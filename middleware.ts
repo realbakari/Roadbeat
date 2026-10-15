@@ -1,8 +1,12 @@
 // Vercel Routing Middleware: Markdown for AI agents, matching
 // functions/_middleware.ts on Cloudflare. A page request that sends
-// `Accept: text/markdown` gets the page's Markdown version from site/plugin.ts.
+// `Accept: text/markdown` gets the page's Markdown version from site/plugin.ts,
+// and an unknown page gets the Markdown 404 with status 404.
 
-export const config = { matcher: ['/', '/about/:path*', '/privacy/:path*', '/contact/:path*'] }
+// Pages only: skip files (paths with a dot) and the two proxies.
+export const config = { matcher: ['/((?!translink-rt|qfd-bushfires|.*\\..*).*)'] }
+
+const MARKDOWN = { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept', 'cache-control': 'public, max-age=300' }
 
 /** "/" → "/index.md", "/about/" → "/about.md". Mirrors markdownPathFor in site/plugin.ts. */
 function markdownPathFor(path: string) {
@@ -11,11 +15,10 @@ function markdownPathFor(path: string) {
 }
 
 export default async function middleware(request: Request): Promise<Response | undefined> {
-  if (!(request.headers.get('accept') ?? '').includes('text/markdown')) return undefined
+  if (request.method !== 'GET' || !(request.headers.get('accept') ?? '').includes('text/markdown')) return undefined
   const url = new URL(request.url)
   const page = await fetch(new URL(markdownPathFor(url.pathname), url))
-  if (!page.ok) return undefined
-  return new Response(page.body, {
-    headers: { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept', 'cache-control': 'public, max-age=300' },
-  })
+  if (page.ok) return new Response(page.body, { headers: MARKDOWN })
+  const missing = await fetch(new URL('/404.md', url))
+  return new Response(missing.body, { status: 404, headers: MARKDOWN })
 }
