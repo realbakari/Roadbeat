@@ -136,7 +136,7 @@ export function MapLayersPanel({
 
   if (!open) {
     return (
-      <div className="absolute top-3 left-3">
+      <div className="absolute top-3 left-3 z-10">
         <Button size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
           Layers
         </Button>
@@ -144,8 +144,9 @@ export function MapLayersPanel({
     )
   }
 
+  // Above the map's popups and camera thumbnails, which carry their own z-index.
   return (
-    <div className="absolute top-3 left-3 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line">
+    <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line">
       <div className="flex items-center justify-between border-b border-kumo-line py-1.5 pr-1.5 pl-3">
         <Text bold size="sm">
           Map layers

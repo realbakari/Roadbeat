@@ -9,6 +9,10 @@ import { CameraCard } from '../CameraCard'
 /** Zoom at which cameras in view show live thumbnails right on the map. */
 const THUMB_ZOOM = 12
 const MAX_THUMBS = 14
+/** Gap between the pinned card's tip and the camera. */
+const PIN_TIP = 18
+/** Space above the pinned card, enough to clear the Layers button and zoom controls along the map's top. */
+const PIN_MARGIN = 56
 
 /** The selected camera's live view, anchored to its spot on the map. */
 export function PinnedCamera({
@@ -31,7 +35,7 @@ export function PinnedCamera({
       closeButton: false,
       closeOnClick: false,
       anchor: 'bottom',
-      offset: 18,
+      offset: PIN_TIP,
       maxWidth: 'none',
       className: 'camera-pin',
       focusAfterOpen: false,
@@ -44,17 +48,27 @@ export function PinnedCamera({
     }
   }, [map, node, lng, lat])
 
-  // Keep the whole card in view: centre slightly below the camera so the card above it fits.
+  // Keep the whole card in view. The card sits above the camera, so the camera moves down the
+  // screen just far enough for the card's top to clear the map's top edge, while staying in view.
+  // Measured after a frame, so the card has its size; `large` re-measures when it changes.
+  // On a phone the map can be hidden behind the list when the camera opens (height 0), so the
+  // card is placed again when the map next resizes, which is when the Map view appears.
   useEffect(() => {
-    const h = map.getContainer().clientHeight
-    map.easeTo({
-      center: [lng, lat],
-      zoom: Math.max(map.getZoom(), 12),
-      offset: [0, Math.min(180, h * 0.3)],
-      duration: 700,
-    })
-    // `large` re-centres when the card changes size.
-  }, [map, lng, lat, large])
+    const place = () => {
+      const h = map.getContainer().clientHeight
+      if (!h) return
+      // The popup element includes the tip below the card.
+      const card = node.closest<HTMLElement>('.maplibregl-popup')?.offsetHeight ?? node.offsetHeight
+      const offsetY = Math.max(0, Math.min(h / 2 - 48, card + PIN_TIP + PIN_MARGIN - h / 2))
+      map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 12), offset: [0, offsetY], duration: 700 })
+    }
+    const raf = requestAnimationFrame(place)
+    map.on('resize', place)
+    return () => {
+      cancelAnimationFrame(raf)
+      map.off('resize', place)
+    }
+  }, [map, node, lng, lat, large])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
