@@ -26,13 +26,15 @@ export interface Selection {
   fire: string | null
   gauge: string | null
   signal: string | null
+  /** A news monitor story id (#news/<id>), or '' for the News tab itself (#news). */
+  news: string | null
 }
 
 /**
  * Selection lives in the URL hash so links can be shared:
  * #event/123, #camera/webcam-5, #place/rest/long007, #place/truck/1,
  * #vehicle/SEQ-…, #transit, #transit/line/train/T1%20Caboolture, #transit/alert/SEQ-500656,
- * #fire/WARN-1, #gauge/E1594, #signal/546, #transit/stop/SEQ/place_albsta, #transit/plan/SEQ/place_censta/place_cabstn[/2026-10-16/480/arrive]
+ * #fire/WARN-1, #gauge/E1594, #signal/546, #news, #news/k3j9x2, #transit/stop/SEQ/place_albsta, #transit/plan/SEQ/place_censta/place_cabstn[/2026-10-16/480/arrive]
  */
 export function parseHash(hash: string): Selection {
   const parts = hash.replace(/^#\/?/, '').split('/')
@@ -67,6 +69,7 @@ export function parseHash(hash: string): Selection {
     fire: parts[0] === 'fire' && parts[1] ? decodeURIComponent(parts.slice(1).join('/')) : null,
     gauge: parts[0] === 'gauge' && parts[1] ? decodeURIComponent(parts[1]) : null,
     signal: parts[0] === 'signal' && parts[1] ? decodeURIComponent(parts[1]) : null,
+    news: parts[0] === 'news' ? decodeURIComponent(parts[1] ?? '') : null,
   }
 }
 

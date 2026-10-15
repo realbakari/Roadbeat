@@ -13,6 +13,8 @@ import { fetchGauges, type Gauge } from '../api/bccGauges'
 import { fetchQldGauges } from '../api/qldGauges'
 import { fetchSignalVolumes, loadSignalSites, type SignalSite, type SignalVolumes } from '../api/bccSignals'
 import { fetchBushfires, type FireWarning } from '../api/bushfires'
+import { fetchNews } from '../api/news'
+import type { NewsSnapshot } from '../api/newsTypes'
 import { fetchClearances, type Clearance } from '../api/clearances'
 import { fetchCouncilEventsOn, type CouncilEvent } from '../api/bccDashboard'
 import { eventsWeek } from '../lib/councilEvents'
@@ -331,6 +333,31 @@ export function useBushfires(enabled: boolean) {
     }
   }, [enabled])
   return { fires: enabled ? fires : null, error: enabled ? error : null }
+}
+
+/**
+ * The Queensland news monitor's reports, polled every 2 minutes while `enabled`.
+ * The server reads the feeds every 5 minutes; `snapshot.fetchedAt` says when.
+ */
+export function useNews(enabled: boolean) {
+  const [snapshot, setSnapshot] = useState<NewsSnapshot | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    const c = new AbortController()
+    const load = () =>
+      fetchNews(c.signal).then(
+        (s) => (setSnapshot(s), setError(null)),
+        (e: Error) => !c.signal.aborted && setError(e.message),
+      )
+    load()
+    const id = setInterval(() => visible() && load(), 120_000)
+    return () => {
+      c.abort()
+      clearInterval(id)
+    }
+  }, [enabled])
+  return { snapshot: enabled ? snapshot : null, error: enabled ? error : null }
 }
 
 /**

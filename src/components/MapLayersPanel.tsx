@@ -1,5 +1,5 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, StackIcon, XIcon } from '@phosphor-icons/react'
+import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, NewspaperIcon, StackIcon, XIcon } from '@phosphor-icons/react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
@@ -225,6 +225,27 @@ export function MapLayersPanel({
                   {l === 'Information' ? 'Fire reported' : l}
                 </span>
               ))}
+            </div>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={LAYER_COLOR.news} icon={<NewspaperIcon size={12} weight="fill" />} />}
+            label="News and official notices"
+            count={counts.news}
+            checked={layers.news}
+            onChange={(v) => set('news', v)}
+          >
+            <div className="grid gap-1">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-full" style={{ boxShadow: `inset 0 0 0 2px ${LAYER_COLOR.news}` }} /> News report
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-full" style={{ background: LAYER_COLOR.newsOfficial }} /> Police, BoM or earthquake
+                </span>
+              </div>
+              <Text size="xs" variant="secondary">
+                Pinned only where a headline or summary names a Queensland place in the official gazetteer. Reports aren't verified.
+              </Text>
             </div>
           </LayerRow>
           <LayerRow

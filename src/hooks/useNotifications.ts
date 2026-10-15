@@ -8,6 +8,7 @@ import {
   eventHeadline,
   eventSignature,
   fireMatches,
+  newsMatches,
   loadSettings,
   matchesRules,
   saveSettings,
@@ -15,10 +16,11 @@ import {
   type AlertSettings,
 } from '../lib/alertRules'
 import { eventTitle } from '../lib/eventText'
+import { publisherList, type NewsStory } from '../lib/newsStories'
 
 export interface AppNotification {
   id: string
-  kind: 'event-new' | 'event-update' | 'event-cleared' | 'transit' | 'fire'
+  kind: 'event-new' | 'event-update' | 'event-cleared' | 'transit' | 'fire' | 'news'
   title: string
   body: string
   at: number
@@ -55,6 +57,8 @@ interface Seen {
   transit: string[]
   /** Bushfire warning id → level. */
   fires?: Record<string, string>
+  /** News monitor story ids. */
+  news?: string[]
 }
 
 /**
@@ -82,6 +86,7 @@ export function useNotifications({
   eventsAt,
   transitAlerts,
   fires,
+  stories,
   onOpen,
 }: {
   settings: AlertSettings
@@ -90,12 +95,14 @@ export function useNotifications({
   eventsAt: number | null
   transitAlerts: TransitAlert[] | null
   fires: FireWarning[] | null
+  /** News monitor stories, or null while they aren't loaded. */
+  stories: NewsStory[] | null
   onOpen: (href: string) => void
 }) {
   const toasts = useKumoToastManager()
   const [items, setItems] = useState<AppNotification[]>(() => load(LIST_KEY, []))
   const seen = useRef<Seen | null>(load<Seen | null>(SEEN_KEY, null))
-  const first = useRef({ events: true, transit: true, fires: true })
+  const first = useRef({ events: true, transit: true, fires: true, news: true })
   const latest = useRef({ settings, onOpen })
   useLayoutEffect(() => {
     latest.current = { settings, onOpen }
@@ -192,7 +199,7 @@ export function useNotifications({
       const stillListed = s.watchedEvents.filter((id) => String(id) in sigs)
       if (stillListed.length !== s.watchedEvents.length) setSettings((x) => ({ ...x, watchedEvents: stillListed }))
     }
-    seen.current = { events: sigs, transit: seen.current?.transit ?? [], fires: seen.current?.fires }
+    seen.current = { ...seen.current, events: sigs, transit: seen.current?.transit ?? [] }
     store(SEEN_KEY, seen.current)
   }, [events, eventsAt, raise, setSettings])
 
@@ -229,7 +236,7 @@ export function useNotifications({
           }),
       )
     }
-    seen.current = { events: seen.current?.events ?? {}, transit: ids, fires: seen.current?.fires }
+    seen.current = { ...seen.current, events: seen.current?.events ?? {}, transit: ids }
     store(SEEN_KEY, seen.current)
   }, [transitAlerts, raise])
 
@@ -263,9 +270,39 @@ export function useNotifications({
       }
       raise(away ? out.slice(0, 10) : out)
     }
-    seen.current = { events: seen.current?.events ?? {}, transit: seen.current?.transit ?? [], fires: levels }
+    seen.current = { ...seen.current, events: seen.current?.events ?? {}, transit: seen.current?.transit ?? [], fires: levels }
     store(SEEN_KEY, seen.current)
   }, [fires, raise])
+
+  // News monitor stories: new ones only. A report joining a known story isn't news to the user.
+  useEffect(() => {
+    if (!stories) return
+    const s = latest.current.settings
+    const prev = seen.current?.news
+    const away = first.current.news
+    first.current.news = false
+    if (prev) {
+      const known = new Set(prev)
+      const now = Date.now()
+      raise(
+        stories
+          .filter((st) => !known.has(st.id) && newsMatches(st, s))
+          .slice(0, away ? 10 : 5)
+          .map((st) => ({
+            id: `news-${st.id}`,
+            kind: 'news' as const,
+            title: st.kind === 'official' ? `${st.publishers[0]}: ${st.items[0].title}` : st.items[0].title,
+            body: st.kind === 'official' ? (st.items[0].summary ?? 'Official notice.') : `News report. Reported by ${publisherList(st.publishers)}.`,
+            at: now,
+            href: `news/${encodeURIComponent(st.id)}`,
+            tone: st.kind === 'official' ? ('warning' as const) : ('info' as const),
+            away,
+          })),
+      )
+    }
+    seen.current = { events: seen.current?.events ?? {}, transit: seen.current?.transit ?? [], ...seen.current, news: stories.map((st) => st.id) }
+    store(SEEN_KEY, seen.current)
+  }, [stories, raise])
 
   const markAllRead = useCallback(() => setItems((l) => l.map((n) => ({ ...n, read: true }))), [])
   const markRead = useCallback((id: string) => setItems((l) => l.map((n) => (n.id === id ? { ...n, read: true } : n))), [])

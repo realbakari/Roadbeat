@@ -5,6 +5,7 @@ import { FlameIcon,
   CheckCircleIcon,
   GearSixIcon,
   InfoIcon,
+  NewspaperIcon,
   TrainIcon,
   WarningCircleIcon,
   WarningIcon,
@@ -100,7 +101,7 @@ export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, 
           <>
             <ul className="max-h-[60vh] divide-y divide-kumo-line overflow-y-auto">
               {items.map((n) => {
-                const t = n.kind === 'transit' ? { icon: TrainIcon, className: 'text-kumo-info' } : n.kind === 'fire' ? { icon: FlameIcon, className: TONE[n.tone].className } : TONE[n.tone]
+                const t = n.kind === 'transit' ? { icon: TrainIcon, className: 'text-kumo-info' } : n.kind === 'fire' ? { icon: FlameIcon, className: TONE[n.tone].className } : n.kind === 'news' ? { icon: NewspaperIcon, className: TONE[n.tone].className } : TONE[n.tone]
                 const I = t.icon
                 return (
                   <li key={n.id}>

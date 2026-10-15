@@ -51,6 +51,8 @@ export const LAYER_COLOR = {
   bikeRack: '#16a34a',
   bikeRepair: '#15803d',
   councilEvent: '#be185d',
+  news: '#7c3aed',
+  newsOfficial: '#0f172a',
 } as const
 
 export const VEHICLE_COLOR = {

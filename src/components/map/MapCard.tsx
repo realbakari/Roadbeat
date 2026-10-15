@@ -52,6 +52,7 @@ export function MapCard({ map, card, onDetails, onClose }: { map: maplibregl.Map
         <Button variant="primary" size="sm" icon={<ArrowRightIcon />} onClick={onDetails}>
           Details
         </Button>
+        {card.directions !== false && (
         <a
           href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
           target="_blank"
@@ -60,6 +61,7 @@ export function MapCard({ map, card, onDetails, onClose }: { map: maplibregl.Map
         >
           <NavigationArrowIcon weight="fill" /> Directions
         </a>
+        )}
       </div>
     </div>,
     node,

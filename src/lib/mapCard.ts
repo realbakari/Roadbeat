@@ -12,6 +12,7 @@ import { latestReading, rainfallSince } from './gauges'
 import { eventAnchor, type LngLat } from './geo'
 import { LAYER_COLOR, VEHICLE_COLOR } from './mapIcons'
 import { placeFocus, type Place } from './places'
+import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
 import { dsColor, siteLoad } from './signals'
 
 /**
@@ -30,6 +31,8 @@ export interface MapCard {
   /** A published picture of the item, shown above the title. */
   image?: string
   position: LngLat
+  /** False for an item whose position isn't somewhere to drive to, such as a town a news story names. */
+  directions?: boolean
 }
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
@@ -193,6 +196,21 @@ export function vehicleCard(v: LiveVehicle, now: number): MapCard {
   }
 }
 
+/** A news story's card, at the first place it names. Never offers directions: the pin is a named town, not an incident site. */
+export function newsCard(s: NewsStory, now: number): MapCard | null {
+  const place = s.places[0]
+  if (!place) return null
+  return {
+    key: `news-${s.id}`,
+    title: s.items[0].title,
+    subtitle: storySourceLine(s),
+    facts: [timeAgo(s.latest, now) ?? '', storyLocatedLine(s) ?? ''].filter(Boolean),
+    color: s.kind === 'official' ? LAYER_COLOR.newsOfficial : LAYER_COLOR.news,
+    position: place.position,
+    directions: false,
+  }
+}
+
 export interface MapSelection {
   event: TrafficEvent | null
   place: Place | null
@@ -201,6 +219,7 @@ export interface MapSelection {
   signal: SignalSite | null
   signalVolumes: SignalVolumes | null
   vehicle: LiveVehicle | null
+  story: NewsStory | null
 }
 
 /** The card for whichever map item is selected, or null when nothing with a card is. */
@@ -211,6 +230,7 @@ export function mapCardFor(s: MapSelection, now: number): MapCard | null {
   if (s.gauge) return gaugeCard(s.gauge, now)
   if (s.signal) return signalCard(s.signal, s.signalVolumes, now)
   if (s.vehicle) return vehicleCard(s.vehicle, now)
+  if (s.story) return newsCard(s.story, now)
   return null
 }
 

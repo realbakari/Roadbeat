@@ -27,7 +27,9 @@ import { useMediaQuery } from './hooks/useMediaQuery'
 import { mapCardFor } from './lib/mapCard'
 import { usePanelLayout } from './hooks/usePanelLayout'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
-import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
+import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
+import { roadBounds } from './lib/newsRoads'
+import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, type EventFilters } from './lib/filters'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
 
@@ -40,12 +42,16 @@ export default function App() {
   const ref = useReferenceData()
   const now = useNow()
 
-  const [panel, setPanel] = useState<Panel>('events')
+  const [panelChoice, setPanel] = useState<Panel>('events')
+  const [sel, go] = useHashSelection()
+  // #news and #news/<story> open the News tab whichever tab was last chosen.
+  const panel: Panel = sel.news != null ? 'news' : panelChoice
   const occupancies = useRoadOccupancies(panel === 'events')
   const { mobileView, panelMode, setPanelMode, revealMap, revealList } = usePanelLayout()
   const [mapView, setMapView] = useState<{ center: LngLat; zoom: number } | null>(null)
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS)
-  const [layers, setLayers] = useState<MapLayers>(DEFAULT_LAYERS)
+  // A link to the News tab or a story (#news/…) opens with the news pins on.
+  const [layers, setLayers] = useState<MapLayers>(() => (location.hash.startsWith('#news') ? { ...DEFAULT_LAYERS, news: true } : DEFAULT_LAYERS))
   // Base map style and 3D buildings are remembered in this browser.
   const [basemap, setBasemapState] = useState<Basemap>(() => {
     try {
@@ -68,7 +74,6 @@ export default function App() {
   const [locating, setLocating] = useState(false)
   const [locateError, setLocateError] = useState<string | null>(null)
   const [focus, setFocus] = useState<MapFocus | null>(null)
-  const [sel, go] = useHashSelection()
   const [alertSettings, setAlertSettings] = useAlertSettings()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [vehicleModes, setVehicleModes] = useState<VehicleMode[]>(['train', 'bus', 'tram', 'ferry'])
@@ -87,13 +92,35 @@ export default function App() {
     transitOpen || !!sel.vehicle || alertSettings.routes.length > 0 || (commuteLive && !!commute?.route),
   )
 
+  const [newsFilter, setNewsFilter] = useState<StoryFilter>(DEFAULT_STORY_FILTER)
+  const news = useNews(panel === 'news' || layers.news || alertSettings.kinds.news || alertSettings.kinds.newsOfficial)
+  const stories = useMemo(() => (news.snapshot ? groupStories(news.snapshot.items) : null), [news.snapshot])
+  // The map shows the stories the News tab's filters leave, and only those that name a place.
+  const mapStories = useMemo(() => (stories ? filterStories(stories, newsFilter, now).filter((s) => s.places.length) : []), [stories, newsFilter, now])
+  const selectedStory = useMemo(() => (sel.news ? (stories?.find((s) => s.id === sel.news) ?? null) : null), [stories, sel.news])
+  // Opening the News tab turns its map pins on.
+  const choosePanel = useCallback((p: Panel) => {
+    setPanel(p)
+    if (p === 'news') setLayers((l) => (l.news ? l : { ...l, news: true }))
+  }, [])
+  // Opening a story fits the map to the first road it is placed on, else its first place, once per story.
+  // The map's own halo marks the story, so no focus ring is needed.
+  const focusedStory = useRef<string | null>(null)
+  useEffect(() => {
+    const bounds = storyBounds(selectedStory)
+    if (!selectedStory || !bounds || focusedStory.current === selectedStory.id) return
+    focusedStory.current = selectedStory.id
+    setFit({ bounds, id: Date.now() })
+  }, [selectedStory])
+
   const openHref = useCallback(
     (href: string) => {
       if (href.startsWith('transit')) setPanel('transit')
+      if (href.startsWith('news')) choosePanel('news')
       revealList()
       go(href)
     },
-    [go, revealList],
+    [go, revealList, choosePanel],
   )
 
   const notifications = useNotifications({
@@ -103,6 +130,7 @@ export default function App() {
     eventsAt: fetchedAt,
     transitAlerts,
     fires,
+    stories,
     onOpen: openHref,
   })
 
@@ -209,9 +237,9 @@ export default function App() {
   const mapCard = useMemo(
     () =>
       cardVisible
-        ? mapCardFor({ event: selectedEvent, place: selectedPlace, fire: selectedFire, gauge: selectedGauge, signal: selectedSignal, signalVolumes, vehicle: selectedVehicle }, now)
+        ? mapCardFor({ event: selectedEvent, place: selectedPlace, fire: selectedFire, gauge: selectedGauge, signal: selectedSignal, signalVolumes, vehicle: selectedVehicle, story: selectedStory }, now)
         : null,
-    [cardVisible, selectedEvent, selectedPlace, selectedFire, selectedGauge, selectedSignal, signalVolumes, selectedVehicle, now],
+    [cardVisible, selectedEvent, selectedPlace, selectedFire, selectedGauge, selectedSignal, signalVolumes, selectedVehicle, selectedStory, now],
   )
 
   // Keep the selected event on the map even if filters would hide it.
@@ -225,7 +253,7 @@ export default function App() {
     setFilters(next)
     setPanel('events')
     revealList()
-    if (sel.transit || sel.event || sel.camera || sel.place || sel.vehicle || sel.fire || sel.gauge || sel.signal) go('')
+    if (sel.transit || sel.event || sel.camera || sel.place || sel.vehicle || sel.fire || sel.gauge || sel.signal || sel.news != null) go('')
   }
 
   const layerCounts = useMemo(
@@ -246,8 +274,9 @@ export default function App() {
       ...(council.meters ? { parkingMeters: council.meters.length } : {}),
       ...(council.bikeStops ? { cycling: council.bikeStops.length } : {}),
       ...(council.events ? { councilEvents: council.events.length } : {}),
+      ...(stories ? { news: mapStories.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories],
   )
 
   const locate = useCallback(() => {
@@ -290,12 +319,19 @@ export default function App() {
         revealMap()
         const cam = cameras.find((c) => `camera/${cameraKey(c)}` === hashKey)
         if (cam) setLayers((l) => (cam.kind === 'webcam' ? (l.webcams ? l : { ...l, webcams: true }) : l.floodcams ? l : { ...l, floodcams: true }))
+      } else if (hashKey.startsWith('newsplace/')) {
+        // A pin several stories share opens the News list for that place.
+        setNewsFilter({ ...DEFAULT_STORY_FILTER, place: decodeURIComponent(hashKey.slice('newsplace/'.length)) })
+        choosePanel('news')
+        revealList()
+        go('news')
+        return
       } else if (reveal) {
         revealList()
       }
       go(hashKey)
     },
-    [go, cameras, revealMap, revealList],
+    [go, cameras, revealMap, revealList, choosePanel],
   )
   const closeCamera = useCallback(() => go(cameraReturn.current), [go])
 
@@ -316,7 +352,7 @@ export default function App() {
           onShowCameras={() => {
             setPanel('cameras')
             revealList()
-            if (sel.transit) go('')
+            if (sel.transit || sel.news != null) go('')
           }}
           onHome={() => go('')}
           notifications={notifications}
@@ -389,7 +425,7 @@ export default function App() {
                 revealMap={revealMap}
                 now={now}
                 panel={panel}
-                onPanelChange={setPanel}
+                onPanelChange={choosePanel}
                 transitOpen={transitOpen}
                 events={events}
                 visibleEvents={visible}
@@ -422,6 +458,18 @@ export default function App() {
                 selectedGauge={selectedGauge}
                 selectedSignal={selectedSignal}
                 signalVolumes={signalVolumes}
+                news={{ snapshot: news.snapshot, error: news.error, stories: stories ?? [] }}
+                newsFilter={newsFilter}
+                onNewsFilterChange={setNewsFilter}
+                selectedStory={selectedStory}
+                onShowNewsPlace={(p) => {
+                  setFocus({ center: p.position, zoom: 12 })
+                  revealMap()
+                }}
+                onShowNewsRoad={(r) => {
+                  setFit({ bounds: roadBounds(r), id: Date.now() })
+                  revealMap()
+                }}
                 alertSettings={alertSettings}
                 notifications={notifications}
               />
@@ -478,6 +526,8 @@ export default function App() {
               parkingMeters={council.meters ?? []}
               bikeStops={council.bikeStops ?? []}
               councilEvents={council.events ?? []}
+              newsStories={mapStories}
+              selectedStory={selectedStory}
               selectedVehicleId={sel.vehicle}
               card={mapCard}
               onCardDetails={revealList}

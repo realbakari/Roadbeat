@@ -35,6 +35,8 @@ export interface MapLayers {
   cycling: boolean
   /** Brisbane City Council events on today and the next 7 days. */
   councilEvents: boolean
+  /** News monitor stories and official notices that name a Queensland place. */
+  news: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -59,4 +61,5 @@ export const DEFAULT_LAYERS: MapLayers = {
   parkingMeters: false,
   cycling: false,
   councilEvents: false,
+  news: false,
 }

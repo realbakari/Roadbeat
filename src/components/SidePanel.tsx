@@ -3,12 +3,14 @@ import type { Gauge } from '../api/bccGauges'
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import type { FireWarning } from '../api/bushfires'
+import type { NewsPlace, NewsRoad, NewsSnapshot } from '../api/newsTypes'
 import type { LiveVehicle, TransitAlert } from '../api/translink'
 import type { Camera, TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
 import type { AlertSettings } from '../lib/alertRules'
 import type { EventFilters } from '../lib/filters'
 import type { LngLat } from '../lib/geo'
+import type { NewsStory, StoryFilter } from '../lib/newsStories'
 import type { Place } from '../lib/places'
 import type { Selection } from '../lib/route'
 import { CameraGrid } from './CameraGrid'
@@ -17,13 +19,15 @@ import { EventDetail } from './EventDetail'
 import { EventList } from './EventList'
 import { FireDetail } from './FireDetail'
 import { GaugeDetail } from './GaugeDetail'
+import { NewsDetail } from './NewsDetail'
+import { NewsPanel } from './NewsPanel'
 import { PlaceDetail } from './PlaceDetail'
 import { SignalDetail } from './SignalDetail'
 import { TransitPanel } from './TransitPanel'
 import { VehicleDetail } from './VehicleDetail'
 
 /** The side panel's tabs, shown when no detail page is open. */
-export type Panel = 'events' | 'cameras' | 'transit'
+export type Panel = 'events' | 'cameras' | 'transit' | 'news'
 
 interface Props {
   sel: Selection
@@ -72,11 +76,18 @@ interface Props {
   selectedSignal: SignalSite | null
   signalVolumes: SignalVolumes | null
 
+  news: { snapshot: NewsSnapshot | null; error: string | null; stories: NewsStory[] }
+  newsFilter: StoryFilter
+  onNewsFilterChange: (f: StoryFilter) => void
+  selectedStory: NewsStory | null
+  onShowNewsPlace: (p: NewsPlace) => void
+  onShowNewsRoad: (r: NewsRoad) => void
+
   alertSettings: AlertSettings
   notifications: ReturnType<typeof useNotifications>
 }
 
-/** The side panel: the open detail page if there is one, else the Road events, Cameras or Transit tab. */
+/** The side panel: the open detail page if there is one, else the Road events, Cameras, Transit or News tab. */
 export function SidePanel(p: Props) {
   const { sel, go, now, alertSettings, notifications } = p
   const back = () => go('')
@@ -122,6 +133,14 @@ export function SidePanel(p: Props) {
   if (p.selectedGauge) {
     return <GaugeDetail gauge={p.selectedGauge} now={now} onBack={() => (history.length > 1 ? history.back() : go(''))} />
   }
+  if (p.selectedStory) {
+    return <NewsDetail story={p.selectedStory} now={now} onBack={() => go('news')} onShowPlace={p.onShowNewsPlace}
+        onShowRoad={p.onShowNewsRoad}
+        events={p.events}
+        fires={p.fires}
+        onOpenHref={p.onOpenHref}
+      />
+  }
   if (p.selectedSignal) {
     return (
       <SignalDetail site={p.selectedSignal} approaches={p.signalVolumes?.get(p.selectedSignal.tsc) ?? null} now={now} onBack={back} />
@@ -132,18 +151,19 @@ export function SidePanel(p: Props) {
     <>
       <div className="px-4 pt-3">
         <Tabs
-          // Three tabs always fit; Kumo's scroll arrow can still appear from sub-pixel rounding.
+          // Four tabs always fit; Kumo's scroll arrow can still appear from sub-pixel rounding.
           className="w-full [&_button[aria-label^='Scroll_tabs']]:hidden"
           listClassName="w-full [&>*]:flex-1"
           value={p.transitOpen ? 'transit' : p.panel}
           onValueChange={(v) => {
             p.onPanelChange(v as Panel)
-            if (sel.transit) go('')
+            if (sel.transit || sel.news != null) go('')
           }}
           tabs={[
             { value: 'events', label: 'Road events' },
             { value: 'cameras', label: 'Cameras' },
             { value: 'transit', label: 'Transit' },
+            { value: 'news', label: 'News' },
           ]}
         />
       </div>
@@ -180,6 +200,16 @@ export function SidePanel(p: Props) {
         />
       ) : p.panel === 'cameras' ? (
         <CameraGrid cameras={p.cameras} selectedKey={sel.camera} onOpen={p.onOpenCamera} />
+      ) : p.panel === 'news' ? (
+        <NewsPanel
+          snapshot={p.news.snapshot}
+          error={p.news.error}
+          stories={p.news.stories}
+          filter={p.newsFilter}
+          onFilterChange={p.onNewsFilterChange}
+          now={now}
+          onOpen={(id) => go(`news/${encodeURIComponent(id)}`)}
+        />
       ) : null}
     </>
   )

@@ -1,12 +1,13 @@
 import type { FireWarning } from '../api/bushfires'
 import type { TrafficEvent } from '../api/types'
+import type { NewsStory } from './newsStories'
 import { routeInfo, type TransitAlert } from '../api/translink'
 import { clean } from './format'
 import { isClosure, isUpcoming } from './filters'
 import { distanceKm, eventAnchor, type LngLat } from './geo'
 import { eventPlace, eventTitle } from './eventText'
 
-export type AlertKind = 'crash' | 'closure' | 'redAlert' | 'high' | 'flooding' | 'hazard' | 'congestion' | 'roadworks' | 'bushfire'
+export type AlertKind = 'crash' | 'closure' | 'redAlert' | 'high' | 'flooding' | 'hazard' | 'congestion' | 'roadworks' | 'bushfire' | 'newsOfficial' | 'news'
 
 export const ALERT_KINDS: { key: AlertKind; label: string }[] = [
   { key: 'crash', label: 'Crashes' },
@@ -18,6 +19,8 @@ export const ALERT_KINDS: { key: AlertKind; label: string }[] = [
   { key: 'congestion', label: 'Congestion' },
   { key: 'roadworks', label: 'Roadworks starting' },
   { key: 'bushfire', label: 'Bushfire warnings' },
+  { key: 'newsOfficial', label: 'Police, BoM and earthquake notices' },
+  { key: 'news', label: 'News reports' },
 ]
 
 export interface AlertSettings {
@@ -48,6 +51,8 @@ export const DEFAULT_SETTINGS: AlertSettings = {
     congestion: false,
     roadworks: false,
     bushfire: true,
+    newsOfficial: false,
+    news: false,
   },
   districts: [],
   roads: [],
@@ -181,6 +186,24 @@ export function fireMatches(f: FireWarning, s: AlertSettings) {
   if (s.nearMe && distanceKm(s.nearMe.at, f.position) <= s.nearMe.km) return true
   if (s.roads.length) {
     const hay = [f.area, f.title, f.location].filter(Boolean).join(' ').toLowerCase()
+    if (s.roads.some((q) => hay.includes(q.toLowerCase()))) return true
+  }
+  return false
+}
+
+/**
+ * Should a new news monitor story alert the user? Official notices and news
+ * reports are separate choices. Area rules use distance from a place the story
+ * names, or the user's listed roads and places in its headlines and summaries.
+ * Stories aren't filed under TMR districts, so a districts-only filter never
+ * matches one rather than guessing.
+ */
+export function newsMatches(story: NewsStory, s: AlertSettings) {
+  if (!s.kinds[story.kind === 'official' ? 'newsOfficial' : 'news']) return false
+  if (!hasAreaFilter(s)) return true
+  if (s.nearMe && story.places.some((p) => distanceKm(s.nearMe!.at, p.position) <= s.nearMe!.km)) return true
+  if (s.roads.length) {
+    const hay = story.items.flatMap((i) => [i.title, i.summary ?? '']).join(' ').toLowerCase()
     if (s.roads.some((q) => hay.includes(q.toLowerCase()))) return true
   }
   return false

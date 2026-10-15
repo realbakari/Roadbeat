@@ -37,7 +37,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     if (map.getLayer('building-3d')) map.removeLayer('building-3d')
   }
 
-  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'council-events', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
+  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'council-events', 'news', 'news-roads', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
     map.addSource(id, { type: 'geojson', data: empty })
   }
   const color = ['get', 'color'] as unknown as string
@@ -483,6 +483,70 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
       'icon-ignore-placement': true,
       'symbol-sort-key': ['-', 10, ['get', 'rank']],
     },
+  })
+  // News monitor pins, above road events so they aren't hidden. News reports are
+  // purple rings, official notices solid dark dots, and a place both kinds name is
+  // a dark dot with a purple ring. A shared pin shows how many stories it holds.
+  map.addLayer({
+    id: 'news-roads',
+    type: 'line',
+    source: 'news-roads',
+    layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: {
+      'line-color': ['case', ['get', 'official'], LAYER_COLOR.newsOfficial, LAYER_COLOR.news] as never,
+      'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 16, 6] as never,
+      'line-opacity': 0.75,
+    },
+  })
+  map.addLayer({
+    id: 'news-roads-selected',
+    type: 'line',
+    source: 'news-roads',
+    filter: ['==', ['get', 'story'], ''],
+    layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': LAYER_COLOR.news, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 6, 16, 14] as never, 'line-opacity': 0.35 },
+  })
+  const newsRadius = (base: number) => ['+', base, ['*', 1.2, ['min', ['get', 'weight'], 6]]]
+  map.addLayer({
+    id: 'news-selected',
+    type: 'circle',
+    source: 'news',
+    filter: ['==', ['get', 'name'], ''],
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, newsRadius(10), 12, newsRadius(14)] as never,
+      'circle-color': LAYER_COLOR.news,
+      'circle-opacity': 0.25,
+      'circle-stroke-color': LAYER_COLOR.news,
+      'circle-stroke-width': 2,
+    },
+  })
+  map.addLayer({
+    id: 'news-pins',
+    type: 'circle',
+    source: 'news',
+    layout: { visibility: 'none', 'circle-sort-key': ['get', 'weight'] as never },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, newsRadius(5), 12, newsRadius(8)] as never,
+      'circle-color': ['match', ['get', 'mix'], 0, mode === 'dark' ? '#1f2937' : '#ffffff', LAYER_COLOR.newsOfficial] as never,
+      'circle-stroke-color': ['match', ['get', 'mix'], 2, '#ffffff', LAYER_COLOR.news] as never,
+      'circle-stroke-width': ['match', ['get', 'mix'], 2, 1.5, 2.5] as never,
+    },
+  })
+  map.addLayer({
+    id: 'news-count',
+    type: 'symbol',
+    source: 'news',
+    filter: ['>', ['get', 'count'], 1],
+    layout: {
+      visibility: 'none',
+      'text-field': ['to-string', ['get', 'count']] as never,
+      'text-font': ['Noto Sans Regular'],
+      'text-size': 11,
+      'text-allow-overlap': true,
+      'text-ignore-placement': true,
+    },
+    paint: { 'text-color': ['match', ['get', 'mix'], 0, LAYER_COLOR.news, '#ffffff'] as never },
   })
 }
 

@@ -6,6 +6,7 @@ import type { SignalSite, SignalVolumes } from '../../api/bccSignals'
 import { clearanceLabel, type Clearance } from '../../api/clearances'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../../api/bccPlaces'
 import type { CouncilEvent } from '../../api/bccDashboard'
+import type { NewsStory } from '../../lib/newsStories'
 import { clearwayInEffect, parseClearwayTimes } from '../../lib/clearways'
 import type { TrafficEvent } from '../../api/types'
 import { latestReading, rainfallSince } from '../../lib/gauges'
@@ -28,6 +29,65 @@ export function fireFeatures(fires: FireWarning[]): GeoJSON.FeatureCollection {
     out.push({ type: 'Feature', geometry: { type: 'Point', coordinates: f.position }, properties: props })
   }
   return { type: 'FeatureCollection', features: out }
+}
+
+/**
+ * One pin per place the news monitor's stories name. Several stories often name
+ * the same place (the gazetteer has one point for "Brisbane"), so they share a
+ * pin with a count, and the pin opens the News list for that place. `mix` is 0
+ * when every story there is a news report, 2 when every one is official, and 1
+ * when both kinds name it. `weight` sizes the pin: the number of stories, or for
+ * a lone news story the number of outlets that carried it.
+ */
+export function newsFeatures(stories: NewsStory[]): GeoJSON.FeatureCollection {
+  const byPlace = new Map<string, { place: NewsStory['places'][number]; stories: NewsStory[] }>()
+  for (const s of stories) {
+    for (const p of s.places) {
+      const hit = byPlace.get(p.name)
+      if (hit) hit.stories.push(s)
+      else byPlace.set(p.name, { place: p, stories: [s] })
+    }
+  }
+  return {
+    type: 'FeatureCollection',
+    features: [...byPlace.values()].map(({ place, stories: list }) => {
+      const official = list.filter((s) => s.kind === 'official').length
+      const one = list.length === 1 ? list[0] : null
+      return {
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: place.position },
+        properties: {
+          key: one ? `news/${encodeURIComponent(one.id)}` : `newsplace/${encodeURIComponent(place.name)}`,
+          name: place.name,
+          count: list.length,
+          mix: official === 0 ? 0 : official === list.length ? 2 : 1,
+          weight: one ? (one.kind === 'news' ? one.publishers.length : 1) : list.length,
+          label: one
+            ? `${one.kind === 'official' ? one.publishers[0] : 'News'}: ${one.items[0].title}`
+            : `${list.length} stories name ${place.name}${place.via === 'gazetteer' ? '' : ' (location from the source)'}`,
+        },
+      }
+    }),
+  }
+}
+
+/** The official segments of each road a story is placed on, one MultiLineString per road and locality. */
+export function newsRoadFeatures(stories: NewsStory[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: stories.flatMap((s) =>
+      s.roads.map((r) => ({
+        type: 'Feature' as const,
+        geometry: { type: 'MultiLineString' as const, coordinates: r.lines },
+        properties: {
+          key: `news/${encodeURIComponent(s.id)}`,
+          story: s.id,
+          official: s.kind === 'official',
+          label: `${r.name}, ${r.locality}: ${s.items[0].title}`,
+        },
+      })),
+    ),
+  }
 }
 
 /** Low clearance signs; each carries the hash key its detail page opens at. */

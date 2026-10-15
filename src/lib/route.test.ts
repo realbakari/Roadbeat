@@ -7,6 +7,8 @@ describe('parseHash', () => {
     expect(parseHash('#fire/WARN-10208').fire).toBe('WARN-10208')
     expect(parseHash('#gauge/E1594').gauge).toBe('E1594')
     expect(parseHash('#signal/546').signal).toBe('546')
+    expect(parseHash('#news/k3j9x2').news).toBe('k3j9x2')
+    expect(parseHash('#news').news).toBe('')
   })
 
   it('reads transit pages', () => {
@@ -23,7 +25,7 @@ describe('parseHash', () => {
 
   it('selects nothing for an empty or unknown hash', () => {
     const empty = parseHash('')
-    expect([empty.event, empty.fire, empty.gauge, empty.signal, empty.transit]).toEqual([null, null, null, null, null])
+    expect([empty.event, empty.fire, empty.gauge, empty.signal, empty.transit, empty.news]).toEqual([null, null, null, null, null, null])
     expect(parseHash('#nonsense/1').event).toBeNull()
   })
 })

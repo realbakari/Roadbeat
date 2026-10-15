@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { Gauge } from '../api/bccGauges'
 import type { TrafficEvent } from '../api/types'
-import { eventCard, gaugeCard, mapCardFor, placeCard } from './mapCard'
+import { eventCard, gaugeCard, mapCardFor, newsCard, placeCard } from './mapCard'
+import { groupStories } from './newsStories'
+import { gazetteerPlace, newsItem } from '../test/fixtures'
 
 const NOW = Date.parse('2026-10-15T08:00:00+10:00')
 
@@ -97,8 +99,21 @@ describe('placeCard and mapCardFor', () => {
   })
 
   it('picks the selected item, and nothing when nothing is selected', () => {
-    const none = { event: null, place: null, fire: null, gauge: null, signal: null, signalVolumes: null, vehicle: null }
+    const none = { event: null, place: null, fire: null, gauge: null, signal: null, signalVolumes: null, vehicle: null, story: null }
     expect(mapCardFor(none, NOW)).toBeNull()
     expect(mapCardFor({ ...none, event }, NOW)?.key).toBe('event-42')
+  })
+})
+
+describe('newsCard', () => {
+  const item = newsItem({ title: 'Crash closes Warrego Highway', published: NOW - 60 * 60_000 })
+
+  it("sits at the first named place, says what located it, and offers no directions", () => {
+    const [s] = groupStories([{ ...item, places: [gazetteerPlace('Toowoomba', 'Toowoomba Regional', [151.95, -27.56])] }])
+    expect(newsCard(s, NOW)).toMatchObject({ title: 'Crash closes Warrego Highway', subtitle: 'News report · ABC', facts: ['1 hour ago', 'Located from: Toowoomba'], position: [151.95, -27.56], directions: false })
+  })
+
+  it('has no card for a story that names no place', () => {
+    expect(newsCard(groupStories([item])[0], NOW)).toBeNull()
   })
 })
