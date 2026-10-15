@@ -31,6 +31,15 @@
 
 Every page is also available as Markdown: send `Accept: text/markdown`, or add `.md` to the page path (for example `%SITE_URL%/about.md`).
 
+## API and MCP server
+
+Roadbeat answers live questions for AI agents and apps. Both are free, read-only and need no key. Every answer names its official source.
+
+- MCP server (Streamable HTTP): `%SITE_URL%/mcp`. Tools: `road_events` (search Queensland road events by road and place), `find_stops` (TransLink stops by name), `next_departures` (real-time departures from a stop, optionally one route) and `bushfire_warnings`. Discovery card: `%SITE_URL%/.well-known/mcp.json`.
+- REST API: `%SITE_URL%/api/events?q=Bruce%20Highway%20Gympie`, `%SITE_URL%/api/stops?q=Central`, `%SITE_URL%/api/departures?stop=place_censta&route=T6`, `%SITE_URL%/api/bushfires`. OpenAPI description: `%SITE_URL%/openapi.json`.
+
+Departure times come from TransLink's real-time feed, which covers services running now or starting soon. A delay is reported as tracked only when a vehicle on that trip is reporting its position.
+
 ## Linking to views in the app
 
 The app keeps its current view in the URL hash, so these links open a view directly:

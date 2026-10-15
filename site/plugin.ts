@@ -14,6 +14,7 @@
 import { readFileSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
+import { mcpCard, openApi } from './agents.ts'
 
 export const SITE = {
   name: 'Roadbeat',
@@ -227,6 +228,8 @@ User-agent: *
 Allow: /
 Disallow: /translink-rt/
 Disallow: /qfd-bushfires
+Disallow: /api/
+Disallow: /mcp
 ${s.siteUrl ? `\nSitemap: ${s.siteUrl}/sitemap.xml\n` : ''}`
 }
 
@@ -272,6 +275,8 @@ export function siteFiles(s: SiteSettings): Record<string, { body: string; type:
     '/robots.txt': { body: robots(s), type: 'text/plain; charset=utf-8' },
     '/llms.txt': { body: fillTemplate(read('./llms.txt'), vars(s)), type: 'text/plain; charset=utf-8' },
     '/manifest.webmanifest': { body: manifest(), type: 'application/manifest+json' },
+    '/openapi.json': { body: JSON.stringify(openApi(s.siteUrl), null, 2), type: 'application/json' },
+    '/.well-known/mcp.json': { body: JSON.stringify(mcpCard(s.siteUrl), null, 2), type: 'application/json' },
   }
   if (s.siteUrl) files['/sitemap.xml'] = { body: sitemap(s), type: 'application/xml; charset=utf-8' }
   for (const name of PAGES) {

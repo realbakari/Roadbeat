@@ -1,4 +1,4 @@
-import type { TransitRegion } from './translink'
+import type { TransitRegion } from './transitTypes.js'
 
 // Stop names and trip headsigns from TransLink's published GTFS (see
 // scripts/build-stops.mjs). Loaded on demand: rail/tram/ferry stops are small,
@@ -16,7 +16,7 @@ export interface Stop {
 }
 
 type StopRow = [string, string, number, number, string | 0, string | 0]
-type StopFile = { stops: Partial<Record<TransitRegion, StopRow[]>> }
+export type StopFile = { stops: Partial<Record<TransitRegion, StopRow[]>> }
 
 export class StopIndex {
   private byKey = new Map<string, Stop>()
@@ -73,7 +73,7 @@ export interface TripInfo {
   direction: 0 | 1
 }
 
-type TripFile = { trips: Partial<Record<TransitRegion, { headsigns: string[]; ids: string; info: string }>> }
+export type TripFile = { trips: Partial<Record<TransitRegion, { headsigns: string[]; ids: string; info: string }>> }
 
 export class TripIndex {
   private maps = new Map<TransitRegion, { headsigns: string[]; trips: Map<number, number> }>()

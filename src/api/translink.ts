@@ -1,38 +1,14 @@
-import GtfsRealtimeBindings from 'gtfs-realtime-bindings'
 import ROUTE_DATA from '../data/translink-routes.json'
+import { decodeFeed, num, parseTripUpdates, parseVehicles, routeCode, rt } from './gtfsrt'
+import type { LiveVehicle, TransitRegion, TripUpdates, VehicleMode } from './transitTypes'
+
+export type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates, VehicleMode } from './transitTypes'
 
 // TransLink GTFS-RT (data.qld.gov.au "Translink real time data"). The feeds are
 // protobuf and send no CORS headers, so they're read through /translink-rt
 // (see vite.config.ts and functions/translink-rt).
 const BASE = import.meta.env.VITE_TRANSLINK_RT_BASE ?? '/translink-rt'
 
-const rt = GtfsRealtimeBindings.transit_realtime
-type Long = { toNumber(): number } | number | null | undefined
-
-export type TransitRegion = 'SEQ' | 'CNS'
-export type VehicleMode = 'bus' | 'train' | 'tram' | 'ferry'
-
-export interface LiveVehicle {
-  id: string
-  region: TransitRegion
-  mode: VehicleMode
-  /** Route code from the feed: "402", "F1", "L1", or a train code like "BRCA". */
-  route: string
-  routeId: string
-  /** GTFS trip id the vehicle reports it is running, if any. */
-  tripId: string | null
-  /** Official T-line for trains ("T1 Caboolture"), else null. */
-  lineName: string | null
-  /** Official route name from TransLink ("Brisbane City - Caboolture", "Toowong - University of Qld"). */
-  routeName: string | null
-  color: string | null
-  label: string | null
-  position: [number, number]
-  bearing: number | null
-  status: 'stopped' | 'arriving' | 'moving' | null
-  stopId: string | null
-  timestamp: number
-}
 
 export interface TransitAlert {
   id: string
@@ -48,7 +24,6 @@ export interface TransitAlert {
   periods: { start: number | null; end: number | null }[]
 }
 
-const num = (v: Long) => (v == null ? null : typeof v === 'number' ? v : v.toNumber())
 
 async function feed(region: TransitRegion, name: 'VehiclePositions' | 'TripUpdates' | 'alerts', signal?: AbortSignal) {
   const res = await fetch(`${BASE}/${region}/${name}`, { signal, cache: 'no-cache' })
@@ -56,12 +31,7 @@ async function feed(region: TransitRegion, name: 'VehiclePositions' | 'TripUpdat
   const type = res.headers.get('content-type') ?? ''
   // A static host without the proxy serves index.html here instead of protobuf.
   if (type.includes('text/html')) throw new Error('TransLink proxy is not configured')
-  return rt.FeedMessage.decode(new Uint8Array(await res.arrayBuffer()))
-}
-
-/** "402-4596" → "402"; Queensland Rail route ids are origin+destination codes like "BRCA". */
-function routeCode(routeId: string) {
-  return routeId.replace(/-\d+$/, '')
+  return decodeFeed(new Uint8Array(await res.arrayBuffer()))
 }
 
 export interface RouteInfo {
@@ -98,43 +68,9 @@ export function routeLabel(code: string, region: TransitRegion = 'SEQ') {
   return r?.line ?? r?.short ?? code
 }
 
-const STATUS = {
-  [rt.VehiclePosition.VehicleStopStatus.STOPPED_AT]: 'stopped',
-  [rt.VehiclePosition.VehicleStopStatus.INCOMING_AT]: 'arriving',
-  [rt.VehiclePosition.VehicleStopStatus.IN_TRANSIT_TO]: 'moving',
-} as Record<number, LiveVehicle['status']>
-
 export async function fetchVehicles(regions: TransitRegion[], signal?: AbortSignal): Promise<LiveVehicle[]> {
   const feeds = await Promise.all(regions.map((r) => feed(r, 'VehiclePositions', signal).then((f) => [r, f] as const)))
-  const out: LiveVehicle[] = []
-  for (const [region, f] of feeds) {
-    for (const e of f.entity) {
-      const v = e.vehicle
-      const p = v?.position
-      if (!v || !p || !p.latitude || !p.longitude) continue
-      const routeId = v.trip?.routeId ?? ''
-      const code = routeCode(routeId)
-      const info = routeInfo(code, region)
-      out.push({
-        id: `${region}-${v.vehicle?.id ?? e.id}`,
-        region,
-        mode: info?.mode ?? 'bus',
-        route: code || '?',
-        routeId,
-        tripId: v.trip?.tripId || null,
-        lineName: info?.line ?? null,
-        routeName: info?.long || null,
-        color: info?.color ?? null,
-        label: v.vehicle?.label || null,
-        position: [p.longitude, p.latitude],
-        bearing: p.bearing ?? null,
-        status: v.currentStatus != null ? (STATUS[v.currentStatus] ?? null) : null,
-        stopId: v.stopId || null,
-        timestamp: (num(v.timestamp) ?? 0) * 1000,
-      })
-    }
-  }
-  return out
+  return feeds.flatMap(([region, f]) => parseVehicles(region, f, routeInfo))
 }
 
 const enumName = (e: Record<string, number>, v: number | null | undefined, fallback: string) => {
@@ -188,45 +124,6 @@ export function alertNextStart(a: TransitAlert, now = Date.now()) {
   return starts.length ? Math.min(...starts) : null
 }
 
-/** One stop on a trip as TransLink's real-time feed reports it. */
-export interface StopTime {
-  stopId: string
-  sequence: number | null
-  /** Reported departure time (ms), or arrival time when only arrival is given. */
-  time: number | null
-  /** True when only an arrival is reported (e.g. the trip ends here). */
-  arrivalOnly: boolean
-  /** Reported delay in seconds against the timetable (negative = early), or null. */
-  delay: number | null
-  skipped: boolean
-}
-
-export interface TripUpdate {
-  key: string
-  region: TransitRegion
-  tripId: string
-  route: string
-  routeId: string
-  relationship: 'scheduled' | 'added' | 'unscheduled' | 'cancelled' | 'replacement' | 'duplicated'
-  /** Remaining stops in order, as listed in the feed. */
-  stops: StopTime[]
-}
-
-export interface TripUpdates {
-  /** Feed timestamps (ms) by region. */
-  at: Partial<Record<TransitRegion, number>>
-  trips: TripUpdate[]
-}
-
-const TRIP_REL: Record<number, TripUpdate['relationship']> = {
-  [rt.TripDescriptor.ScheduleRelationship.SCHEDULED]: 'scheduled',
-  [rt.TripDescriptor.ScheduleRelationship.ADDED]: 'added',
-  [rt.TripDescriptor.ScheduleRelationship.UNSCHEDULED]: 'unscheduled',
-  [rt.TripDescriptor.ScheduleRelationship.CANCELED]: 'cancelled',
-  5: 'replacement',
-  6: 'duplicated',
-}
-
 /** GTFS-RT TripUpdates: TransLink's real-time stop times for running and about-to-start trips. */
 export async function fetchTripUpdates(regions: TransitRegion[], signal?: AbortSignal): Promise<TripUpdates> {
   // Each region on its own, with a time limit, so a slow Cairns feed doesn't hold up Brisbane's.
@@ -238,37 +135,6 @@ export async function fetchTripUpdates(regions: TransitRegion[], signal?: AbortS
   )
   const feeds = settled.flatMap((x) => (x.status === 'fulfilled' ? [x.value] : []))
   if (!feeds.length) throw (settled[0] as PromiseRejectedResult).reason
-  const out: TripUpdates = { at: {}, trips: [] }
-  for (const [region, f] of feeds) {
-    out.at[region] = (num(f.header?.timestamp) ?? 0) * 1000
-    for (const e of f.entity) {
-      const u = e.tripUpdate
-      const tripId = u?.trip?.tripId
-      if (!u || !tripId) continue
-      const routeId = u.trip.routeId ?? ''
-      out.trips.push({
-        key: `${region}-${tripId}`,
-        region,
-        tripId,
-        route: routeCode(routeId),
-        routeId,
-        relationship: TRIP_REL[u.trip.scheduleRelationship ?? 0] ?? 'scheduled',
-        stops: (u.stopTimeUpdate ?? [])
-          .filter((s) => s.stopId)
-          .map((s) => {
-            const ev = s.departure?.time != null ? s.departure : s.arrival
-            const t = num(ev?.time)
-            return {
-              stopId: s.stopId!,
-              sequence: s.stopSequence ?? null,
-              time: t ? t * 1000 : null,
-              arrivalOnly: s.departure?.time == null,
-              delay: ev?.delay ?? null,
-              skipped: s.scheduleRelationship === rt.TripUpdate.StopTimeUpdate.ScheduleRelationship.SKIPPED,
-            }
-          }),
-      })
-    }
-  }
-  return out
+  const parts = feeds.map(([region, f]) => parseTripUpdates(region, f))
+  return { at: Object.assign({}, ...parts.map((p) => p.at)), trips: parts.flatMap((p) => p.trips) }
 }

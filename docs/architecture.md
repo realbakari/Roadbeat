@@ -56,6 +56,12 @@ Every page has a hash route, so any view can be shared or bookmarked: `#event/12
 
 `/dashboard` and `/kiosk/<region>/<stop id>` are separate full-screen views, not panels in the app. `parsePath()` in `src/lib/route.ts` picks the screen in `src/Root.tsx`, and each screen is loaded only when opened. Hosts serve `index.html` for these paths: `vercel.json` and `public/_redirects` rewrite them. The dashboard's figures come from pure functions in `src/lib/dashboard.ts`. Its on-time share counts only trips with a vehicle reporting its position, because TransLink's feed also lists trips that haven't started, whose delay is just the timetable.
 
+## The API and MCP server share the app's parsing
+
+`api/` holds Vercel functions: four REST endpoints and an MCP server (`api/mcp.ts`, Streamable HTTP, stateless). They fetch the official feeds directly, because servers need no CORS proxy, and cache each one in memory for 30 to 120 seconds. `api/_lib/tools.ts` turns the data into answers, and both the REST endpoints and the MCP tools call it, so they always agree.
+
+The functions reuse the app's pure modules: `src/api/gtfsrt.ts` decodes TransLink's protobuf feeds, `src/api/bushfireFeed.ts` parses the bushfire feed, `src/lib/eventStatus.ts` decides whether an event is in effect, and `src/lib/departures.ts` builds departure lists. These modules must not use browser-only code such as `import.meta.env`, and their relative imports end in `.js` (see [Deploy the app](deploy.md)). `site/agents.ts` writes `/openapi.json` and `/.well-known/mcp.json`.
+
 ## Published timetables are prebuilt and loaded per route
 
 TransLink's GTFS file holds about 3.7 million stop times. That is far too much to ship, so `scripts/build-timetables.mjs` compresses it at build time into one JSON file per route in `public/timetables/`.

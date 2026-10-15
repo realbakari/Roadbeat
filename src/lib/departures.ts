@@ -1,5 +1,5 @@
-import type { StopIndex, TripIndex } from '../api/stops'
-import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/translink'
+import type { StopIndex, TripIndex } from '../api/stops.js'
+import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/transitTypes.js'
 
 /**
  * A departure exactly as TransLink's real-time feed lists it. `time` is the

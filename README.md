@@ -18,6 +18,7 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Notifications.** Alerts for events, routes and bushfire warnings that match your settings, while the app is open.
 - **Network dashboard.** A full-screen overview at `/dashboard` for a TV or second monitor: closures and crashes by district, how tracked trains and buses are running, bushfire warnings, the fastest-rising Brisbane creeks, the busiest intersections and a ticker of the latest events.
 - **Kiosk departure board.** A large, self-refreshing board for one stop at `/kiosk/<region>/<stop id>`, opened from any stop page.
+- **API and MCP server.** Free, read-only answers for AI agents and apps: Queensland road events, TransLink departures and bushfire warnings at `/mcp` and `/api/*`, described in `/openapi.json` and `/llms.txt`.
 - **Maps.** Every printable map TransLink publishes, by place, and a choice of base map styles with 3D buildings.
 
 ## Run it locally

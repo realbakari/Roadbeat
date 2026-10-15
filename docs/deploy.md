@@ -33,6 +33,12 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 `vercel.json` sets the build command and output folder, and rewrites both proxy paths. `middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, the same as `functions/_middleware.ts` on Cloudflare. Add `SITE_URL`, `CONTACT_EMAIL` and `GA_MEASUREMENT_ID` as environment variables. Until `SITE_URL` is set, the build uses the project's production address (`VERCEL_PROJECT_PRODUCTION_URL`).
 
+### The API and MCP server run only on Vercel
+
+The functions in `api/` serve the public API (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`) and the MCP server at `/mcp`. Vercel builds them with no extra setup. On other hosts the app still works; only these endpoints are missing.
+
+Vercel compiles each file in `api/` on its own for Node, without bundling. So every relative import in `api/`, and in the `src/` modules it imports, must end in `.js`, and JSON imports need `with { type: 'json' }`. `api/tsconfig.json` checks this, and `npm run build` runs it.
+
 ## Deploy to Netlify
 
 Add the rewrites to `public/_redirects` before you build:

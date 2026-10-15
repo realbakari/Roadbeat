@@ -5,6 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/mcp",
+      "destination": "/api/mcp"
+    },
+    {
+      "source": "/.well-known/mcp",
+      "destination": "/.well-known/mcp.json"
+    },
+    {
       "source": "/dashboard",
       "destination": "/index.html"
     },
