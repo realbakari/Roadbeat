@@ -83,7 +83,7 @@ The app follows the TransLink app's convention for delays: the scheduled time, w
 
 ## Train lines come from two official sources that disagree
 
-TransLink's T-code mapping files each Queensland Rail route under the line it ends on. A Nambour train that runs through Caboolture is filed under T1 Nambour, not T1 Caboolture. TransLink's own Caboolture timetable lists it anyway. `timetableCodes()` in `src/lib/transitLines.ts` reconciles the two by adding every train route that calls at the line's terminus.
+TransLink's T-code mapping files each Queensland Rail route under the line it ends on. A Nambour train that runs through Caboolture is filed under T1 Nambour, not T1 Caboolture. TransLink's own Caboolture timetable lists it anyway. `timetableCodes()` in `src/lib/transitLines.ts` reconciles the two by adding the train routes that call at the line's terminus and also stop at every station the line's own trains stop at. That matches TransLink: T1 Caboolture lists Nambour trains, which stop everywhere from Caboolture in, but not Gympie North trains, which run express past Morayfield to Dakabin.
 
 ## The map
 

@@ -51,7 +51,10 @@ export function lineSlug(line: TransitLine) {
  * starting at a line's outer terminus, or running through it (Nambour trains
  * at Caboolture), are listed under other lines. For trains, this adds every
  * train route that calls at the line's terminus: the station its routes most
- * often end at other than Brisbane City. TransLink's line timetables list these too.
+ * often end at other than Brisbane City, as long as it also stops at every
+ * station the line's own trains all stop at. TransLink's line timetables list
+ * Nambour trains on T1 Caboolture, which stop everywhere from Caboolture in,
+ * but not Gympie North trains, which run express past Morayfield to Dakabin.
  */
 export function timetableCodes(codes: string[], index: TimetableIndex, mode: string): string[] {
   const r = index.regions.SEQ
@@ -64,5 +67,17 @@ export function timetableCodes(codes: string[], index: TimetableIndex, mode: str
   }
   const terminus = [...ends].sort((a, b) => b[1] - a[1])[0]?.[0]
   if (!terminus) return codes
-  return [...new Set([...codes, ...routesAtStops(index, 'SEQ', [terminus]).filter((c) => routeInfo(c)?.mode === 'train')])]
+  // Stations (parent "place_" ids, so both directions count) each route calls at.
+  const stations = (code: string) => {
+    const i = r.routes.indexOf(code).toString(36)
+    return new Set(Object.keys(r.stops).filter((id) => id.startsWith('place_') && r.stops[id].split('.').includes(i)))
+  }
+  const own = codes.filter((c) => /^[A-Z]{4}$/.test(c)).map(stations)
+  const core = own.length ? [...own[0]].filter((id) => own.every((s) => s.has(id))) : []
+  const through = routesAtStops(index, 'SEQ', [terminus]).filter((c) => {
+    if (codes.includes(c) || routeInfo(c)?.mode !== 'train') return false
+    const s = stations(c)
+    return core.every((id) => s.has(id))
+  })
+  return [...new Set([...codes, ...through])]
 }

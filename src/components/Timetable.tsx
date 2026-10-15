@@ -1,5 +1,5 @@
 import { Button, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
-import { BroadcastIcon, CalendarDotsIcon } from '@phosphor-icons/react'
+import { BoatIcon, BroadcastIcon, BusIcon, CalendarDotsIcon, TrainIcon, TramIcon } from '@phosphor-icons/react'
 import { useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { StopIndex } from '../api/stops'
 import {
@@ -183,15 +183,20 @@ function Grid({
         items={hours}
       />
       {dir.rows[dir.reference]?.name && (
-        <Text size="xs" variant="secondary">Sorted by {shortName(dir.rows[dir.reference].name!)} departure time</Text>
+        <Text size="xs" variant="secondary">* Sorted by {shortName(dir.rows[dir.reference].name!)} departure time</Text>
       )}
     </div>
     <div ref={scroller} className="max-h-[60vh] overflow-auto rounded-lg ring ring-kumo-line">
       <table className="border-separate border-spacing-0 text-sm tabular-nums">
         <thead>
           <tr>
-            <th className="sticky top-0 left-0 z-20 min-w-36 border-r border-b border-kumo-line bg-kumo-base px-3 py-1.5 text-left font-medium">
-              Stop
+            <th className="sticky top-0 left-0 z-20 min-w-48 border-r border-b border-kumo-line bg-kumo-base py-1.5 pr-3 pl-2 text-left font-medium">
+              <span className="flex items-center gap-2">
+                <span className="flex size-7 items-center justify-center rounded-full bg-kumo-contrast text-kumo-inverse" aria-hidden>
+                  <ModeIcon mode={routeInfo(dir.trips[0].route)?.mode} />
+                </span>
+                Stop
+              </span>
             </th>
             {dir.trips.map((t, i) => {
               const l = liveTrips[i]
@@ -219,15 +224,27 @@ function Grid({
         <tbody>
           {dir.rows.map((row, r) => (
             <tr key={row.region + row.id}>
-              <th className="sticky left-0 z-10 max-w-48 border-r border-kumo-line bg-kumo-base px-3 py-1 text-left font-normal">
-                <button
-                  type="button"
-                  onClick={() => onNavigate(stopHref(row.region, row.id))}
-                  className="block w-full truncate text-left hover:underline"
-                  title={row.name ?? undefined}
-                >
-                  {row.name ? shortName(row.name) : `Stop ${row.id}`}
-                </button>
+              <th className="sticky left-0 z-10 max-w-60 border-r border-kumo-line bg-kumo-base py-1 pr-3 pl-2 text-left font-normal">
+                {/* The line and a circle per stop, as TransLink draws them; the stop the services are sorted by is filled. The sticky cell positions the line, so it runs the cell's full height. */}
+                <span
+                  className={`absolute left-[21px] w-1 bg-current text-kumo-inactive ${r === 0 ? 'top-1/2 bottom-0' : r === dir.rows.length - 1 ? 'top-0 bottom-1/2' : 'top-0 bottom-0'}`}
+                  aria-hidden
+                />
+                <span className="relative flex items-center gap-2">
+                  <span
+                    className={`relative ml-[7px] size-4 shrink-0 rounded-full ring-[3px] ring-kumo-strong ring-inset ${r === dir.reference ? 'bg-kumo-strong' : 'bg-kumo-base'}`}
+                    aria-hidden
+                  />
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(stopHref(row.region, row.id))}
+                    className={`block min-w-0 truncate text-left hover:underline ${r === dir.reference ? 'font-medium' : ''}`}
+                    title={row.name ?? undefined}
+                  >
+                    {row.name ?? `Stop ${row.id}`}
+                    {r === dir.reference && ' *'}
+                  </button>
+                </span>
               </th>
               {dir.cells.map((col, c) => {
                 const s = col[r]
@@ -442,6 +459,11 @@ function directionLabel(d: GridDirection) {
 }
 
 /** "Caboolture station" → "Caboolture" for labels. */
+function ModeIcon({ mode }: { mode: string | undefined }) {
+  const I = mode === 'bus' ? BusIcon : mode === 'ferry' ? BoatIcon : mode === 'tram' ? TramIcon : TrainIcon
+  return <I size={16} weight="fill" />
+}
+
 function shortName(headsign: string) {
   return headsign.replace(/ station$/i, '')
 }
