@@ -4,7 +4,8 @@ import { useMemo, type ReactNode } from 'react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { alertActive, isAccessibilityAlert, modeOf } from '../api/translink'
 import { useColorMode } from '../hooks/useColorMode'
-import { useBushfires, useCarParkSpaces, useGauges, useLiveVehicles, useNow, useSignals, useTrafficData, useTransitAlerts, useTripUpdates } from '../hooks/useTrafficData'
+import { useBushfires, useCarParkSpaces, useGauges, useLiveVehicles, useNews, useNow, useSignals, useTrafficData, useTransitAlerts, useTripUpdates } from '../hooks/useTrafficData'
+import { groupStories, headlineStories } from '../lib/newsStories'
 import {
   busiestSignals,
   closuresAndCrashesByDistrict,
@@ -24,6 +25,7 @@ import { isClosure } from '../lib/filters'
 import { timeAgo } from '../lib/format'
 import { dsColor } from '../lib/signals'
 import { Ticker } from './Ticker'
+import { WhatsHappening } from './WhatsHappening'
 import { EmptyNote, Row, Stat, Tile } from './Tile'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
@@ -50,6 +52,8 @@ export function Dashboard() {
   const { alerts } = useTransitAlerts(true)
   const parking = useCarParkSpaces(true)
   const council = useCouncilDashboard()
+  const { snapshot: news } = useNews(true)
+  const headlines = useMemo(() => (news ? headlineStories(groupStories(news.items), now) : null), [news, now])
   const corridorRows = useMemo(() => (council.corridors ? corridorReport(council.corridors.corridors, council.corridors.months) : null), [council.corridors])
   // Today's remaining timed events, or tomorrow's once today's are over.
   const todaysEvents = useMemo(() => {
@@ -121,6 +125,8 @@ export function Dashboard() {
           value={parking ? (parking.kingGeorgeSquare ?? 0) + (parking.wickhamTerrace ?? 0) : '…'}
         />
       </div>
+
+      <WhatsHappening stories={headlines} now={now} />
 
       <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:grid-rows-2">
         <Tile title="Closures and crashes by district" source="QLDTraffic events in effect now.">
