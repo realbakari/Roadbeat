@@ -32,13 +32,13 @@ export function useSelectedPlace(
   setLayers: Dispatch<SetStateAction<MapLayers>>,
   setFocus: Dispatch<SetStateAction<MapFocus | null>>,
 ): Place | null {
-  const { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays } = sources
+  const { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops } = sources
   const place = useMemo(
     () =>
       sel.place
-        ? findPlace(sel.place, { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays })
+        ? findPlace(sel.place, { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops })
         : null,
-    [sel.place, restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays],
+    [sel.place, restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops],
   )
 
   const kind = sel.place?.kind

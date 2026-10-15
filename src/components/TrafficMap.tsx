@@ -6,7 +6,7 @@ import type { CrashFilter } from '../api/crashes'
 import type { Gauge } from '../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import type { Clearance } from '../api/clearances'
-import type { AccessibleBay, Clearway, Toilet } from '../api/bccPlaces'
+import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../api/bccPlaces'
 import type { FireWarning } from '../api/bushfires'
 import { loadTracks } from '../api/tracks'
 import { loadStopFeatures } from '../lib/stopFeatures'
@@ -83,6 +83,8 @@ interface Props {
   clearways: Clearway[]
   toilets: Toilet[]
   accessibleBays: AccessibleBay[]
+  parkingMeters: ParkingMeter[]
+  bikeStops: BikeStop[]
   selectedVehicleId: string | null
   /** Route codes whose train, tram or ferry track to highlight (a line shown on the map, or the selected vehicle's route). */
   trackCodes: string[] | null
@@ -120,21 +122,27 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   toilets: ['toilets'],
   accessibleParking: ['accessible-parking'],
   flood2022: ['flood-2022-fill', 'flood-2022-line'],
+  parkingMeters: ['parking-meters'],
+  cycling: ['bikeways', 'bike-stops'],
 }
 
-const CLICKABLE_PLACES = ['clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 
-let flood2022: Promise<GeoJSON.FeatureCollection | null> | null = null
-/** Built by scripts/build-flood-2022.mjs; fetched once per visit. */
-function loadFlood2022() {
-  flood2022 ??= fetch('/flood-2022.json')
-    .then((r) => (r.ok ? (r.json() as Promise<GeoJSON.FeatureCollection>) : null))
-    .catch(() => {
-      flood2022 = null
-      return null
-    })
-  return flood2022
+const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
+/** A GeoJSON file built into public/ (scripts/build-flood-2022.mjs, build-bikeways.mjs), fetched once per visit. */
+function loadStatic(path: string) {
+  let hit = staticFiles.get(path)
+  if (!hit) {
+    hit = fetch(path)
+      .then((r) => (r.ok ? (r.json() as Promise<GeoJSON.FeatureCollection>) : null))
+      .catch(() => {
+        staticFiles.delete(path)
+        return null
+      })
+    staticFiles.set(path, hit)
+  }
+  return hit
 }
 
 export function TrafficMap(props: Props) {
@@ -161,6 +169,8 @@ export function TrafficMap(props: Props) {
     clearways,
     toilets,
     accessibleBays,
+    parkingMeters,
+    bikeStops,
     selectedVehicleId,
     trackCodes,
     followVehicle,
@@ -305,20 +315,32 @@ export function TrafficMap(props: Props) {
   useEffect(() => {
     if (ready && map) setData(map, 'clearways', clearwayData)
   }, [map, ready, clearwayData])
-  const councilPlaces = useMemo(() => councilPlaceFeatures(toilets, accessibleBays), [toilets, accessibleBays])
+  const councilPlaces = useMemo(
+    () => councilPlaceFeatures({ toilets, bays: accessibleBays, meters: parkingMeters, bikeStops }),
+    [toilets, accessibleBays, parkingMeters, bikeStops],
+  )
   useEffect(() => {
     if (ready && map) setData(map, 'council-places', councilPlaces)
   }, [map, ready, councilPlaces])
-  // The February 2022 flood extent (0.5 MB) loads the first time its layer is turned on.
+  // The February 2022 flood extent (0.5 MB) and the bikeway network (0.25 MB) load the first time their layer is turned on.
   const showFlood = layers.flood2022
   useEffect(() => {
     if (!ready || !map || !showFlood) return
     let live = true
-    loadFlood2022().then((data) => live && data && setData(map, 'flood-2022', data))
+    loadStatic('/flood-2022.json').then((data) => live && data && setData(map, 'flood-2022', data))
     return () => {
       live = false
     }
   }, [map, ready, showFlood])
+  const showCycling = layers.cycling
+  useEffect(() => {
+    if (!ready || !map || !showCycling) return
+    let live = true
+    loadStatic('/bikeways.json').then((data) => live && data && setData(map, 'bikeways', data))
+    return () => {
+      live = false
+    }
+  }, [map, ready, showCycling])
   useEffect(() => {
     if (ready && map) setData(map, 'districts', districts)
   }, [map, ready, districts])

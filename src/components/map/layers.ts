@@ -37,7 +37,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     if (map.getLayer('building-3d')) map.removeLayer('building-3d')
   }
 
-  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
+  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
     map.addSource(id, { type: 'geojson', data: empty })
   }
   const color = ['get', 'color'] as unknown as string
@@ -125,6 +125,19 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': LAYER_COLOR.clearwayOn, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 2.5, 16, 6] },
   })
+  // Bikeways: separated and off-road paths solid, on-road lanes and routes dashed, shared paths in between.
+  map.addLayer({
+    id: 'bikeways',
+    type: 'line',
+    source: 'bikeways',
+    minzoom: 11,
+    layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: {
+      'line-color': ['match', ['get', 'kind'], 'separated', '#15803d', 'shared', '#22c55e', 'lane', '#65a30d', 'route', '#84cc16', '#a3a3a3'] as never,
+      'line-width': ['interpolate', ['linear'], ['zoom'], 11, 1.2, 16, ['match', ['get', 'kind'], 'separated', 4, 'shared', 3.5, 3]] as never,
+      'line-opacity': ['match', ['get', 'kind'], 'informal', 0.6, 0.9] as never,
+    },
+  })
   map.addLayer({
     id: 'event-lines-casing',
     type: 'line',
@@ -181,6 +194,8 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   iconLayer('places-dump', 'places', ['==', ['get', 'icon'], 'dump-point'], 6)
   iconLayer('trucks-icon', 'trucks', ['==', ['geometry-type'], 'Point'], 7)
   iconLayer('toilets', 'council-places', ['in', ['get', 'icon'], ['literal', ['toilet', 'toilet-accessible']]], 11, [11, 0.55, 16, 0.85])
+  iconLayer('parking-meters', 'council-places', ['==', ['get', 'icon'], 'parking-meter'], 13, [13, 0.55, 17, 0.85])
+  iconLayer('bike-stops', 'council-places', ['in', ['get', 'icon'], ['literal', ['bike-rack', 'bike-repair']]], 13, [13, 0.5, 17, 0.8])
   iconLayer('accessible-parking', 'council-places', ['==', ['get', 'icon'], 'accessible-parking'], 14, [14, 0.6, 17, 0.85])
   // Low clearance signs: lower clearances draw on top where two overlap.
   map.addLayer({

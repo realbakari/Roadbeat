@@ -62,3 +62,15 @@ describe('parseFerryTerminal', () => {
     expect(t).toMatchObject({ toiletNote: 'Toilet available on CityCat ferries', inspected: '2024-02-21' })
   })
 })
+
+describe('parking meters and bike stops', () => {
+  it('reads meter rates, hours and restrictions as published', async () => {
+    const { parseParkingMeters, parseBikeRacks } = await import('./bccPlaces')
+    const [m] = parseParkingMeters([
+      { meter_no: '4597', category: 'TICKETLESS METER MULTISPACE', street: 'KING ST', suburb: 'BOWEN HILLS', max_stay_hrs: '2', restrictions: 'NONE', operational_day: '7 DAYS', operational_time: '7AM-7PM', tar_zone: 'Zone 1, 15 min free', tar_rate_weekday: 6.85, tar_rate_ah_we: '3.7', loc_desc: 'King St between St Pauls Tce and Gregory Tce', veh_bays: '5', mobile_zone: '4000502', max_cap_chg: null, longitude: 153.0337, latitude: -27.452412 },
+    ])
+    expect(m).toMatchObject({ street: 'King St', suburb: 'Bowen Hills', maxStayHours: 2, rate: 6.85, afterHoursRate: 3.7, cap: null, bays: 5, payment: 'Ticketless meter or app', restriction: null })
+    const [r] = parseBikeRacks([{ objectid: 4, suburb: 'Brisbane City', address: '101 Edward Street', location: 'Footpath', capacity: 2, rack_type: 'Holding rail', latitude: -27.47, longitude: 153.029 }])
+    expect(r).toMatchObject({ id: 'rack-4', kind: 'rack', name: '101 Edward Street', detail: 'Holding rail · Footpath', capacity: 2 })
+  })
+})

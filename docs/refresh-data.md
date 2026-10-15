@@ -64,6 +64,14 @@ npm run data:intersections
 
 The script prints how many intersections have a position. It stops without writing if it finds fewer than 500.
 
+## Rebuild the bikeway network
+
+When the council updates its bikeways, rebuild the simplified network:
+
+```bash
+npm run data:bikeways
+```
+
 ## Rebuild the February 2022 flood extent
 
 The council revises its flood awareness layers rarely. If it does, rebuild the simplified outline:

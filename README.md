@@ -17,6 +17,7 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Brisbane gauges and signals.** Brisbane City Council's live stream heights and rainfall, shown on the map and next to nearby flooding events, each linked to the Bureau of Meteorology's flood warning for its area, and how busy each council-run traffic signal is right now.
 - **Low clearances.** Signed clearances of about 20 low Brisbane City Council structures and about 100 Queensland Rail bridges in South East Queensland, for truck and caravan drivers, each with its owner's phone number and the date the council validated it or Queensland Rail's extract was taken.
 - **Clearways, toilets and accessible parking.** Brisbane City Council clearways on the map, red while their signed times are in effect, plus public toilets with their accessibility features and accessible parking bays with their signed times.
+- **Parking meters and cycling.** Brisbane parking meters with their hours, maximum stay and rates, and the council's bikeway network with bike racks and repair stations.
 - **February 2022 flood extent.** The council's adopted outline of the 2022 Brisbane River and creek flood, as an optional map layer for context.
 - **Council road closures.** Brisbane City Council's planned lane and road closures for today, above the road events list.
 - **Station and terminal access.** Lift and escalator outages from Translink, Queensland Rail's access details and facilities on every train station page, and the council's access details on CityCat and ferry terminal pages.

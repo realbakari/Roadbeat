@@ -16,7 +16,7 @@ import {
 } from '../api/crashes'
 import { EVENT_TYPES } from '../lib/eventMeta'
 import { BCC_CLEARANCES_URL, QR_CLEARANCES_URL } from '../api/clearances'
-import { ACCESSIBLE_PARKING_URL, CLEARWAYS_URL, TOILETS_URL } from '../api/bccPlaces'
+import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_URL, TOILETS_URL } from '../api/bccPlaces'
 import { iconUrl, LAYER_COLOR, signalIcon, typeSlug, VEHICLE_COLOR } from '../lib/mapIcons'
 import type { Basemap, MapLayers } from './map/settings'
 
@@ -34,7 +34,7 @@ interface Props {
   vehicleError: string | null
   clearanceError: string | null
   /** Load errors for the council's clearway, toilet and accessible parking layers. */
-  councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null }
+  councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null }
 }
 
 const VEHICLE_MODES: { mode: VehicleMode; label: string }[] = [
@@ -443,6 +443,64 @@ export function MapLayersPanel({
                 </>
               )}
             </Text>
+          </LayerRow>
+          <LayerRow
+            icon={<img src={iconUrl('parking-meter')} alt="" className="size-5" />}
+            label="Parking meters"
+            count={counts.parkingMeters}
+            checked={layers.parkingMeters}
+            onChange={(v) => set('parkingMeters', v)}
+          >
+            <Text size="xs" variant={councilErrors.parkingMeters ? 'error' : 'secondary'}>
+              {councilErrors.parkingMeters ? (
+                `Parking meters unavailable: ${councilErrors.parkingMeters}.`
+              ) : (
+                <>
+                  Hours, maximum stay and hourly rates as the council lists them, from{' '}
+                  <a href={PARKING_METERS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    Brisbane City Council
+                  </a>
+                  . Zoom in to see them.
+                </>
+              )}
+            </Text>
+          </LayerRow>
+          <LayerRow
+            icon={<img src={iconUrl('bike-rack')} alt="" className="size-5" />}
+            label="Bikeways and bike racks"
+            count={counts.cycling}
+            checked={layers.cycling}
+            onChange={(v) => set('cycling', v)}
+          >
+            <div className="grid gap-1">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+                {(
+                  [
+                    ['#15803d', 'Separated path'],
+                    ['#22c55e', 'Shared path'],
+                    ['#65a30d', 'Bike lane'],
+                    ['#84cc16', 'Bike route'],
+                  ] as const
+                ).map(([c, l]) => (
+                  <span key={l} className="inline-flex items-center gap-1.5">
+                    <span className="h-1 w-4 rounded-full" style={{ background: c }} /> {l}
+                  </span>
+                ))}
+              </div>
+              <Text size="xs" variant={councilErrors.cycling ? 'error' : 'secondary'}>
+                {councilErrors.cycling ? (
+                  `Bike racks unavailable: ${councilErrors.cycling}.`
+                ) : (
+                  <>
+                    Brisbane City Council's bikeway network, bike racks and repair stations (
+                    <a href={BIKE_RACKS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                      open data
+                    </a>
+                    ). Zoom in to see them.
+                  </>
+                )}
+              </Text>
+            </div>
           </LayerRow>
         </Group>
       </div>

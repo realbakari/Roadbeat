@@ -13,7 +13,7 @@ import { fetchGauges, type Gauge } from '../api/bccGauges'
 import { fetchSignalVolumes, loadSignalSites, type SignalSite, type SignalVolumes } from '../api/bccSignals'
 import { fetchBushfires, type FireWarning } from '../api/bushfires'
 import { fetchClearances, type Clearance } from '../api/clearances'
-import { fetchAccessibleBays, fetchClearways, fetchToilets, type AccessibleBay, type Clearway, type Toilet } from '../api/bccPlaces'
+import { fetchAccessibleBays, fetchBikeStops, fetchClearways, fetchParkingMeters, fetchToilets, type AccessibleBay, type BikeStop, type Clearway, type ParkingMeter, type Toilet } from '../api/bccPlaces'
 import { fetchRoadOccupancies, type RoadOccupancy } from '../api/bccRoadOccupancies'
 import { fetchCarParkSpaces, type CarParkSpaces } from '../api/bccParking'
 import { loadTimetableIndex, type TimetableIndex } from '../api/timetables'
@@ -454,15 +454,19 @@ function useLoadOnce<T>(enabled: boolean, load: (signal: AbortSignal) => Promise
   return { list: enabled ? list : null, error: enabled ? error : null }
 }
 
-/** Brisbane City Council clearways, public toilets and accessible parking, each loaded when its layer or a detail page needs it. */
-export function useCouncilPlaces(show: { clearways: boolean; toilets: boolean; accessibleParking: boolean }) {
+/** Brisbane City Council clearways, toilets, accessible parking, parking meters and bike racks, each loaded when its layer or a detail page needs it. */
+export function useCouncilPlaces(show: { clearways: boolean; toilets: boolean; accessibleParking: boolean; parkingMeters: boolean; cycling: boolean }) {
   const clearways = useLoadOnce<Clearway>(show.clearways, fetchClearways)
   const toilets = useLoadOnce<Toilet>(show.toilets, fetchToilets)
   const bays = useLoadOnce<AccessibleBay>(show.accessibleParking, fetchAccessibleBays)
+  const meters = useLoadOnce<ParkingMeter>(show.parkingMeters, fetchParkingMeters)
+  const bikeStops = useLoadOnce<BikeStop>(show.cycling, fetchBikeStops)
   return {
     clearways: clearways.list,
     toilets: toilets.list,
     bays: bays.list,
-    errors: { clearways: clearways.error, toilets: toilets.error, accessibleParking: bays.error },
+    meters: meters.list,
+    bikeStops: bikeStops.list,
+    errors: { clearways: clearways.error, toilets: toilets.error, accessibleParking: bays.error, parkingMeters: meters.error, cycling: bikeStops.error },
   }
 }

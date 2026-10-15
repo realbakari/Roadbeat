@@ -174,3 +174,118 @@ export function parseAccessibleBays(list: unknown[]): AccessibleBay[] {
 }
 
 export const fetchAccessibleBays = (signal?: AbortSignal) => exportJson('disability-permit-parking-locations', signal).then(parseAccessibleBays)
+
+// Parking meters
+
+export const PARKING_METERS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/brisbane-parking-meters/information/'
+
+export interface ParkingMeter {
+  id: string
+  street: string | null
+  suburb: string | null
+  /** Where the bays are, e.g. "King St between St Pauls Tce and Gregory Tce in Bowen Hills". */
+  where: string | null
+  position: LngLat
+  /** As published, e.g. "MON-FRI" and "7AM-7PM,7PM-10PM(MON-FRI),7AM-7PM(SAT,SUN)". */
+  days: string | null
+  hours: string | null
+  maxStayHours: number | null
+  /** Dollars per hour on weekdays, and after hours and on weekends where the council lists a rate. */
+  rate: number | null
+  afterHoursRate: number | null
+  /** Most a stay can cost, in dollars, where the council lists one. */
+  cap: number | null
+  /** Tariff zone as published, e.g. "Zone 2, 15 min free". */
+  zone: string | null
+  bays: number | null
+  /** Pay by app only, or a ticketless meter. */
+  payment: string | null
+  /** The zone number to enter in the parking app. */
+  appZone: string | null
+  /** Other signs on the street, e.g. "CLEARWAY 4PM-7PM MON-FRI TOWAWAY". */
+  restriction: string | null
+}
+
+const money = z.union([z.string(), z.number()]).nullish().transform((v) => (v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v)))
+const MeterRow = z.object({
+  meter_no: z.union([z.string(), z.number()]),
+  category: text,
+  street: text,
+  suburb: text,
+  loc_desc: text,
+  latitude: z.number(),
+  longitude: z.number(),
+  operational_day: text,
+  operational_time: text,
+  max_stay_hrs: money,
+  tar_rate_weekday: money,
+  tar_rate_ah_we: money,
+  max_cap_chg: money,
+  tar_zone: text,
+  veh_bays: money,
+  mobile_zone: text,
+  restrictions: text,
+})
+
+const PAYMENT: Record<string, string> = { 'PAY BY MOBILE APP ONLY': 'Pay by app only', 'TICKETLESS METER MULTISPACE': 'Ticketless meter or app', Hybrid: 'Meter or app' }
+
+export function parseParkingMeters(list: unknown[]): ParkingMeter[] {
+  return rows(list, MeterRow, (r) => ({
+    id: String(r.meter_no),
+    street: title(r.street),
+    suburb: title(r.suburb),
+    where: r.loc_desc,
+    position: [r.longitude, r.latitude],
+    days: r.operational_day,
+    hours: r.operational_time?.replace(/,(?=\S)/g, ', ') ?? null,
+    maxStayHours: r.max_stay_hrs,
+    rate: r.tar_rate_weekday,
+    afterHoursRate: r.tar_rate_ah_we,
+    cap: r.max_cap_chg,
+    zone: r.tar_zone,
+    bays: r.veh_bays,
+    payment: r.category ? (PAYMENT[r.category] ?? r.category) : null,
+    appZone: r.mobile_zone,
+    restriction: r.restrictions && r.restrictions.toUpperCase() !== 'NONE' ? r.restrictions : null,
+  }))
+}
+
+export const fetchParkingMeters = (signal?: AbortSignal) => exportJson('brisbane-parking-meters', signal).then(parseParkingMeters)
+
+// Bike racks and repair stations
+
+export const BIKE_RACKS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/bicycle-racks/information/'
+
+export interface BikeStop {
+  id: string
+  kind: 'rack' | 'repair'
+  /** Address or place, e.g. "101 Edward Street" or "Colmslie Beach Reserve, Murarrie". */
+  name: string
+  detail: string | null
+  suburb: string | null
+  position: LngLat
+  /** Bikes the rack holds, where published. */
+  capacity: number | null
+}
+
+const RackRow = z.object({ objectid: z.union([z.string(), z.number()]), address: text, location: text, suburb: text, capacity: money, rack_type: text, latitude: z.number(), longitude: z.number() })
+const RepairRow = z.object({ objectid: z.union([z.string(), z.number()]), location: text, suburb: text, latitude: z.number(), longitude: z.number() })
+
+export function parseBikeRacks(list: unknown[]): BikeStop[] {
+  return rows(list, RackRow, (r) => ({
+    id: `rack-${r.objectid}`,
+    kind: 'rack',
+    name: r.address ?? r.location ?? 'Bike rack',
+    detail: [r.rack_type, r.address ? r.location : null].filter(Boolean).join(' · ') || null,
+    suburb: r.suburb,
+    position: [r.longitude, r.latitude],
+    capacity: r.capacity,
+  }))
+}
+
+export function parseRepairStations(list: unknown[]): BikeStop[] {
+  return rows(list, RepairRow, (r) => ({ id: `repair-${r.objectid}`, kind: 'repair', name: r.location ?? 'Bike repair station', detail: null, suburb: r.suburb, position: [r.longitude, r.latitude], capacity: null }))
+}
+
+export const fetchBikeStops = (signal?: AbortSignal) =>
+  Promise.all([exportJson('bicycle-racks', signal).then(parseBikeRacks), exportJson('bike-repair-stations', signal).then(parseRepairStations)]).then(([a, b]) => [...b, ...a])

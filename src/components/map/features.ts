@@ -4,7 +4,7 @@ import { FIRE_COLOR, fireKindLabel, fireRank, type FireWarning } from '../../api
 import type { Gauge } from '../../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../../api/bccSignals'
 import { clearanceLabel, type Clearance } from '../../api/clearances'
-import type { AccessibleBay, Clearway, Toilet } from '../../api/bccPlaces'
+import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../../api/bccPlaces'
 import { clearwayInEffect, parseClearwayTimes } from '../../lib/clearways'
 import type { TrafficEvent } from '../../api/types'
 import { latestReading, rainfallSince } from '../../lib/gauges'
@@ -65,11 +65,32 @@ export function clearwayFeatures(list: Clearway[], now: number): GeoJSON.Feature
   }
 }
 
-/** Public toilets and accessible parking bays, sharing one source. */
-export function councilPlaceFeatures(toilets: Toilet[], bays: AccessibleBay[]): GeoJSON.FeatureCollection {
+/** Public toilets, accessible parking, parking meters and bike racks, sharing one source. */
+export function councilPlaceFeatures({
+  toilets,
+  bays,
+  meters,
+  bikeStops,
+}: {
+  toilets: Toilet[]
+  bays: AccessibleBay[]
+  meters: ParkingMeter[]
+  bikeStops: BikeStop[]
+}): GeoJSON.FeatureCollection {
+  const point = (position: [number, number]) => ({ type: 'Point' as const, coordinates: position })
   return {
     type: 'FeatureCollection',
     features: [
+      ...meters.map((m) => ({
+        type: 'Feature' as const,
+        geometry: point(m.position),
+        properties: { key: `place/meter/${encodeURIComponent(m.id)}`, icon: 'parking-meter', label: `Parking meter${m.street ? ` · ${m.street}` : ''}` },
+      })),
+      ...bikeStops.map((b) => ({
+        type: 'Feature' as const,
+        geometry: point(b.position),
+        properties: { key: `place/bike/${encodeURIComponent(b.id)}`, icon: b.kind === 'repair' ? 'bike-repair' : 'bike-rack', label: `${b.kind === 'repair' ? 'Bike repair station' : 'Bike rack'} · ${b.name}` },
+      })),
       ...toilets.map((t) => ({
         type: 'Feature' as const,
         geometry: { type: 'Point' as const, coordinates: t.position },

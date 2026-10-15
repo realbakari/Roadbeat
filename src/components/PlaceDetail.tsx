@@ -18,11 +18,14 @@ import {
   PersonSimpleWalkIcon,
   ProhibitIcon,
   ShowerIcon,
+  LetterCirclePIcon,
+  BicycleIcon,
+  WrenchIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { Fragment, type ReactNode } from 'react'
 import { BCC_CLEARANCES_URL, clearanceLabel, QR_BRIDGES_URL, QR_CLEARANCES_URL, type Clearance } from '../api/clearances'
-import { ACCESSIBLE_PARKING_URL, CLEARWAYS_URL, type AccessibleBay, type Clearway, type Toilet } from '../api/bccPlaces'
+import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_URL, type AccessibleBay, type BikeStop, type Clearway, type ParkingMeter, type Toilet } from '../api/bccPlaces'
 import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
 import { formatDay, timeAgo, titleCase } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
@@ -174,6 +177,10 @@ function body(place: Place, now: number) {
       return <ToiletBody t={place.data} />
     case 'bay':
       return <BayBody b={place.data} />
+    case 'meter':
+      return <MeterBody m={place.data} />
+    case 'bike':
+      return <BikeBody b={place.data} />
   }
 }
 
@@ -264,6 +271,67 @@ function ToiletBody({ t }: { t: Toilet }) {
         </Text>
       </div>
       <Directions at={t.position} />
+    </>
+  )
+}
+
+const dollars = (n: number) => `$${n.toFixed(2)}`
+
+function MeterBody({ m }: { m: ParkingMeter }) {
+  const rows: [string, ReactNode][] = []
+  if (m.days || m.hours) rows.push(['Paid hours', [m.days, m.hours].filter(Boolean).join(', ')])
+  if (m.maxStayHours != null) rows.push(['Maximum stay', `${m.maxStayHours} ${m.maxStayHours === 1 ? 'hour' : 'hours'}`])
+  if (m.rate != null) rows.push(['Rate', `${dollars(m.rate)} an hour`])
+  if (m.afterHoursRate != null) rows.push(['After hours and weekends', `${dollars(m.afterHoursRate)} an hour`])
+  if (m.cap != null) rows.push(['Most a stay costs', dollars(m.cap)])
+  if (m.zone) rows.push(['Tariff zone', m.zone])
+  if (m.bays != null) rows.push(['Bays', String(m.bays)])
+  if (m.payment) rows.push(['How to pay', m.payment])
+  if (m.appZone) rows.push(['Parking app zone', m.appZone])
+  return (
+    <>
+      <Header icon={LetterCirclePIcon} color={LAYER_COLOR.parkingMeter} title={m.street ?? 'Parking meter'} subtitle={['Parking meter', m.suburb].filter(Boolean).join(' · ')} />
+      {m.where && <Text size="sm">{m.where}</Text>}
+      {m.restriction && (
+        <Banner variant="alert" size="sm" icon={<WarningIcon weight="fill" />} title="Also signed here" description={m.restriction} />
+      )}
+      <Section title="Hours and rates">
+        <dl className="grid grid-cols-[9rem_1fr] gap-x-4 gap-y-1.5 text-sm">
+          {rows.map(([k, v]) => (
+            <Fragment key={k}>
+              <dt className="text-kumo-subtle">{k}</dt>
+              <dd>{v}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      </Section>
+      <Text size="sm" variant="secondary">
+        As listed by the council. The signs and the meter on the street are what count.
+      </Text>
+      <ExternalLink href={PARKING_METERS_URL}>Parking meters — Brisbane City Council</ExternalLink>
+      <Directions at={m.position} />
+    </>
+  )
+}
+
+function BikeBody({ b }: { b: BikeStop }) {
+  const repair = b.kind === 'repair'
+  return (
+    <>
+      <Header
+        icon={repair ? WrenchIcon : BicycleIcon}
+        color={repair ? LAYER_COLOR.bikeRepair : LAYER_COLOR.bikeRack}
+        title={b.name}
+        subtitle={[repair ? 'Bike repair station' : 'Bike rack', b.suburb].filter(Boolean).join(' · ')}
+      />
+      {b.detail && <Text size="sm">{b.detail}</Text>}
+      {b.capacity != null && (
+        <Text size="sm">
+          Holds {b.capacity} {b.capacity === 1 ? 'bike' : 'bikes'}.
+        </Text>
+      )}
+      <ExternalLink href={BIKE_RACKS_URL}>Bicycle racks — Brisbane City Council</ExternalLink>
+      <Directions at={b.position} />
     </>
   )
 }

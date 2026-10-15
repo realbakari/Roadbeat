@@ -1,4 +1,4 @@
-import type { AccessibleBay, Clearway, Toilet } from '../api/bccPlaces'
+import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../api/bccPlaces'
 import type { Clearance } from '../api/clearances'
 import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
 import type { MapLayers } from '../components/map/settings'
@@ -14,6 +14,8 @@ export type Place =
   | { kind: 'clearway'; data: Clearway }
   | { kind: 'toilet'; data: Toilet }
   | { kind: 'bay'; data: AccessibleBay }
+  | { kind: 'meter'; data: ParkingMeter }
+  | { kind: 'bike'; data: BikeStop }
 
 /** The loaded lists a place link can point into; null while a list has not loaded. */
 export interface PlaceSources {
@@ -25,6 +27,8 @@ export interface PlaceSources {
   clearways: Clearway[] | null
   toilets: Toilet[] | null
   bays: AccessibleBay[] | null
+  meters: ParkingMeter[] | null
+  bikeStops: BikeStop[] | null
 }
 
 /** The map layer a shared link to a place turns on. */
@@ -37,6 +41,8 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   clearway: 'clearways',
   toilet: 'toilets',
   bay: 'accessibleParking',
+  meter: 'parkingMeters',
+  bike: 'cycling',
 }
 
 /** The place a #place/<kind>/<id> link names, or null when it is unknown or not loaded yet. */
@@ -74,6 +80,14 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.bays?.find((b) => b.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'meter') {
+    const data = s.meters?.find((m) => m.id === id)
+    return data ? { kind, data } : null
+  }
+  if (kind === 'bike') {
+    const data = s.bikeStops?.find((b) => b.id === id)
+    return data ? { kind, data } : null
+  }
   return null
 }
 
@@ -94,6 +108,9 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
     case 'clearance':
     case 'bay':
       return { center: place.data.position, zoom: 16 }
+    case 'meter':
+    case 'bike':
+      return { center: place.data.position, zoom: 17 }
     case 'toilet':
       return { center: place.data.position, zoom: 15 }
     case 'clearway':

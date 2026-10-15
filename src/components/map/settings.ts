@@ -29,6 +29,10 @@ export interface MapLayers {
   accessibleParking: boolean
   /** Brisbane City Council's adopted extent of the February 2022 flood. */
   flood2022: boolean
+  /** Brisbane City Council parking meters, with their hours and rates. */
+  parkingMeters: boolean
+  /** Brisbane City Council bikeways, bike racks and repair stations. */
+  cycling: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -50,4 +54,6 @@ export const DEFAULT_LAYERS: MapLayers = {
   toilets: false,
   accessibleParking: false,
   flood2022: false,
+  parkingMeters: false,
+  cycling: false,
 }

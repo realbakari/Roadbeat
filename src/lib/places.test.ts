@@ -36,6 +36,8 @@ const sources: PlaceSources = {
   clearways: [clearway],
   toilets: [toilet],
   bays: null,
+  meters: null,
+  bikeStops: null,
 }
 
 describe('findPlace', () => {

@@ -13,6 +13,9 @@ import {
   TrafficSignalIcon,
   ToiletIcon,
   WheelchairIcon,
+  LetterCirclePIcon,
+  BicycleIcon,
+  WrenchIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -43,6 +46,9 @@ export const LAYER_COLOR = {
   /** The international symbol of access is white on blue. */
   accessibleParking: '#1d4ed8',
   flood2022: '#2563eb',
+  parkingMeter: '#334155',
+  bikeRack: '#16a34a',
+  bikeRepair: '#15803d',
 } as const
 
 export const VEHICLE_COLOR = {
@@ -111,6 +117,9 @@ function buildIcons(): Record<string, string> {
   icons['toilet'] = square(LAYER_COLOR.toilet, ToiletIcon)
   icons['toilet-accessible'] = square(LAYER_COLOR.toiletAccessible, ToiletIcon)
   icons['accessible-parking'] = square(LAYER_COLOR.accessibleParking, WheelchairIcon)
+  icons['parking-meter'] = square(LAYER_COLOR.parkingMeter, LetterCirclePIcon)
+  icons['bike-rack'] = disc(LAYER_COLOR.bikeRack, BicycleIcon)
+  icons['bike-repair'] = disc(LAYER_COLOR.bikeRepair, WrenchIcon)
   icons['vehicle-bus'] = disc(VEHICLE_COLOR.bus, BusIcon)
   icons['vehicle-train'] = disc(VEHICLE_COLOR.train, TrainIcon)
   icons['vehicle-tram'] = disc(VEHICLE_COLOR.tram, TramIcon)

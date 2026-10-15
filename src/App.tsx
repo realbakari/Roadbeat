@@ -167,6 +167,8 @@ export default function App() {
     clearways: layers.clearways || sel.place?.kind === 'clearway',
     toilets: layers.toilets || sel.place?.kind === 'toilet',
     accessibleParking: layers.accessibleParking || sel.place?.kind === 'bay',
+    parkingMeters: layers.parkingMeters || sel.place?.kind === 'meter',
+    cycling: layers.cycling || sel.place?.kind === 'bike',
   })
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
@@ -194,7 +196,7 @@ export default function App() {
 
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops },
     setLayers,
     setFocus,
   )
@@ -228,8 +230,10 @@ export default function App() {
       ...(council.clearways ? { clearways: council.clearways.length } : {}),
       ...(council.toilets ? { toilets: council.toilets.length } : {}),
       ...(council.bays ? { accessibleParking: council.bays.length } : {}),
+      ...(council.meters ? { parkingMeters: council.meters.length } : {}),
+      ...(council.bikeStops ? { cycling: council.bikeStops.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops],
   )
 
   const locate = useCallback(() => {
@@ -456,6 +460,8 @@ export default function App() {
               clearways={council.clearways ?? []}
               toilets={council.toilets ?? []}
               accessibleBays={council.bays ?? []}
+              parkingMeters={council.meters ?? []}
+              bikeStops={council.bikeStops ?? []}
               selectedVehicleId={sel.vehicle}
               trackCodes={trackCodes}
               followVehicle={followVehicle && !!selectedVehicle}

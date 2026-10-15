@@ -54,7 +54,7 @@ The app keeps its current view in the URL hash, so these links open a view direc
 - `%SITE_URL%/#fire/<warning id>`: a Queensland Fire Department warning or incident.
 - `%SITE_URL%/#gauge/<sensor id>`: a Brisbane City Council stream or rain gauge.
 - `%SITE_URL%/#signal/<SCATS number>`: a Brisbane City Council signalised intersection.
-- `%SITE_URL%/#place/clearway/<id>`, `#place/toilet/<id>`, `#place/bay/<id>` or `#place/clearance/<id>`: a Brisbane clearway, public toilet, accessible parking bay or low clearance.
+- `%SITE_URL%/#place/clearway/<id>`, `#place/toilet/<id>`, `#place/bay/<id>`, `#place/meter/<meter number>`, `#place/bike/<id>` or `#place/clearance/<id>`: a Brisbane clearway, public toilet, accessible parking bay, parking meter, bike rack or low clearance.
 
 ## Data sources
 
@@ -63,7 +63,7 @@ All are used under Creative Commons Attribution 4.0 unless noted.
 - Department of Transport and Main Roads: road events, cameras, rest areas and crash history (QLDTraffic feeds and data.qld.gov.au).
 - Translink: GTFS timetables and GTFS-RT vehicle positions, trip updates and service alerts for South East Queensland and Cairns.
 - Queensland Fire Department: current bushfire incidents and warnings.
-- Brisbane City Council: clearways, public toilets (National Public Toilet Map), accessible parking, ferry terminals, the February 2022 flood extent, telemetry gauges, intersection volumes, planned temporary road occupancies, CBD car park spaces, and Queensland Rail's railway station facilities (data.brisbane.qld.gov.au).
+- Brisbane City Council: clearways, parking meters, bikeways and bike racks, public toilets (National Public Toilet Map), accessible parking, ferry terminals, the February 2022 flood extent, telemetry gauges, intersection volumes, planned temporary road occupancies, CBD car park spaces, and Queensland Rail's railway station facilities (data.brisbane.qld.gov.au).
 - Bureau of Meteorology: National Flood Gauge Network catchments (data.gov.au).
 - OpenFreeMap, OpenMapTiles and OpenStreetMap contributors: base maps (ODbL).
 
