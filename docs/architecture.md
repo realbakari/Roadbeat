@@ -50,7 +50,7 @@ The app itself needs JavaScript, so `site/plugin.ts` gives search engines and AI
 
 ## Navigation lives in the URL hash
 
-Every page has a hash route, so any view can be shared or bookmarked: `#event/123`, `#fire/WARN-10208`, `#transit/stop/SEQ/place_censta`, `#transit/plan/SEQ/place_fersta/place_dbnsta`. `readHash()` in `src/App.tsx` parses the hash into a selection, and the side panel renders whatever is selected. There is no router library, because the app has one screen with a side panel and a map.
+Every page has a hash route, so any view can be shared or bookmarked: `#event/123`, `#fire/WARN-10208`, `#transit/stop/SEQ/place_censta`, `#transit/plan/SEQ/place_fersta/place_dbnsta`. `parseHash()` in `src/lib/route.ts` parses the hash into a selection, `useHashSelection()` in `src/hooks/useSelection.ts` keeps it in step with the URL, and `SidePanel` in `src/components/SidePanel.tsx` renders whatever is selected. There is no router library, because the app has one screen with a side panel and a map.
 
 ## The dashboard and kiosk board have their own paths
 

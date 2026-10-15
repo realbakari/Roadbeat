@@ -22,11 +22,11 @@ import {
 } from '@phosphor-icons/react'
 import { Fragment, type ReactNode } from 'react'
 import { BCC_CLEARANCES_URL, clearanceLabel, QR_BRIDGES_URL, QR_CLEARANCES_URL, type Clearance } from '../api/clearances'
-import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
 import { ACCESSIBLE_PARKING_URL, CLEARWAYS_URL, type AccessibleBay, type Clearway, type Toilet } from '../api/bccPlaces'
 import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
 import { formatDay, timeAgo, titleCase } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
+import type { Place } from '../lib/places'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
 const REST_TYPES: Record<string, string> = {
@@ -43,16 +43,6 @@ const REST_TYPES: Record<string, string> = {
   HVSB: 'Heavy vehicle stopping bay',
   MHSB: 'Motorist and heavy vehicle stopping bay',
 }
-
-export type Place =
-  | { kind: 'rest'; data: RestArea }
-  | { kind: 'dump'; data: DumpPoint }
-  | { kind: 'truck'; data: TruckRestriction }
-  | { kind: 'waze'; data: WazeReport }
-  | { kind: 'clearance'; data: Clearance }
-  | { kind: 'clearway'; data: Clearway }
-  | { kind: 'toilet'; data: Toilet }
-  | { kind: 'bay'; data: AccessibleBay }
 
 interface Props {
   place: Place

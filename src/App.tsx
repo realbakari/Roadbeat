@@ -1,98 +1,33 @@
-import { Banner, Button, Loader, Tabs, Text, Tooltip, TooltipProvider } from '@cloudflare/kumo'
+import { Banner, Button, Tabs, TooltipProvider } from '@cloudflare/kumo'
 import {
-  ArrowClockwiseIcon,
   ArrowsInSimpleIcon,
   ArrowsOutSimpleIcon,
   CaretLeftIcon,
   CaretRightIcon,
   SidebarSimpleIcon,
-  CarProfileIcon,
   ListIcon,
   MapTrifoldIcon,
-  MoonIcon,
-  ProhibitIcon,
-  SirenIcon,
-  SunIcon,
-  TrafficConeIcon,
-  VideoCameraIcon,
   WarningCircleIcon,
-  type Icon,
 } from '@phosphor-icons/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_CRASH_FILTER, type CrashFilter } from './api/crashes'
 import { loadTracks, trackBounds } from './api/tracks'
 import { allRouteCodes, type VehicleMode } from './api/translink'
 import { AlertSettingsDialog } from './components/AlertSettingsDialog'
-import { NotificationCenter } from './components/NotificationCenter'
-import { CommuteCard } from './components/CommuteCard'
+import { AppHeader } from './components/AppHeader'
 import { commuteWindow } from './lib/commute'
 import { useCommute } from './lib/commuteStore'
-import { InstallApp } from './components/InstallApp'
-import { VehicleDetail } from './components/VehicleDetail'
 import { useAlertSettings, useNotifications } from './hooks/useNotifications'
-import { CameraGrid } from './components/CameraGrid'
-import { EventDetail } from './components/EventDetail'
-import { EventList } from './components/EventList'
 import { MapLayersPanel } from './components/MapLayersPanel'
-import { PlaceDetail, type Place } from './components/PlaceDetail'
-import { FireDetail } from './components/FireDetail'
-import { GaugeDetail } from './components/GaugeDetail'
-import { SignalDetail } from './components/SignalDetail'
+import { SidePanel, type Panel } from './components/SidePanel'
 import { TrafficMap } from './components/TrafficMap'
 import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/settings'
-import { TransitPanel } from './components/TransitPanel'
-import { parseHash } from './lib/route'
 import { useColorMode } from './hooks/useColorMode'
+import { usePanelLayout } from './hooks/usePanelLayout'
+import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
-import { applyFilters, DEFAULT_FILTERS, districtsOf, isClosure, isUpcoming, type EventFilters } from './lib/filters'
-import { timeAgo } from './lib/format'
+import { applyFilters, DEFAULT_FILTERS, districtsOf, type EventFilters } from './lib/filters'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
-
-type Panel = 'events' | 'cameras' | 'transit'
-
-
-type PanelMode = 'normal' | 'expanded' | 'closed'
-
-function readPanelMode(): PanelMode {
-  try {
-    const v = localStorage.getItem('qldt-panel')
-    return v === 'expanded' || v === 'closed' ? v : 'normal'
-  } catch {
-    return 'normal'
-  }
-}
-
-function useHashSelection() {
-  const [sel, setSel] = useState(() => parseHash(location.hash))
-  useEffect(() => {
-    const on = () => setSel(parseHash(location.hash))
-    window.addEventListener('hashchange', on)
-    return () => window.removeEventListener('hashchange', on)
-  }, [])
-  const go = useCallback((hash: string) => {
-    if (hash) location.hash = hash
-    else history.pushState(null, '', location.pathname + location.search)
-    setSel(parseHash(location.hash))
-  }, [])
-  return [sel, go] as const
-}
-
-/** The map layer a shared link to a place turns on. */
-const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
-  rest: 'restAreas',
-  dump: 'dumpPoints',
-  truck: 'trucks',
-  waze: 'waze',
-  clearance: 'clearances',
-  clearway: 'clearways',
-  toilet: 'toilets',
-  bay: 'accessibleParking',
-}
-
-function firstPoint(g: GeoJSON.LineString | GeoJSON.MultiLineString): LngLat {
-  const p = g.type === 'LineString' ? g.coordinates[0] : g.coordinates[0][0]
-  return [p[0], p[1]]
-}
 
 export default function App() {
   const { mode, toggle } = useColorMode()
@@ -105,39 +40,7 @@ export default function App() {
 
   const [panel, setPanel] = useState<Panel>('events')
   const occupancies = useRoadOccupancies(panel === 'events')
-  const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
-  // Desktop panel: today's width, full screen for detail, or closed for a full map. Remembered per browser.
-  const [panelMode, setPanelModeState] = useState<PanelMode>(readPanelMode)
-  const setPanelMode = useCallback((m: PanelMode | ((m: PanelMode) => PanelMode)) => {
-    setPanelModeState((prev) => {
-      const next = typeof m === 'function' ? m(prev) : m
-      try {
-        localStorage.setItem('qldt-panel', next)
-      } catch {
-        // Storage blocked: the choice lasts for this visit.
-      }
-      return next
-    })
-  }, [])
-  /** Shows the map: on phones the Map view, on desktop leaving full-screen panel mode. */
-  const revealMap = useCallback(() => {
-    setMobileView('map')
-    setPanelMode((m) => (m === 'expanded' ? 'normal' : m))
-  }, [setPanelMode])
-  /** Shows the panel: on phones the List view, on desktop reopening it if closed. */
-  const revealList = useCallback(() => {
-    setMobileView('list')
-    setPanelMode((m) => (m === 'closed' ? 'normal' : m))
-  }, [setPanelMode])
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented) return
-      if (document.querySelector('[role="dialog"], [role="listbox"]')) return // let open dialogs and menus close first
-      setPanelMode((m) => (m === 'expanded' ? 'normal' : m))
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [setPanelMode])
+  const { mobileView, panelMode, setPanelMode, revealMap, revealList } = usePanelLayout()
   const [mapView, setMapView] = useState<{ center: LngLat; zoom: number } | null>(null)
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS)
   const [layers, setLayers] = useState<MapLayers>(DEFAULT_LAYERS)
@@ -162,7 +65,7 @@ export default function App() {
   const [userLocation, setUserLocation] = useState<LngLat | null>(null)
   const [locating, setLocating] = useState(false)
   const [locateError, setLocateError] = useState<string | null>(null)
-  const [focus, setFocus] = useState<{ center: LngLat; zoom?: number; ring?: boolean } | null>(null)
+  const [focus, setFocus] = useState<MapFocus | null>(null)
   const [sel, go] = useHashSelection()
   const [alertSettings, setAlertSettings] = useAlertSettings()
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -289,68 +192,12 @@ export default function App() {
     setFocus({ center: selectedFire.position, zoom: selectedFire.areaShape ? 10 : 11 })
   }, [selectedFire])
 
-  const selectedPlace = useMemo((): Place | null => {
-    const p = sel.place
-    if (!p) return null
-    if (p.kind === 'rest') {
-      const data = ref.restAreas.find((r) => r.id === p.id)
-      return data ? { kind: 'rest', data } : null
-    }
-    if (p.kind === 'dump') {
-      const data = ref.dumpPoints.find((d) => d.id === p.id)
-      return data ? { kind: 'dump', data } : null
-    }
-    if (p.kind === 'truck') {
-      const data = ref.truckRestrictions.find((t) => String(t.properties.id) === p.id)
-      return data ? { kind: 'truck', data } : null
-    }
-    if (p.kind === 'waze') {
-      const data = waze.find((w) => w.uuid === p.id)
-      return data ? { kind: 'waze', data } : null
-    }
-    if (p.kind === 'clearance') {
-      const data = clearances?.find((c) => c.id === p.id)
-      return data ? { kind: 'clearance', data } : null
-    }
-    if (p.kind === 'clearway') {
-      const data = council.clearways?.find((c) => c.id === p.id)
-      return data ? { kind: 'clearway', data } : null
-    }
-    if (p.kind === 'toilet') {
-      const data = council.toilets?.find((t) => t.id === p.id)
-      return data ? { kind: 'toilet', data } : null
-    }
-    if (p.kind === 'bay') {
-      const data = council.bays?.find((b) => b.id === p.id)
-      return data ? { kind: 'bay', data } : null
-    }
-    return null
-  }, [sel.place, ref, waze, clearances, council.clearways, council.toilets, council.bays])
-
-  // Opening a shared link to a layer item turns that layer on.
-  useEffect(() => {
-    const k = sel.place?.kind
-    const key = k ? PLACE_LAYER[k] : undefined
-    if (key) setLayers((l) => (l[key] ? l : { ...l, [key]: true }))
-  }, [sel.place?.kind])
-
-  useEffect(() => {
-    if (!selectedPlace) {
-      if (!sel.vehicle) setFocus(null)
-      return
-    }
-    const at =
-      selectedPlace.kind === 'waze'
-        ? ([selectedPlace.data.location.x, selectedPlace.data.location.y] as LngLat)
-        : selectedPlace.kind === 'truck'
-          ? (selectedPlace.data.geometry.coordinates[0]?.[0] as LngLat)
-          : selectedPlace.kind === 'clearance' || selectedPlace.kind === 'toilet' || selectedPlace.kind === 'bay'
-            ? selectedPlace.data.position
-            : selectedPlace.kind === 'clearway'
-              ? firstPoint(selectedPlace.data.geometry)
-              : selectedPlace.data.coordinates
-    if (at) setFocus({ center: at, zoom: selectedPlace.kind === 'truck' ? 12 : selectedPlace.kind === 'clearance' || selectedPlace.kind === 'bay' ? 16 : selectedPlace.kind === 'clearway' || selectedPlace.kind === 'toilet' ? 15 : 13 })
-  }, [selectedPlace, sel.vehicle])
+  const selectedPlace = useSelectedPlace(
+    sel,
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays },
+    setLayers,
+    setFocus,
+  )
 
   // Keep the selected event on the map even if filters would hide it.
   const mapEvents = useMemo(
@@ -365,16 +212,6 @@ export default function App() {
     revealList()
     if (sel.transit || sel.event || sel.camera || sel.place || sel.vehicle || sel.fire || sel.gauge || sel.signal) go('')
   }
-
-  const stats = useMemo(() => {
-    const current = events.filter((e) => !isUpcoming(e, now))
-    return {
-      current: current.length,
-      closures: current.filter(isClosure).length,
-      crashes: current.filter((e) => e.properties.event_type === 'Crash').length,
-      redAlerts: current.filter((e) => e.properties.event_priority === 'Red Alert').length,
-    }
-  }, [events, now])
 
   const layerCounts = useMemo(
     () => ({
@@ -443,224 +280,35 @@ export default function App() {
   )
   const closeCamera = useCallback(() => go(cameraReturn.current), [go])
 
-  const sidebar = selectedEvent ? (
-    <EventDetail
-      event={selectedEvent}
-      cameras={cameras}
-      now={now}
-      onBack={() => go('')}
-      onOpenCamera={(k) => openKey(`camera/${k}`)}
-      watched={alertSettings.watchedEvents.includes(selectedEvent.properties.id)}
-      onToggleWatch={() => notifications.toggleWatchEvent(selectedEvent.properties.id)}
-      gauges={gauges}
-      onOpenHref={openHref}
-    />
-  ) : sel.vehicle ? (
-    !allVehicles.length && !vehicleError ? (
-      <div className="flex justify-center py-16">
-        <Loader />
-      </div>
-    ) : (
-      <VehicleDetail
-        vehicle={selectedVehicle}
-        alerts={transitAlerts}
-        watchedRoutes={alertSettings.routes}
-        now={now}
-        onBack={() => go('')}
-        onToggleWatch={notifications.toggleWatchRoute}
-        onOpenAlert={(id) => openHref(`transit/alert/${encodeURIComponent(id)}`)}
-        onOpenHref={openHref}
-        following={followVehicle}
-        onToggleFollow={() => {
-          setFollowVehicle((f) => !f)
-          revealMap()
-        }}
-      />
-    )
-  ) : selectedPlace ? (
-    <PlaceDetail place={selectedPlace} now={now} onBack={() => go('')} />
-  ) : selectedFire ? (
-    <FireDetail fire={selectedFire} now={now} onBack={() => go('')} />
-  ) : selectedGauge ? (
-    <GaugeDetail gauge={selectedGauge} now={now} onBack={() => (history.length > 1 ? history.back() : go(''))} />
-  ) : selectedSignal ? (
-    <SignalDetail site={selectedSignal} approaches={signalVolumes?.get(selectedSignal.tsc) ?? null} now={now} onBack={() => go('')} />
-  ) : (
-    <>
-      <div className="px-4 pt-3">
-        <Tabs
-          // Three tabs always fit; Kumo's scroll arrow can still appear from sub-pixel rounding.
-          className="w-full [&_button[aria-label^='Scroll_tabs']]:hidden"
-          listClassName="w-full [&>*]:flex-1"
-          value={transitOpen ? 'transit' : panel}
-          onValueChange={(v) => {
-            setPanel(v as Panel)
-            if (sel.transit) go('')
-          }}
-          tabs={[
-            { value: 'events', label: 'Road events' },
-            { value: 'cameras', label: 'Cameras' },
-            { value: 'transit', label: 'Transit' },
-          ]}
-        />
-      </div>
-      {transitOpen ? (
-        <TransitPanel
-          view={sel.transit ?? { kind: 'home' }}
-          alerts={transitAlerts}
-          alertsError={transitAlertsError}
-          vehicles={allVehicles}
-          watchedRoutes={alertSettings.routes}
-          onNavigate={openHref}
-          onToggleWatch={notifications.toggleWatchRoute}
-          onShowOnMap={showLineOnMap}
-          mapView={mapView}
-          onShowMap={() => revealMap()}
-        />
-      ) : panel === 'events' ? (
-        <EventList
-          allEvents={events}
-          events={visible}
-          districts={districts}
-          filters={filters}
-          onFiltersChange={setFilters}
-          loading={loading}
-          now={now}
-          userLocation={userLocation}
-          locating={locating}
-          onLocate={locate}
-          onSelect={selectEvent}
-          fires={fires}
-          onOpenHref={openHref}
-          occupancies={occupancies}
-          top={<CommuteCard events={events} fires={fires} vehicles={allVehicles} alerts={transitAlerts} now={now} onOpen={openHref} />}
-        />
-      ) : panel === 'cameras' ? (
-        <CameraGrid cameras={cameras} selectedKey={sel.camera} onOpen={(k) => openKey(`camera/${k}`)} />
-      ) : null}
-    </>
-  )
-
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col bg-kumo-canvas">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-kumo-line bg-kumo-base px-4">
-          <a href="#" onClick={(e) => (e.preventDefault(), go(''))} className="flex min-w-0 items-center gap-2.5">
-            <img src="/favicon.svg" alt="" className="size-7" />
-            <div className="grid leading-tight">
-              <Text variant="heading" as="h1">
-                Roadbeat
-              </Text>
-              <span className="hidden text-xs text-kumo-subtle sm:block">Live roads and transport across Queensland</span>
-            </div>
-          </a>
-
-          <nav aria-label="Quick filters" className="hidden min-w-0 items-center gap-1.5 md:flex">
-            {(
-              [
-                {
-                  key: 'all',
-                  label: 'Current events',
-                  value: firstLoad ? null : stats.current,
-                  icon: TrafficConeIcon,
-                  active: panel === 'events' && !transitOpen && filters.when === 'now' && !filtersActive(filters),
-                  apply: () => showEvents(() => ({ ...DEFAULT_FILTERS, sort: filters.sort })),
-                },
-                {
-                  key: 'closures',
-                  label: 'Closures',
-                  value: firstLoad ? null : stats.closures,
-                  icon: ProhibitIcon,
-                  tone: 'danger',
-                  active: panel === 'events' && filters.closuresOnly,
-                  apply: () => showEvents((f) => ({ ...f, when: 'now', closuresOnly: !f.closuresOnly })),
-                },
-                {
-                  key: 'crashes',
-                  label: 'Crashes',
-                  value: firstLoad ? null : stats.crashes,
-                  icon: CarProfileIcon,
-                  tone: 'danger',
-                  active: panel === 'events' && filters.types.size === 1 && filters.types.has('Crash'),
-                  apply: () =>
-                    showEvents((f) => ({
-                      ...f,
-                      when: 'now',
-                      types: f.types.size === 1 && f.types.has('Crash') ? new Set() : new Set(['Crash' as const]),
-                    })),
-                },
-                {
-                  key: 'red',
-                  label: 'Red alerts',
-                  value: firstLoad ? null : stats.redAlerts,
-                  icon: SirenIcon,
-                  tone: 'danger',
-                  active: panel === 'events' && filters.priority === 'Red Alert',
-                  apply: () => showEvents((f) => ({ ...f, when: 'now', priority: f.priority === 'Red Alert' ? 'all' : 'Red Alert' })),
-                },
-                {
-                  key: 'cameras',
-                  label: 'Cameras',
-                  value: firstLoad ? null : cameras.length,
-                  icon: VideoCameraIcon,
-                  active: panel === 'cameras' && !transitOpen,
-                  apply: () => {
-                    setPanel('cameras')
-                    revealList()
-                    if (sel.transit) go('')
-                  },
-                },
-              ] satisfies (StatChipProps & { key: string })[]
-            ).map(({ key, ...chip }) => (
-              <StatChip key={key} {...chip} />
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-1">
-            <InstallApp />
-            <NotificationCenter
-              items={notifications.items}
-              unread={notifications.unread}
-              now={now}
-              onOpen={(n) => {
-                notifications.markRead(n.id)
-                if (n.href) openHref(n.href)
-              }}
-              onMarkAllRead={notifications.markAllRead}
-              onClear={notifications.clear}
-              onSettings={() => setSettingsOpen(true)}
-            />
-            <span className="mr-1 hidden items-center gap-1.5 text-sm text-kumo-subtle sm:flex" aria-live="polite">
-              <span className={`size-2 rounded-full ${error ? 'bg-kumo-danger' : 'bg-kumo-success'}`} aria-hidden />
-              {fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
-            </span>
-            <Tooltip
-              content="Refresh now"
-              render={
-                <Button
-                  variant="ghost"
-                  shape="square"
-                  aria-label="Refresh events"
-                  icon={<ArrowClockwiseIcon />}
-                  loading={refreshing && !loading}
-                  onClick={refresh}
-                />
-              }
-            />
-            <Tooltip
-              content={mode === 'dark' ? 'Light mode' : 'Dark mode'}
-              render={
-                <Button
-                  variant="ghost"
-                  shape="square"
-                  aria-label="Toggle colour mode"
-                  icon={mode === 'dark' ? <SunIcon /> : <MoonIcon />}
-                  onClick={toggle}
-                />
-              }
-            />
-          </div>
-        </header>
+        <AppHeader
+          mode={mode}
+          onToggleMode={toggle}
+          now={now}
+          events={events}
+          cameraCount={cameras.length}
+          firstLoad={firstLoad}
+          panel={panel}
+          transitOpen={transitOpen}
+          filters={filters}
+          onShowEvents={showEvents}
+          onShowCameras={() => {
+            setPanel('cameras')
+            revealList()
+            if (sel.transit) go('')
+          }}
+          onHome={() => go('')}
+          notifications={notifications}
+          onOpenHref={openHref}
+          onAlertSettings={() => setSettingsOpen(true)}
+          error={error}
+          fetchedAt={fetchedAt}
+          loading={loading}
+          refreshing={refreshing}
+          onRefresh={refresh}
+        />
 
         {(error || locateError) && (
           <div className="grid gap-2 border-b border-kumo-line bg-kumo-base px-4 py-2">
@@ -712,7 +360,54 @@ export default function App() {
               </Button>
             </div>
             {/* Full screen: keep lines and lists at a readable width. */}
-            <div className={`flex min-h-0 w-full flex-1 flex-col ${panelMode === 'expanded' ? 'md:mx-auto md:max-w-5xl' : ''}`}>{sidebar}</div>
+            <div className={`flex min-h-0 w-full flex-1 flex-col ${panelMode === 'expanded' ? 'md:mx-auto md:max-w-5xl' : ''}`}>
+              <SidePanel
+                sel={sel}
+                go={go}
+                onOpenHref={openHref}
+                onOpenCamera={(k) => openKey(`camera/${k}`)}
+                onSelectEvent={selectEvent}
+                revealMap={revealMap}
+                now={now}
+                panel={panel}
+                onPanelChange={setPanel}
+                transitOpen={transitOpen}
+                events={events}
+                visibleEvents={visible}
+                selectedEvent={selectedEvent}
+                districts={districts}
+                filters={filters}
+                onFiltersChange={setFilters}
+                loading={loading}
+                userLocation={userLocation}
+                locating={locating}
+                onLocate={locate}
+                occupancies={occupancies}
+                cameras={cameras}
+                vehicles={allVehicles}
+                vehicleError={vehicleError}
+                selectedVehicle={selectedVehicle}
+                followVehicle={followVehicle}
+                onToggleFollow={() => {
+                  setFollowVehicle((f) => !f)
+                  revealMap()
+                }}
+                transitAlerts={transitAlerts}
+                transitAlertsError={transitAlertsError}
+                onShowLineOnMap={showLineOnMap}
+                mapView={mapView}
+                selectedPlace={selectedPlace}
+                fires={fires}
+                selectedFire={selectedFire}
+                gauges={gauges}
+                selectedGauge={selectedGauge}
+                selectedSignal={selectedSignal}
+                signalVolumes={signalVolumes}
+                alertSettings={alertSettings}
+                notifications={notifications}
+              />
+            </div>
+
           </aside>
 
           <main
@@ -842,50 +537,4 @@ export default function App() {
       </div>
     </TooltipProvider>
   )
-}
-
-interface StatChipProps {
-  label: string
-  /** Null while the first load is in progress, so "0" never stands in for "not loaded yet". */
-  value: number | null
-  icon: Icon
-  tone?: 'danger'
-  active: boolean
-  apply: () => void
-}
-
-/**
- * A header count that is also a shortcut: it shows the live number and, when
- * clicked, opens the list filtered to it (click again to clear).
- */
-function StatChip({ label, value, icon: I, tone, active, apply }: StatChipProps) {
-  const alert = tone === 'danger' && value != null && value > 0
-  return (
-    <button
-      type="button"
-      onClick={apply}
-      aria-pressed={active}
-      title={active ? `Showing ${label.toLowerCase()} — click to clear` : `Show ${label.toLowerCase()}`}
-      className={`inline-flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left ring ${
-        active ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'
-      }`}
-    >
-      <span
-        className={`flex size-6 items-center justify-center rounded-full ${alert ? 'bg-kumo-danger/10 text-kumo-danger' : 'bg-kumo-recessed text-kumo-subtle'}`}
-        aria-hidden
-      >
-        <I size={14} weight="bold" />
-      </span>
-      <span className={`text-sm font-semibold tabular-nums ${alert ? 'text-kumo-danger' : value == null ? 'text-kumo-subtle' : 'text-kumo-strong'}`}>
-        {value ?? '…'}
-      </span>
-      <span className="hidden text-sm text-kumo-subtle xl:inline">{label}</span>
-      <span className="sr-only xl:hidden">{label}</span>
-    </button>
-  )
-}
-
-/** Whether any list filter besides sorting is set. */
-function filtersActive(f: EventFilters) {
-  return !!f.query || f.types.size > 0 || f.district !== 'all' || f.priority !== 'all' || f.closuresOnly
 }
