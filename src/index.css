@@ -76,3 +76,18 @@ body {
 .maplibregl-marker:has(> button) {
   z-index: 2;
 }
+
+/* Dashboard ticker: the list is rendered twice, so sliding it by half loops seamlessly. */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker 120s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+}

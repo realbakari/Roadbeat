@@ -5,6 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/kiosk/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/translink-rt/:path*",
       "destination": "https://gtfsrt.api.translink.com.au/api/realtime/:path*"
     },

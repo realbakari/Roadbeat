@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseHash } from './route'
+import { kioskPath, parsePath, parseHash } from './route'
 
 describe('parseHash', () => {
   it('reads detail pages', () => {
@@ -25,5 +25,15 @@ describe('parseHash', () => {
     const empty = parseHash('')
     expect([empty.event, empty.fire, empty.gauge, empty.signal, empty.transit]).toEqual([null, null, null, null, null])
     expect(parseHash('#nonsense/1').event).toBeNull()
+  })
+})
+
+describe('parsePath', () => {
+  it('opens the dashboard, a kiosk board, or the app', () => {
+    expect(parsePath('/dashboard')).toEqual({ kind: 'dashboard' })
+    expect(parsePath('/dashboard/')).toEqual({ kind: 'dashboard' })
+    expect(parsePath(kioskPath('SEQ', 'place_censta'))).toEqual({ kind: 'kiosk', region: 'SEQ', stopId: 'place_censta' })
+    expect(parsePath('/kiosk/XYZ/1')).toEqual({ kind: 'app' })
+    expect(parsePath('/')).toEqual({ kind: 'app' })
   })
 })

@@ -69,3 +69,21 @@ export function parseHash(hash: string): Selection {
     signal: parts[0] === 'signal' && parts[1] ? decodeURIComponent(parts[1]) : null,
   }
 }
+
+/** Screens that live at their own path rather than in the hash. */
+export type Screen = { kind: 'app' } | { kind: 'dashboard' } | { kind: 'kiosk'; region: TransitRegion; stopId: string }
+
+/** Which screen a path opens: /dashboard, /kiosk/SEQ/place_censta, or the app. */
+export function parsePath(path: string): Screen {
+  const parts = path.split('/').filter(Boolean)
+  if (parts[0] === 'dashboard' && parts.length === 1) return { kind: 'dashboard' }
+  if (parts[0] === 'kiosk' && (parts[1] === 'SEQ' || parts[1] === 'CNS') && parts[2]) {
+    return { kind: 'kiosk', region: parts[1], stopId: decodeURIComponent(parts[2]) }
+  }
+  return { kind: 'app' }
+}
+
+/** The kiosk path for a stop: /kiosk/SEQ/place_censta. */
+export function kioskPath(region: TransitRegion, stopId: string) {
+  return `/kiosk/${region}/${encodeURIComponent(stopId)}`
+}

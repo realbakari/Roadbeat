@@ -16,6 +16,8 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Bushfire warnings.** Queensland Fire Department warnings and incidents on the map, in the events list and in notifications.
 - **Brisbane gauges and signals.** Brisbane City Council's live stream heights and rainfall, shown on the map and next to nearby flooding events, and how busy each council-run traffic signal is right now.
 - **Notifications.** Alerts for events, routes and bushfire warnings that match your settings, while the app is open.
+- **Network dashboard.** A full-screen overview at `/dashboard` for a TV or second monitor: closures and crashes by district, how tracked trains and buses are running, bushfire warnings, the fastest-rising Brisbane creeks, the busiest intersections and a ticker of the latest events.
+- **Kiosk departure board.** A large, self-refreshing board for one stop at `/kiosk/<region>/<stop id>`, opened from any stop page.
 - **Maps.** Every printable map TransLink publishes, by place, and a choice of base map styles with 3D buildings.
 
 ## Run it locally

@@ -52,6 +52,10 @@ The app itself needs JavaScript, so `site/plugin.ts` gives search engines and AI
 
 Every page has a hash route, so any view can be shared or bookmarked: `#event/123`, `#fire/WARN-10208`, `#transit/stop/SEQ/place_censta`, `#transit/plan/SEQ/place_fersta/place_dbnsta`. `readHash()` in `src/App.tsx` parses the hash into a selection, and the side panel renders whatever is selected. There is no router library, because the app has one screen with a side panel and a map.
 
+## The dashboard and kiosk board have their own paths
+
+`/dashboard` and `/kiosk/<region>/<stop id>` are separate full-screen views, not panels in the app. `parsePath()` in `src/lib/route.ts` picks the screen in `src/Root.tsx`, and each screen is loaded only when opened. Hosts serve `index.html` for these paths: `vercel.json` and `public/_redirects` rewrite them. The dashboard's figures come from pure functions in `src/lib/dashboard.ts`. Its on-time share counts only trips with a vehicle reporting its position, because TransLink's feed also lists trips that haven't started, whose delay is just the timetable.
+
 ## Published timetables are prebuilt and loaded per route
 
 TransLink's GTFS file holds about 3.7 million stop times. That is far too much to ship, so `scripts/build-timetables.mjs` compresses it at build time into one JSON file per route in `public/timetables/`.

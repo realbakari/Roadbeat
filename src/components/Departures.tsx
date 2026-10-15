@@ -5,6 +5,7 @@ import {
   CalendarBlankIcon,
   CaretDownIcon,
   CaretUpIcon,
+  MonitorIcon,
   StarIcon,
   WarningIcon,
   WifiSlashIcon,
@@ -20,6 +21,7 @@ import { DelayChip, TimeFormatToggle } from './Realtime'
 import { StationMapLink } from './TransitMaps'
 import { StopTimetable, TimetableLink } from './Timetable'
 import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
+import { kioskPath } from '../lib/route'
 import { departuresAt, lineDirections, stopHref, type Departure, type DepartureContext } from '../lib/departures'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
@@ -243,6 +245,15 @@ export function StopPage({
                 <TimetableLink target="stop-timetable" />
                 <SaveStopButton region={region} id={stop.id} />
                 <StationMapLink name={stops.station(stop).name} stopId={stops.station(stop).id} />
+                <a
+                  href={kioskPath(region, stop.id)}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="A large departure board for a screen in a lobby or café"
+                  className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
+                >
+                  <MonitorIcon size={14} /> Kiosk display
+                </a>
               </div>
             </header>
           )}

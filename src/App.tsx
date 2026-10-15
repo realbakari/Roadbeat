@@ -634,6 +634,7 @@ export default function App() {
                 <a href="/about/" className="hover:text-kumo-default hover:underline">About</a>
                 <a href="/privacy/" className="hover:text-kumo-default hover:underline">Privacy</a>
                 <a href="/contact/" className="hover:text-kumo-default hover:underline">Contact</a>
+                <a href="/dashboard" className="hover:text-kumo-default hover:underline" title="Network dashboard for a TV or second screen">Dashboard</a>
               </nav>
               <Button
                 size="xs"
