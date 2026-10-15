@@ -29,6 +29,9 @@ The browser reads these while the app is open.
 | Public toilets | National Public Toilet Map, published by Brisbane City Council | `data.brisbane.qld.gov.au/…/datasets/public-toilets-in-brisbane/exports/json` | Direct | Once per visit, while the layer is on | `src/api/bccPlaces.ts` |
 | Accessible parking | Brisbane City Council | `data.brisbane.qld.gov.au/…/datasets/disability-permit-parking-locations/exports/json` | Direct. Signs no longer in service are dropped. | Once per visit, while the layer is on | `src/api/bccPlaces.ts` |
 | Ferry terminal access | Brisbane City Council | `data.brisbane.qld.gov.au/…/datasets/ferry-terminals/records?where=hastus="<stop id>"` | Direct. `hastus` is TransLink's stop id. | Once per terminal per visit | `src/api/ferryTerminals.ts` |
+| Key corridor performance | Brisbane City Council | `…/datasets/traffic-management-key-corridor-monthly-performance-report/exports/json?where=year in (…)` and `…-routes/exports/json` | Direct | 6 h, on the dashboard. The council publishes monthly. | `src/api/bccDashboard.ts` |
+| Council events | Brisbane City Council | `…/datasets/brisbane-city-council-events/exports/json` (today and tomorrow) | Direct. All-day listings, which start at midnight, are left out. | 15 min, on the dashboard | `src/api/bccDashboard.ts` |
+| Pedestrian movements | Brisbane City Council | `…/datasets/pedestrian-movement-counts/exports/json?where=date = date'<yesterday>'` | Direct. Estimated hours (`is_computed`) and counts published as "< 25" are left out. | 1 h, on the dashboard. The council publishes the previous day. | `src/api/bccDashboard.ts` |
 | Crash history | TMR, data.qld.gov.au | `www.data.qld.gov.au/api/3/action/datastore_search_sql` | Direct (CKAN SQL) | On demand | `src/api/crashes.ts` |
 | Base maps | OpenFreeMap | `tiles.openfreemap.org/styles/{positron,dark,liberty,bright,fiord}` | Direct | On demand | `src/components/TrafficMap.tsx` |
 

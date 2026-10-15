@@ -146,3 +146,87 @@ export function latestEvents(events: TrafficEvent[], now: number, limit: number)
     .sort((a, b) => time(b) - time(a))
     .slice(0, limit)
 }
+
+export interface CorridorRow {
+  name: string
+  km: number | null
+  /** Average AM (7–9 am) and PM (4–7 pm) peak travel times in the latest month, seconds. */
+  am: number | null
+  pm: number | null
+  amKmh: number | null
+  /** Change in AM peak travel time from the same month a year earlier, seconds. Null without both months. */
+  amChange: number | null
+}
+
+/**
+ * The latest month the council has published for every key corridor, each with
+ * its change from the same month a year before. All values are the council's
+ * measured averages.
+ */
+export function corridorReport(
+  corridors: { siteId: number; name: string; km: number | null }[],
+  months: { siteId: number; year: number; month: number; amSeconds: number | null; pmSeconds: number | null; amKmh: number | null }[],
+): { year: number; month: number; rows: CorridorRow[] } | null {
+  if (!months.length) return null
+  const latest = months.reduce((a, b) => (b.year * 12 + b.month > a.year * 12 + a.month ? b : a))
+  const at = (siteId: number, year: number) => months.find((m) => m.siteId === siteId && m.year === year && m.month === latest.month)
+  const rows = corridors
+    .flatMap((c) => {
+      const now = at(c.siteId, latest.year)
+      if (!now) return []
+      const before = at(c.siteId, latest.year - 1)
+      return [
+        {
+          name: c.name,
+          km: c.km,
+          am: now.amSeconds,
+          pm: now.pmSeconds,
+          amKmh: now.amKmh,
+          amChange: now.amSeconds != null && before?.amSeconds != null ? now.amSeconds - before.amSeconds : null,
+        },
+      ]
+    })
+    .sort((a, b) => (b.am ?? 0) - (a.am ?? 0))
+  return { year: latest.year, month: latest.month, rows }
+}
+
+const brisbaneHour = (t: number) => new Date(t + 10 * 3600_000).getUTCHours() + new Date(t + 10 * 3600_000).getUTCMinutes() / 60
+
+/**
+ * Council events still to start, or started in the last hour, soonest first.
+ * All-day listings, such as exhibitions, are left out, so the list shows timed events.
+ */
+export function upcomingEvents<T extends { start: number; end: number | null }>(events: T[], now: number, limit: number): T[] {
+  return events
+    .filter((e) => {
+      // The council lists exhibitions and other all-day items as starting at midnight.
+      const allDay = brisbaneHour(e.start) === 0
+      return !allDay && e.start >= now - 3600_000
+    })
+    .sort((a, b) => a.start - b.start)
+    .slice(0, limit)
+}
+
+export interface FootTraffic {
+  precinct: string
+  /** Sum of the hours each sensor measured. Hours the council estimated, or published only as "< 25", aren't included. */
+  movements: number
+  measuredHours: number
+  /** Sensor-hours in the day, measured or not. */
+  hours: number
+}
+
+/** A day's measured pedestrian movements per precinct, busiest first. */
+export function footTraffic(hours: { precinct: string | null; sensor: string; count: number | null; estimated: boolean }[]): FootTraffic[] {
+  const by = new Map<string, FootTraffic>()
+  for (const h of hours) {
+    const precinct = h.precinct ?? h.sensor
+    let row = by.get(precinct)
+    if (!row) by.set(precinct, (row = { precinct, movements: 0, measuredHours: 0, hours: 0 }))
+    row.hours++
+    if (h.estimated || h.count == null) continue
+    row.movements += h.count
+    row.measuredHours++
+  }
+  return [...by.values()].sort((a, b) => b.movements - a.movements)
+}

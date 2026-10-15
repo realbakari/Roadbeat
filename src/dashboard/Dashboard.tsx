@@ -1,6 +1,6 @@
 import { Button } from '@cloudflare/kumo'
 import { ArrowLeftIcon, ArrowsOutIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { alertActive, isAccessibilityAlert, modeOf } from '../api/translink'
 import { useColorMode } from '../hooks/useColorMode'
@@ -13,8 +13,13 @@ import {
   firesByLevel,
   latestEvents,
   ON_TIME,
+  corridorReport,
+  footTraffic,
   punctuality,
+  upcomingEvents,
 } from '../lib/dashboard'
+import { CORRIDORS_URL, EVENTS_URL, PEDESTRIANS_URL } from '../api/bccDashboard'
+import { useCouncilDashboard } from './useCouncilDashboard'
 import { isClosure } from '../lib/filters'
 import { timeAgo } from '../lib/format'
 import { dsColor } from '../lib/signals'
@@ -23,6 +28,7 @@ import { EmptyNote, Row, Stat, Tile } from './Tile'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 const timeOnly = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+const dayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 const MODE_LABEL = { train: 'Trains', bus: 'Buses', tram: 'Trams', ferry: 'Ferries' } as const
 const CRASH = '#dc2626'
 const CLOSURE = '#7a1f3d'
@@ -43,6 +49,17 @@ export function Dashboard() {
   const { mode, toggle } = useColorMode()
   const { alerts } = useTransitAlerts(true)
   const parking = useCarParkSpaces(true)
+  const council = useCouncilDashboard()
+  const corridorRows = useMemo(() => (council.corridors ? corridorReport(council.corridors.corridors, council.corridors.months) : null), [council.corridors])
+  // Today's remaining timed events, or tomorrow's once today's are over.
+  const todaysEvents = useMemo(() => {
+    if (!council.events) return null
+    const all = upcomingEvents(council.events, now, 100)
+    const today = all.filter((e) => dayKey.format(e.start) === dayKey.format(now))
+    return (today.length ? today : all).slice(0, 6)
+  }, [council.events, now])
+  const eventsTomorrow = !!todaysEvents?.length && dayKey.format(todaysEvents[0].start) !== dayKey.format(now)
+  const foot = useMemo(() => (council.pedestrians ? footTraffic(council.pedestrians.hours) : null), [council.pedestrians])
   const liftOutages = useMemo(() => (alerts ?? []).filter((a) => isAccessibilityAlert(a) && alertActive(a, now)), [alerts, now])
 
   const current = useMemo(() => currentEvents(events, now), [events, now])
@@ -105,7 +122,7 @@ export function Dashboard() {
         />
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2">
+      <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:grid-rows-2">
         <Tile title="Closures and crashes by district" source="QLDTraffic events in effect now.">
           {districts.length ? (
             <ul className="grid gap-1.5">
@@ -236,21 +253,69 @@ export function Dashboard() {
           )}
         </Tile>
 
-        <Tile title="Latest road events" source="QLDTraffic, most recently updated first.">
-          {ticker.length ? (
+        <Tile title="Key corridor travel times" source={<CorridorSource report={corridorRows} />}>
+          {corridorRows?.rows.length ? (
             <ul className="grid gap-1">
-              {ticker.slice(0, 6).map((e) => (
+              {corridorRows.rows.slice(0, 7).map((r) => (
                 <Row
-                  key={e.properties.id}
-                  label={e.properties.road_summary?.road_name ?? e.properties.event_type}
-                  detail={e.properties.road_summary?.locality ?? undefined}
-                  value={<span className="text-kumo-subtle">{e.properties.event_type}</span>}
-                  href={`/#event/${e.properties.id}`}
+                  key={r.name}
+                  label={r.name}
+                  detail={r.am != null ? `PM ${mmss(r.pm)}` : undefined}
+                  value={
+                    <span className="flex gap-2">
+                      <span>AM {mmss(r.am)}</span>
+                      {r.amChange != null && Math.abs(r.amChange) >= 5 && (
+                        <span className={r.amChange > 0 ? 'text-kumo-danger' : 'text-kumo-success'}>
+                          {r.amChange > 0 ? '+' : '−'}
+                          {mmss(Math.abs(r.amChange))}
+                        </span>
+                      )}
+                    </span>
+                  }
                 />
               ))}
             </ul>
           ) : (
-            <EmptyNote>{loading ? 'Loading road events…' : 'No road events reported.'}</EmptyNote>
+            <EmptyNote>{council.corridors ? 'No corridor results published.' : 'Loading corridor results…'}</EmptyNote>
+          )}
+        </Tile>
+
+        <Tile title={eventsTomorrow ? 'Council events tomorrow' : 'Council events today'} source={<SourceLink href={EVENTS_URL}>Brisbane City Council events. Timed events still to start; all-day listings left out.</SourceLink>}>
+          {todaysEvents?.length ? (
+            <ul className="grid gap-1">
+              {todaysEvents.map((e) => (
+                <Row key={`${e.title}-${e.start}`} label={e.title} detail={e.venue ?? undefined} value={<span className="text-kumo-subtle">{timeOnly.format(e.start)}</span>} href={e.url ?? undefined} />
+              ))}
+            </ul>
+          ) : (
+            <EmptyNote>{council.events ? 'No more timed council events today or tomorrow.' : 'Loading council events…'}</EmptyNote>
+          )}
+        </Tile>
+
+        <Tile
+          title="CBD foot traffic yesterday"
+          source={
+            <SourceLink href={PEDESTRIANS_URL}>
+              Brisbane City Council sensors count movements across a line, not people. Hours the council estimated, or published as under 25, are left
+              out.
+            </SourceLink>
+          }
+        >
+          {foot?.length ? (
+            <ul className="grid gap-1.5">
+              {foot.slice(0, 6).map((f) => (
+                <Row
+                  key={f.precinct}
+                  label={f.precinct}
+                  detail={f.measuredHours < f.hours ? `${f.measuredHours} of ${f.hours} sensor-hours measured` : undefined}
+                  value={f.movements.toLocaleString('en-AU')}
+                  bar={f.movements / Math.max(1, foot[0].movements)}
+                  color="var(--color-kumo-brand)"
+                />
+              ))}
+            </ul>
+          ) : (
+            <EmptyNote>{council.pedestrians ? 'No counts published for yesterday yet.' : 'Loading foot traffic…'}</EmptyNote>
           )}
         </Tile>
       </div>
@@ -259,3 +324,30 @@ export function Dashboard() {
     </div>
   )
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** Seconds as m:ss. */
+function mmss(sec: number | null) {
+  if (sec == null) return '–'
+  const s = Math.round(sec)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+function SourceLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="hover:underline">
+      {children}
+    </a>
+  )
+}
+
+function CorridorSource({ report }: { report: ReturnType<typeof corridorReport> }) {
+  return (
+    <SourceLink href={CORRIDORS_URL}>
+      Brisbane City Council measured averages{report ? ` for ${MONTHS[report.month - 1]} ${report.year}` : ''}: AM peak 7–9 am, PM peak 4–7 pm.
+      Change is from the same month a year earlier.
+    </SourceLink>
+  )
+}
+

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Gauge } from '../api/bccGauges'
 import type { LiveVehicle, TripUpdate } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
-import { busiestSignals, closuresAndCrashesByDistrict, fastestRising, latestEvents, punctuality } from './dashboard'
+import { busiestSignals, closuresAndCrashesByDistrict, corridorReport, fastestRising, footTraffic, latestEvents, punctuality, upcomingEvents } from './dashboard'
 
 const NOW = Date.parse('2026-10-15T08:00:00+10:00')
 
@@ -111,6 +111,51 @@ describe('busiestSignals', () => {
     expect(busiestSignals([site('1'), site('2'), site('3')], volumes, 5).map((s) => [s.site.tsc, s.maxDs])).toEqual([
       ['2', 95],
       ['1', 60],
+    ])
+  })
+})
+
+describe('corridorReport', () => {
+  it('reports the latest month with the change from a year earlier, longest AM trip first', () => {
+    const corridors = [
+      { siteId: 1, name: 'Coronation Drive', km: 3.5 },
+      { siteId: 2, name: 'Logan Road', km: 6 },
+    ]
+    const m = (siteId: number, year: number, month: number, am: number) => ({ siteId, year, month, amSeconds: am, pmSeconds: am - 60, amKmh: 30 })
+    const r = corridorReport(corridors, [m(1, 2026, 8, 540), m(1, 2025, 8, 500), m(2, 2026, 8, 900), m(1, 2026, 7, 999)])
+    expect(r).toMatchObject({ year: 2026, month: 8 })
+    expect(r!.rows.map((x) => [x.name, x.am, x.amChange])).toEqual([
+      ['Logan Road', 900, null],
+      ['Coronation Drive', 540, 40],
+    ])
+  })
+})
+
+describe('upcomingEvents', () => {
+  it('lists timed events still to come today and leaves out all-day listings', () => {
+    const t = (hhmm: string) => Date.parse(`2026-10-15T${hhmm}:00+10:00`)
+    const events = [
+      { id: 'exhibition', start: t('00:00'), end: t('23:59') },
+      { id: 'short exhibition', start: t('00:00'), end: t('17:00') },
+      { id: 'concert', start: t('19:30'), end: t('22:00') },
+      { id: 'started', start: t('17:30'), end: null },
+      { id: 'morning', start: t('09:00'), end: t('10:00') },
+    ]
+    expect(upcomingEvents(events, t('18:00'), 5).map((e) => e.id)).toEqual(['started', 'concert'])
+  })
+})
+
+describe('footTraffic', () => {
+  it('sums measured hours per precinct and leaves out estimated and "< 25" hours', () => {
+    const rows = footTraffic([
+      { precinct: 'Queen St Mall', sensor: 'a', count: 1000, estimated: false },
+      { precinct: 'Queen St Mall', sensor: 'a', count: 900, estimated: true },
+      { precinct: 'Queen St Mall', sensor: 'b', count: null, estimated: false },
+      { precinct: 'Chinatown Mall', sensor: 'c', count: 300, estimated: false },
+    ])
+    expect(rows).toEqual([
+      { precinct: 'Queen St Mall', movements: 1000, measuredHours: 1, hours: 3 },
+      { precinct: 'Chinatown Mall', movements: 300, measuredHours: 1, hours: 1 },
     ])
   })
 })
