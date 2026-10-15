@@ -1,3 +1,6 @@
+import type { FireWarning } from '../api/bushfireFeed'
+import type { NewsItem, NewsPlace } from '../api/newsTypes'
+import type { TrafficEvent } from '../api/types'
 import { StopIndex } from '../api/stops'
 import type { ScheduledStop, ScheduledTrip, StopKind } from '../api/timetables'
 
@@ -35,5 +38,88 @@ export function trip(number: number, route: string, stops: [string, number, numb
     stops: stops.map(
       ([stopId, dep, arr, kind]): ScheduledStop => ({ stopId, time: at(dep), arrival: at(arr ?? dep), kind: kind ?? 'normal' }),
     ),
+  }
+}
+
+/** A news monitor item: an ABC report with no summary, places or roads unless overridden. */
+export function newsItem(over: Partial<NewsItem> = {}): NewsItem {
+  const id = over.id ?? 'a'
+  return {
+    id,
+    source: 'abc-qld',
+    publisher: 'ABC',
+    kind: 'news',
+    title: 'Headline',
+    link: `https://example.com/${id}`,
+    published: 0,
+    updated: null,
+    summary: null,
+    places: [],
+    roads: [],
+    ...over,
+  }
+}
+
+/** A place matched from the gazetteer, at a given point. */
+export function gazetteerPlace(name: string, lga: string, position: [number, number] = [0, 0]): NewsPlace {
+  return { name, lga, position, via: 'gazetteer' }
+}
+
+/** A QLDTraffic road event on a road in a locality: a crash in effect unless overridden. */
+export function roadEvent(
+  id: number,
+  road: string,
+  locality: string | null,
+  over: Partial<Pick<TrafficEvent['properties'], 'event_type' | 'duration'>> = {},
+): TrafficEvent {
+  return {
+    type: 'Feature',
+    geometry: null,
+    properties: {
+      id,
+      status: 'Published',
+      published: null,
+      source: null,
+      url: '',
+      event_type: over.event_type ?? 'Crash',
+      event_subtype: null,
+      event_due_to: null,
+      impact: { direction: null, towards: null, impact_type: 'Lanes', impact_subtype: null, delay: null },
+      duration: over.duration ?? null,
+      event_priority: 'High',
+      description: null,
+      advice: null,
+      information: null,
+      road_summary: { road_name: road, locality, postcode: null, local_government_area: null, district: 'Metropolitan' },
+      last_updated: null,
+      next_inspection: null,
+      web_link: null,
+    },
+  }
+}
+
+/** A QFD warning with only an id, level, area and title set. */
+export function fireWarning(id: string, area: string | null, title = 'Bushfire'): FireWarning {
+  return {
+    id,
+    level: 'Advice',
+    levelText: 'Advice',
+    title,
+    area,
+    location: null,
+    status: null,
+    kind: 'FIRE VEGETATION',
+    callToAction: null,
+    header: null,
+    impacts: null,
+    shouldDo: null,
+    leaveSafely: null,
+    further: null,
+    text: null,
+    position: [0, 0],
+    areaShape: null,
+    issued: null,
+    published: null,
+    expires: null,
   }
 }
