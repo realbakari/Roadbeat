@@ -3,11 +3,12 @@ import type * as maplibregl from 'maplibre-gl'
 import { FIRE_COLOR, fireKindLabel, fireRank, type FireWarning } from '../../api/bushfires'
 import type { Gauge } from '../../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../../api/bccSignals'
+import { clearanceLabel, type Clearance } from '../../api/clearances'
 import type { TrafficEvent } from '../../api/types'
 import { latestReading, rainfallSince } from '../../lib/gauges'
 import { dsBand, loadChanged, siteLoad } from '../../lib/signals'
 import type { Bounds } from '../../lib/geo'
-import { fireIcon, signalIcon } from '../../lib/mapIcons'
+import { clearanceIcon, fireIcon, signalIcon } from '../../lib/mapIcons'
 
 /** Warning areas and fire markers; markers carry the hash key their detail page opens at. */
 export function fireFeatures(fires: FireWarning[]): GeoJSON.FeatureCollection {
@@ -24,6 +25,23 @@ export function fireFeatures(fires: FireWarning[]): GeoJSON.FeatureCollection {
     out.push({ type: 'Feature', geometry: { type: 'Point', coordinates: f.position }, properties: props })
   }
   return { type: 'FeatureCollection', features: out }
+}
+
+/** Low clearance signs; each carries the hash key its detail page opens at. */
+export function clearanceFeatures(list: Clearance[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: list.map((c) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: c.position },
+      properties: {
+        key: `place/clearance/${encodeURIComponent(c.id)}`,
+        label: `${clearanceLabel(c.metres)} clearance · ${c.title}`,
+        icon: clearanceIcon(c.metres),
+        metres: c.metres,
+      },
+    })),
+  }
 }
 
 export function setData(map: maplibregl.Map, id: string, data: GeoJSON.FeatureCollection) {

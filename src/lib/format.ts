@@ -45,3 +45,12 @@ export function titleCase(s: string | null | undefined): string | null {
   if (t !== t.toUpperCase()) return t
   return t.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase())
 }
+
+const day = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' })
+
+/** "2020-10-08" → "8 Oct 2020", for a calendar date with no time of day. */
+export function formatDay(ymd: string | null | undefined): string | null {
+  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null
+  const d = new Date(`${ymd}T00:00:00Z`)
+  return Number.isNaN(d.getTime()) ? null : day.format(d)
+}

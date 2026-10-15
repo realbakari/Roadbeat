@@ -43,7 +43,7 @@ import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/s
 import { TransitPanel } from './components/TransitPanel'
 import { parseHash } from './lib/route'
 import { useColorMode } from './hooks/useColorMode'
-import { useBushfires, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
+import { useBushfires, useClearances, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, isClosure, isUpcoming, type EventFilters } from './lib/filters'
 import { timeAgo } from './lib/format'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
@@ -242,6 +242,7 @@ export default function App() {
   // Brisbane City Council gauges and signals load only when something shows them.
   const { gauges } = useGauges(layers.gauges || !!sel.gauge || selectedEvent?.properties.event_type === 'Flooding')
   const { sites: signalSites, volumes: signalVolumes } = useSignals(layers.signals || !!sel.signal)
+  const { clearances, error: clearanceError } = useClearances(layers.clearances || sel.place?.kind === 'clearance')
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
     () => (sel.signal ? (signalSites?.find((s) => s.tsc === sel.signal) ?? null) : null),
@@ -285,13 +286,28 @@ export default function App() {
       const data = waze.find((w) => w.uuid === p.id)
       return data ? { kind: 'waze', data } : null
     }
+    if (p.kind === 'clearance') {
+      const data = clearances?.find((c) => c.id === p.id)
+      return data ? { kind: 'clearance', data } : null
+    }
     return null
-  }, [sel.place, ref, waze])
+  }, [sel.place, ref, waze, clearances])
 
   // Opening a shared link to a layer item turns that layer on.
   useEffect(() => {
     const k = sel.place?.kind
-    const key = k === 'rest' ? 'restAreas' : k === 'dump' ? 'dumpPoints' : k === 'truck' ? 'trucks' : k === 'waze' ? 'waze' : null
+    const key =
+      k === 'rest'
+        ? 'restAreas'
+        : k === 'dump'
+          ? 'dumpPoints'
+          : k === 'truck'
+            ? 'trucks'
+            : k === 'waze'
+              ? 'waze'
+              : k === 'clearance'
+                ? 'clearances'
+                : null
     if (key) setLayers((l) => (l[key] ? l : { ...l, [key]: true }))
   }, [sel.place?.kind])
 
@@ -305,8 +321,10 @@ export default function App() {
         ? ([selectedPlace.data.location.x, selectedPlace.data.location.y] as LngLat)
         : selectedPlace.kind === 'truck'
           ? (selectedPlace.data.geometry.coordinates[0]?.[0] as LngLat)
-          : selectedPlace.data.coordinates
-    if (at) setFocus({ center: at, zoom: selectedPlace.kind === 'truck' ? 12 : 13 })
+          : selectedPlace.kind === 'clearance'
+            ? selectedPlace.data.position
+            : selectedPlace.data.coordinates
+    if (at) setFocus({ center: at, zoom: selectedPlace.kind === 'truck' ? 12 : selectedPlace.kind === 'clearance' ? 16 : 13 })
   }, [selectedPlace, sel.vehicle])
 
   // Keep the selected event on the map even if filters would hide it.
@@ -344,8 +362,9 @@ export default function App() {
       ...(fires ? { fires: fires.length } : {}),
       ...(gauges ? { gauges: gauges.length } : {}),
       ...(signalVolumes ? { signals: signalVolumes.size } : {}),
+      ...(clearances ? { clearances: clearances.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances],
   )
 
   const locate = useCallback(() => {
@@ -710,6 +729,7 @@ export default function App() {
               gauges={gauges ?? []}
               signalSites={signalSites ?? []}
               signalVolumes={signalVolumes}
+              clearances={clearances ?? []}
               selectedVehicleId={sel.vehicle}
               trackCodes={trackCodes}
               followVehicle={followVehicle && !!selectedVehicle}
@@ -738,6 +758,7 @@ export default function App() {
               onVehicleModesChange={setVehicleModes}
               vehicleCounts={vehicleCounts}
               vehicleError={vehicleError}
+              clearanceError={clearanceError}
             />
             {vehicleFilter && layers.vehicles && (
               <div className="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line">

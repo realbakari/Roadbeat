@@ -1,5 +1,5 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, StackIcon, XIcon } from '@phosphor-icons/react'
+import { ArrowsVerticalIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, StackIcon, XIcon } from '@phosphor-icons/react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
@@ -15,7 +15,8 @@ import {
   type CrashFilter,
 } from '../api/crashes'
 import { EVENT_TYPES } from '../lib/eventMeta'
-import { iconUrl, signalIcon, typeSlug, VEHICLE_COLOR } from '../lib/mapIcons'
+import { BCC_CLEARANCES_URL, QR_CLEARANCES_URL } from '../api/clearances'
+import { iconUrl, LAYER_COLOR, signalIcon, typeSlug, VEHICLE_COLOR } from '../lib/mapIcons'
 import type { Basemap, MapLayers } from './map/settings'
 
 interface Props {
@@ -30,6 +31,7 @@ interface Props {
   onVehicleModesChange: (modes: VehicleMode[]) => void
   vehicleCounts: Partial<Record<VehicleMode, number>>
   vehicleError: string | null
+  clearanceError: string | null
 }
 
 const VEHICLE_MODES: { mode: VehicleMode; label: string }[] = [
@@ -121,6 +123,7 @@ export function MapLayersPanel({
   onVehicleModesChange,
   vehicleCounts,
   vehicleError,
+  clearanceError,
   basemap,
   onBasemapChange,
 }: Props) {
@@ -260,6 +263,31 @@ export function MapLayersPanel({
               onChange={(v) => set(t.key, v)}
             />
           ))}
+          <LayerRow
+            icon={<Badge color={LAYER_COLOR.clearance} className="ring ring-black/70" icon={<ArrowsVerticalIcon size={12} weight="bold" color="#111" />} />}
+            label="Low clearances"
+            count={counts.clearances}
+            checked={layers.clearances}
+            onChange={(v) => set('clearances', v)}
+          >
+            <Text size="xs" variant={clearanceError ? 'error' : 'secondary'}>
+              {clearanceError
+                ? `Clearances unavailable: ${clearanceError}.`
+                : 'Signed clearances of low bridges and structures, as published by '}
+              {!clearanceError && (
+                <>
+                  <a href={BCC_CLEARANCES_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    Brisbane City Council
+                  </a>{' '}
+                  and{' '}
+                  <a href={QR_CLEARANCES_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    Queensland Rail
+                  </a>
+                  . Not every low structure is listed; always obey the signs on the road.
+                </>
+              )}
+            </Text>
+          </LayerRow>
           <LayerRow
             icon={<img src={iconUrl(signalIcon(1))} alt="" className="size-5" />}
             label="Signal traffic"

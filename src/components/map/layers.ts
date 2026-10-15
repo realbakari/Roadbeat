@@ -37,7 +37,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     if (map.getLayer('building-3d')) map.removeLayer('building-3d')
   }
 
-  for (const id of ['districts', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
+  for (const id of ['districts', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
     map.addSource(id, { type: 'geojson', data: empty })
   }
   const color = ['get', 'color'] as unknown as string
@@ -146,6 +146,21 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   iconLayer('places-rest', 'places', ['in', ['get', 'icon'], ['literal', ['rest-area', 'rest-area-hv']]], 6)
   iconLayer('places-dump', 'places', ['==', ['get', 'icon'], 'dump-point'], 6)
   iconLayer('trucks-icon', 'trucks', ['==', ['geometry-type'], 'Point'], 7)
+  // Low clearance signs: lower clearances draw on top where two overlap.
+  map.addLayer({
+    id: 'clearances',
+    type: 'symbol',
+    source: 'clearances',
+    minzoom: 8,
+    layout: {
+      visibility: 'none',
+      'icon-image': ['get', 'icon'],
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.7, 13, 1],
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
+      'symbol-sort-key': ['-', 10, ['get', 'metres']],
+    },
+  })
   iconLayer('cameras-web', 'cameras', ['==', ['get', 'icon'], 'camera-webcam'], 7)
   iconLayer('cameras-flood', 'cameras', ['==', ['get', 'icon'], 'camera-floodcam'], 6)
   iconLayer('places-waze', 'places', ['==', ['get', 'icon'], 'waze'], 0, [5, 0.6, 12, 0.85])

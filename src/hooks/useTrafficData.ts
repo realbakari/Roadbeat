@@ -12,6 +12,7 @@ import {
 import { fetchGauges, type Gauge } from '../api/bccGauges'
 import { fetchSignalVolumes, loadSignalSites, type SignalSite, type SignalVolumes } from '../api/bccSignals'
 import { fetchBushfires, type FireWarning } from '../api/bushfires'
+import { fetchClearances, type Clearance } from '../api/clearances'
 import { fetchRoadOccupancies, type RoadOccupancy } from '../api/bccRoadOccupancies'
 import { fetchCarParkSpaces, type CarParkSpaces } from '../api/bccParking'
 import { loadTimetableIndex, type TimetableIndex } from '../api/timetables'
@@ -378,6 +379,26 @@ export function useSignals(enabled: boolean) {
     }
   }, [enabled])
   return { sites: enabled ? sites : null, volumes: enabled ? volumes : null, error: enabled ? error : null }
+}
+
+/**
+ * Low clearance bridges and structures, loaded once per visit the first time
+ * something shows them. Both datasets change about monthly.
+ */
+export function useClearances(enabled: boolean) {
+  const [list, setList] = useState<Clearance[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const loaded = list != null
+  useEffect(() => {
+    if (!enabled || loaded) return
+    const c = new AbortController()
+    fetchClearances(c.signal).then(
+      (l) => (setList(l), setError(null)),
+      (e: Error) => !c.signal.aborted && setError(e.message),
+    )
+    return () => c.abort()
+  }, [enabled, loaded])
+  return { clearances: enabled ? list : null, error: enabled ? error : null }
 }
 
 /** Brisbane City Council planned road occupancies, refreshed every 30 minutes while `enabled` (the council updates them daily). */

@@ -19,6 +19,8 @@ export interface MapLayers {
   gauges: boolean
   /** Brisbane City Council signalised intersections, coloured by measured saturation. */
   signals: boolean
+  /** Brisbane City Council and Queensland Rail low clearance bridges and structures. */
+  clearances: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -35,4 +37,5 @@ export const DEFAULT_LAYERS: MapLayers = {
   fires: true,
   gauges: false,
   signals: false,
+  clearances: false,
 }

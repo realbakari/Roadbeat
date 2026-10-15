@@ -24,14 +24,16 @@ The browser reads these while the app is open.
 | Railway station facilities and access | Queensland Rail, published by Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/railway-station-facilities/records?where=stops="<stop id>"` | Direct | Once per station per visit | `src/api/stationFacilities.ts` |
 | Planned road occupancies | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/planned-temporary-road-occupancies/exports/json` | Direct. The permit holder's contact details are dropped. | 30 min, while Road events is open. The council updates daily. | `src/api/bccRoadOccupancies.ts` |
 | CBD car park spaces | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-parking-stations/records` | Direct | 5 min, on the dashboard | `src/api/bccParking.ts` |
+| Low clearances | Brisbane City Council; Queensland Rail, published by Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/road-restrictions/exports/json`, `…/road-restrictions-qr/exports/json` and `…/road-restrictions-qr` (dataset metadata) | Direct | Once per visit, when the layer or a clearance page is opened. Both datasets update about monthly. | `src/api/clearances.ts` |
 | Crash history | TMR, data.qld.gov.au | `www.data.qld.gov.au/api/3/action/datastore_search_sql` | Direct (CKAN SQL) | On demand | `src/api/crashes.ts` |
 | Base maps | OpenFreeMap | `tiles.openfreemap.org/styles/{positron,dark,liberty,bright,fiord}` | Direct | On demand | `src/components/TrafficMap.tsx` |
 
 Base maps are © OpenFreeMap, OpenMapTiles and OpenStreetMap contributors (ODbL for the map data).
 
-Two Brisbane City Council feeds need care:
+Three Brisbane City Council feeds need care:
 
 - **Gauges** report at irregular intervals. Tidal gauges report every few minutes, but some creek gauges report only every few hours. The app shows when each reading was taken and draws a trend only between two real readings. The feed has no flood thresholds, so the app never labels a height as minor, moderate or major flooding.
+- **Low clearances** come from two datasets. The council's rows each have a `validation_date`; the app shows it as "Validated". Queensland Rail's rows have no date or id: the app dates them by the dataset's "temporal coverage from" metadata, the day Queensland Rail's extract was taken, and identifies each bridge by its published latitude and longitude. The app shows `signed_clearance_min` and `road_clearance_m` exactly as published, never rounded. It ignores `signed_clearance_max`, which holds the placeholders 9999 and -9999.
 - **Intersection volumes** give each lane's degree of saturation (`dsN`, measured) and vehicle count (`mfN`, measured). They also give `rfN`, a flow that SCATS calculates. The app does not use `rfN`, because it is an estimate. The council does not publish which street each SCATS approach belongs to.
 
 The QLDTraffic files are the feeds behind qldtraffic.qld.gov.au. They are not part of the published QLDTraffic API specification, so they can change without notice. The documented API at `api.qldtraffic.qld.gov.au` has the same events, but its camera endpoints send no CORS headers. Set `VITE_QLDTRAFFIC_DATA_BASE` to read the files from a mirror.

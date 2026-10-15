@@ -15,6 +15,7 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Journey planner.** Direct trips and trips with one change at the same station or stop, built from the published timetable. Trips that need a walk link to TransLink's own planner.
 - **Bushfire warnings.** Queensland Fire Department warnings and incidents on the map, in the events list and in notifications.
 - **Brisbane gauges and signals.** Brisbane City Council's live stream heights and rainfall, shown on the map and next to nearby flooding events, each linked to the Bureau of Meteorology's flood warning for its area, and how busy each council-run traffic signal is right now.
+- **Low clearances.** Signed clearances of about 20 low Brisbane City Council structures and about 100 Queensland Rail bridges in South East Queensland, for truck and caravan drivers, each with its owner's phone number and the date the council validated it or Queensland Rail's extract was taken.
 - **Council road closures.** Brisbane City Council's planned lane and road closures for today, above the road events list.
 - **Station access.** Lift and escalator outages from Translink, and Queensland Rail's access details and facilities, on every train station page.
 - **Notifications.** Alerts for events, routes and bushfire warnings that match your settings, while the app is open.

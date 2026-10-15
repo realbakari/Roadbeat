@@ -31,6 +31,8 @@ export const LAYER_COLOR = {
   dumpPoint: '#7c3aed',
   waze: '#0ea5e9',
   truck: '#b91c1c',
+  /** Yellow, like a low clearance sign. */
+  clearance: '#facc15',
 } as const
 
 export const VEHICLE_COLOR = {
@@ -143,6 +145,50 @@ export async function ensureIcons(map: MapLibreMap) {
   const imgs = await loadAll()
   for (const [id, img] of imgs) {
     if (!map.hasImage(id)) map.addImage(id, img, { pixelRatio: 2 })
+  }
+}
+
+/** Map image id for a clearance sign showing `metres`, as published. */
+export function clearanceIcon(metres: number) {
+  return `clearance-${metres}`
+}
+
+/** A yellow low clearance sign with the height in black, sized to its text. */
+function clearanceSign(metres: number) {
+  const label = `${metres}m`
+  const w = Math.round(10 + label.length * 6.6)
+  const h = 20
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w * 2}" height="${(h + 2) * 2}" viewBox="0 0 ${w} ${h + 2}">` +
+    `<rect x="1" y="1.8" width="${w - 2}" height="${h - 1}" rx="3" fill="rgba(0,0,0,.25)"/>` +
+    `<rect x="1" y="1" width="${w - 2}" height="${h - 1}" rx="3" fill="${LAYER_COLOR.clearance}" stroke="#111" stroke-width="1.6"/>` +
+    `<text x="${w / 2}" y="14.6" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="700" font-size="11" fill="#111">${label}</text></svg>`
+}
+
+export function clearanceIconUrl(metres: number) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(clearanceSign(metres))}`
+}
+
+const clearanceImages = new Map<number, Promise<HTMLImageElement>>()
+
+/** Registers a sign for each clearance height on the map's current style (call after each style load). */
+export async function ensureClearanceIcons(map: MapLibreMap, heights: number[]) {
+  const imgs = await Promise.all(
+    [...new Set(heights)].map((m) => {
+      let p = clearanceImages.get(m)
+      if (!p) {
+        p = new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image()
+          img.onload = () => resolve(img)
+          img.onerror = reject
+          img.src = clearanceIconUrl(m)
+        })
+        clearanceImages.set(m, p)
+      }
+      return p.then((img) => [m, img] as const)
+    }),
+  )
+  for (const [m, img] of imgs) {
+    if (!map.hasImage(clearanceIcon(m))) map.addImage(clearanceIcon(m), img, { pixelRatio: 2 })
   }
 }
 

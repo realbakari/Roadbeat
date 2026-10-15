@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CrashFilter } from '../api/crashes'
 import type { Gauge } from '../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
+import type { Clearance } from '../api/clearances'
 import type { FireWarning } from '../api/bushfires'
 import { loadTracks } from '../api/tracks'
 import { loadStopFeatures } from '../lib/stopFeatures'
@@ -23,10 +24,10 @@ import {
   type Bounds,
   type LngLat,
 } from '../lib/geo'
-import { ensureIcons } from '../lib/mapIcons'
+import { ensureClearanceIcons, ensureIcons } from '../lib/mapIcons'
 import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
-import { boundsOf, fireFeatures, gaugeFeatures, setData, signalFeatures, withLabels } from './map/features'
+import { boundsOf, clearanceFeatures, fireFeatures, gaugeFeatures, setData, signalFeatures, withLabels } from './map/features'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -77,6 +78,7 @@ interface Props {
   gauges: Gauge[]
   signalSites: SignalSite[]
   signalVolumes: SignalVolumes | null
+  clearances: Clearance[]
   selectedVehicleId: string | null
   /** Route codes whose train, tram or ferry track to highlight (a line shown on the map, or the selected vehicle's route). */
   trackCodes: string[] | null
@@ -109,9 +111,10 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   fires: ['fire-areas', 'fire-area-lines', 'fire-markers'],
   gauges: ['gauges', 'gauges-label'],
   signals: ['signals', 'signals-label', 'signals-halo', 'signals-ring'],
+  clearances: ['clearances'],
 }
 
-const CLICKABLE_PLACES = ['gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 
 export function TrafficMap(props: Props) {
@@ -134,6 +137,7 @@ export function TrafficMap(props: Props) {
     gauges,
     signalSites,
     signalVolumes,
+    clearances,
     selectedVehicleId,
     trackCodes,
     followVehicle,
@@ -264,6 +268,15 @@ export function TrafficMap(props: Props) {
   useEffect(() => {
     if (ready && map) setData(map, 'trucks', truckData)
   }, [map, ready, truckData])
+  // Each height's sign is drawn once its image is registered on the current style.
+  useEffect(() => {
+    if (!ready || !map) return
+    let live = true
+    ensureClearanceIcons(map, clearances.map((c) => c.metres)).then(() => live && setData(map, 'clearances', clearanceFeatures(clearances)))
+    return () => {
+      live = false
+    }
+  }, [map, ready, clearances])
   useEffect(() => {
     if (ready && map) setData(map, 'districts', districts)
   }, [map, ready, districts])
