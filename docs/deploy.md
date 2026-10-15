@@ -39,6 +39,18 @@ The functions in `api/` serve the public API (`/api/events`, `/api/stops`, `/api
 
 Vercel compiles each file in `api/` on its own for Node, without bundling. So every relative import in `api/`, and in the `src/` modules it imports, must end in `.js`, and JSON imports need `with { type: 'json' }`. `api/tsconfig.json` checks this, and `npm run build` runs it.
 
+### Turn on commute push alerts
+
+Push alerts need four environment variables, a database and a scheduler. Until all are set, the app hides the push switch and everything else works.
+
+1. Generate VAPID keys with `npx web-push generate-vapid-keys`. In Vercel, set `VAPID_PUBLIC_KEY` and `VITE_VAPID_PUBLIC_KEY` to the public key, and `VAPID_PRIVATE_KEY` to the private key as a sensitive variable. Optionally set `VAPID_SUBJECT` to a `mailto:` address; it defaults to the site address.
+2. Set `CRON_SECRET` to a long random string, as a sensitive variable.
+3. In Vercel, open **Storage**, create an **Upstash for Redis** database and connect it to the project. This sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+4. In GitHub, add a repository secret named `CRON_SECRET` with the same value. `.github/workflows/push-check.yml` then calls `/api/push-check` every 5 minutes. If the site isn't at `https://roadbeat.vercel.app`, add a repository variable `SITE_URL`.
+5. Redeploy, so the build picks up `VITE_VAPID_PUBLIC_KEY`.
+
+GitHub runs scheduled workflows on a best-effort basis, often a few minutes late, and pauses them in repositories with no activity for 60 days. Vercel's Hobby plan runs its own cron jobs only once a day, which is why GitHub does the scheduling.
+
 ## Deploy to Netlify
 
 Add the rewrites to `public/_redirects` before you build:

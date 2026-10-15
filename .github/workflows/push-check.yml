@@ -1,0 +1,25 @@
+# Asks Roadbeat to send commute push alerts every 5 minutes (see api/push-check.ts).
+# Vercel's Hobby plan runs cron jobs only once a day, so GitHub's scheduler does this.
+# Set the repository secret CRON_SECRET to the same value as the Vercel environment variable.
+name: Push alert check
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check commutes and send alerts
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://roadbeat.vercel.app' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET is not set, so push alerts are off. Skipping."
+            exit 0
+          fi
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE_URL/api/push-check"

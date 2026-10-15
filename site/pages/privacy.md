@@ -1,10 +1,10 @@
 ---
 title: Privacy
 <!--if:GA_MEASUREMENT_ID-->
-description: Roadbeat has no accounts or advertising and uses Google Analytics to count visits. Your settings and location stay in your browser.
+description: Roadbeat has no accounts or advertising and uses Google Analytics to count visits. Your settings and location stay in your browser unless you turn on commute push alerts.
 <!--endif-->
 <!--ifnot:GA_MEASUREMENT_ID-->
-description: Roadbeat has no accounts, no cookies and no analytics. Your settings and location stay in your browser.
+description: Roadbeat has no accounts, no cookies and no analytics. Your settings and location stay in your browser unless you turn on commute push alerts.
 <!--endif-->
 ---
 
@@ -39,7 +39,15 @@ Roadbeat uses Google Analytics to count visits and see which pages and features 
 <!--endif-->
 ## Notifications
 
-Notifications are created in your browser while Roadbeat is open. If you allow system notifications, your browser shows them. Roadbeat has no push server and does not send notifications from anywhere else.
+The alerts you set in **Notification settings** are created in your browser while Roadbeat is open. If you allow system notifications, your browser shows them. Nothing about them is sent to a server.
+
+## Push alerts for your commute
+
+Push alerts are off unless you turn them on in the **My commute** card. When you do, your browser creates a push subscription: an address at your browser maker's push service (such as Google, Apple or Mozilla) and the keys to encrypt messages to it. Roadbeat sends that subscription to its server together with your commute: the roads, stop, line, usual departure time and days you chose. It does not send your name, your location or anything else you've saved.
+
+The server stores this in a database (Upstash Redis, through Roadbeat's host, Vercel) and uses it only to check the official feeds during your commute window and send you alerts. It also keeps the short ids of alerts it has already sent, so you don't get the same one twice. Each alert is encrypted and passes through your browser maker's push service to reach you.
+
+Turning push alerts off, or removing your commute, deletes your subscription from the server. If your browser withdraws the subscription, for example because you blocked notifications, Roadbeat deletes it the next time it tries to send.
 
 ## Changes and questions
 

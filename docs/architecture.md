@@ -93,9 +93,11 @@ Track lines come from TransLink's GTFS shapes. Those shapes follow the middle of
 
 Map animation follows the same rule as the data. The **Signal traffic** layer does not animate red, amber and green lights, because the council's feed has no phase timing. It rings intersections whose measured saturation changed in the newest batch, and it pulses a halo on intersections at 100% or more. `useSignalAnimation` in `src/components/map/` runs both, and turns them off when the viewer's system asks for reduced motion.
 
-## Notifications run only while the app is open
+## Notifications run in the app; commute alerts can also be pushed
 
-There is no push server. `useNotifications` in `src/hooks/useNotifications.ts` compares each refresh with the last one it saw, which it keeps in `localStorage`. It raises a notification for new or changed items that match the user's settings. Items that changed while the app was closed appear as "While you were away" on the next visit.
+In-app notifications need no server. `useNotifications` in `src/hooks/useNotifications.ts` compares each refresh with the last one it saw, which it keeps in `localStorage`. It raises a notification for new or changed items that match the user's settings. Items that changed while the app was closed appear as "While you were away" on the next visit.
+
+Commute push alerts are the one exception, and riders opt in. The browser subscribes with the server's VAPID key (`src/api/push.ts`, `public/sw.js`) and sends the subscription and its commute to `api/push.ts`, which stores them in Upstash Redis. Every five minutes a GitHub Actions workflow calls `api/push-check.ts`. It checks only commutes inside their window, runs `commuteAlerts()` from `src/lib/commute.ts` (the same rules the in-app card uses) and sends each alert once. The service worker shows alerts and caches nothing.
 
 ## What the browser remembers
 
