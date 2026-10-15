@@ -19,7 +19,7 @@ import { timetableCodes } from '../lib/transitLines'
 import { recordRecentStop, toggleSavedStop, useSavedStops } from '../lib/savedStops'
 import { DelayChip, TimeFormatToggle } from './Realtime'
 import { StationMapLink } from './TransitMaps'
-import { AccessAlerts, FerryTerminalSection, StationFacilitiesSection } from './StationAccess'
+import { AccessAlerts, BusStopSection, FerryTerminalSection, StationFacilitiesSection } from './StationAccess'
 import { StopTimetable, TimetableLink } from './Timetable'
 import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
 import { kioskPath } from '../lib/route'
@@ -303,6 +303,7 @@ export function StopPage({
           <Legend />
           {stop && <StationFacilitiesSection stopId={stops?.station(stop).id ?? stop.id} />}
           {stop && <FerryTerminalSection stopId={stop.id} />}
+          {stop && <BusStopSection stopId={stop.id} />}
           <section id="stop-timetable" className="grid scroll-mt-4 gap-2">
             <Text as="h3" variant="heading">
               Timetable

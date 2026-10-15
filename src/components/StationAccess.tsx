@@ -40,11 +40,12 @@ import {
   SecurityCameraIcon,
   type Icon,
 } from '@phosphor-icons/react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { fetchStationFacilities, STATION_FACILITIES_URL, type Feature, type StationFacilities } from '../api/stationFacilities'
 import type { TransitAlert } from '../api/translink'
 import { AudioPlayer } from './AudioPlayer'
 import { fetchFerryTerminal, FERRY_TERMINALS_URL, type FerryTerminal } from '../api/ferryTerminals'
+import { BUS_STOPS_URL, fetchBusStopAudit, type BusStopAudit, type Rating } from '../api/bccBusStops'
 import { formatDay } from '../lib/format'
 import { LightMarkdown } from './LightMarkdown'
 
@@ -227,6 +228,66 @@ export function FerryTerminalSection({ stopId }: { stopId: string }) {
           Ferry terminals
         </a>
         , CC BY 4.0){inspected && `, last inspected ${inspected}`}. Lift outages come from TransLink's real-time alerts.
+      </Text>
+    </section>
+  )
+}
+
+const RATING_COLOR: Record<Rating, string> = { Easy: 'text-kumo-success', Medium: 'text-kumo-warning', Hard: 'text-kumo-danger' }
+
+/**
+ * Brisbane City Council's audit of a bus stop: its type and the council's
+ * boarding, gradient and cross-fall ratings. Renders nothing for stops outside
+ * the council's area.
+ */
+export function BusStopSection({ stopId }: { stopId: string }) {
+  // A failed fetch shows nothing; the rest of the stop page doesn't depend on it.
+  const [state, setState] = useState<{ id: string; data: BusStopAudit | null } | null>(null)
+  useEffect(() => {
+    let live = true
+    fetchBusStopAudit(stopId).then(
+      (data) => live && setState({ id: stopId, data }),
+      () => live && setState({ id: stopId, data: null }),
+    )
+    return () => {
+      live = false
+    }
+  }, [stopId])
+  const a = state?.id === stopId ? state.data : null
+  if (!a) return null
+  const audited = formatDay(a.audited)
+  const ratings: [string, Rating | null, string][] = [
+    ['Boarding point', a.boarding, 'How easy it is to board from the kerb'],
+    ['Road gradient', a.gradient, 'The slope of the road along the stop'],
+    ['Cross fall', a.crossFall, 'The slope of the footpath across the stop'],
+  ]
+
+  return (
+    <section id="stop-access" className="grid scroll-mt-4 gap-3" aria-labelledby="bus-stop-access-title">
+      <Text as="h3" variant="heading" id="bus-stop-access-title">
+        Stop access
+      </Text>
+      <Text size="sm">
+        {[a.type && `${a.type} stop`, a.street && a.crossStreet ? `${a.street} near ${a.crossStreet}` : a.street, a.suburb].filter(Boolean).join(' · ')}
+      </Text>
+      <dl className="grid grid-cols-[8.5rem_1fr] gap-x-4 gap-y-1.5 text-sm">
+        {ratings.map(([label, value, meaning]) => (
+          <Fragment key={label}>
+            <dt className="text-kumo-subtle" title={meaning}>
+              {label}
+            </dt>
+            <dd className={value ? `font-medium ${RATING_COLOR[value]}` : 'text-kumo-subtle'}>{value ?? 'Not rated'}</dd>
+          </Fragment>
+        ))}
+        <dt className="text-kumo-subtle">Tactile indicators</dt>
+        <dd className={a.tactile == null ? 'text-kumo-subtle' : ''}>{a.tactile == null ? 'Not recorded' : a.tactile ? 'Yes' : 'No'}</dd>
+      </dl>
+      <Text size="xs" variant="secondary">
+        Ratings as recorded in Brisbane City Council's bus stop audit (
+        <a href={BUS_STOPS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+          Brisbane bus stops
+        </a>
+        , CC BY 4.0){audited && `, last audited ${audited}`}. Easy, Medium and Hard are the council's own terms.
       </Text>
     </section>
   )
