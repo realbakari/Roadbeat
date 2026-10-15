@@ -87,6 +87,7 @@ describe('fastestRising', () => {
     id,
     name: id,
     kind: 'stream',
+    source: 'bcc',
     unit: 'm',
     position: [153, -27.5],
     readings: values.map((value, i) => ({ time: NOW - (values.length - 1 - i) * 5 * 60_000, value })),

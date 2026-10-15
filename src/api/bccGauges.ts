@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { parseSimpleCsv } from '../lib/csv'
-import type { LngLat } from '../lib/geo'
+import type { Gauge, GaugeReading } from './gaugeTypes'
 
 // Brisbane City Council rainfall and stream height gauges
 // (data.brisbane.qld.gov.au "Telemetry sensors — Rainfall and Stream heights"
@@ -14,23 +14,7 @@ export const GAUGES_DATASET_URL = 'https://data.brisbane.qld.gov.au/explore/data
 /** 24 hours of 5-minute rows. */
 const ROWS = 288
 
-export interface GaugeReading {
-  /** When the gauge measured it (ms). */
-  time: number
-  value: number
-}
-
-export interface Gauge {
-  /** Sensor id, e.g. "E1594". */
-  id: string
-  name: string
-  /** Stream height in metres above the Australian Height Datum, or rainfall in mm per 5 minutes. */
-  kind: 'stream' | 'rain'
-  unit: string
-  position: LngLat
-  /** Readings over the last 24 hours, oldest first. Intervals with no report are left out. */
-  readings: GaugeReading[]
-}
+export type { Gauge, GaugeReading } from './gaugeTypes'
 
 const Sensor = z.object({
   sensor_id: z.string(),
@@ -62,6 +46,7 @@ export function parseGauges(sensors: unknown, readingsCsv: string): Gauge[] {
       id: s.data.sensor_id,
       name: s.data.location_name.trim(),
       kind: s.data.sensor_type.toLowerCase().startsWith('stream') ? 'stream' : 'rain',
+      source: 'bcc',
       unit: s.data.unit_of_measure,
       position: [s.data.longitude, s.data.latitude],
       readings,

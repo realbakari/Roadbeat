@@ -4,7 +4,7 @@ import { changeWithin, nearbyGauges, rainfallSince } from './gauges'
 
 const T = Date.parse('2026-10-15T10:00:00+10:00')
 const min = (m: number) => T + m * 60_000
-const gauge = (over: Partial<Gauge>): Gauge => ({ id: 'E1', name: 'Gauge', kind: 'stream', unit: 'm', position: [153, -27.5], readings: [], ...over })
+const gauge = (over: Partial<Gauge>): Gauge => ({ id: 'E1', name: 'Gauge', kind: 'stream', source: 'bcc', unit: 'm', position: [153, -27.5], readings: [], ...over })
 
 describe('changeWithin', () => {
   it('compares the earliest and latest readings in the window', () => {

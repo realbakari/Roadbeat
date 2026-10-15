@@ -32,7 +32,7 @@ interface Props {
   onOpenCamera: (key: string) => void
   watched: boolean
   onToggleWatch: () => void
-  /** Brisbane City Council gauges, shown next to flooding events. */
+  /** Brisbane City Council and Queensland Government gauges, shown next to flooding events. */
   gauges: Gauge[] | null
   onOpenHref: (hash: string) => void
 }

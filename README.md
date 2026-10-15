@@ -14,7 +14,7 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Timetables.** Every published trip on every route, as a stop-by-trip grid per line and a full day's list per stop, with real-time delays on today's trips.
 - **Journey planner.** Direct trips and trips with one change at the same station or stop, built from the published timetable. Trips that need a walk link to TransLink's own planner.
 - **Bushfire warnings.** Queensland Fire Department warnings and incidents on the map, in the events list and in notifications.
-- **Brisbane gauges and signals.** Brisbane City Council's live stream heights and rainfall, shown on the map and next to nearby flooding events, each linked to the Bureau of Meteorology's flood warning for its area, and how busy each council-run traffic signal is right now.
+- **Stream gauges and signals.** Brisbane City Council's live stream heights and rainfall, and the latest stream height at about 400 Queensland Government gauging stations across the state, shown on the map and next to nearby flooding events. Each council gauge links to the Bureau of Meteorology's flood warning for its area, and each state gauge to its page on the Water Monitoring Information Portal. Also how busy each council-run traffic signal is right now.
 - **Low clearances.** Signed clearances of about 20 low Brisbane City Council structures and about 100 Queensland Rail bridges in South East Queensland, for truck and caravan drivers, each with its owner's phone number and the date the council validated it or Queensland Rail's extract was taken.
 - **Clearways, toilets and accessible parking.** Brisbane City Council clearways on the map, red while their signed times are in effect, plus public toilets with their accessibility features and accessible parking bays with their signed times.
 - **Parking meters and cycling.** Brisbane parking meters with their hours, maximum stay and rates, and the council's bikeway network with bike racks and repair stations.
@@ -65,6 +65,7 @@ The development server proxies the TransLink and Queensland Fire Department feed
 | `npm run data:tracks` | Rebuilds the train, tram and ferry tracks in `public/transit-tracks.json`. |
 | `npm run data:maps` | Rebuilds the list of TransLink's printable maps in `src/data/translink-maps.json`. |
 | `npm run data:intersections` | Rebuilds Brisbane City Council's signal locations in `src/data/bcc-intersections.json`. |
+| `npm run data:qld-gauges` | Rebuilds the statewide stream gauging station list in `public/qld-gauges.json`. |
 
 ## Documentation
 
@@ -78,4 +79,4 @@ Roadbeat also publishes [About](site/pages/about.md), [Privacy](site/pages/priva
 
 ## Licence
 
-Road and transport data © State of Queensland (Department of Transport and Main Roads, Translink, Queensland Fire Department) and Brisbane City Council, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Base maps © OpenFreeMap, OpenMapTiles and OpenStreetMap contributors. This is an independent project and is not affiliated with the Queensland Government.
+Road and transport data © State of Queensland (Department of Transport and Main Roads, Translink, Queensland Fire Department, Department of Local Government, Water and Volunteers) and Brisbane City Council, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Base maps © OpenFreeMap, OpenMapTiles and OpenStreetMap contributors. This is an independent project and is not affiliated with the Queensland Government.

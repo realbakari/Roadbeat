@@ -44,7 +44,7 @@ describe('eventCard', () => {
 
 describe('gaugeCard', () => {
   it('shows the latest reading with its time', () => {
-    const gauge: Gauge = { id: 'E1', name: 'Oxley Ck', kind: 'stream', unit: 'm', position: [153, -27.5], readings: [{ time: NOW - 600_000, value: 1.234 }] }
+    const gauge: Gauge = { id: 'E1', name: 'Oxley Ck', kind: 'stream', source: 'bcc', unit: 'm', position: [153, -27.5], readings: [{ time: NOW - 600_000, value: 1.234 }] }
     expect(gaugeCard(gauge, NOW).facts[0]).toBe('1.23 m AHD at 7:50 am')
   })
 })

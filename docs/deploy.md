@@ -1,13 +1,14 @@
 # Deploy the app
 
-`npm run build` writes a static site to `dist/`. Any static host can serve it. Live transport and bushfire warnings also need two proxies, because their sources send no CORS headers. Everything else works without them.
+`npm run build` writes a static site to `dist/`. Any static host can serve it. Live transport, bushfire warnings and the statewide stream gauges also need proxies, because their sources send no CORS headers. Everything else works without them.
 
 | Path | Proxies |
 | --- | --- |
 | `/translink-rt/<region>/<feed>` | `https://gtfsrt.api.translink.com.au/api/realtime/<region>/<feed>` |
 | `/qfd-bushfires` | `https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json` |
+| `/qld-gauges` | A POST to `https://water-monitoring.information.qld.gov.au/cgi/webservice.pl` for the latest stream height at every station in `public/qld-gauges.json` |
 
-Without the proxies, the Transit tab falls back to TransLink's RSS notices, and the bushfire layer stays empty.
+Without the proxies, the Transit tab falls back to TransLink's RSS notices, the bushfire layer stays empty, and the gauges layer shows Brisbane City Council's gauges only.
 
 ## Set the site address and contact email
 
@@ -27,11 +28,11 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 1. Set the build command to `npm run build` and the output folder to `dist`.
 2. Add `SITE_URL`, `CONTACT_EMAIL` and `GA_MEASUREMENT_ID` under **Settings** > **Environment variables**.
-3. Deploy. `functions/translink-rt/[[path]].ts` and `functions/qfd-bushfires.ts` serve the two proxy paths and cache each response at the edge for 10 to 60 seconds. `functions/_middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, and a Markdown 404 for unknown pages.
+3. Deploy. `functions/translink-rt/[[path]].ts`, `functions/qfd-bushfires.ts` and `functions/qld-gauges.ts` serve the three proxy paths and cache each response at the edge for 10 to 60 seconds. `functions/_middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, and a Markdown 404 for unknown pages.
 
 ## Deploy to Vercel
 
-`vercel.json` sets the build command and output folder, and rewrites both proxy paths. `middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, the same as `functions/_middleware.ts` on Cloudflare. Add `SITE_URL`, `CONTACT_EMAIL` and `GA_MEASUREMENT_ID` as environment variables. Until `SITE_URL` is set, the build uses the project's production address (`VERCEL_PROJECT_PRODUCTION_URL`).
+`vercel.json` sets the build command and output folder, rewrites the three proxy paths, and gives `api/qld-gauges.ts` 60 seconds, because the water monitoring portal takes about 20 seconds to answer. `middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, the same as `functions/_middleware.ts` on Cloudflare. Add `SITE_URL`, `CONTACT_EMAIL` and `GA_MEASUREMENT_ID` as environment variables. Until `SITE_URL` is set, the build uses the project's production address (`VERCEL_PROJECT_PRODUCTION_URL`).
 
 ### The API and MCP server run only on Vercel
 
@@ -60,12 +61,14 @@ Add the rewrites to `public/_redirects` before you build:
 /qfd-bushfires   https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json  200
 ```
 
+A rewrite can't serve `/qld-gauges`, because the water monitoring portal wants a POST. Port `functions/qld-gauges.ts` to a Netlify Function, or leave it out: the map then shows Brisbane City Council's gauges only.
+
 ## Deploy elsewhere
 
-On any other host, serve `dist/` and add a reverse proxy for the two paths in the table. If the proxies run on another origin, point the app at them at build time:
+On any other host, serve `dist/` and add a reverse proxy for the two rewrite paths in the table, and a small function for `/qld-gauges` that POSTs the request in `src/api/qldGaugesFeed.ts` to the water monitoring portal. If the proxies run on another origin, point the app at them at build time:
 
 ```bash
-VITE_TRANSLINK_RT_BASE=https://proxy.example.com/translink-rt VITE_QFD_BUSHFIRES_URL=https://proxy.example.com/qfd-bushfires npm run build
+VITE_TRANSLINK_RT_BASE=https://proxy.example.com/translink-rt VITE_QFD_BUSHFIRES_URL=https://proxy.example.com/qfd-bushfires VITE_QLD_GAUGES_URL=https://proxy.example.com/qld-gauges npm run build
 ```
 
 ## Check search and agent readiness

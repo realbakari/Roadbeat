@@ -15,7 +15,7 @@ export interface MapLayers {
   buildings3d: boolean
   /** Queensland Fire Department bushfire warnings and incidents. */
   fires: boolean
-  /** Brisbane City Council stream height and rain gauges. */
+  /** Brisbane City Council and Queensland Government stream height and rain gauges. */
   gauges: boolean
   /** Brisbane City Council signalised intersections, coloured by measured saturation. */
   signals: boolean

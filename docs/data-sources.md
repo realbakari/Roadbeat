@@ -20,6 +20,7 @@ The browser reads these while the app is open.
 | Service alerts | Translink | `gtfsrt.api.translink.com.au/api/realtime/{SEQ,CNS}/alerts` | Proxy `/translink-rt` (protobuf) | 60 s | `src/api/translink.ts` |
 | Bushfire warnings and incidents | Queensland Fire Department | `publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json` | Proxy `/qfd-bushfires` | 2 min | `src/api/bushfires.ts` |
 | Stream height and rain gauges | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/telemetry-sensors-rainfall-and-stream-heights/exports/csv` (last 24 hours) and `…-metadata/exports/json` (gauge list) | Direct | 5 min, while the layer or a flooding event is open | `src/api/bccGauges.ts` |
+| Statewide stream gauges | Department of Local Government, Water and Volunteers (Water Monitoring Information Portal) | `water-monitoring.information.qld.gov.au/cgi/webservice.pl`, `get_latest_ts_values` for datasource `AT`, variable 100 (stream water level), POSTed for every station in `public/qld-gauges.json` | Proxy `/qld-gauges` (`api/qld-gauges.ts`, `functions/qld-gauges.ts`, dev plugin in `vite.config.ts`), cached 5 min at the edge | 5 min, while the layer, a gauge page or a flooding event is open | `src/api/qldGauges.ts`, `src/api/qldGaugesFeed.ts` |
 | Intersection volumes | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/traffic-data-at-intersection/exports/csv` | Direct | 2 min, while the layer is on. The council publishes a new batch about every 5 minutes. | `src/api/bccSignals.ts` |
 | Railway station facilities and access | Queensland Rail, published by Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/railway-station-facilities/records?where=stops="<stop id>"` | Direct | Once per station per visit | `src/api/stationFacilities.ts` |
 | Planned road occupancies | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/planned-temporary-road-occupancies/exports/json` | Direct. The permit holder's contact details are dropped. | 30 min, while Road events is open. The council updates daily. | `src/api/bccRoadOccupancies.ts` |
@@ -43,6 +44,7 @@ Base maps are © OpenFreeMap, OpenMapTiles and OpenStreetMap contributors (ODbL 
 Three Brisbane City Council feeds need care:
 
 - **Gauges** report at irregular intervals. Tidal gauges report every few minutes, but some creek gauges report only every few hours. The app shows when each reading was taken and draws a trend only between two real readings. The feed has no flood thresholds, so the app never labels a height as minor, moderate or major flooding.
+- **Statewide stream gauges** differ from the council's. The portal's web service gives the latest reading only, so a state gauge page shows one height with its time and no trend. Heights are gauge heights on each station's own datum, not AHD. Times are AEST. Readings older than 24 hours, and values whose quality code says they were estimated or derived (50, 59, 60, 69, 136, 151 in the department's quality code list), are left out. The service answers in about 20 seconds for the whole network and rejects long GET URLs, which is why the proxy POSTs and caches for 5 minutes.
 - **Low clearances** come from two datasets. The council's rows each have a `validation_date`; the app shows it as "Validated". Queensland Rail's rows have no date or id: the app dates them by the dataset's "temporal coverage from" metadata, the day Queensland Rail's extract was taken, and identifies each bridge by its published latitude and longitude. The app shows `signed_clearance_min` and `road_clearance_m` exactly as published, never rounded. It ignores `signed_clearance_max`, which holds the placeholders 9999 and -9999.
 - **Intersection volumes** give each lane's degree of saturation (`dsN`, measured) and vehicle count (`mfN`, measured). They also give `rfN`, a flow that SCATS calculates. The app does not use `rfN`, because it is an estimate. The council does not publish which street each SCATS approach belongs to.
 
@@ -64,6 +66,7 @@ The `scripts/` build these files from published data. They change when TransLink
 | `src/data/translink-maps.json` | The list of PDFs on translink.com.au/plan-your-journey/maps | `npm run data:maps` | Bundled |
 | `public/flood-2022.json` | Brisbane City Council *Flood Awareness: Historic Brisbane River and Creek Floods Feb 2022*: the adopted extent, outlines simplified to about 5 m (771,544 points to about 115,000) | `npm run data:flood2022` | 0.5 MB compressed, loaded when the layer is turned on |
 | `public/bikeways.json` | Brisbane City Council *Bikeway sections*: about 8,000 sections with their type, hierarchy and street, lines simplified to about 3 m | `npm run data:bikeways` | 0.24 MB compressed, loaded when the cycling layer is turned on |
+| `public/qld-gauges.json` | Department of Local Government, Water and Volunteers *Queensland Water Monitoring Hydrology Data* (data.qld.gov.au, CC BY 4.0), the stream gauging station network list: each open station's id, name and position, kept if the portal's web service has a telemetered stream height for it | `npm run data:qld-gauges` | 9 KB compressed, loaded when the gauges layer is turned on |
 | `src/data/gauge-catchments.json` | Bureau of Meteorology *National Flood Gauge Network* (data.gov.au, CC BY 4.0): the flood warning catchment each Brisbane stream gauge is in, and its BoM product id | `npm run data:catchments` | Bundled |
 | `src/data/bcc-intersections.json` | Brisbane City Council's *Traffic Management — Intersection locations — reference*: each signal's SCATS number, suburb, position and street names | `npm run data:intersections` | 24 KB compressed, loaded on demand |
 
@@ -77,6 +80,7 @@ All are optional. Each overrides where the app reads one source.
 | --- | --- | --- |
 | `VITE_QLDTRAFFIC_DATA_BASE` | `https://data.qldtraffic.qld.gov.au` | The QLDTraffic feed host |
 | `VITE_TRANSLINK_RT_BASE` | `/translink-rt` | The TransLink GTFS-RT proxy path |
+| `VITE_QLD_GAUGES_URL` | `/qld-gauges` | The statewide stream gauges proxy path |
 | `VITE_QFD_BUSHFIRES_URL` | `/qfd-bushfires` | The bushfire feed proxy path |
 
 ## What the app links to instead of showing

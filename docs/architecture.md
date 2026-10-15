@@ -12,14 +12,15 @@ Some of the choices below look odd until you know this rule. The journey planner
 
 The browser does almost all of the work. `npm run build` produces a static site in `dist/` that any static host can serve.
 
-Most sources send `Access-Control-Allow-Origin: *`, so the browser reads them directly. Two do not:
+Most sources send `Access-Control-Allow-Origin: *`, so the browser reads them directly. Three do not:
 
 - TransLink's GTFS-RT feeds, read through `/translink-rt`.
 - The Queensland Fire Department bushfire feed, read through `/qfd-bushfires`.
+- The Queensland Water Monitoring Information Portal's web service, read through `/qld-gauges`. This proxy is not a plain rewrite: the service wants a POST naming every station, so the proxy sends that request itself and caches the answer for 5 minutes.
 
 Brisbane City Council's gauge and signal feeds also send `Access-Control-Allow-Origin: *`, so the browser reads them directly.
 
-In development, `vite.config.ts` proxies both paths. In production, a Cloudflare Pages Function in `functions/` proxies each one and caches the response at the edge. `vercel.json` does the same on Vercel. Without a proxy, the app still runs: live vehicles and bushfire warnings show as unavailable.
+In development, `vite.config.ts` proxies all three paths. In production, a Cloudflare Pages Function in `functions/` proxies each one and caches the response at the edge. `vercel.json` does the same on Vercel. Without a proxy, the app still runs: live vehicles and bushfire warnings show as unavailable.
 
 ## Code layout
 

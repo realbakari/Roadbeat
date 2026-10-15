@@ -18,7 +18,8 @@
     "data:intersections": "node scripts/build-intersections.mjs",
     "data:catchments": "node scripts/build-gauge-catchments.mjs",
     "data:flood2022": "node scripts/build-flood-2022.mjs",
-    "data:bikeways": "node scripts/build-bikeways.mjs"
+    "data:bikeways": "node scripts/build-bikeways.mjs",
+    "data:qld-gauges": "node scripts/build-qld-gauges.mjs"
   },
   "dependencies": {
     "@cloudflare/kumo": "^2.14.0",

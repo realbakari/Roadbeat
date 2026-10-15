@@ -235,7 +235,8 @@ export function MapLayersPanel({
             onChange={(v) => set('gauges', v)}
           >
             <Text size="xs" variant="secondary">
-              Brisbane City Council gauges. Blue: stream height (m AHD). Teal: rain in the last hour. Faded: no reading in the last hour.
+              Brisbane City Council and Queensland Government gauges. Blue: stream height (m). Teal: rain in the last hour. Faded: no
+              reading in the last hour.
             </Text>
           </LayerRow>
           <LayerRow

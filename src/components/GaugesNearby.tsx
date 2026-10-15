@@ -6,14 +6,14 @@ import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, nearbyGauges, rainfallSince } from '../lib/gauges'
 import type { LngLat } from '../lib/geo'
 
-/** How far from a flooding event to look for Brisbane City Council gauges. */
+/** How far from a flooding event to look for gauges. */
 const RADIUS_KM = 5
 const HOUR = 60 * 60_000
 
 /**
- * Live readings from the Brisbane City Council gauges closest to a flooding
- * event: stream heights with their change over the last hour, and rainfall.
- * Renders nothing outside the council's network.
+ * Live readings from the Brisbane City Council and Queensland Government gauges
+ * closest to a flooding event: stream heights, with their change over the last
+ * hour for council gauges, and rainfall. Renders nothing when none is in range.
  */
 export function GaugesNearby({
   at,
@@ -47,7 +47,8 @@ export function GaugesNearby({
                 <span className="grid min-w-0 flex-1 gap-0.5">
                   <span className="truncate text-sm">{g.name}</span>
                   <span className="text-xs text-kumo-subtle">
-                    {g.kind === 'stream' ? 'Stream height' : 'Rainfall'} · {km.toFixed(1)} km
+                    {g.kind === 'stream' ? 'Stream height' : 'Rainfall'}
+                    {g.source === 'qld' && ' · Qld Government'} · {km.toFixed(1)} km
                     {latest && ` · ${timeAgo(latest.time, now)}`}
                   </span>
                 </span>
@@ -75,8 +76,8 @@ export function GaugesNearby({
         })}
       </ul>
       <Text size="xs" variant="secondary">
-        Raw readings from Brisbane City Council gauges within {RADIUS_KM} km. Heights are metres above the Australian Height
-        Datum, not flood levels.
+        Raw readings from Brisbane City Council and Queensland Government gauges within {RADIUS_KM} km. Heights are gauge
+        readings in metres, not flood levels.
       </Text>
       {area && (
         <a href={area.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">

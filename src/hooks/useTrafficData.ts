@@ -10,6 +10,7 @@ import {
   fetchWaze,
 } from '../api/client'
 import { fetchGauges, type Gauge } from '../api/bccGauges'
+import { fetchQldGauges } from '../api/qldGauges'
 import { fetchSignalVolumes, loadSignalSites, type SignalSite, type SignalVolumes } from '../api/bccSignals'
 import { fetchBushfires, type FireWarning } from '../api/bushfires'
 import { fetchClearances, type Clearance } from '../api/clearances'
@@ -332,7 +333,12 @@ export function useBushfires(enabled: boolean) {
   return { fires: enabled ? fires : null, error: enabled ? error : null }
 }
 
-/** Brisbane City Council stream and rain gauges with their last 24 hours of readings, polled every 5 minutes while `enabled`. */
+/**
+ * Brisbane City Council stream and rain gauges with their last 24 hours of
+ * readings, and Queensland's statewide stream gauges with their latest reading,
+ * polled every 5 minutes while `enabled`. If one source fails, the other's gauges
+ * still show and `error` names the failure.
+ */
 export function useGauges(enabled: boolean) {
   const [gauges, setGauges] = useState<Gauge[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -340,10 +346,12 @@ export function useGauges(enabled: boolean) {
     if (!enabled) return
     const c = new AbortController()
     const load = () =>
-      fetchGauges(c.signal).then(
-        (g) => (setGauges(g), setError(null)),
-        (e: Error) => !c.signal.aborted && setError(e.message),
-      )
+      Promise.allSettled([fetchGauges(c.signal), fetchQldGauges(c.signal)]).then((results) => {
+        if (c.signal.aborted) return
+        const failed = results.flatMap((r) => (r.status === 'rejected' ? [String(r.reason)] : []))
+        if (failed.length < results.length) setGauges(results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])))
+        setError(failed[0] ?? null)
+      })
     load()
     const id = setInterval(() => visible() && load(), 5 * 60_000)
     return () => {

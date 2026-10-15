@@ -80,6 +80,16 @@ The council revises its flood awareness layers rarely. If it does, rebuild the s
 npm run data:flood2022
 ```
 
+## Rebuild the statewide stream gauge list
+
+When the Department of Local Government, Water and Volunteers opens or closes gauging stations, rebuild the station list:
+
+```bash
+npm run data:qld-gauges
+```
+
+The script reads the stream gauging station network list from data.qld.gov.au, asks the Water Monitoring Information Portal's web service for every station's latest stream height (about 20 seconds), keeps the stations that have one, and writes `public/qld-gauges.json`. It stops without writing if the list has fewer than 300 stations.
+
 ## Rebuild the gauge flood warning areas
 
 When Brisbane City Council adds stream gauges, or BoM redraws its flood warning catchments, match each gauge to its catchment again:

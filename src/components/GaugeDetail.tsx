@@ -2,13 +2,14 @@ import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, ArrowSquareOutIcon, CloudRainIcon, WavesIcon } from '@phosphor-icons/react'
 import { GAUGES_DATASET_URL, type Gauge, type GaugeReading } from '../api/bccGauges'
 import { BOM_QLD_WARNINGS, floodWarningArea } from '../api/floodWarnings'
+import { qldGaugeUrl, WMIP_PORTAL } from '../api/qldGauges'
 import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, rainfallSince } from '../lib/gauges'
 
 const time = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
 const HOUR = 60 * 60_000
 
-/** One Brisbane City Council gauge: its latest reading, recent change or rainfall, and the last 24 hours. */
+/** One gauge: its latest reading, recent change or rainfall, and the last 24 hours. State gauges publish the latest reading only. */
 export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number; onBack: () => void }) {
   const latest = latestReading(gauge)
   const stream = gauge.kind === 'stream'
@@ -16,6 +17,7 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
   const day = changeWithin(gauge, 24 * HOUR)
   const Icon = stream ? WavesIcon : CloudRainIcon
   const warningArea = floodWarningArea(gauge.id)
+  const council = gauge.source === 'bcc'
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center border-b border-kumo-line px-2 py-2">
@@ -38,7 +40,8 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
               </Text>
               <div className="flex flex-wrap gap-1.5">
                 <Badge variant="outline">{stream ? 'Stream height' : 'Rainfall'}</Badge>
-                <Badge variant="outline">Gauge {gauge.id}</Badge>
+                <Badge variant="outline">{council ? 'Gauge' : 'Station'} {gauge.id}</Badge>
+                <Badge variant="outline">{council ? 'Brisbane City Council' : 'Queensland Government'}</Badge>
               </div>
             </div>
           </header>
@@ -49,12 +52,19 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
             <div className="grid gap-1">
               <span className="text-base font-semibold tabular-nums">{latest.value.toFixed(2)} m</span>
               <Text size="sm" variant="secondary">
-                Above the Australian Height Datum (AHD), measured {time.format(latest.time)} ({timeAgo(latest.time, now)}).
+                {council ? 'Above the Australian Height Datum (AHD)' : "Gauge height on the station's own datum"}, measured {time.format(latest.time)} (
+                {timeAgo(latest.time, now)}).
               </Text>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm">
-                <Change label="Last hour" change={hour} />
-                <Change label="Last 24 hours" change={day} />
-              </div>
+              {council ? (
+                <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm">
+                  <Change label="Last hour" change={hour} />
+                  <Change label="Last 24 hours" change={day} />
+                </div>
+              ) : (
+                <Text size="sm" variant="secondary">
+                  The portal publishes the latest reading only, so there is no trend here. The station's page has its recent readings.
+                </Text>
+              )}
             </div>
           ) : (
             <div className="grid gap-1">
@@ -103,15 +113,30 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
             </section>
           )}
 
-          <div className="grid gap-1">
-            <a href={GAUGES_DATASET_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
-              Brisbane City Council telemetry data <ArrowSquareOutIcon size={14} />
-            </a>
-            <Text size="xs" variant="secondary">
-              Raw readings from Brisbane City Council's gauges, which also feed the Bureau of Meteorology's flood warnings. CC BY 4.0.
-              Warning areas: Bureau of Meteorology, National Flood Gauge Network, CC BY 4.0.
-            </Text>
-          </div>
+          {council ? (
+            <div className="grid gap-1">
+              <a href={GAUGES_DATASET_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+                Brisbane City Council telemetry data <ArrowSquareOutIcon size={14} />
+              </a>
+              <Text size="xs" variant="secondary">
+                Raw readings from Brisbane City Council's gauges, which also feed the Bureau of Meteorology's flood warnings. CC BY 4.0.
+                Warning areas: Bureau of Meteorology, National Flood Gauge Network, CC BY 4.0.
+              </Text>
+            </div>
+          ) : (
+            <div className="grid gap-1">
+              <a href={qldGaugeUrl(gauge.id)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+                This station on the Water Monitoring Information Portal <ArrowSquareOutIcon size={14} />
+              </a>
+              <Text size="xs" variant="secondary">
+                Latest telemetered stream water level from the Queensland Government's{' '}
+                <a href={WMIP_PORTAL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                  Water Monitoring Information Portal
+                </a>
+                , Department of Local Government, Water and Volunteers. CC BY 4.0.
+              </Text>
+            </div>
+          )}
         </div>
       </div>
     </div>

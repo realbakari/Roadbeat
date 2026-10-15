@@ -1,6 +1,9 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig, loadEnv } from 'vite'
+import { readFileSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { latestHeightsRequest, WMIP_SERVICE } from './src/api/qldGaugesFeed.ts'
 import { sitePages } from './site/plugin.ts'
 
 // TransLink's GTFS-RT feeds send no CORS headers, so the app reads them through
@@ -20,6 +23,34 @@ const translinkProxy = {
   },
 }
 
+// Queensland's water monitoring portal sends no CORS headers and answers only a
+// POST for the whole station network (about 20 s), so /qld-gauges is served by a
+// small middleware here and by api/qld-gauges.ts or functions/qld-gauges.ts in production.
+function qldGaugesProxy(): Plugin {
+  let latest: { at: number; body: Promise<string> } | null = null
+  const handler = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+    if (req.url?.split('?')[0] !== '/qld-gauges') return next()
+    if (!latest || Date.now() - latest.at > 5 * 60_000) {
+      const sites = (JSON.parse(readFileSync(new URL('./public/qld-gauges.json', import.meta.url), 'utf8')) as { stations: [string][] }).stations.map(([id]) => id)
+      const body = fetch(WMIP_SERVICE, { method: 'POST', body: latestHeightsRequest(sites) }).then((r) => {
+        if (!r.ok) throw new Error(`Water monitoring portal responded with ${r.status}`)
+        return r.text()
+      })
+      latest = { at: Date.now(), body }
+      body.catch(() => (latest = null))
+    }
+    latest.body.then(
+      (text) => res.writeHead(200, { 'content-type': 'application/json' }).end(text),
+      (e: Error) => res.writeHead(502, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message })),
+    )
+  }
+  return {
+    name: 'qld-gauges-proxy',
+    configureServer: (server) => void server.middlewares.use(handler),
+    configurePreviewServer: (server) => void server.middlewares.use(handler),
+  }
+}
+
 export default defineConfig(({ mode, command }) => {
   // SITE_URL, CONTACT_EMAIL and GA_MEASUREMENT_ID feed the SEO and agent pages (see site/plugin.ts and docs/deploy.md).
   const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env }
@@ -28,7 +59,7 @@ export default defineConfig(({ mode, command }) => {
   // Analytics only in built sites, so local development doesn't count as visits.
   const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
+    plugins: [react(), tailwindcss(), qldGaugesProxy(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }

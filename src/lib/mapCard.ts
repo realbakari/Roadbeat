@@ -150,14 +150,14 @@ export function gaugeCard(g: Gauge, now: number): MapCard {
   const fact =
     g.kind === 'stream'
       ? latest
-        ? `${latest.value.toFixed(2)} m AHD at ${clock.format(latest.time)}`
+        ? `${latest.value.toFixed(2)} m${g.source === 'bcc' ? ' AHD' : ''} at ${clock.format(latest.time)}`
         : 'No reading in the last 24 hours'
       : `${rainfallSince(g, now - 3600_000).mm} mm in the last hour`
   return {
     key: `gauge-${g.id}`,
     title: g.name,
     subtitle: g.kind === 'stream' ? 'Stream height gauge' : 'Rain gauge',
-    facts: [fact, 'Brisbane City Council'],
+    facts: [fact, g.source === 'bcc' ? 'Brisbane City Council' : 'Queensland Government'],
     color: g.kind === 'stream' ? '#0369a1' : '#0d9488',
     position: g.position,
   }
