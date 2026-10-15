@@ -120,6 +120,11 @@ function headTags(page: Page, s: SiteSettings) {
     '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />',
     '<link rel="apple-touch-icon" href="/apple-touch-icon.png" />',
     '<link rel="manifest" href="/manifest.webmanifest" />',
+    // iPhone and iPad read these when the site is added to the Home Screen.
+    `<meta name="apple-mobile-web-app-title" content="${SITE.name}" />`,
+    '<meta name="mobile-web-app-capable" content="yes" />',
+    '<meta name="apple-mobile-web-app-capable" content="yes" />',
+    '<meta name="apple-mobile-web-app-status-bar-style" content="default" />',
     '<link rel="alternate" type="text/markdown" href="' + (page.name === 'index' ? '/index.md' : `/${page.name}.md`) + '" />',
     `<meta property="og:site_name" content="${SITE.name}" />`,
     `<meta property="og:type" content="website" />`,
@@ -239,6 +244,7 @@ function manifest() {
   return JSON.stringify(
     {
       name: `${SITE.name}: ${SITE.tagline}`,
+      id: '/',
       short_name: SITE.name,
       description: 'Live Queensland road conditions, cameras, public transport, timetables and bushfire warnings from official sources.',
       start_url: '/',

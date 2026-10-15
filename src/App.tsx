@@ -24,6 +24,7 @@ import { loadTracks, trackBounds } from './api/tracks'
 import { allRouteCodes, type VehicleMode } from './api/translink'
 import { AlertSettingsDialog } from './components/AlertSettingsDialog'
 import { NotificationCenter } from './components/NotificationCenter'
+import { InstallApp } from './components/InstallApp'
 import { VehicleDetail } from './components/VehicleDetail'
 import { useAlertSettings, useNotifications } from './hooks/useNotifications'
 import { CameraGrid } from './components/CameraGrid'
@@ -560,6 +561,7 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-1">
+            <InstallApp />
             <NotificationCenter
               items={notifications.items}
               unread={notifications.unread}
