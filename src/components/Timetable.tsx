@@ -27,6 +27,7 @@ const hourLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisba
 
 /** "5:42am": compact enough for a grid cell. */
 const short = (t: number) => clock.format(t).replace(/\s/g, '')
+const weekday = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short' })
 
 function DayPicker({ dates, value, today, onChange }: { dates: string[]; value: string; today: string; onChange: (d: string) => void }) {
   const items = useMemo(() => {
@@ -164,7 +165,8 @@ function Grid({
     if (openedAt != null) jumpWhenOpened(openedAt)
   }, [dir, openedAt])
 
-  const midnight = dayStart(brisbaneDate(dir.trips[0].stops[0].time))
+  const serviceDay = brisbaneDate(dir.trips[0].stops[0].time)
+  const midnight = dayStart(serviceDay)
   const hours = Object.fromEntries([
     ...(now != null ? [['now', 'Now']] : []),
     ...Array.from({ length: 24 }, (_, h) => [String(h), h === 0 ? 'Midnight' : h === 12 ? 'Midday' : hourLabel.format(midnight + h * 3_600_000)]),
@@ -242,12 +244,14 @@ function Grid({
                 return (
                   <td
                     key={c}
-                    className={`h-9 cursor-pointer px-2 leading-tight whitespace-nowrap ${past && !here ? 'text-kumo-subtle' : ''} ${s.kind === 'arrival' ? 'italic' : ''} ${here ? 'bg-kumo-success/15 font-medium ring-2 ring-kumo-success ring-inset' : c === sel ? 'bg-kumo-tint' : 'hover:bg-kumo-tint'}`}
+                    className={`h-9 cursor-pointer px-2 leading-tight whitespace-nowrap ${past && !here ? 'text-kumo-subtle' : ''} ${here ? 'bg-kumo-success/15 font-medium ring-2 ring-kumo-success ring-inset' : c === sel ? 'bg-kumo-tint' : 'hover:bg-kumo-tint'}`}
                     title={`${here ? `${VEHICLE_STATUS[l!.vehicle!.status ?? 'moving']} · ` : ''}${cellTitle(s, rt, l)} · tap for this service's stops`}
                     onClick={() => setPicked(c === sel ? null : dir.trips[c].key)}
                   >
                     <span className={gone || late ? 'line-through decoration-1' : ''}>{short(s.time)}</span>
-                    {s.kind !== 'normal' && <sup className="ml-0.5 text-kumo-subtle">{s.kind === 'arrival' ? 'a' : 'p'}</sup>}
+                    {/* After midnight, the day, as TransLink shows it ("12:30 am Friday"). */}
+                    {brisbaneDate(s.time) !== serviceDay && <span className="ml-1 text-xs text-kumo-subtle">{weekday.format(s.time)}</span>}
+                    {s.kind !== 'normal' && <span className="block text-xs text-kumo-subtle not-italic">{s.kind === 'arrival' ? 'Drop-off only' : 'Pick-up only'}</span>}
                     {late && !gone && (
                       <span className={`block text-xs ${rt!.time! > s.time ? 'text-kumo-warning' : 'text-kumo-info'}`}>{short(rt!.time!)}</span>
                     )}
@@ -349,8 +353,8 @@ function TripView({
                   </button>
                   <span className="flex flex-wrap gap-x-2 text-xs text-kumo-subtle">
                     {stop?.platform && <span>Platform {stop.platform}</span>}
-                    {s.kind === 'arrival' && <span>Set down only</span>}
-                    {s.kind === 'pickup' && <span>Pick up only</span>}
+                    {s.kind === 'arrival' && <span>Drop-off only</span>}
+                    {s.kind === 'pickup' && <span>Pick-up only</span>}
                     {rt?.skipped && <span className="text-kumo-danger">Not stopping</span>}
                     {here && <span className="text-kumo-success">{VEHICLE_STATUS[live!.vehicle!.status ?? 'moving']}</span>}
                   </span>
@@ -385,8 +389,8 @@ function vehicleAt(v: LiveVehicle, stopId: string, stops: StopIndex | null) {
 
 function cellTitle(s: ScheduledStop, rt: StopTime | null, live: LiveTrip | null) {
   const parts = [`Timetabled ${clock.format(s.time)}`]
-  if (s.kind === 'arrival') parts.push('arrival, set down only')
-  if (s.kind === 'pickup') parts.push('pick up only')
+  if (s.kind === 'arrival') parts.push('drop-off only')
+  if (s.kind === 'pickup') parts.push('pick-up only')
   if (live?.cancelled) parts.push('cancelled (real-time)')
   else if (rt?.skipped) parts.push('stop skipped (real-time)')
   else if (rt?.time != null) parts.push(`${live?.vehicle ? 'real-time' : 'expected'} ${clock.format(rt.time)}`)
@@ -410,8 +414,8 @@ function LiveTag({ live }: { live: LiveTrip | null }) {
 function GridLegend({ today }: { today: boolean }) {
   return (
     <Text size="xs" variant="secondary">
-      Times are TransLink's published timetable. <i>a</i> arrival only (set down), <i>p</i> pick up only, — doesn't stop. Tap a
-      time or column to see that service's stops.
+      Times are TransLink's published timetable. Drop-off only: the service only lets passengers off there, usually where it ends. — doesn't
+      stop. Times after midnight show the day. Tap a time or column to see that service's stops.
       {today && (
         <>
           {' '}
@@ -647,7 +651,7 @@ function TimetableRow({
         </span>
         <span className="flex flex-wrap items-center gap-x-2 text-xs text-kumo-subtle">
           {platform && <span>Platform {platform}</span>}
-          {stop.kind === 'pickup' && <span>Pick up only</span>}
+          {stop.kind === 'pickup' && <span>Pick-up only</span>}
           {live?.cancelled ? (
             <span className="font-medium text-kumo-danger">Cancelled</span>
           ) : rt?.skipped ? (

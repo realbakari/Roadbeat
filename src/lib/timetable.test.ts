@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { trip } from '../test/fixtures'
-import { scheduledArrivals, scheduledDepartures } from './timetable'
+import { StopIndex } from '../api/stops'
+import { scheduledArrivals, scheduledDepartures, timetableGrid } from './timetable'
 
 const trips = [
   trip(1, 'R1', [['a1', 480], ['b1', 490], ['c1', 500]]),
@@ -22,5 +23,29 @@ describe('scheduledArrivals', () => {
       ['R2', 'b2'],
       ['R1', 'c1'],
     ])
+  })
+})
+
+describe('timetableGrid', () => {
+  it('orders services by Roma Street when every service calls at it, as TransLink does', () => {
+    const stops = new StopIndex().add({
+      stops: {
+        SEQ: [
+          ['petrie', 'Petrie station', -27.27, 152.98, 0, 0],
+          ['central', 'Central station', -27.466, 153.026, 0, 0],
+          ['roma', 'Roma Street station', -27.46, 153.02, 0, 0],
+        ],
+      },
+    })
+    // Trip 2 leaves Petrie and Central first but reaches Roma Street second.
+    const [dir] = timetableGrid(
+      [
+        trip(1, 'T1', [['petrie', 600], ['central', 628], ['roma', 630]]),
+        trip(2, 'T1', [['petrie', 590], ['central', 627], ['roma', 640]]),
+      ],
+      stops,
+    )
+    expect(dir.rows[dir.reference].name).toBe('Roma Street station')
+    expect(dir.trips.map((t) => t.number)).toEqual([1, 2])
   })
 })

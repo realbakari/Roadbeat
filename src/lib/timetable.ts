@@ -107,10 +107,13 @@ export function timetableGrid(trips: ScheduledTrip[], stops: StopIndex | null): 
       }
       return cells
     }
-    // Like TransLink, order services by their time at the stop most of them call at.
+    // Like TransLink, order services by their time at the stop most of them call at,
+    // and among stops every service calls at, by Roma Street or Central, as TransLink's timetables do.
     const grid = list.map((t) => ({ t, c: cellsOf(t) }))
     const calls = order.map((_, r) => grid.filter((g) => g.c[r]).length)
-    const reference = calls.indexOf(Math.max(...calls))
+    const most = order.map((_, r) => r).filter((r) => calls[r] === Math.max(...calls))
+    const named = (re: RegExp) => most.find((r) => re.test(rows.get(order[r])!.name ?? ''))
+    const reference = named(/^Roma Street\b/i) ?? named(/^Central\b/i) ?? most[0]
     const sortTime = (g: (typeof grid)[number]) => g.c[reference]?.time ?? g.t.stops[0].time
     grid.sort((a, b) => sortTime(a) - sortTime(b) || a.t.number - b.t.number)
     out.push({
