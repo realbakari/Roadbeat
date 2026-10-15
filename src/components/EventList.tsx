@@ -1,6 +1,6 @@
 import { Button, Empty, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
-import { CheckCircleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
-import { useMemo } from 'react'
+import { CheckCircleIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
+import { useMemo, useState } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import type { EventType, TrafficEvent } from '../api/types'
 import { FireList } from './FireList'
@@ -41,6 +41,8 @@ export function EventList({
   fires,
   onOpenHref,
 }: Props) {
+  // On phones the district and priority pickers fold behind a button, so the list starts higher.
+  const [moreOpen, setMoreOpen] = useState(false)
   const set = <K extends keyof EventFilters>(k: K, v: EventFilters[K]) => onFiltersChange({ ...filters, [k]: v })
 
   const typeCounts = useMemo(() => {
@@ -77,11 +79,13 @@ export function EventList({
   const reset = () =>
     onFiltersChange({ ...filters, query: '', types: new Set(), district: 'all', priority: 'all', closuresOnly: false })
 
+  const moreActive = (filters.district !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0)
+
   const sortItems: Record<SortKey, string> = { priority: 'Priority', recent: 'Recently updated', nearest: 'Nearest to me' }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="grid gap-3 border-b border-kumo-line px-4 pt-3 pb-4">
+      <div className="grid gap-2.5 border-b border-kumo-line px-4 pt-2 pb-3 md:gap-3 md:pt-3 md:pb-4">
         <Tabs
           variant="underline"
           value={filters.when}
@@ -91,28 +95,40 @@ export function EventList({
             { value: 'upcoming', label: <span>Upcoming <span className="text-kumo-subtle tabular-nums">{whenCounts.upcoming}</span></span> },
           ]}
         />
-        <InputGroup>
-          <InputGroup.Addon>
-            <MagnifyingGlassIcon />
-          </InputGroup.Addon>
-          <InputGroup.Input
-            aria-label="Search events"
-            placeholder="Search road, suburb or postcode"
-            value={filters.query}
-            onChange={(e) => set('query', e.target.value)}
-          />
-          {filters.query && (
-            <InputGroup.Button
-              variant="ghost"
-              shape="square"
-              aria-label="Clear search"
-              icon={<XIcon />}
-              onClick={() => set('query', '')}
+        <div className="flex gap-2">
+          <InputGroup className="min-w-0 flex-1">
+            <InputGroup.Addon>
+              <MagnifyingGlassIcon />
+            </InputGroup.Addon>
+            <InputGroup.Input
+              aria-label="Search events"
+              placeholder="Search road, suburb or postcode"
+              value={filters.query}
+              onChange={(e) => set('query', e.target.value)}
             />
-          )}
-        </InputGroup>
+            {filters.query && (
+              <InputGroup.Button
+                variant="ghost"
+                shape="square"
+                aria-label="Clear search"
+                icon={<XIcon />}
+                onClick={() => set('query', '')}
+              />
+            )}
+          </InputGroup>
+          <Button
+            variant="secondary"
+            className="shrink-0 md:hidden"
+            icon={<FunnelSimpleIcon />}
+            aria-expanded={moreOpen}
+            aria-controls="event-more-filters"
+            onClick={() => setMoreOpen((o) => !o)}
+          >
+            Filters{moreActive > 0 && <span className="tabular-nums text-kumo-subtle">{moreActive}</span>}
+          </Button>
+        </div>
 
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Event types">
+        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 py-px [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0" role="group" aria-label="Event types">
           {EVENT_TYPES.map((m) => {
             const count = typeCounts.get(m.type) ?? 0
             const active = filters.types.has(m.type)
@@ -122,7 +138,7 @@ export function EventList({
                 type="button"
                 aria-pressed={active}
                 onClick={() => toggleType(m.type)}
-                className={`inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-sm ring ${
+                className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm whitespace-nowrap ring ${
                   active
                     ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand'
                     : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
@@ -139,7 +155,7 @@ export function EventList({
             type="button"
             aria-pressed={filters.closuresOnly}
             onClick={() => set('closuresOnly', !filters.closuresOnly)}
-            className={`inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-sm ring ${
+            className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm whitespace-nowrap ring ${
               filters.closuresOnly ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
             }`}
           >
@@ -148,7 +164,7 @@ export function EventList({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div id="event-more-filters" className={`${moreOpen ? 'grid' : 'hidden'} grid-cols-2 gap-2 md:grid`}>
           <Select
             aria-label="District"
             size="sm"
