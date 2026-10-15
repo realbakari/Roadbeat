@@ -6,6 +6,12 @@
   "functions": {
     "api/qld-gauges.ts": {
       "maxDuration": 60
+    },
+    "api/news-ingest.ts": {
+      "maxDuration": 60
+    },
+    "api/news.ts": {
+      "maxDuration": 60
     }
   },
   "rewrites": [

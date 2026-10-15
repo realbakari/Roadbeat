@@ -51,6 +51,33 @@ function qldGaugesProxy(): Plugin {
   }
 }
 
+// The news monitor's feeds are read on the server (api/news.ts on Vercel). In
+// development this middleware runs the same ingest, loaded through Vite, and
+// keeps the result for 5 minutes. `npm run news:ingest` prints one run.
+function newsDevApi(): Plugin {
+  let latest: { at: number; body: Promise<string> } | null = null
+  return {
+    name: 'news-dev-api',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.split('?')[0] !== '/api/news') return next()
+        if (!latest || Date.now() - latest.at > 5 * 60_000) {
+          const body = server
+            .ssrLoadModule('/api/_lib/newsIngest.ts')
+            .then((m) => m.ingest([]))
+            .then((snapshot) => JSON.stringify(snapshot))
+          latest = { at: Date.now(), body }
+          body.catch(() => (latest = null))
+        }
+        latest.body.then(
+          (text) => res.writeHead(200, { 'content-type': 'application/json' }).end(text),
+          (e: Error) => res.writeHead(502, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message })),
+        )
+      })
+    },
+  }
+}
+
 export default defineConfig(({ mode, command }) => {
   // SITE_URL, CONTACT_EMAIL and GA_MEASUREMENT_ID feed the SEO and agent pages (see site/plugin.ts and docs/deploy.md).
   const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env }
@@ -59,7 +86,7 @@ export default defineConfig(({ mode, command }) => {
   // Analytics only in built sites, so local development doesn't count as visits.
   const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), qldGaugesProxy(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
+    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }

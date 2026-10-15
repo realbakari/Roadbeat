@@ -1,0 +1,25 @@
+# Asks Roadbeat to read the Queensland news monitor's feeds every 5 minutes (see api/news-ingest.ts).
+# Vercel's Hobby plan runs cron jobs only once a day, so GitHub's scheduler does this, as it does for push alerts.
+# Uses the same CRON_SECRET repository secret and SITE_URL variable as push-check.yml.
+name: News monitor ingest
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Read the news feeds
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://roadbeat.vercel.app' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET is not set, so /api/news reads the feeds on demand instead. Skipping."
+            exit 0
+          fi
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE_URL/api/news-ingest"

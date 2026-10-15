@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto'
 
-// Push subscriptions, kept in Upstash Redis through its REST API. Vercel's
-// Upstash integration sets KV_REST_API_URL and KV_REST_API_TOKEN; without them
-// push alerts are off and the app hides the switch.
+// Push subscriptions and the news monitor's items, kept in Upstash Redis through
+// its REST API. Vercel's Upstash integration sets KV_REST_API_URL and
+// KV_REST_API_TOKEN; without them push alerts are off and the app hides the
+// switch, and the news monitor reads its feeds on each request instead.
 
 const URL_ = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL
 const TOKEN = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN
@@ -10,7 +11,8 @@ const KEY = 'push:subs'
 
 export const storeConfigured = !!URL_ && !!TOKEN
 
-async function redis<T>(command: (string | number)[]): Promise<T> {
+/** Runs one Redis command, such as ['GET', key]. */
+export async function redis<T>(command: (string | number)[]): Promise<T> {
   const res = await fetch(URL_!, {
     method: 'POST',
     headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
@@ -18,7 +20,7 @@ async function redis<T>(command: (string | number)[]): Promise<T> {
     signal: AbortSignal.timeout(10_000),
   })
   const body = (await res.json()) as { result?: T; error?: string }
-  if (!res.ok || body.error) throw new Error(`Subscription store: ${body.error ?? res.status}`)
+  if (!res.ok || body.error) throw new Error(`Redis store: ${body.error ?? res.status}`)
   return body.result as T
 }
 

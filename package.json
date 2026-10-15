@@ -19,13 +19,16 @@
     "data:catchments": "node scripts/build-gauge-catchments.mjs",
     "data:flood2022": "node scripts/build-flood-2022.mjs",
     "data:bikeways": "node scripts/build-bikeways.mjs",
-    "data:qld-gauges": "node scripts/build-qld-gauges.mjs"
+    "data:qld-gauges": "node scripts/build-qld-gauges.mjs",
+    "data:places": "node scripts/build-places.mjs",
+    "news:ingest": "node scripts/ingest-news.mjs"
   },
   "dependencies": {
     "@cloudflare/kumo": "^2.14.0",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.3.3",
+    "basic-ftp": "^5.3.1",
     "echarts": "^6.1.0",
     "gtfs-realtime-bindings": "^2.2.0",
     "maplibre-gl": "^6.14.0",
