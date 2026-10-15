@@ -27,8 +27,11 @@ describe('parseStationFacilities', () => {
       address: 'Cnr Edward & Ann St, Brisbane',
       notice: '**Lift upgrade** on platforms 5 and 6.',
       carBays: null,
-      access: ['Lift', 'Accessible toilet'],
-      other: ['Toilets'],
+      access: [
+        { key: 'lift', label: 'Lift' },
+        { key: 'accessible_toilet_lh', label: 'Accessible toilet' },
+      ],
+      other: [{ key: 'toilets', label: 'Toilets' }],
       bikeRacks: 4,
       guide: 'https://www.queenslandrail.com.au/Customers/Central.pdf',
     })

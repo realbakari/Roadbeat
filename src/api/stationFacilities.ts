@@ -62,6 +62,12 @@ export const OTHER_FEATURES = [
   ['fare_gates', 'Fare gates'],
 ] as const
 
+export interface Feature {
+  /** The dataset's field name without "facility_", e.g. "hearing_loop_available". */
+  key: string
+  label: string
+}
+
 export interface StationFacilities {
   name: string
   address: string | null
@@ -75,10 +81,10 @@ export interface StationFacilities {
   accessZone: string | null
   /** Platform height and boarding notes (light Markdown list). */
   boarding: string | null
-  /** Labels of access features the station has, without repeats. */
-  access: string[]
-  /** Labels of other facilities the station has. */
-  other: string[]
+  /** Access features the station has, by dataset key, without repeated labels. */
+  access: Feature[]
+  /** Other facilities the station has. */
+  other: Feature[]
   bikeRacks: number
   audio: string | null
   guide: string | null
@@ -93,7 +99,8 @@ export function parseStationFacilities(raw: unknown): StationFacilities | null {
   if (!r.success) return null
   const d = r.data
   const has = (key: string) => d[`facility_${key}`] === true
-  const access = [...new Set(ACCESS_FEATURES.filter(([k]) => has(k)).map(([, label]) => label))]
+  const access: Feature[] = []
+  for (const [key, label] of ACCESS_FEATURES) if (has(key) && !access.some((a) => a.label === label)) access.push({ key, label })
   const bays = d.cbay != null ? Number(d.cbay) : NaN
   const racks = Number(d.facility_bike_rack)
   return {
@@ -106,7 +113,7 @@ export function parseStationFacilities(raw: unknown): StationFacilities | null {
     accessZone: d.zn,
     boarding: d.sginfor,
     access,
-    other: OTHER_FEATURES.filter(([k]) => has(k)).map(([, label]) => label),
+    other: OTHER_FEATURES.filter(([k]) => has(k)).map(([key, label]) => ({ key, label })),
     bikeRacks: Number.isFinite(racks) ? racks : 0,
     audio: absolute(d.audiofile),
     guide: absolute(d.pdffile),
