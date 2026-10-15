@@ -1,6 +1,6 @@
 # Roadbeat
 
-> Roadbeat is a free web app for live Queensland road conditions and public transport: QLDTraffic road events and cameras, TransLink vehicles, departures and published timetables, a timetable-based journey planner, Queensland Fire Department bushfire warnings, and Brisbane City Council stream gauges and traffic signal volumes. It shows only data that official sources publish and never estimates times, positions or delays.
+> Roadbeat is a free web app for live Queensland road conditions and public transport: QLDTraffic road events and cameras, TransLink vehicles, departures and published timetables, a timetable-based journey planner, Queensland Fire Department bushfire warnings, Brisbane City Council stream gauges, traffic signal volumes and planned road closures, and Queensland Rail station access details with Translink's lift and escalator outages. It shows only data that official sources publish and never estimates times, positions or delays.
 
 ## When to use Roadbeat
 
@@ -8,13 +8,14 @@
 - Someone wants the next departures from a TransLink stop or station, or a line's full timetable for a given day.
 - Someone wants a direct public transport trip, or a trip with one change at the same station or stop, from Queensland's published timetable.
 - Someone asks about current bushfire warnings in Queensland, or Brisbane creek and river heights and rainfall.
+- Someone needs to know whether a train station has a working lift, level boarding, accessible toilets or parking.
 - Someone wants a shareable link to a specific road event, stop, line, fire warning or journey search.
 
 ## When not to use Roadbeat
 
 - Emergencies: call Triple Zero (000).
 - Trips that need walking between stops, more than one change, or fares: use TransLink's journey planner at https://jp.translink.com.au/plan-your-journey/journey-planner.
-- Flood warnings: Roadbeat shows raw gauge heights without flood levels. Use the Bureau of Meteorology for warnings.
+- Flood warnings: Roadbeat shows raw gauge heights without flood levels, and links each gauge to the Bureau of Meteorology's warning for its area. Use BoM for warnings.
 - Places outside Queensland.
 
 ## Pages
@@ -60,7 +61,8 @@ All are used under Creative Commons Attribution 4.0 unless noted.
 - Department of Transport and Main Roads: road events, cameras, rest areas and crash history (QLDTraffic feeds and data.qld.gov.au).
 - Translink: GTFS timetables and GTFS-RT vehicle positions, trip updates and service alerts for South East Queensland and Cairns.
 - Queensland Fire Department: current bushfire incidents and warnings.
-- Brisbane City Council: telemetry gauges and intersection volumes (data.brisbane.qld.gov.au).
+- Brisbane City Council: telemetry gauges, intersection volumes, planned temporary road occupancies, CBD car park spaces, and Queensland Rail's railway station facilities (data.brisbane.qld.gov.au).
+- Bureau of Meteorology: National Flood Gauge Network catchments (data.gov.au).
 - OpenFreeMap, OpenMapTiles and OpenStreetMap contributors: base maps (ODbL).
 
 Roadbeat is independent and is not affiliated with, or endorsed by, the Queensland Government.

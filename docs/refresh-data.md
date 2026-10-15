@@ -64,6 +64,16 @@ npm run data:intersections
 
 The script prints how many intersections have a position. It stops without writing if it finds fewer than 500.
 
+## Rebuild the gauge flood warning areas
+
+When Brisbane City Council adds stream gauges, or BoM redraws its flood warning catchments, match each gauge to its catchment again:
+
+```bash
+npm run data:catchments
+```
+
+The script asks BoM's National Flood Gauge Network which catchment contains each stream gauge and writes `src/data/gauge-catchments.json`.
+
 ## Check the result
 
 1. Run the tests and the build:

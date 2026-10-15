@@ -12,13 +12,14 @@ import {
 } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
-import { alertActive, routeInfo, routeLabel, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
+import { alertActive, isAccessibilityAlert, routeInfo, routeLabel, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
 import { routesAtStops } from '../api/timetables'
 import { useNow, useStopIndex, useTimetableIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
 import { timetableCodes } from '../lib/transitLines'
 import { recordRecentStop, toggleSavedStop, useSavedStops } from '../lib/savedStops'
 import { DelayChip, TimeFormatToggle } from './Realtime'
 import { StationMapLink } from './TransitMaps'
+import { AccessAlerts, StationFacilitiesSection } from './StationAccess'
 import { StopTimetable, TimetableLink } from './Timetable'
 import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
 import { kioskPath } from '../lib/route'
@@ -204,12 +205,24 @@ export function StopPage({
   }, [region, stop])
   const { index } = useTimetableIndex(true)
   const routes = useMemo(() => (index ? routesAtStops(index, region, ids) : null), [index, region, ids])
-  // Alerts in effect now on any route that calls here (TransLink's alerts name routes, not stops).
+  // Lift and escalator outages TransLink reports for this stop or its platforms.
+  const accessAlerts = useMemo(
+    () => (alerts ?? []).filter((a) => a.region === region && alertActive(a, now) && isAccessibilityAlert(a) && a.stopIds.some((s) => ids.has(s))),
+    [alerts, region, now, ids],
+  )
+  // Alerts in effect now on any route that calls here, or naming this stop or its platforms.
   const stopAlerts = useMemo(() => {
     if (!alerts || !routes) return null
     const on = new Set(routes)
-    return alerts.filter((a) => a.region === region && alertActive(a, now) && a.routes.some((r) => on.has(r)))
-  }, [alerts, routes, region, now])
+    // Lift and escalator outages show in the station's access section instead.
+    return alerts.filter(
+      (a) =>
+        a.region === region &&
+        alertActive(a, now) &&
+        !isAccessibilityAlert(a) &&
+        (a.routes.some((r) => on.has(r)) || a.stopIds.some((s) => ids.has(s))),
+    )
+  }, [alerts, routes, region, now, ids])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -260,6 +273,8 @@ export function StopPage({
 
           <StopStats list={list} now={now} routes={routes} alerts={stopAlerts} region={region} />
 
+          <AccessAlerts alerts={accessAlerts} />
+
           {stopAlerts && stopAlerts.length > 0 && <StopAlerts alerts={stopAlerts} routes={routes} onNavigate={onNavigate} />}
 
           <section id="stop-next" className="grid scroll-mt-4 gap-2">
@@ -286,6 +301,7 @@ export function StopPage({
             )}
           </section>
           <Legend />
+          {stop && <StationFacilitiesSection stopId={stops?.station(stop).id ?? stop.id} />}
           <section id="stop-timetable" className="grid scroll-mt-4 gap-2">
             <Text as="h3" variant="heading">
               Timetable

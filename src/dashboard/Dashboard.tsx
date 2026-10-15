@@ -2,9 +2,9 @@ import { Button } from '@cloudflare/kumo'
 import { ArrowLeftIcon, ArrowsOutIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
 import { useMemo } from 'react'
 import { FIRE_COLOR } from '../api/bushfires'
-import { modeOf } from '../api/translink'
+import { alertActive, isAccessibilityAlert, modeOf } from '../api/translink'
 import { useColorMode } from '../hooks/useColorMode'
-import { useBushfires, useGauges, useLiveVehicles, useNow, useSignals, useTrafficData, useTripUpdates } from '../hooks/useTrafficData'
+import { useBushfires, useCarParkSpaces, useGauges, useLiveVehicles, useNow, useSignals, useTrafficData, useTransitAlerts, useTripUpdates } from '../hooks/useTrafficData'
 import {
   busiestSignals,
   closuresAndCrashesByDistrict,
@@ -41,6 +41,9 @@ export function Dashboard() {
   const { updates } = useTripUpdates(true)
   const { vehicles } = useLiveVehicles(true)
   const { mode, toggle } = useColorMode()
+  const { alerts } = useTransitAlerts(true)
+  const parking = useCarParkSpaces(true)
+  const liftOutages = useMemo(() => (alerts ?? []).filter((a) => isAccessibilityAlert(a) && alertActive(a, now)), [alerts, now])
 
   const current = useMemo(() => currentEvents(events, now), [events, now])
   const districts = useMemo(() => closuresAndCrashesByDistrict(events, now).slice(0, 7), [events, now])
@@ -85,7 +88,7 @@ export function Dashboard() {
         </span>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <Stat label="Road events in effect" value={loading ? '…' : current.length} href="/" />
         <Stat label="Road closures" value={loading ? '…' : closures} tone={CLOSURE} href="/" />
         <Stat label="Crashes" value={loading ? '…' : crashes} tone={CRASH} href="/" />
@@ -95,6 +98,10 @@ export function Dashboard() {
           value={trains?.tracked ? `${pct(trains.onTime, trains.tracked)}%` : '…'}
           tone="var(--color-kumo-success)"
           href="/#transit"
+        />
+        <Stat
+          label={parking ? `Free in council CBD car parks: King George Sq ${parking.kingGeorgeSquare ?? '–'}, Wickham Tce ${parking.wickhamTerrace ?? '–'}` : 'Free in council CBD car parks'}
+          value={parking ? (parking.kingGeorgeSquare ?? 0) + (parking.wickhamTerrace ?? 0) : '…'}
         />
       </div>
 
@@ -124,7 +131,19 @@ export function Dashboard() {
 
         <Tile
           title="Public transport running"
-          source={`TransLink real-time, trips with a vehicle reporting its position. On time: ${-ON_TIME.early / 60} min early to under ${ON_TIME.late / 60} min late, as reported. Not TransLink's official punctuality figure.`}
+          source={
+            <>
+              {liftOutages.length > 0 && (
+                <span className="mb-1 block text-sm">
+                  <span className="font-medium text-kumo-warning">
+                    {liftOutages.length} lift or escalator {liftOutages.length === 1 ? 'outage' : 'outages'}:
+                  </span>{' '}
+                  <span className="text-kumo-subtle">{liftOutages.map((a) => a.header.replace(/^(lift|escalator) outage\s*-\s*/i, '')).join('; ')}</span>
+                </span>
+              )}
+              {`TransLink real-time, trips with a vehicle reporting its position. On time: ${-ON_TIME.early / 60} min early to under ${ON_TIME.late / 60} min late, as reported. Not TransLink's official punctuality figure.`}
+            </>
+          }
         >
           {transit?.length ? (
             <ul className="grid gap-2.5">

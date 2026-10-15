@@ -43,7 +43,7 @@ import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/s
 import { TransitPanel } from './components/TransitPanel'
 import { parseHash } from './lib/route'
 import { useColorMode } from './hooks/useColorMode'
-import { useBushfires, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
+import { useBushfires, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, isClosure, isUpcoming, type EventFilters } from './lib/filters'
 import { timeAgo } from './lib/format'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
@@ -87,6 +87,7 @@ export default function App() {
   const now = useNow()
 
   const [panel, setPanel] = useState<Panel>('events')
+  const occupancies = useRoadOccupancies(panel === 'events')
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
   // Desktop panel: today's width, full screen for detail, or closed for a full map. Remembered per browser.
   const [panelMode, setPanelModeState] = useState<PanelMode>(readPanelMode)
@@ -484,6 +485,7 @@ export default function App() {
           onSelect={selectEvent}
           fires={fires}
           onOpenHref={openHref}
+          occupancies={occupancies}
           top={<CommuteCard events={events} fires={fires} vehicles={allVehicles} alerts={transitAlerts} now={now} onOpen={openHref} />}
         />
       ) : panel === 'cameras' ? (

@@ -21,6 +21,8 @@ export interface TransitAlert {
   /** Route codes this alert affects ("402", "BRCA", "F1"…), de-duplicated. */
   routes: string[]
   stops: number
+  /** Stop ids the alert names, e.g. the platforms a lift outage affects. */
+  stopIds: string[]
   periods: { start: number | null; end: number | null }[]
 }
 
@@ -102,6 +104,7 @@ export async function fetchTransitAlerts(regions: TransitRegion[], signal?: Abor
         effect: enumName(rt.Alert.Effect as unknown as Record<string, number>, a.effect, 'Unknown effect'),
         routes: [...new Set(entities.map((x) => (x.routeId ? routeCode(x.routeId) : '')).filter(Boolean))],
         stops: entities.filter((x) => x.stopId).length,
+        stopIds: [...new Set(entities.flatMap((x) => (x.stopId ? [x.stopId] : [])))],
         periods: (a.activePeriod ?? []).map((p) => ({
           start: num(p.start) != null ? num(p.start)! * 1000 : null,
           end: num(p.end) != null && num(p.end) !== 0 ? num(p.end)! * 1000 : null,
@@ -110,6 +113,11 @@ export async function fetchTransitAlerts(regions: TransitRegion[], signal?: Abor
     }
   }
   return out
+}
+
+/** TransLink files lift and escalator outages under the GTFS-RT effect ACCESSIBILITY_ISSUE. */
+export function isAccessibilityAlert(a: TransitAlert) {
+  return a.effect === 'Accessibility issue' || /^(lift|escalator) outage/i.test(a.header)
 }
 
 /** Active now if any period contains `now` (no periods means always active). */

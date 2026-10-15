@@ -1,6 +1,7 @@
 import { Loader, Text } from '@cloudflare/kumo'
-import { CaretRightIcon } from '@phosphor-icons/react'
+import { ArrowSquareOutIcon, CaretRightIcon } from '@phosphor-icons/react'
 import type { Gauge } from '../api/bccGauges'
+import { floodWarningArea } from '../api/floodWarnings'
 import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, nearbyGauges, rainfallSince } from '../lib/gauges'
 import type { LngLat } from '../lib/geo'
@@ -29,6 +30,7 @@ export function GaugesNearby({
   const streams = nearbyGauges(gauges, at, RADIUS_KM, 'stream').slice(0, 4)
   const rain = nearbyGauges(gauges, at, RADIUS_KM, 'rain').slice(0, 2)
   if (!streams.length && !rain.length) return null
+  const area = streams.map((s) => floodWarningArea(s.gauge.id)).find(Boolean)
   return (
     <div className="grid gap-1.5">
       <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
@@ -74,8 +76,13 @@ export function GaugesNearby({
       </ul>
       <Text size="xs" variant="secondary">
         Raw readings from Brisbane City Council gauges within {RADIUS_KM} km. Heights are metres above the Australian Height
-        Datum.
+        Datum, not flood levels.
       </Text>
+      {area && (
+        <a href={area.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+          BoM flood warning for {area.catchment} <ArrowSquareOutIcon size={14} />
+        </a>
+      )}
     </div>
   )
 }

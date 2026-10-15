@@ -16,7 +16,9 @@ Every time, position, delay and count in Roadbeat comes from an official source.
 - **Road events, cameras, rest areas and rain radar:** the Department of Transport and Main Roads, through the feeds behind qldtraffic.qld.gov.au.
 - **Public transport:** Translink's published timetables (GTFS) and live feeds (GTFS-RT) for South East Queensland and Cairns.
 - **Bushfire warnings:** the Queensland Fire Department's current incidents feed.
-- **Stream heights, rainfall and signal traffic:** Brisbane City Council's open data.
+- **Stream heights, rainfall, signal traffic, planned council road closures and CBD car park spaces:** Brisbane City Council's open data.
+- **Station access and facilities:** Queensland Rail's station details, published by Brisbane City Council. Lift and escalator outages come from Translink's alerts.
+- **Flood warning areas:** the Bureau of Meteorology's National Flood Gauge Network, used to link each Brisbane gauge to BoM's flood warning for its area.
 - **Crash history:** the Department of Transport and Main Roads' crash data on data.qld.gov.au.
 - **Maps:** OpenFreeMap, OpenMapTiles and OpenStreetMap contributors.
 

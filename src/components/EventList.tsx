@@ -4,6 +4,8 @@ import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import type { EventType, TrafficEvent } from '../api/types'
 import { FireList } from './FireList'
+import { CouncilWorksList } from './CouncilWorksList'
+import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import { EVENT_TYPES, PRIORITIES } from '../lib/eventMeta'
 import { matchesBase, type EventFilters, type SortKey, type When } from '../lib/filters'
 import { nextHidden } from '../lib/scrollReveal'
@@ -27,6 +29,8 @@ interface Props {
   onOpenHref: (hash: string) => void
   /** Shown above the list, e.g. the My commute card. */
   top?: ReactNode
+  /** Brisbane City Council planned road occupancies, or null while loading. */
+  occupancies: RoadOccupancy[] | null
 }
 
 export function EventList({
@@ -44,6 +48,7 @@ export function EventList({
   fires,
   onOpenHref,
   top,
+  occupancies,
 }: Props) {
   // On phones the district and priority pickers fold behind a button, so the list starts higher.
   const [moreOpen, setMoreOpen] = useState(false)
@@ -269,6 +274,7 @@ export function EventList({
       <div className="min-h-0 flex-1 overflow-y-auto" onScroll={onListScroll}>
         {filters.when === 'now' && top}
         {filters.when === 'now' && fires && <FireList fires={fires} now={now} onOpen={onOpenHref} />}
+        {filters.when === 'now' && occupancies && <CouncilWorksList occupancies={occupancies} query={filters.query} now={now} />}
         {loading ? (
           <div className="flex justify-center py-16">
             <Loader />

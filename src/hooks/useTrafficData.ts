@@ -12,6 +12,8 @@ import {
 import { fetchGauges, type Gauge } from '../api/bccGauges'
 import { fetchSignalVolumes, loadSignalSites, type SignalSite, type SignalVolumes } from '../api/bccSignals'
 import { fetchBushfires, type FireWarning } from '../api/bushfires'
+import { fetchRoadOccupancies, type RoadOccupancy } from '../api/bccRoadOccupancies'
+import { fetchCarParkSpaces, type CarParkSpaces } from '../api/bccParking'
 import { loadTimetableIndex, type TimetableIndex } from '../api/timetables'
 import { loadStops, loadTrips, type StopIndex, type TripIndex } from '../api/stops'
 import {
@@ -376,4 +378,38 @@ export function useSignals(enabled: boolean) {
     }
   }, [enabled])
   return { sites: enabled ? sites : null, volumes: enabled ? volumes : null, error: enabled ? error : null }
+}
+
+/** Brisbane City Council planned road occupancies, refreshed every 30 minutes while `enabled` (the council updates them daily). */
+export function useRoadOccupancies(enabled: boolean) {
+  const [list, setList] = useState<RoadOccupancy[] | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    const c = new AbortController()
+    const load = () => fetchRoadOccupancies(c.signal).then(setList, () => {})
+    load()
+    const id = setInterval(() => visible() && load(), 30 * 60_000)
+    return () => {
+      c.abort()
+      clearInterval(id)
+    }
+  }, [enabled])
+  return enabled ? list : null
+}
+
+/** Vacant spaces at the council's CBD car parks, polled every 5 minutes while `enabled`. */
+export function useCarParkSpaces(enabled: boolean) {
+  const [spaces, setSpaces] = useState<CarParkSpaces | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    const c = new AbortController()
+    const load = () => fetchCarParkSpaces(c.signal).then(setSpaces, () => {})
+    load()
+    const id = setInterval(() => visible() && load(), 5 * 60_000)
+    return () => {
+      c.abort()
+      clearInterval(id)
+    }
+  }, [enabled])
+  return enabled ? spaces : null
 }

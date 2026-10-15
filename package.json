@@ -15,7 +15,8 @@
     "data:maps": "node scripts/build-maps.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "data:intersections": "node scripts/build-intersections.mjs"
+    "data:intersections": "node scripts/build-intersections.mjs",
+    "data:catchments": "node scripts/build-gauge-catchments.mjs"
   },
   "dependencies": {
     "@cloudflare/kumo": "^2.14.0",

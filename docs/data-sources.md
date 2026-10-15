@@ -21,6 +21,9 @@ The browser reads these while the app is open.
 | Bushfire warnings and incidents | Queensland Fire Department | `publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json` | Proxy `/qfd-bushfires` | 2 min | `src/api/bushfires.ts` |
 | Stream height and rain gauges | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/telemetry-sensors-rainfall-and-stream-heights/exports/csv` (last 24 hours) and `…-metadata/exports/json` (gauge list) | Direct | 5 min, while the layer or a flooding event is open | `src/api/bccGauges.ts` |
 | Intersection volumes | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/traffic-data-at-intersection/exports/csv` | Direct | 2 min, while the layer is on. The council publishes a new batch about every 5 minutes. | `src/api/bccSignals.ts` |
+| Railway station facilities and access | Queensland Rail, published by Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/railway-station-facilities/records?where=stops="<stop id>"` | Direct | Once per station per visit | `src/api/stationFacilities.ts` |
+| Planned road occupancies | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/planned-temporary-road-occupancies/exports/json` | Direct. The permit holder's contact details are dropped. | 30 min, while Road events is open. The council updates daily. | `src/api/bccRoadOccupancies.ts` |
+| CBD car park spaces | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-parking-stations/records` | Direct | 5 min, on the dashboard | `src/api/bccParking.ts` |
 | Crash history | TMR, data.qld.gov.au | `www.data.qld.gov.au/api/3/action/datastore_search_sql` | Direct (CKAN SQL) | On demand | `src/api/crashes.ts` |
 | Base maps | OpenFreeMap | `tiles.openfreemap.org/styles/{positron,dark,liberty,bright,fiord}` | Direct | On demand | `src/components/TrafficMap.tsx` |
 
@@ -47,6 +50,7 @@ The `scripts/` build these files from published data. They change when TransLink
 | `public/timetables/index.json` | The same: routes per stop and the calendar window | `npm run data:timetables` | 53 KB compressed |
 | `public/transit-tracks.json` | GTFS `shapes.txt` for train, tram and ferry routes | `npm run data:tracks` | 74 KB compressed |
 | `src/data/translink-maps.json` | The list of PDFs on translink.com.au/plan-your-journey/maps | `npm run data:maps` | Bundled |
+| `src/data/gauge-catchments.json` | Bureau of Meteorology *National Flood Gauge Network* (data.gov.au, CC BY 4.0): the flood warning catchment each Brisbane stream gauge is in, and its BoM product id | `npm run data:catchments` | Bundled |
 | `src/data/bcc-intersections.json` | Brisbane City Council's *Traffic Management — Intersection locations — reference*: each signal's SCATS number, suburb, position and street names | `npm run data:intersections` | 24 KB compressed, loaded on demand |
 
 TransLink's GTFS files are at `gtfsrt.api.translink.com.au/GTFS/SEQ_GTFS.zip` and `CNS_GTFS.zip`.
@@ -60,3 +64,9 @@ All are optional. Each overrides where the app reads one source.
 | `VITE_QLDTRAFFIC_DATA_BASE` | `https://data.qldtraffic.qld.gov.au` | The QLDTraffic feed host |
 | `VITE_TRANSLINK_RT_BASE` | `/translink-rt` | The TransLink GTFS-RT proxy path |
 | `VITE_QFD_BUSHFIRES_URL` | `/qfd-bushfires` | The bushfire feed proxy path |
+
+## What the app links to instead of showing
+
+The Bureau of Meteorology's flood warnings, and the minor, moderate and major flood levels for its gauges, are published under BoM's default terms: personal use only, not to be supplied to anyone else. Its web API says it must not be used. So the app doesn't show warning text or flood levels. A gauge page links to the BoM warning page for the gauge's catchment, using the catchment's product id from the CC BY *National Flood Gauge Network*.
+
+TransLink reports lift and escalator outages as service alerts with the GTFS-RT effect `ACCESSIBILITY_ISSUE`, naming the stops they affect. Stop pages and the dashboard show them as published.

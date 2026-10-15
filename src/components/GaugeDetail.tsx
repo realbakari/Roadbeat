@@ -1,6 +1,7 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, ArrowSquareOutIcon, CloudRainIcon, WavesIcon } from '@phosphor-icons/react'
 import { GAUGES_DATASET_URL, type Gauge, type GaugeReading } from '../api/bccGauges'
+import { BOM_QLD_WARNINGS, floodWarningArea } from '../api/floodWarnings'
 import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, rainfallSince } from '../lib/gauges'
 
@@ -14,6 +15,7 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
   const hour = changeWithin(gauge, HOUR)
   const day = changeWithin(gauge, 24 * HOUR)
   const Icon = stream ? WavesIcon : CloudRainIcon
+  const warningArea = floodWarningArea(gauge.id)
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center border-b border-kumo-line px-2 py-2">
@@ -78,13 +80,36 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
             </section>
           )}
 
+          {stream && (
+            <section className="grid gap-1.5">
+              <Text as="h3" variant="heading">
+                Flood warnings
+              </Text>
+              <Text size="sm" variant="secondary">
+                This page shows heights only. The Bureau of Meteorology issues flood warnings and sets the minor, moderate and major flood
+                levels.
+                {warningArea && ` This gauge is in BoM's ${warningArea.catchment} warning area.`}
+              </Text>
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {warningArea && (
+                  <a href={warningArea.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+                    Flood warning for this area (BoM) <ArrowSquareOutIcon size={14} />
+                  </a>
+                )}
+                <a href={BOM_QLD_WARNINGS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+                  All Queensland warnings (BoM) <ArrowSquareOutIcon size={14} />
+                </a>
+              </div>
+            </section>
+          )}
+
           <div className="grid gap-1">
             <a href={GAUGES_DATASET_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
               Brisbane City Council telemetry data <ArrowSquareOutIcon size={14} />
             </a>
             <Text size="xs" variant="secondary">
-              Raw readings from Brisbane City Council's gauges, which also feed the Bureau of Meteorology's flood warnings. For
-              flood warnings, see the Bureau of Meteorology. CC BY 4.0.
+              Raw readings from Brisbane City Council's gauges, which also feed the Bureau of Meteorology's flood warnings. CC BY 4.0.
+              Warning areas: Bureau of Meteorology, National Flood Gauge Network, CC BY 4.0.
             </Text>
           </div>
         </div>
