@@ -43,7 +43,7 @@ import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/s
 import { TransitPanel } from './components/TransitPanel'
 import { parseHash } from './lib/route'
 import { useColorMode } from './hooks/useColorMode'
-import { useBushfires, useClearances, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
+import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, isClosure, isUpcoming, type EventFilters } from './lib/filters'
 import { timeAgo } from './lib/format'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
@@ -75,6 +75,23 @@ function useHashSelection() {
     setSel(parseHash(location.hash))
   }, [])
   return [sel, go] as const
+}
+
+/** The map layer a shared link to a place turns on. */
+const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
+  rest: 'restAreas',
+  dump: 'dumpPoints',
+  truck: 'trucks',
+  waze: 'waze',
+  clearance: 'clearances',
+  clearway: 'clearways',
+  toilet: 'toilets',
+  bay: 'accessibleParking',
+}
+
+function firstPoint(g: GeoJSON.LineString | GeoJSON.MultiLineString): LngLat {
+  const p = g.type === 'LineString' ? g.coordinates[0] : g.coordinates[0][0]
+  return [p[0], p[1]]
 }
 
 export default function App() {
@@ -243,6 +260,11 @@ export default function App() {
   const { gauges } = useGauges(layers.gauges || !!sel.gauge || selectedEvent?.properties.event_type === 'Flooding')
   const { sites: signalSites, volumes: signalVolumes } = useSignals(layers.signals || !!sel.signal)
   const { clearances, error: clearanceError } = useClearances(layers.clearances || sel.place?.kind === 'clearance')
+  const council = useCouncilPlaces({
+    clearways: layers.clearways || sel.place?.kind === 'clearway',
+    toilets: layers.toilets || sel.place?.kind === 'toilet',
+    accessibleParking: layers.accessibleParking || sel.place?.kind === 'bay',
+  })
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
     () => (sel.signal ? (signalSites?.find((s) => s.tsc === sel.signal) ?? null) : null),
@@ -290,24 +312,25 @@ export default function App() {
       const data = clearances?.find((c) => c.id === p.id)
       return data ? { kind: 'clearance', data } : null
     }
+    if (p.kind === 'clearway') {
+      const data = council.clearways?.find((c) => c.id === p.id)
+      return data ? { kind: 'clearway', data } : null
+    }
+    if (p.kind === 'toilet') {
+      const data = council.toilets?.find((t) => t.id === p.id)
+      return data ? { kind: 'toilet', data } : null
+    }
+    if (p.kind === 'bay') {
+      const data = council.bays?.find((b) => b.id === p.id)
+      return data ? { kind: 'bay', data } : null
+    }
     return null
-  }, [sel.place, ref, waze, clearances])
+  }, [sel.place, ref, waze, clearances, council.clearways, council.toilets, council.bays])
 
   // Opening a shared link to a layer item turns that layer on.
   useEffect(() => {
     const k = sel.place?.kind
-    const key =
-      k === 'rest'
-        ? 'restAreas'
-        : k === 'dump'
-          ? 'dumpPoints'
-          : k === 'truck'
-            ? 'trucks'
-            : k === 'waze'
-              ? 'waze'
-              : k === 'clearance'
-                ? 'clearances'
-                : null
+    const key = k ? PLACE_LAYER[k] : undefined
     if (key) setLayers((l) => (l[key] ? l : { ...l, [key]: true }))
   }, [sel.place?.kind])
 
@@ -321,10 +344,12 @@ export default function App() {
         ? ([selectedPlace.data.location.x, selectedPlace.data.location.y] as LngLat)
         : selectedPlace.kind === 'truck'
           ? (selectedPlace.data.geometry.coordinates[0]?.[0] as LngLat)
-          : selectedPlace.kind === 'clearance'
+          : selectedPlace.kind === 'clearance' || selectedPlace.kind === 'toilet' || selectedPlace.kind === 'bay'
             ? selectedPlace.data.position
-            : selectedPlace.data.coordinates
-    if (at) setFocus({ center: at, zoom: selectedPlace.kind === 'truck' ? 12 : selectedPlace.kind === 'clearance' ? 16 : 13 })
+            : selectedPlace.kind === 'clearway'
+              ? firstPoint(selectedPlace.data.geometry)
+              : selectedPlace.data.coordinates
+    if (at) setFocus({ center: at, zoom: selectedPlace.kind === 'truck' ? 12 : selectedPlace.kind === 'clearance' || selectedPlace.kind === 'bay' ? 16 : selectedPlace.kind === 'clearway' || selectedPlace.kind === 'toilet' ? 15 : 13 })
   }, [selectedPlace, sel.vehicle])
 
   // Keep the selected event on the map even if filters would hide it.
@@ -363,8 +388,11 @@ export default function App() {
       ...(gauges ? { gauges: gauges.length } : {}),
       ...(signalVolumes ? { signals: signalVolumes.size } : {}),
       ...(clearances ? { clearances: clearances.length } : {}),
+      ...(council.clearways ? { clearways: council.clearways.length } : {}),
+      ...(council.toilets ? { toilets: council.toilets.length } : {}),
+      ...(council.bays ? { accessibleParking: council.bays.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays],
   )
 
   const locate = useCallback(() => {
@@ -730,6 +758,9 @@ export default function App() {
               signalSites={signalSites ?? []}
               signalVolumes={signalVolumes}
               clearances={clearances ?? []}
+              clearways={council.clearways ?? []}
+              toilets={council.toilets ?? []}
+              accessibleBays={council.bays ?? []}
               selectedVehicleId={sel.vehicle}
               trackCodes={trackCodes}
               followVehicle={followVehicle && !!selectedVehicle}
@@ -759,6 +790,7 @@ export default function App() {
               vehicleCounts={vehicleCounts}
               vehicleError={vehicleError}
               clearanceError={clearanceError}
+              councilErrors={council.errors}
             />
             {vehicleFilter && layers.vehicles && (
               <div className="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line">

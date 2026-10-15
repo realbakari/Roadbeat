@@ -17,6 +17,7 @@ Every time, position, delay and count in Roadbeat comes from an official source.
 - **Public transport:** Translink's published timetables (GTFS) and live feeds (GTFS-RT) for South East Queensland and Cairns.
 - **Bushfire warnings:** the Queensland Fire Department's current incidents feed.
 - **Stream heights, rainfall, signal traffic, planned council road closures and CBD car park spaces:** Brisbane City Council's open data.
+- **Clearways, public toilets, accessible parking, ferry terminal access and the February 2022 flood extent:** Brisbane City Council's open data. Toilets come from the National Public Toilet Map.
 - **Station access and facilities:** Queensland Rail's station details, published by Brisbane City Council. Lift and escalator outages come from Translink's alerts.
 - **Flood warning areas:** the Bureau of Meteorology's National Flood Gauge Network, used to link each Brisbane gauge to BoM's flood warning for its area.
 - **Crash history:** the Department of Transport and Main Roads' crash data on data.qld.gov.au.

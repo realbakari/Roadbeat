@@ -25,6 +25,10 @@ The browser reads these while the app is open.
 | Planned road occupancies | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/planned-temporary-road-occupancies/exports/json` | Direct. The permit holder's contact details are dropped. | 30 min, while Road events is open. The council updates daily. | `src/api/bccRoadOccupancies.ts` |
 | CBD car park spaces | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-parking-stations/records` | Direct | 5 min, on the dashboard | `src/api/bccParking.ts` |
 | Low clearances | Brisbane City Council; Queensland Rail, published by Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/road-restrictions/exports/json`, `…/road-restrictions-qr/exports/json` and `…/road-restrictions-qr` (dataset metadata) | Direct | Once per visit, when the layer or a clearance page is opened. Both datasets update about monthly. | `src/api/clearances.ts` |
+| Clearways | Brisbane City Council | `data.brisbane.qld.gov.au/…/datasets/parking-clearways/exports/json` | Direct. `src/lib/clearways.ts` reads the signed times; times it can't read are shown as published, with no in-effect claim. | Once per visit, while the layer or a clearway page is open | `src/api/bccPlaces.ts` |
+| Public toilets | National Public Toilet Map, published by Brisbane City Council | `data.brisbane.qld.gov.au/…/datasets/public-toilets-in-brisbane/exports/json` | Direct | Once per visit, while the layer is on | `src/api/bccPlaces.ts` |
+| Accessible parking | Brisbane City Council | `data.brisbane.qld.gov.au/…/datasets/disability-permit-parking-locations/exports/json` | Direct. Signs no longer in service are dropped. | Once per visit, while the layer is on | `src/api/bccPlaces.ts` |
+| Ferry terminal access | Brisbane City Council | `data.brisbane.qld.gov.au/…/datasets/ferry-terminals/records?where=hastus="<stop id>"` | Direct. `hastus` is TransLink's stop id. | Once per terminal per visit | `src/api/ferryTerminals.ts` |
 | Crash history | TMR, data.qld.gov.au | `www.data.qld.gov.au/api/3/action/datastore_search_sql` | Direct (CKAN SQL) | On demand | `src/api/crashes.ts` |
 | Base maps | OpenFreeMap | `tiles.openfreemap.org/styles/{positron,dark,liberty,bright,fiord}` | Direct | On demand | `src/components/TrafficMap.tsx` |
 
@@ -52,6 +56,7 @@ The `scripts/` build these files from published data. They change when TransLink
 | `public/timetables/index.json` | The same: routes per stop and the calendar window | `npm run data:timetables` | 53 KB compressed |
 | `public/transit-tracks.json` | GTFS `shapes.txt` for train, tram and ferry routes | `npm run data:tracks` | 74 KB compressed |
 | `src/data/translink-maps.json` | The list of PDFs on translink.com.au/plan-your-journey/maps | `npm run data:maps` | Bundled |
+| `public/flood-2022.json` | Brisbane City Council *Flood Awareness: Historic Brisbane River and Creek Floods Feb 2022*: the adopted extent, outlines simplified to about 5 m (771,544 points to about 115,000) | `npm run data:flood2022` | 0.5 MB compressed, loaded when the layer is turned on |
 | `src/data/gauge-catchments.json` | Bureau of Meteorology *National Flood Gauge Network* (data.gov.au, CC BY 4.0): the flood warning catchment each Brisbane stream gauge is in, and its BoM product id | `npm run data:catchments` | Bundled |
 | `src/data/bcc-intersections.json` | Brisbane City Council's *Traffic Management — Intersection locations — reference*: each signal's SCATS number, suburb, position and street names | `npm run data:intersections` | 24 KB compressed, loaded on demand |
 

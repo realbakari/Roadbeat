@@ -11,6 +11,8 @@ import {
   VideoCameraIcon,
   FlameIcon,
   TrafficSignalIcon,
+  ToiletIcon,
+  WheelchairIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -33,6 +35,14 @@ export const LAYER_COLOR = {
   truck: '#b91c1c',
   /** Yellow, like a low clearance sign. */
   clearance: '#facc15',
+  /** Red when a clearway is in effect, like the sign's tow-away panel. */
+  clearwayOn: '#dc2626',
+  clearwayOff: '#9ca3af',
+  toilet: '#475569',
+  toiletAccessible: '#0369a1',
+  /** The international symbol of access is white on blue. */
+  accessibleParking: '#1d4ed8',
+  flood2022: '#2563eb',
 } as const
 
 export const VEHICLE_COLOR = {
@@ -98,6 +108,9 @@ function buildIcons(): Record<string, string> {
   icons['dump-point'] = square(LAYER_COLOR.dumpPoint, VanIcon)
   icons['waze'] = disc(LAYER_COLOR.waze, CarProfileIcon)
   icons['truck-restriction'] = disc(LAYER_COLOR.truck, TruckIcon)
+  icons['toilet'] = square(LAYER_COLOR.toilet, ToiletIcon)
+  icons['toilet-accessible'] = square(LAYER_COLOR.toiletAccessible, ToiletIcon)
+  icons['accessible-parking'] = square(LAYER_COLOR.accessibleParking, WheelchairIcon)
   icons['vehicle-bus'] = disc(VEHICLE_COLOR.bus, BusIcon)
   icons['vehicle-train'] = disc(VEHICLE_COLOR.train, TrainIcon)
   icons['vehicle-tram'] = disc(VEHICLE_COLOR.tram, TramIcon)

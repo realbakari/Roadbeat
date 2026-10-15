@@ -12,35 +12,10 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { FEEDS, MODES, download, eachRow, parseCsv, unzip } from './lib/gtfs.mjs'
+import { simplify } from './lib/simplify.mjs'
 
 const SOURCE = 'TransLink GTFS (SEQ, Cairns), data.qld.gov.au, CC BY 4.0'
 const TOLERANCE = 0.00003 // degrees, ~3 m
-
-/** Douglas–Peucker line simplification. */
-function simplify(pts) {
-  if (pts.length < 3) return pts
-  const keep = new Uint8Array(pts.length)
-  keep[0] = keep[pts.length - 1] = 1
-  const stack = [[0, pts.length - 1]]
-  while (stack.length) {
-    const [a, b] = stack.pop()
-    const [x1, y1] = pts[a], [x2, y2] = pts[b]
-    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1e-12
-    let max = 0, at = -1
-    for (let i = a + 1; i < b; i++) {
-      const d = Math.abs(dy * pts[i][0] - dx * pts[i][1] + x2 * y1 - y2 * x1) / len
-      if (d > max) {
-        max = d
-        at = i
-      }
-    }
-    if (max > TOLERANCE) {
-      keep[at] = 1
-      stack.push([a, at], [at, b])
-    }
-  }
-  return pts.filter((_, i) => keep[i])
-}
 
 const features = []
 for (const [region, url] of Object.entries(FEEDS)) {
@@ -81,7 +56,7 @@ for (const [region, url] of Object.entries(FEEDS)) {
       const fresh = s.line.filter((p) => !covered.has(cell(p))).length
       if (parts.length && fresh < s.line.length * 0.02) continue
       s.line.forEach((p) => covered.add(cell(p)))
-      parts.push(simplify(s.line).map(([x, y]) => [Math.round(x * 1e5) / 1e5, Math.round(y * 1e5) / 1e5]))
+      parts.push(simplify(s.line, TOLERANCE).map(([x, y]) => [Math.round(x * 1e5) / 1e5, Math.round(y * 1e5) / 1e5]))
     }
     const colors = new Map()
     for (const s of list) for (const [c, n] of s.colors) colors.set(c, (colors.get(c) ?? 0) + n)

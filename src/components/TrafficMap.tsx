@@ -6,6 +6,7 @@ import type { CrashFilter } from '../api/crashes'
 import type { Gauge } from '../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import type { Clearance } from '../api/clearances'
+import type { AccessibleBay, Clearway, Toilet } from '../api/bccPlaces'
 import type { FireWarning } from '../api/bushfires'
 import { loadTracks } from '../api/tracks'
 import { loadStopFeatures } from '../lib/stopFeatures'
@@ -27,7 +28,7 @@ import {
 import { ensureClearanceIcons, ensureIcons } from '../lib/mapIcons'
 import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
-import { boundsOf, clearanceFeatures, fireFeatures, gaugeFeatures, setData, signalFeatures, withLabels } from './map/features'
+import { boundsOf, clearanceFeatures, clearwayFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, setData, signalFeatures, withLabels } from './map/features'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -79,6 +80,9 @@ interface Props {
   signalSites: SignalSite[]
   signalVolumes: SignalVolumes | null
   clearances: Clearance[]
+  clearways: Clearway[]
+  toilets: Toilet[]
+  accessibleBays: AccessibleBay[]
   selectedVehicleId: string | null
   /** Route codes whose train, tram or ferry track to highlight (a line shown on the map, or the selected vehicle's route). */
   trackCodes: string[] | null
@@ -112,10 +116,26 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   gauges: ['gauges', 'gauges-label'],
   signals: ['signals', 'signals-label', 'signals-halo', 'signals-ring'],
   clearances: ['clearances'],
+  clearways: ['clearways-on', 'clearways-off'],
+  toilets: ['toilets'],
+  accessibleParking: ['accessible-parking'],
+  flood2022: ['flood-2022-fill', 'flood-2022-line'],
 }
 
-const CLICKABLE_PLACES = ['clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
+
+let flood2022: Promise<GeoJSON.FeatureCollection | null> | null = null
+/** Built by scripts/build-flood-2022.mjs; fetched once per visit. */
+function loadFlood2022() {
+  flood2022 ??= fetch('/flood-2022.json')
+    .then((r) => (r.ok ? (r.json() as Promise<GeoJSON.FeatureCollection>) : null))
+    .catch(() => {
+      flood2022 = null
+      return null
+    })
+  return flood2022
+}
 
 export function TrafficMap(props: Props) {
   const {
@@ -138,6 +158,9 @@ export function TrafficMap(props: Props) {
     signalSites,
     signalVolumes,
     clearances,
+    clearways,
+    toilets,
+    accessibleBays,
     selectedVehicleId,
     trackCodes,
     followVehicle,
@@ -277,6 +300,25 @@ export function TrafficMap(props: Props) {
       live = false
     }
   }, [map, ready, clearances])
+  // Clearways recolour as their signed times start and end; `now` ticks every 30 s.
+  const clearwayData = useMemo(() => clearwayFeatures(clearways, now), [clearways, now])
+  useEffect(() => {
+    if (ready && map) setData(map, 'clearways', clearwayData)
+  }, [map, ready, clearwayData])
+  const councilPlaces = useMemo(() => councilPlaceFeatures(toilets, accessibleBays), [toilets, accessibleBays])
+  useEffect(() => {
+    if (ready && map) setData(map, 'council-places', councilPlaces)
+  }, [map, ready, councilPlaces])
+  // The February 2022 flood extent (0.5 MB) loads the first time its layer is turned on.
+  const showFlood = layers.flood2022
+  useEffect(() => {
+    if (!ready || !map || !showFlood) return
+    let live = true
+    loadFlood2022().then((data) => live && data && setData(map, 'flood-2022', data))
+    return () => {
+      live = false
+    }
+  }, [map, ready, showFlood])
   useEffect(() => {
     if (ready && map) setData(map, 'districts', districts)
   }, [map, ready, districts])

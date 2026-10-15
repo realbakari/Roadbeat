@@ -64,6 +64,14 @@ npm run data:intersections
 
 The script prints how many intersections have a position. It stops without writing if it finds fewer than 500.
 
+## Rebuild the February 2022 flood extent
+
+The council revises its flood awareness layers rarely. If it does, rebuild the simplified outline:
+
+```bash
+npm run data:flood2022
+```
+
 ## Rebuild the gauge flood warning areas
 
 When Brisbane City Council adds stream gauges, or BoM redraws its flood warning catchments, match each gauge to its catchment again:

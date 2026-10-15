@@ -33,12 +33,19 @@ import {
   WarningIcon,
   WheelchairIcon,
   WheelchairMotionIcon,
+  ArmchairIcon,
+  ArrowsHorizontalIcon,
+  BoatIcon,
+  HandPointingIcon,
+  SecurityCameraIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { fetchStationFacilities, STATION_FACILITIES_URL, type Feature, type StationFacilities } from '../api/stationFacilities'
 import type { TransitAlert } from '../api/translink'
 import { AudioPlayer } from './AudioPlayer'
+import { fetchFerryTerminal, FERRY_TERMINALS_URL, type FerryTerminal } from '../api/ferryTerminals'
+import { formatDay } from '../lib/format'
 import { LightMarkdown } from './LightMarkdown'
 
 const QR = 'https://www.queenslandrail.com.au'
@@ -162,6 +169,69 @@ export function StationFacilitiesSection({ stopId }: { stopId: string }) {
   )
 }
 
+/**
+ * Brisbane City Council's access details for a CityCat or ferry terminal. Renders
+ * nothing for stops that aren't one of the council's terminals.
+ */
+export function FerryTerminalSection({ stopId }: { stopId: string }) {
+  // A failed fetch shows nothing; the rest of the stop page doesn't depend on it.
+  const [state, setState] = useState<{ id: string; data: FerryTerminal | null } | null>(null)
+  useEffect(() => {
+    let live = true
+    fetchFerryTerminal(stopId).then(
+      (data) => live && setState({ id: stopId, data }),
+      () => live && setState({ id: stopId, data: null }),
+    )
+    return () => {
+      live = false
+    }
+  }, [stopId])
+  const t = state?.id === stopId ? state.data : null
+  if (!t) return null
+  const inspected = formatDay(t.inspected)
+
+  return (
+    <section id="stop-access" className="grid scroll-mt-4 gap-4" aria-labelledby="terminal-access-title">
+      <Text as="h3" variant="heading" id="terminal-access-title">
+        Terminal access and facilities
+      </Text>
+      {t.status && t.status !== 'ACTIVE' && (
+        <Banner variant="alert" size="sm" icon={<WarningIcon weight="fill" />} title={`Terminal status: ${t.status.toLowerCase()}`} description="As recorded by Brisbane City Council." />
+      )}
+      <div className="grid gap-2">
+        <SubHeading icon={<WheelchairIcon size={16} />}>Accessibility</SubHeading>
+        {t.accessSummary && <Text size="sm">{t.accessSummary}</Text>}
+        {t.access.length > 0 ? (
+          <FeatureList features={t.access} />
+        ) : (
+          <Text size="sm" variant="secondary">
+            No access features are recorded for this terminal.
+          </Text>
+        )}
+      </div>
+      {(t.other.length > 0 || t.toiletNote) && (
+        <div className="grid gap-2">
+          <SubHeading icon={<BoatIcon size={16} />}>Facilities</SubHeading>
+          {t.other.length > 0 && <FeatureList features={t.other} />}
+          {t.toiletNote && <Text size="sm">{t.toiletNote}</Text>}
+        </div>
+      )}
+      {t.ticketing && (
+        <Text size="sm" variant="secondary">
+          {t.ticketing}
+        </Text>
+      )}
+      <Text size="xs" variant="secondary">
+        Brisbane City Council (
+        <a href={FERRY_TERMINALS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+          Ferry terminals
+        </a>
+        , CC BY 4.0){inspected && `, last inspected ${inspected}`}. Lift outages come from TransLink's real-time alerts.
+      </Text>
+    </section>
+  )
+}
+
 /** An icon for each facility key in the dataset. */
 const ICONS: Record<string, Icon> = {
   lift: ElevatorIcon,
@@ -192,6 +262,11 @@ const ICONS: Record<string, Icon> = {
   customer_service_window: HeadsetIcon,
   ticket_vending_machine: TicketIcon,
   fare_gates: DoorIcon,
+  dda_compliant: WheelchairIcon,
+  gangway_level_landing: ArrowsHorizontalIcon,
+  braille_signage: HandPointingIcon,
+  seating: ArmchairIcon,
+  cctv: SecurityCameraIcon,
 }
 
 function FeatureList({ features }: { features: Feature[] }) {

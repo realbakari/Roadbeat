@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "data:intersections": "node scripts/build-intersections.mjs",
-    "data:catchments": "node scripts/build-gauge-catchments.mjs"
+    "data:catchments": "node scripts/build-gauge-catchments.mjs",
+    "data:flood2022": "node scripts/build-flood-2022.mjs"
   },
   "dependencies": {
     "@cloudflare/kumo": "^2.14.0",

@@ -1,5 +1,5 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { ArrowsVerticalIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, StackIcon, XIcon } from '@phosphor-icons/react'
+import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, StackIcon, XIcon } from '@phosphor-icons/react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
@@ -16,6 +16,7 @@ import {
 } from '../api/crashes'
 import { EVENT_TYPES } from '../lib/eventMeta'
 import { BCC_CLEARANCES_URL, QR_CLEARANCES_URL } from '../api/clearances'
+import { ACCESSIBLE_PARKING_URL, CLEARWAYS_URL, TOILETS_URL } from '../api/bccPlaces'
 import { iconUrl, LAYER_COLOR, signalIcon, typeSlug, VEHICLE_COLOR } from '../lib/mapIcons'
 import type { Basemap, MapLayers } from './map/settings'
 
@@ -32,6 +33,8 @@ interface Props {
   vehicleCounts: Partial<Record<VehicleMode, number>>
   vehicleError: string | null
   clearanceError: string | null
+  /** Load errors for the council's clearway, toilet and accessible parking layers. */
+  councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null }
 }
 
 const VEHICLE_MODES: { mode: VehicleMode; label: string }[] = [
@@ -124,6 +127,7 @@ export function MapLayersPanel({
   vehicleCounts,
   vehicleError,
   clearanceError,
+  councilErrors,
   basemap,
   onBasemapChange,
 }: Props) {
@@ -233,6 +237,17 @@ export function MapLayersPanel({
             </Text>
           </LayerRow>
           <LayerRow
+            icon={<Badge color={LAYER_COLOR.flood2022} icon={<DropHalfBottomIcon size={12} weight="fill" />} />}
+            label="February 2022 flood extent"
+            checked={layers.flood2022}
+            onChange={(v) => set('flood2022', v)}
+          >
+            <Text size="xs" variant="secondary">
+              Where the Brisbane River and creeks flooded in February 2022, as adopted by Brisbane City Council. A past flood for context, not a
+              forecast or a current warning. Outlines simplified to about 5 m.
+            </Text>
+          </LayerRow>
+          <LayerRow
             icon={<Badge className="bg-sky-600" icon={<CloudRainIcon size={12} weight="fill" />} />}
             label="Rain radar"
             checked={layers.radar}
@@ -287,6 +302,37 @@ export function MapLayersPanel({
                 </>
               )}
             </Text>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={LAYER_COLOR.clearwayOn} icon={<ProhibitIcon size={12} weight="bold" />} />}
+            label="Clearways"
+            count={counts.clearways}
+            checked={layers.clearways}
+            onChange={(v) => set('clearways', v)}
+          >
+            <div className="grid gap-1">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-1 w-4 rounded-full" style={{ background: LAYER_COLOR.clearwayOn }} /> In effect now
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-0 w-4 border-t-2 border-dashed" style={{ borderColor: LAYER_COLOR.clearwayOff }} /> Not now, or times unknown
+                </span>
+              </div>
+              <Text size="xs" variant={councilErrors.clearways ? 'error' : 'secondary'}>
+                {councilErrors.clearways ? (
+                  `Clearways unavailable: ${councilErrors.clearways}.`
+                ) : (
+                  <>
+                    From the signed times in{' '}
+                    <a href={CLEARWAYS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                      Brisbane City Council's records
+                    </a>
+                    . Zoom in to see them. The signs on the road are what count.
+                  </>
+                )}
+              </Text>
+            </div>
           </LayerRow>
           <LayerRow
             icon={<img src={iconUrl(signalIcon(1))} alt="" className="size-5" />}
@@ -356,6 +402,48 @@ export function MapLayersPanel({
               onChange={(v) => set(t.key, v)}
             />
           ))}
+          <LayerRow
+            icon={<img src={iconUrl('toilet-accessible')} alt="" className="size-5" />}
+            label="Public toilets"
+            count={counts.toilets}
+            checked={layers.toilets}
+            onChange={(v) => set('toilets', v)}
+          >
+            <Text size="xs" variant={councilErrors.toilets ? 'error' : 'secondary'}>
+              {councilErrors.toilets ? (
+                `Toilets unavailable: ${councilErrors.toilets}.`
+              ) : (
+                <>
+                  Blue: accessible toilet. Grey: no accessible toilet listed. Brisbane only, from the National Public Toilet Map via{' '}
+                  <a href={TOILETS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    Brisbane City Council
+                  </a>
+                  .
+                </>
+              )}
+            </Text>
+          </LayerRow>
+          <LayerRow
+            icon={<img src={iconUrl('accessible-parking')} alt="" className="size-5" />}
+            label="Accessible parking"
+            count={counts.accessibleParking}
+            checked={layers.accessibleParking}
+            onChange={(v) => set('accessibleParking', v)}
+          >
+            <Text size="xs" variant={councilErrors.accessibleParking ? 'error' : 'secondary'}>
+              {councilErrors.accessibleParking ? (
+                `Accessible parking unavailable: ${councilErrors.accessibleParking}.`
+              ) : (
+                <>
+                  Disability permit bays on council streets, with their signed times, from{' '}
+                  <a href={ACCESSIBLE_PARKING_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    Brisbane City Council
+                  </a>
+                  . Zoom in to see them.
+                </>
+              )}
+            </Text>
+          </LayerRow>
         </Group>
       </div>
     </div>

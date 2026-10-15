@@ -21,6 +21,14 @@ export interface MapLayers {
   signals: boolean
   /** Brisbane City Council and Queensland Rail low clearance bridges and structures. */
   clearances: boolean
+  /** Brisbane City Council clearways, coloured by whether their signed times cover now. */
+  clearways: boolean
+  /** Public toilets in Brisbane, from the National Public Toilet Map via the council. */
+  toilets: boolean
+  /** Brisbane City Council accessible (disability permit) parking bays. */
+  accessibleParking: boolean
+  /** Brisbane City Council's adopted extent of the February 2022 flood. */
+  flood2022: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -38,4 +46,8 @@ export const DEFAULT_LAYERS: MapLayers = {
   gauges: false,
   signals: false,
   clearances: false,
+  clearways: false,
+  toilets: false,
+  accessibleParking: false,
+  flood2022: false,
 }

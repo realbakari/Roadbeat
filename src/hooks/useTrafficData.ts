@@ -13,6 +13,7 @@ import { fetchGauges, type Gauge } from '../api/bccGauges'
 import { fetchSignalVolumes, loadSignalSites, type SignalSite, type SignalVolumes } from '../api/bccSignals'
 import { fetchBushfires, type FireWarning } from '../api/bushfires'
 import { fetchClearances, type Clearance } from '../api/clearances'
+import { fetchAccessibleBays, fetchClearways, fetchToilets, type AccessibleBay, type Clearway, type Toilet } from '../api/bccPlaces'
 import { fetchRoadOccupancies, type RoadOccupancy } from '../api/bccRoadOccupancies'
 import { fetchCarParkSpaces, type CarParkSpaces } from '../api/bccParking'
 import { loadTimetableIndex, type TimetableIndex } from '../api/timetables'
@@ -433,4 +434,35 @@ export function useCarParkSpaces(enabled: boolean) {
     }
   }, [enabled])
   return enabled ? spaces : null
+}
+
+/** A council layer that changes rarely: loaded once per visit, the first time something shows it. */
+function useLoadOnce<T>(enabled: boolean, load: (signal: AbortSignal) => Promise<T[]>) {
+  const [list, setList] = useState<T[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const loaded = list != null
+  const loader = useRef(load)
+  useEffect(() => {
+    if (!enabled || loaded) return
+    const c = new AbortController()
+    loader.current(c.signal).then(
+      (l) => (setList(l), setError(null)),
+      (e: Error) => !c.signal.aborted && setError(e.message),
+    )
+    return () => c.abort()
+  }, [enabled, loaded])
+  return { list: enabled ? list : null, error: enabled ? error : null }
+}
+
+/** Brisbane City Council clearways, public toilets and accessible parking, each loaded when its layer or a detail page needs it. */
+export function useCouncilPlaces(show: { clearways: boolean; toilets: boolean; accessibleParking: boolean }) {
+  const clearways = useLoadOnce<Clearway>(show.clearways, fetchClearways)
+  const toilets = useLoadOnce<Toilet>(show.toilets, fetchToilets)
+  const bays = useLoadOnce<AccessibleBay>(show.accessibleParking, fetchAccessibleBays)
+  return {
+    clearways: clearways.list,
+    toilets: toilets.list,
+    bays: bays.list,
+    errors: { clearways: clearways.error, toilets: toilets.error, accessibleParking: bays.error },
+  }
 }

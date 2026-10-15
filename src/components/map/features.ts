@@ -4,6 +4,8 @@ import { FIRE_COLOR, fireKindLabel, fireRank, type FireWarning } from '../../api
 import type { Gauge } from '../../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../../api/bccSignals'
 import { clearanceLabel, type Clearance } from '../../api/clearances'
+import type { AccessibleBay, Clearway, Toilet } from '../../api/bccPlaces'
+import { clearwayInEffect, parseClearwayTimes } from '../../lib/clearways'
 import type { TrafficEvent } from '../../api/types'
 import { latestReading, rainfallSince } from '../../lib/gauges'
 import { dsBand, loadChanged, siteLoad } from '../../lib/signals'
@@ -41,6 +43,48 @@ export function clearanceFeatures(list: Clearance[]): GeoJSON.FeatureCollection 
         metres: c.metres,
       },
     })),
+  }
+}
+
+/** Clearways, each marked "on" while its signed times cover `now`, "off" when they don't, or "unknown". */
+export function clearwayFeatures(list: Clearway[], now: number): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: list.map((c) => {
+      const on = clearwayInEffect(parseClearwayTimes(c.times), now)
+      return {
+        type: 'Feature',
+        geometry: c.geometry,
+        properties: {
+          key: `place/clearway/${encodeURIComponent(c.id)}`,
+          state: on == null ? 'unknown' : on ? 'on' : 'off',
+          label: `Clearway${c.times ? ` · ${c.times}` : ''}${on ? ' · in effect now' : ''}`,
+        },
+      }
+    }),
+  }
+}
+
+/** Public toilets and accessible parking bays, sharing one source. */
+export function councilPlaceFeatures(toilets: Toilet[], bays: AccessibleBay[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: [
+      ...toilets.map((t) => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: t.position },
+        properties: { key: `place/toilet/${encodeURIComponent(t.id)}`, icon: t.accessible ? 'toilet-accessible' : 'toilet', label: `Toilet · ${t.name}` },
+      })),
+      ...bays.map((b) => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: b.position },
+        properties: {
+          key: `place/bay/${encodeURIComponent(b.id)}`,
+          icon: 'accessible-parking',
+          label: `Accessible parking${b.street ? ` · ${b.street}` : ''}`,
+        },
+      })),
+    ],
   }
 }
 

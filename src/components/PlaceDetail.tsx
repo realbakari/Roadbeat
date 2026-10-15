@@ -12,11 +12,19 @@ import {
   WarningIcon,
   WheelchairIcon,
   CarProfileIcon,
+  BabyCarriageIcon,
+  KeyIcon,
+  PersonIcon,
+  PersonSimpleWalkIcon,
+  ProhibitIcon,
+  ShowerIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { Fragment, type ReactNode } from 'react'
 import { BCC_CLEARANCES_URL, clearanceLabel, QR_BRIDGES_URL, QR_CLEARANCES_URL, type Clearance } from '../api/clearances'
 import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
+import { ACCESSIBLE_PARKING_URL, CLEARWAYS_URL, type AccessibleBay, type Clearway, type Toilet } from '../api/bccPlaces'
+import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
 import { formatDay, timeAgo, titleCase } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
 
@@ -42,6 +50,9 @@ export type Place =
   | { kind: 'truck'; data: TruckRestriction }
   | { kind: 'waze'; data: WazeReport }
   | { kind: 'clearance'; data: Clearance }
+  | { kind: 'clearway'; data: Clearway }
+  | { kind: 'toilet'; data: Toilet }
+  | { kind: 'bay'; data: AccessibleBay }
 
 interface Props {
   place: Place
@@ -167,7 +178,130 @@ function body(place: Place, now: number) {
     }
     case 'clearance':
       return <ClearanceBody c={place.data} />
+    case 'clearway':
+      return <ClearwayBody c={place.data} now={now} />
+    case 'toilet':
+      return <ToiletBody t={place.data} />
+    case 'bay':
+      return <BayBody b={place.data} />
   }
+}
+
+function ClearwayBody({ c, now }: { c: Clearway; now: number }) {
+  const on = clearwayInEffect(parseClearwayTimes(c.times), now)
+  const p = c.geometry.type === 'LineString' ? c.geometry.coordinates[0] : c.geometry.coordinates[0][0]
+  return (
+    <>
+      <Header icon={ProhibitIcon} color={on ? LAYER_COLOR.clearwayOn : LAYER_COLOR.clearwayOff} title="Clearway" subtitle="Brisbane City Council" />
+      <div className="grid gap-1 rounded-lg bg-kumo-recessed p-3">
+        <Text size="sm" variant="secondary">
+          Signed times
+        </Text>
+        <span className="text-xl font-semibold">{c.times ?? 'Not published'}</span>
+        <span className={`text-sm font-medium ${on ? 'text-kumo-danger' : 'text-kumo-subtle'}`}>
+          {on == null ? "Roadbeat couldn't read these times, so it doesn't say whether the clearway is in effect." : on ? 'In effect now: no stopping or parking' : 'Not in effect right now'}
+        </span>
+      </div>
+      <Text size="sm" variant="secondary">
+        Vehicles stopped in a clearway while it's in effect can be towed. The times above are the council's record of the signs; the signs on the road
+        are what count, including public holiday and event changes.
+      </Text>
+      <ExternalLink href={CLEARWAYS_URL}>Parking — clearways — Brisbane City Council</ExternalLink>
+      <Directions at={[p[0], p[1]]} />
+    </>
+  )
+}
+
+const TOILET_FEATURES: [keyof Toilet, string, Icon][] = [
+  ['accessible', 'Accessible toilet', WheelchairIcon],
+  ['ambulant', 'Ambulant toilet (grab rails)', PersonSimpleWalkIcon],
+  ['changingPlaces', 'Changing Places (hoist and adult change table)', PersonIcon],
+  ['adultChange', 'Adult change facilities', PersonIcon],
+  ['mlak', 'Opens with an MLAK key', KeyIcon],
+  ['keyRequired', 'Key needed', KeyIcon],
+  ['accessibleParking', 'Accessible parking', CarProfileIcon],
+  ['babyChange', 'Baby change', BabyCarriageIcon],
+  ['drinkingWater', 'Drinking water', DropIcon],
+  ['shower', 'Shower', ShowerIcon],
+]
+
+function ToiletBody({ t }: { t: Toilet }) {
+  const has = TOILET_FEATURES.filter(([k]) => t[k] === true)
+  return (
+    <>
+      <Header icon={ToiletIcon} color={t.accessible ? LAYER_COLOR.toiletAccessible : LAYER_COLOR.toilet} title={t.name} subtitle={t.address ?? 'Public toilet'} />
+      {t.hours && (
+        <Section title="Opening hours">
+          <Text size="sm">{t.hours.replace(/^OPEN:\s*/i, '')}</Text>
+        </Section>
+      )}
+      <Section title="Facilities">
+        {has.length ? (
+          <ul className="grid gap-1.5 sm:grid-cols-2">
+            {has.map(([k, label, I]) => (
+              <li key={k} className="flex items-start gap-2 text-sm">
+                <span className="flex h-lh items-center text-kumo-subtle">
+                  <I size={16} aria-hidden />
+                </span>
+                {label}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Text size="sm" variant="secondary">
+            No facilities listed.
+          </Text>
+        )}
+        {!t.accessible && (
+          <Text size="sm" variant="secondary">
+            No accessible toilet is listed here.
+          </Text>
+        )}
+      </Section>
+      {t.notes.length > 0 && (
+        <Section title="Notes">
+          {t.notes.map((n) => (
+            <Text key={n} size="sm">
+              {n}
+            </Text>
+          ))}
+        </Section>
+      )}
+      <div className="grid gap-1">
+        {t.url && <ExternalLink href={t.url}>This toilet on the National Public Toilet Map</ExternalLink>}
+        <Text size="xs" variant="secondary">
+          National Public Toilet Map, published by Brisbane City Council (CC BY 4.0).
+        </Text>
+      </div>
+      <Directions at={t.position} />
+    </>
+  )
+}
+
+function BayBody({ b }: { b: AccessibleBay }) {
+  return (
+    <>
+      <Header icon={WheelchairIcon} color={LAYER_COLOR.accessibleParking} title={b.street ?? 'Accessible parking'} subtitle={['Accessible parking', b.suburb].filter(Boolean).join(' · ')} />
+      <Section title="Signed days and times">
+        {b.times.length ? (
+          <ul className="grid gap-1 text-sm">
+            {b.times.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        ) : (
+          <Text size="sm" variant="secondary">
+            The council's record has no times for this sign. Check the sign on the street.
+          </Text>
+        )}
+      </Section>
+      <Text size="sm" variant="secondary">
+        For vehicles displaying a disability parking permit. The position is the sign's, from the council's sign records.
+      </Text>
+      <ExternalLink href={ACCESSIBLE_PARKING_URL}>Disability permit parking — Brisbane City Council</ExternalLink>
+      <Directions at={b.position} />
+    </>
+  )
 }
 
 // Owner codes the council's dataset uses.

@@ -37,7 +37,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     if (map.getLayer('building-3d')) map.removeLayer('building-3d')
   }
 
-  for (const id of ['districts', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
+  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
     map.addSource(id, { type: 'geojson', data: empty })
   }
   const color = ['get', 'color'] as unknown as string
@@ -57,6 +57,21 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     paint: { 'line-color': '#2563eb', 'line-width': 2, 'line-dasharray': [2, 1.5] },
   })
   addCrashLayers(map)
+  // February 2022 flood extent, under everything else so live layers stay readable.
+  map.addLayer({
+    id: 'flood-2022-fill',
+    type: 'fill',
+    source: 'flood-2022',
+    layout: { visibility: 'none' },
+    paint: { 'fill-color': LAYER_COLOR.flood2022, 'fill-opacity': 0.2 },
+  })
+  map.addLayer({
+    id: 'flood-2022-line',
+    type: 'line',
+    source: 'flood-2022',
+    layout: { visibility: 'none' },
+    paint: { 'line-color': LAYER_COLOR.flood2022, 'line-width': 0.8, 'line-opacity': 0.6 },
+  })
   // Bushfire warning areas (shaded in the warning level's colour) under everything else.
   map.addLayer({
     id: 'fire-areas',
@@ -90,6 +105,25 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
       'line-width': ['interpolate', ['linear'], ['zoom'], 8, 2, 14, 5],
       'line-dasharray': [1.5, 1],
     },
+  })
+  // Clearways: solid red while their signed times cover now, dashed grey otherwise.
+  map.addLayer({
+    id: 'clearways-off',
+    type: 'line',
+    source: 'clearways',
+    minzoom: 11,
+    filter: ['!=', ['get', 'state'], 'on'],
+    layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': LAYER_COLOR.clearwayOff, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 2, 16, 5], 'line-dasharray': [1.5, 1.2] },
+  })
+  map.addLayer({
+    id: 'clearways-on',
+    type: 'line',
+    source: 'clearways',
+    minzoom: 11,
+    filter: ['==', ['get', 'state'], 'on'],
+    layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': LAYER_COLOR.clearwayOn, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 2.5, 16, 6] },
   })
   map.addLayer({
     id: 'event-lines-casing',
@@ -146,6 +180,8 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   iconLayer('places-rest', 'places', ['in', ['get', 'icon'], ['literal', ['rest-area', 'rest-area-hv']]], 6)
   iconLayer('places-dump', 'places', ['==', ['get', 'icon'], 'dump-point'], 6)
   iconLayer('trucks-icon', 'trucks', ['==', ['geometry-type'], 'Point'], 7)
+  iconLayer('toilets', 'council-places', ['in', ['get', 'icon'], ['literal', ['toilet', 'toilet-accessible']]], 11, [11, 0.55, 16, 0.85])
+  iconLayer('accessible-parking', 'council-places', ['==', ['get', 'icon'], 'accessible-parking'], 14, [14, 0.6, 17, 0.85])
   // Low clearance signs: lower clearances draw on top where two overlap.
   map.addLayer({
     id: 'clearances',
