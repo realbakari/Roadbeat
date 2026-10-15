@@ -30,7 +30,7 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 ## Deploy to Vercel
 
-`vercel.json` already rewrites both proxy paths and serves the `.md` pages as Markdown. Set the build command to `npm run build`, the output folder to `dist`, and add `SITE_URL` and `CONTACT_EMAIL` as environment variables. Vercel does not run `functions/_middleware.ts`, so `Accept: text/markdown` requests get HTML there. The `.md` URLs, such as `/about.md`, still work.
+`vercel.json` sets the build command and output folder, and rewrites both proxy paths. `middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, the same as `functions/_middleware.ts` on Cloudflare. Add `SITE_URL` and `CONTACT_EMAIL` as environment variables. Until `SITE_URL` is set, the build uses the project's production address (`VERCEL_PROJECT_PRODUCTION_URL`).
 
 ## Deploy to Netlify
 

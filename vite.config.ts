@@ -23,8 +23,10 @@ const translinkProxy = {
 export default defineConfig(({ mode }) => {
   // SITE_URL and CONTACT_EMAIL feed the SEO and agent pages (see site/plugin.ts and docs/deploy.md).
   const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env }
+  // On Vercel, fall back to the project's production address until SITE_URL is set.
+  const siteUrl = env.SITE_URL || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
   return {
-    plugins: [react(), tailwindcss(), sitePages({ siteUrl: env.SITE_URL ?? '', contactEmail: env.CONTACT_EMAIL ?? '' })],
+    plugins: [react(), tailwindcss(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '' })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }
