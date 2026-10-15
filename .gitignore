@@ -30,3 +30,4 @@ dist-ssr
 
 # Local tool settings
 .claude/
+.vercel
