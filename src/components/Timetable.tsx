@@ -1,4 +1,4 @@
-import { Button, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
+import { Badge, Button, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
 import { BoatIcon, BroadcastIcon, BusIcon, CalendarDotsIcon, TrainIcon, TramIcon } from '@phosphor-icons/react'
 import { useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { StopIndex } from '../api/stops'
@@ -268,7 +268,11 @@ function Grid({
                     <span className={gone || late ? 'line-through decoration-1' : ''}>{short(s.time)}</span>
                     {/* After midnight, the day, as TransLink shows it ("12:30 am Friday"). */}
                     {brisbaneDate(s.time) !== serviceDay && <span className="ml-1 text-xs text-kumo-subtle">{weekday.format(s.time)}</span>}
-                    {s.kind !== 'normal' && <span className="block text-xs text-kumo-subtle not-italic">{s.kind === 'arrival' ? 'Drop-off only' : 'Pick-up only'}</span>}
+                    {s.kind !== 'normal' && (
+                      <span className="block pt-0.5">
+                        <StopKindBadge kind={s.kind} />
+                      </span>
+                    )}
                     {late && !gone && (
                       <span className={`block text-xs ${rt!.time! > s.time ? 'text-kumo-warning' : 'text-kumo-info'}`}>{short(rt!.time!)}</span>
                     )}
@@ -370,8 +374,7 @@ function TripView({
                   </button>
                   <span className="flex flex-wrap gap-x-2 text-xs text-kumo-subtle">
                     {stop?.platform && <span>Platform {stop.platform}</span>}
-                    {s.kind === 'arrival' && <span>Drop-off only</span>}
-                    {s.kind === 'pickup' && <span>Pick-up only</span>}
+                    {s.kind !== 'normal' && <StopKindBadge kind={s.kind} />}
                     {rt?.skipped && <span className="text-kumo-danger">Not stopping</span>}
                     {here && <span className="text-kumo-success">{VEHICLE_STATUS[live!.vehicle!.status ?? 'moving']}</span>}
                   </span>
@@ -459,6 +462,15 @@ function directionLabel(d: GridDirection) {
 }
 
 /** "Caboolture station" → "Caboolture" for labels. */
+/** "Drop-off only" or "Pick-up only", in a tag as TransLink's timetables show it. */
+function StopKindBadge({ kind }: { kind: 'arrival' | 'pickup' }) {
+  return (
+    <Badge variant="blue" className="whitespace-nowrap">
+      {kind === 'arrival' ? 'Drop-off only' : 'Pick-up only'}
+    </Badge>
+  )
+}
+
 function ModeIcon({ mode }: { mode: string | undefined }) {
   const I = mode === 'bus' ? BusIcon : mode === 'ferry' ? BoatIcon : mode === 'tram' ? TramIcon : TrainIcon
   return <I size={16} weight="fill" />
@@ -673,7 +685,7 @@ function TimetableRow({
         </span>
         <span className="flex flex-wrap items-center gap-x-2 text-xs text-kumo-subtle">
           {platform && <span>Platform {platform}</span>}
-          {stop.kind === 'pickup' && <span>Pick-up only</span>}
+          {stop.kind === 'pickup' && <StopKindBadge kind="pickup" />}
           {live?.cancelled ? (
             <span className="font-medium text-kumo-danger">Cancelled</span>
           ) : rt?.skipped ? (
