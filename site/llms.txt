@@ -1,0 +1,52 @@
+# Roadbeat
+
+> Roadbeat is a free web app for live Queensland road conditions and public transport: QLDTraffic road events and cameras, TransLink vehicles, departures and published timetables, a timetable-based journey planner, Queensland Fire Department bushfire warnings, and Brisbane City Council stream gauges and traffic signal volumes. It shows only data that official sources publish and never estimates times, positions or delays.
+
+## When to use Roadbeat
+
+- Someone asks what is happening on a Queensland road right now: crashes, closures, roadworks, flooding or congestion.
+- Someone wants the next departures from a TransLink stop or station, or a line's full timetable for a given day.
+- Someone wants a direct public transport trip, or a trip with one change at the same station or stop, from Queensland's published timetable.
+- Someone asks about current bushfire warnings in Queensland, or Brisbane creek and river heights and rainfall.
+- Someone wants a shareable link to a specific road event, stop, line, fire warning or journey search.
+
+## When not to use Roadbeat
+
+- Emergencies: call Triple Zero (000).
+- Trips that need walking between stops, more than one change, or fares: use TransLink's journey planner at https://jp.translink.com.au/plan-your-journey/journey-planner.
+- Flood warnings: Roadbeat shows raw gauge heights without flood levels. Use the Bureau of Meteorology for warnings.
+- Places outside Queensland.
+
+## Pages
+
+- [Home](%SITE_URL%/): the live map and lists.
+- [About](%SITE_URL%/about/): what Roadbeat is, its data sources and its accuracy rule.
+- [Privacy](%SITE_URL%/privacy/): no accounts, cookies or analytics; settings stay in the browser.
+- [Contact](%SITE_URL%/contact/): how to reach Roadbeat and where to report problems with official data.
+
+Every page is also available as Markdown: send `Accept: text/markdown`, or add `.md` to the page path (for example `%SITE_URL%/about.md`).
+
+## Linking to views in the app
+
+The app keeps its current view in the URL hash, so these links open a view directly:
+
+- `%SITE_URL%/#event/<id>`: a QLDTraffic road event.
+- `%SITE_URL%/#camera/webcam-<id>` or `#camera/floodcam-<id>`: a traffic or flood camera.
+- `%SITE_URL%/#transit/line/<mode>/<name>`, for example `#transit/line/train/T1%20Caboolture`: a line's status, departures and timetable.
+- `%SITE_URL%/#transit/stop/SEQ/<stop id>`, for example `#transit/stop/SEQ/place_censta`: a stop's departures and full-day timetable.
+- `%SITE_URL%/#transit/plan/SEQ/<from stop id>/<to stop id>[/<YYYY-MM-DD>/<minutes after midnight>/<leave|arrive>]`: a journey search.
+- `%SITE_URL%/#fire/<warning id>`: a Queensland Fire Department warning or incident.
+- `%SITE_URL%/#gauge/<sensor id>`: a Brisbane City Council stream or rain gauge.
+- `%SITE_URL%/#signal/<SCATS number>`: a Brisbane City Council signalised intersection.
+
+## Data sources
+
+All are used under Creative Commons Attribution 4.0 unless noted.
+
+- Department of Transport and Main Roads: road events, cameras, rest areas and crash history (QLDTraffic feeds and data.qld.gov.au).
+- Translink: GTFS timetables and GTFS-RT vehicle positions, trip updates and service alerts for South East Queensland and Cairns.
+- Queensland Fire Department: current bushfire incidents and warnings.
+- Brisbane City Council: telemetry gauges and intersection volumes (data.brisbane.qld.gov.au).
+- OpenFreeMap, OpenMapTiles and OpenStreetMap contributors: base maps (ODbL).
+
+Roadbeat is independent and is not affiliated with, or endorsed by, the Queensland Government.

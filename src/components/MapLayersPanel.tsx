@@ -1,0 +1,394 @@
+import { Button, Select, Switch, Text } from '@cloudflare/kumo'
+import { BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, StackIcon, XIcon } from '@phosphor-icons/react'
+import { FIRE_COLOR } from '../api/bushfires'
+import { DS_BANDS } from '../lib/signals'
+import type { VehicleMode } from '../api/translink'
+import { useState, type ReactNode } from 'react'
+import {
+  CRASH_DATA_END,
+  CRASH_DATASET_URL,
+  CRASH_FIRST_YEAR,
+  CRASH_LAST_YEAR,
+  SEVERITIES,
+  SEVERITY_COLOR,
+  SEVERITY_LABEL,
+  type CrashFilter,
+} from '../api/crashes'
+import { EVENT_TYPES } from '../lib/eventMeta'
+import { iconUrl, signalIcon, typeSlug, VEHICLE_COLOR } from '../lib/mapIcons'
+import type { Basemap, MapLayers } from './map/settings'
+
+interface Props {
+  basemap: Basemap
+  onBasemapChange: (b: Basemap) => void
+  layers: MapLayers
+  counts: Partial<Record<keyof MapLayers, number>>
+  onChange: (layers: MapLayers) => void
+  crashFilter: CrashFilter
+  onCrashFilterChange: (filter: CrashFilter) => void
+  vehicleModes: VehicleMode[]
+  onVehicleModesChange: (modes: VehicleMode[]) => void
+  vehicleCounts: Partial<Record<VehicleMode, number>>
+  vehicleError: string | null
+}
+
+const VEHICLE_MODES: { mode: VehicleMode; label: string }[] = [
+  { mode: 'train', label: 'Trains' },
+  { mode: 'bus', label: 'Buses' },
+  { mode: 'tram', label: 'Tram' },
+  { mode: 'ferry', label: 'Ferries' },
+]
+
+const BASEMAPS: { value: Basemap; label: string; hint: string }[] = [
+  { value: 'standard', label: 'Standard', hint: 'Light or dark, with the app' },
+  { value: 'detailed', label: 'Detailed', hint: 'Streets and landmarks' },
+  { value: 'bright', label: 'Bright', hint: 'Colourful' },
+  { value: 'night', label: 'Night', hint: 'Dark blue' },
+]
+
+const TOGGLES: { key: keyof MapLayers; label: string; icon: string; group: 'traffic' | 'places' }[] = [
+  { key: 'webcams', label: 'Traffic cameras', icon: 'camera-webcam', group: 'traffic' },
+  { key: 'floodcams', label: 'Flood cameras', icon: 'camera-floodcam', group: 'traffic' },
+  { key: 'waze', label: 'Waze crash reports', icon: 'waze', group: 'traffic' },
+  { key: 'trucks', label: 'Truck restrictions', icon: 'truck-restriction', group: 'traffic' },
+  { key: 'restAreas', label: 'Rest areas', icon: 'rest-area', group: 'places' },
+  { key: 'dumpPoints', label: 'RV dump points', icon: 'dump-point', group: 'places' },
+]
+
+/** A titled block of layer switches. */
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-0.5 border-t border-kumo-line pt-3">
+      <Text size="xs" variant="secondary">
+        {title}
+      </Text>
+      {children}
+    </section>
+  )
+}
+
+/** One layer's switch, with its key or settings underneath while it's on. */
+function LayerRow({
+  icon,
+  label,
+  count,
+  checked,
+  onChange,
+  children,
+}: {
+  icon: ReactNode
+  label: string
+  count?: number
+  checked: boolean
+  onChange: (on: boolean) => void
+  children?: ReactNode
+}) {
+  return (
+    <>
+      <label className="flex cursor-pointer items-center gap-2 rounded-md py-1 text-sm">
+        {icon}
+        <span className="flex-1">
+          {label}
+          {count != null && <span className="ml-1 text-kumo-subtle tabular-nums">{count}</span>}
+        </span>
+        <Switch size="sm" aria-label={label} checked={checked} onCheckedChange={onChange} />
+      </label>
+      {checked && children && <div className="grid gap-1.5 pb-1.5 pl-7">{children}</div>}
+    </>
+  )
+}
+
+/** A small coloured disc holding a layer's icon. */
+function Badge({ icon, color, className = '' }: { icon: ReactNode; color?: string; className?: string }) {
+  return (
+    <span
+      className={`flex size-5 shrink-0 items-center justify-center rounded-full text-white ${className}`}
+      style={color ? { background: color } : undefined}
+    >
+      {icon}
+    </span>
+  )
+}
+
+/** Layer switches and icon key for the map, collapsed to a button on small screens. */
+export function MapLayersPanel({
+  layers,
+  counts,
+  onChange,
+  crashFilter,
+  onCrashFilterChange,
+  vehicleModes,
+  onVehicleModesChange,
+  vehicleCounts,
+  vehicleError,
+  basemap,
+  onBasemapChange,
+}: Props) {
+  const [open, setOpen] = useState(false)
+  const set = (key: keyof MapLayers, v: boolean) => onChange({ ...layers, [key]: v })
+
+  if (!open) {
+    return (
+      <div className="absolute top-3 left-3">
+        <Button size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
+          Layers
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="absolute top-3 left-3 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line">
+      <div className="flex items-center justify-between border-b border-kumo-line py-1.5 pr-1.5 pl-3">
+        <Text bold size="sm">
+          Map layers
+        </Text>
+        <Button size="xs" variant="ghost" shape="square" aria-label="Hide layers" icon={<XIcon />} onClick={() => setOpen(false)} />
+      </div>
+      <div className="grid gap-3 overflow-y-auto px-3 py-3">
+        <div className="grid gap-1.5">
+          <Text size="xs" variant="secondary">
+            Map style
+          </Text>
+          <div className="grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Map style">
+            {BASEMAPS.map((b) => (
+              <button
+                key={b.value}
+                type="button"
+                role="radio"
+                aria-checked={basemap === b.value}
+                onClick={() => onBasemapChange(b.value)}
+                className={`grid rounded-lg px-2.5 py-1.5 text-left ring ${basemap === b.value ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'}`}
+              >
+                <span className="text-sm">{b.label}</span>
+                <span className="text-xs text-kumo-subtle">{b.hint}</span>
+              </button>
+            ))}
+          </div>
+          <label className="flex cursor-pointer items-center gap-2 rounded-md py-1 text-sm">
+            <span className="flex size-5 items-center justify-center rounded-full bg-kumo-contrast text-kumo-inverse">
+              <BuildingsIcon size={12} weight="fill" />
+            </span>
+            <span className="flex-1">3D buildings</span>
+            <Switch size="sm" aria-label="3D buildings" checked={layers.buildings3d} onCheckedChange={(v: boolean) => set('buildings3d', v)} />
+          </label>
+          {layers.buildings3d && (
+            <Text size="xs" variant="secondary">
+              {layers.radar
+                ? 'The map stays flat while rain radar is on, so the radar lines up.'
+                : 'Building heights from OpenStreetMap. Zoom in to street level to see them.'}
+            </Text>
+          )}
+        </div>
+        <div className="grid gap-1.5 border-t border-kumo-line pt-3">
+          <Text size="xs" variant="secondary">
+            Road events
+          </Text>
+          <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
+            {EVENT_TYPES.map((m) => (
+              <li key={m.type} className="flex items-center gap-1.5 text-xs">
+                <img src={iconUrl(`event-${typeSlug(m.type)}`)} alt="" className="size-5" />
+                {m.label}
+              </li>
+            ))}
+            <li className="flex items-center gap-1.5 text-xs">
+              <img src={iconUrl('closure-all')} alt="" className="size-5" />
+              Road closed
+            </li>
+            <li className="flex items-center gap-1.5 text-xs">
+              <img src={iconUrl('event-roadworks-future')} alt="" className="size-5" />
+              Upcoming
+            </li>
+          </ul>
+        </div>
+        <Group title="Hazards and weather">
+          <LayerRow
+            icon={<Badge color={FIRE_COLOR['Watch and Act']} icon={<FlameIcon size={12} weight="fill" />} />}
+            label="Bushfire warnings"
+            count={counts.fires}
+            checked={layers.fires}
+            onChange={(v) => set('fires', v)}
+          >
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+              {(['Emergency Warning', 'Watch and Act', 'Advice', 'Information'] as const).map((l) => (
+                <span key={l} className="inline-flex items-center gap-1">
+                  <span className="size-2 rounded-full" style={{ background: FIRE_COLOR[l] }} />
+                  {l === 'Information' ? 'Fire reported' : l}
+                </span>
+              ))}
+            </div>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge className="bg-sky-700" icon={<WavesIcon size={12} weight="fill" />} />}
+            label="Stream and rain gauges"
+            count={counts.gauges}
+            checked={layers.gauges}
+            onChange={(v) => set('gauges', v)}
+          >
+            <Text size="xs" variant="secondary">
+              Brisbane City Council gauges. Blue: stream height (m AHD). Teal: rain in the last hour. Faded: no reading in the last hour.
+            </Text>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge className="bg-sky-600" icon={<CloudRainIcon size={12} weight="fill" />} />}
+            label="Rain radar"
+            checked={layers.radar}
+            onChange={(v) => set('radar', v)}
+          >
+            <Text size="xs" variant="secondary">
+              Radar © Bureau of Meteorology via QLDTraffic
+            </Text>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge className="bg-red-700" icon={<ClockCounterClockwiseIcon size={12} weight="bold" />} />}
+            label="Crash history"
+            checked={layers.crashes}
+            onChange={(v) => set('crashes', v)}
+          >
+            <CrashControls filter={crashFilter} onChange={onCrashFilterChange} />
+          </LayerRow>
+        </Group>
+
+        <Group title="Traffic">
+          {TOGGLES.filter((t) => t.group === 'traffic').map((t) => (
+            <LayerRow
+              key={t.key}
+              icon={<img src={iconUrl(t.icon)} alt="" className="size-5" />}
+              label={t.label}
+              count={counts[t.key]}
+              checked={layers[t.key]}
+              onChange={(v) => set(t.key, v)}
+            />
+          ))}
+          <LayerRow
+            icon={<img src={iconUrl(signalIcon(1))} alt="" className="size-5" />}
+            label="Signal traffic"
+            count={counts.signals}
+            checked={layers.signals}
+            onChange={(v) => set('signals', v)}
+          >
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+              {DS_BANDS.map(([from], band) => (
+                <span key={from} className="inline-flex items-center gap-1">
+                  <img src={iconUrl(signalIcon(band))} alt="" className="size-4" />
+                  {from}%+
+                </span>
+              ))}
+            </div>
+            <Text size="xs" variant="secondary">
+              Busiest lane's measured degree of saturation at Brisbane City Council signals. The council publishes new readings about every
+              5 minutes; a ring marks signals that changed, and a red halo marks signals at 100% or more.
+            </Text>
+          </LayerRow>
+        </Group>
+
+        <Group title="Public transport">
+          <LayerRow
+            icon={<Badge color={VEHICLE_COLOR.bus} icon={<BusIcon size={12} weight="fill" />} />}
+            label="Live vehicles, lines and stops"
+            checked={layers.vehicles}
+            onChange={(v) => set('vehicles', v)}
+          >
+            <div className="flex flex-wrap gap-1" role="group" aria-label="Vehicle types">
+              {VEHICLE_MODES.map(({ mode, label }) => {
+                const on = vehicleModes.includes(mode)
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => onVehicleModesChange(on ? vehicleModes.filter((m) => m !== mode) : [...vehicleModes, mode])}
+                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring ${
+                      on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
+                    }`}
+                  >
+                    <span className="size-2 rounded-full" style={{ background: VEHICLE_COLOR[mode], opacity: on ? 1 : 0.4 }} />
+                    {label}
+                    {vehicleCounts[mode] != null && <span className="tabular-nums text-kumo-subtle">{vehicleCounts[mode]}</span>}
+                  </button>
+                )
+              })}
+            </div>
+            <Text size="xs" variant={vehicleError ? 'error' : 'secondary'}>
+              {vehicleError
+                ? `Live positions unavailable: ${vehicleError}.`
+                : 'TransLink live positions (SEQ and Cairns), every 15 s. Zoom in to see them.'}
+            </Text>
+          </LayerRow>
+        </Group>
+
+        <Group title="Places">
+          {TOGGLES.filter((t) => t.group === 'places').map((t) => (
+            <LayerRow
+              key={t.key}
+              icon={<img src={iconUrl(t.icon)} alt="" className="size-5" />}
+              label={t.label}
+              count={counts[t.key]}
+              checked={layers[t.key]}
+              onChange={(v) => set(t.key, v)}
+            />
+          ))}
+        </Group>
+      </div>
+    </div>
+  )
+}
+
+const YEARS = Object.fromEntries(
+  Array.from({ length: CRASH_LAST_YEAR - CRASH_FIRST_YEAR + 1 }, (_, i) => {
+    const y = String(CRASH_LAST_YEAR - i)
+    return [y, y]
+  }),
+)
+
+function CrashControls({ filter, onChange }: { filter: CrashFilter; onChange: (f: CrashFilter) => void }) {
+  const setYear = (key: 'from' | 'to', v: string | null) => {
+    const y = Number(v)
+    if (!y) return
+    const next = { ...filter, [key]: y }
+    if (next.from > next.to) next[key === 'from' ? 'to' : 'from'] = y
+    onChange(next)
+  }
+  const toggle = (s: CrashFilter['severities'][number]) => {
+    const has = filter.severities.includes(s)
+    if (has && filter.severities.length === 1) return
+    onChange({ ...filter, severities: has ? filter.severities.filter((x) => x !== s) : [...filter.severities, s] })
+  }
+
+  return (
+    <div className="grid gap-2 rounded-lg bg-kumo-recessed p-2">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
+        <Select aria-label="From year" size="sm" className="w-full" value={String(filter.from)} onValueChange={(v) => setYear('from', v as string)} items={YEARS} />
+        <Text size="xs" variant="secondary">
+          to
+        </Text>
+        <Select aria-label="To year" size="sm" className="w-full" value={String(filter.to)} onValueChange={(v) => setYear('to', v as string)} items={YEARS} />
+      </div>
+      <div className="flex flex-wrap gap-1" role="group" aria-label="Crash severity">
+        {SEVERITIES.map((s) => {
+          const on = filter.severities.includes(s)
+          return (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggle(s)}
+              className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring ${
+                on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
+              }`}
+            >
+              <span className="size-2 rounded-full" style={{ background: SEVERITY_COLOR[s], opacity: on ? 1 : 0.4 }} />
+              {SEVERITY_LABEL[s]}
+            </button>
+          )
+        })}
+      </div>
+      <Text size="xs" variant="secondary">
+        Property-damage-only crashes were recorded until 2010. Data to {CRASH_DATA_END}.{' '}
+        <a href={CRASH_DATASET_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+          TMR, CC BY 4.0
+        </a>
+      </Text>
+    </div>
+  )
+}

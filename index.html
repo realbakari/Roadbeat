@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><!--site-title--></title>
+    <!--site-head-->
+    <script>
+      document.documentElement.classList.add('js')
+      try {
+        var m = localStorage.getItem('qldt-mode') ||
+          (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.mode = m;
+      } catch (e) {}
+    </script>
+    <style>
+      /* The static home content is for readers without JavaScript; the app replaces it. */
+      .js .static-home { display: none }
+      .static-home { max-width: 44rem; margin: 0 auto; padding: 16px; font: 14px/1.6 system-ui, sans-serif }
+    </style>
+  </head>
+  <body>
+    <div id="root"><!--site-static-home--></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,78 @@
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@import "@cloudflare/kumo/styles/tailwind";
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Contain in-page z-indexes (e.g. Kumo inputs use z-index: 1) so portaled dialogs stay on top. */
+#root {
+  isolation: isolate;
+}
+
+body {
+  margin: 0;
+  background: var(--color-kumo-canvas);
+  color: var(--text-color-kumo-default);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* MapLibre popups/controls themed with Kumo tokens */
+.maplibregl-ctrl-group {
+  background: var(--color-kumo-base) !important;
+  box-shadow: 0 0 0 1px var(--color-kumo-line) !important;
+  border-radius: 8px !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--color-kumo-line) !important;
+}
+[data-mode="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+.maplibregl-ctrl-attrib {
+  background: color-mix(in srgb, var(--color-kumo-base) 80%, transparent) !important;
+  color: var(--text-color-kumo-subtle);
+  font-size: 11px;
+}
+.maplibregl-ctrl-attrib a {
+  color: inherit !important;
+}
+[data-mode="dark"] .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+.maplibregl-popup-content {
+  background: var(--color-kumo-base);
+  color: var(--text-color-kumo-default);
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 0 0 1px var(--color-kumo-line), 0 4px 12px rgb(0 0 0 / 0.12);
+  font-size: 13px;
+}
+.maplibregl-popup-tip {
+  display: none;
+}
+
+/* Camera view pinned on the map: the card supplies its own surface. */
+.camera-pin {
+  z-index: 3;
+}
+.camera-pin .maplibregl-popup-content {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+.camera-pin .maplibregl-popup-tip {
+  display: block;
+  border-top-color: var(--color-kumo-base) !important;
+}
+.maplibregl-marker:has(> button) {
+  z-index: 2;
+}

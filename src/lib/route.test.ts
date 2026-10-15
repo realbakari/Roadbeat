@@ -1,0 +1,29 @@
+import { describe, expect, it } from 'vitest'
+import { parseHash } from './route'
+
+describe('parseHash', () => {
+  it('reads detail pages', () => {
+    expect(parseHash('#event/123').event).toBe(123)
+    expect(parseHash('#fire/WARN-10208').fire).toBe('WARN-10208')
+    expect(parseHash('#gauge/E1594').gauge).toBe('E1594')
+    expect(parseHash('#signal/546').signal).toBe('546')
+  })
+
+  it('reads transit pages', () => {
+    expect(parseHash('#transit/stop/SEQ/place_censta').transit).toEqual({ kind: 'stop', region: 'SEQ', id: 'place_censta' })
+    expect(parseHash('#transit/line/train/T1%20Caboolture').transit).toEqual({ kind: 'line', mode: 'train', name: 'T1 Caboolture' })
+  })
+
+  it('reads a shared journey search', () => {
+    expect(parseHash('#transit/plan/SEQ/place_fersta/place_dbnsta/2026-10-16/480/arrive').transit).toEqual({
+      kind: 'home',
+      plan: { region: 'SEQ', from: 'place_fersta', to: 'place_dbnsta', date: '2026-10-16', minutes: 480, arrive: true },
+    })
+  })
+
+  it('selects nothing for an empty or unknown hash', () => {
+    const empty = parseHash('')
+    expect([empty.event, empty.fire, empty.gauge, empty.signal, empty.transit]).toEqual([null, null, null, null, null])
+    expect(parseHash('#nonsense/1').event).toBeNull()
+  })
+})

@@ -1,0 +1,305 @@
+import { Badge, Banner, Button, Text } from '@cloudflare/kumo'
+import {
+  ArrowLeftIcon,
+  ArrowSquareOutIcon,
+  BellIcon,
+  BellRingingIcon,
+  CheckIcon,
+  LinkSimpleIcon,
+  ProhibitIcon,
+  SirenIcon,
+  WarningIcon,
+} from '@phosphor-icons/react'
+import { useMemo, useState, type ReactNode } from 'react'
+import type { Camera, TrafficEvent } from '../api/types'
+import { priorityBadge, typeMeta } from '../lib/eventMeta'
+import { clean, formatDateTime, timeAgo, titleCase } from '../lib/format'
+import { isClosure } from '../lib/filters'
+import { distanceKm, eventAnchor } from '../lib/geo'
+import { CameraThumb } from './CameraGrid'
+import type { Gauge } from '../api/bccGauges'
+import { CrashNearby } from './CrashNearby'
+import { GaugesNearby } from './GaugesNearby'
+import { RoadContacts } from './RoadContacts'
+import { TypeIcon } from './EventCard'
+import { eventPlace, eventTitle } from '../lib/eventText'
+
+interface Props {
+  event: TrafficEvent
+  cameras: Camera[]
+  now: number
+  onBack: () => void
+  onOpenCamera: (key: string) => void
+  watched: boolean
+  onToggleWatch: () => void
+  /** Brisbane City Council gauges, shown next to flooding events. */
+  gauges: Gauge[] | null
+  onOpenHref: (hash: string) => void
+}
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched, onToggleWatch, gauges, onOpenHref }: Props) {
+  const p = event.properties
+  const meta = typeMeta(p.event_type)
+  const pr = priorityBadge(p.event_priority)
+  const impact = p.impact
+  const r = p.road_summary
+  const d = p.duration
+
+  const anchor = useMemo(() => eventAnchor(event), [event])
+  const nearby = useMemo(() => {
+    const a = anchor
+    if (!a) return []
+    return cameras
+      .map((c) => ({ c, km: distanceKm(a, c.geometry.coordinates as [number, number]) }))
+      .filter((x) => x.km <= 15)
+      .sort((x, y) => x.km - y.km)
+      .slice(0, 4)
+  }, [anchor, cameras])
+
+  const [copied, setCopied] = useState(false)
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard can be blocked; the URL bar still holds the link.
+    }
+  }
+
+  const direction = [clean(impact?.direction), clean(impact?.towards) && `towards ${clean(impact?.towards)}`]
+    .filter(Boolean)
+    .join(' ')
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center justify-between gap-2 border-b border-kumo-line px-2 py-2">
+        <Button variant="ghost" size="sm" icon={<ArrowLeftIcon />} onClick={onBack}>
+          All events
+        </Button>
+        <div className="flex items-center gap-1">
+        <Button
+          variant={watched ? 'secondary' : 'ghost'}
+          size="sm"
+          icon={watched ? <BellRingingIcon weight="fill" /> : <BellIcon />}
+          onClick={onToggleWatch}
+          title={watched ? 'Stop alerts for this event' : 'Get alerts when this event changes or clears'}
+        >
+          {watched ? 'Watching' : 'Watch'}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={copied ? <CheckIcon /> : <LinkSimpleIcon />}
+          onClick={copyLink}
+          aria-live="polite"
+        >
+          {copied ? 'Copied' : 'Copy link'}
+        </Button>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
+          <header className="grid gap-3">
+            <div className="flex items-start gap-3">
+              <TypeIcon type={p.event_type} size="lg" />
+              <div className="grid min-w-0 gap-0.5">
+                <Text as="h2" variant="heading" size="lg">
+                  {eventTitle(event)}
+                </Text>
+                <Text variant="secondary">{eventPlace(event)}</Text>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Badge variant={meta.badge}>
+                {[p.event_type, clean(p.event_subtype), clean(p.event_due_to)].filter(Boolean).join(' · ')}
+              </Badge>
+              <Badge variant={pr.variant} appearance={pr.appearance}>
+                {p.event_priority} priority
+              </Badge>
+              {p.status === 'Reopened' && <Badge variant="success">Reopened</Badge>}
+            </div>
+          </header>
+
+          {isClosure(event) && (
+            <Banner
+              variant="error"
+              icon={<ProhibitIcon weight="fill" />}
+              title={clean(impact?.impact_subtype) ?? 'Road closed'}
+              description={direction || undefined}
+            />
+          )}
+          {p.area_alert && clean(p.alert_message) && (
+            <Banner variant="alert" icon={<SirenIcon weight="fill" />} title="Area alert" description={clean(p.alert_message)!} />
+          )}
+
+          {clean(p.description) && <Text>{clean(p.description)}</Text>}
+
+          {clean(p.advice) && (
+            <Banner
+              variant="alert"
+              icon={<WarningIcon weight="fill" />}
+              title="Advice"
+              description={clean(p.advice)!}
+            />
+          )}
+
+          <Section title="Impact">
+            <Rows
+              rows={[
+                ['Effect', [clean(impact?.impact_type), clean(impact?.impact_subtype)].filter(Boolean).join(' — ')],
+                ['Direction', direction],
+                ['Delay', clean(impact?.delay)],
+              ]}
+            />
+          </Section>
+
+          <Section title="When">
+            <Rows
+              rows={[
+                ['Started', formatDateTime(d?.start)],
+                ['Expected end', formatDateTime(d?.end) ?? 'Until further notice'],
+                ['Next inspection', formatDateTime(p.next_inspection)],
+              ]}
+            />
+            {!!d?.active_days?.length && (
+              <div className="mt-3 flex gap-1" aria-label="Active days">
+                {DAYS.map((day) => {
+                  const on = d.active_days!.includes(day)
+                  return (
+                    <span
+                      key={day}
+                      title={day}
+                      className={`flex h-7 flex-1 items-center justify-center rounded-md text-xs ${
+                        on ? 'bg-kumo-contrast text-kumo-inverse' : 'bg-kumo-recessed text-kumo-subtle'
+                      }`}
+                    >
+                      {day.slice(0, 3)}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+            {!!d?.recurrences?.length && (
+              <ul className="mt-3 grid gap-2">
+                {d.recurrences.map((rec, i) => (
+                  <li key={i} className="rounded-lg bg-kumo-recessed px-3 py-2">
+                    <Text bold size="sm">
+                      {rec.description}
+                    </Text>
+                    {rec.impact && (
+                      <Text variant="secondary" size="sm">
+                        {[clean(rec.impact.impact_subtype), clean(rec.impact.delay)].filter(Boolean).join(' · ')}
+                      </Text>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
+
+          <Section title="Location">
+            <Rows
+              rows={[
+                ['Road', clean(r?.road_name)],
+                ['Locality', [clean(r?.locality), clean(r?.postcode)].filter(Boolean).join(' ')],
+                ['Council', titleCase(r?.local_government_area)],
+                ['District', clean(r?.district)],
+              ]}
+            />
+          </Section>
+
+          {nearby.length > 0 && (
+            <Section title="Nearby cameras">
+              <div className="grid grid-cols-2 gap-2">
+                {nearby.map(({ c, km }) => (
+                  <CameraThumb key={`${c.kind}-${c.properties.id}`} camera={c} note={`${km.toFixed(1)} km`} onOpen={onOpenCamera} />
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {anchor && p.event_type === 'Flooding' && gauges?.some((g) => distanceKm(anchor, g.position) <= 5) && (
+            <Section title="Stream gauges nearby">
+              <GaugesNearby at={anchor} gauges={gauges} now={now} onOpen={onOpenHref} />
+            </Section>
+          )}
+
+          {anchor && (
+            <Section title="Crash history nearby">
+              <CrashNearby at={anchor} />
+            </Section>
+          )}
+
+          {anchor && (
+            <Section title="Who manages this road">
+              <RoadContacts at={anchor} />
+            </Section>
+          )}
+
+          {clean(p.information) && (
+            <Section title="More information">
+              <Text>{clean(p.information)}</Text>
+            </Section>
+          )}
+
+          <div className="grid gap-1 border-t border-kumo-line pt-4">
+            <Text variant="secondary" size="sm">
+              Updated {timeAgo(p.last_updated, now)} · Event #{p.id}
+              {clean(p.source?.provided_by) && ` · ${clean(p.source?.provided_by)}`}
+            </Text>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {clean(p.web_link) && <ExternalLink href={clean(p.web_link)!}>More details</ExternalLink>}
+              {clean(p.source?.provided_by_url)?.startsWith('http') && (
+                <ExternalLink href={clean(p.source?.provided_by_url)!}>Data provider</ExternalLink>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-2">
+      <Text as="h3" variant="heading">
+        {title}
+      </Text>
+      <div>{children}</div>
+    </section>
+  )
+}
+
+function Rows({ rows }: { rows: [string, string | null | undefined][] }) {
+  const visible = rows.filter(([, v]) => v)
+  if (!visible.length) return <Text variant="secondary">Not provided</Text>
+  return (
+    <dl className="grid grid-cols-[minmax(7rem,auto)_1fr] gap-x-4 gap-y-1.5 text-sm">
+      {visible.map(([k, v]) => (
+        <div key={k} className="contents">
+          <dt className="text-kumo-subtle">{k}</dt>
+          <dd className="text-kumo-default">{v}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
+    >
+      {children}
+      <ArrowSquareOutIcon size={14} />
+    </a>
+  )
+}

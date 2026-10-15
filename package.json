@@ -1,0 +1,43 @@
+{
+  "name": "roadbeat",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "data:routes": "node scripts/build-routes.mjs",
+    "data:stops": "node scripts/build-stops.mjs",
+    "data:timetables": "node scripts/build-timetables.mjs",
+    "data:tracks": "node scripts/build-tracks.mjs",
+    "data:maps": "node scripts/build-maps.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "data:intersections": "node scripts/build-intersections.mjs"
+  },
+  "dependencies": {
+    "@cloudflare/kumo": "^2.14.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tailwindcss/vite": "^4.3.3",
+    "echarts": "^6.1.0",
+    "gtfs-realtime-bindings": "^2.2.0",
+    "maplibre-gl": "^6.14.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.2"
+  }
+}
