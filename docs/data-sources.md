@@ -13,7 +13,7 @@ The browser reads these while the app is open.
 | Rest areas, RV dump points, truck restrictions | TMR | `data.qldtraffic.qld.gov.au/QLD_RA_LITE.geojson`, `rvEffluentDumpSites.geojson`, `restrictedtruck.geojson` | Direct | Once per visit | `src/api/client.ts` |
 | Waze crash reports | TMR (QLDTraffic) | `data.qldtraffic.qld.gov.au/displayed_waze_events.json` | Direct | 60 s | `src/api/client.ts` |
 | TMR districts | TMR | `data.qldtraffic.qld.gov.au/districts.geojson` | Direct | Once per visit | `src/api/client.ts` |
-| Rain radar | Bureau of Meteorology via QLDTraffic | `rainradar.qldtraffic.qld.gov.au/radarimage` | Direct, as an image | 5 min, and on every map move | `src/components/map/RainRadar.tsx` |
+| Rain radar | Bureau of Meteorology via QLDTraffic | `rainradar.qldtraffic.qld.gov.au/radarimage` | Direct, as an image pinned to the area it covers, which moves with the map. Each image covers 30% more than the view on every side. | 5 min, and when the view leaves the covered area or the zoom changes | `src/components/map/RainRadar.tsx` |
 | TransLink network status and notices | Translink | `data.qldtraffic.qld.gov.au/translink/*.json` | Direct | 2 min | `src/api/client.ts` |
 | Vehicle positions | Translink | `gtfsrt.api.translink.com.au/api/realtime/{SEQ,CNS}/VehiclePositions` | Proxy `/translink-rt` (protobuf) | 15 s | `src/api/translink.ts` |
 | Trip updates | Translink | `gtfsrt.api.translink.com.au/api/realtime/{SEQ,CNS}/TripUpdates` | Proxy `/translink-rt` (protobuf) | 30 s | `src/api/translink.ts` |
