@@ -36,7 +36,7 @@ const TIMES = Object.fromEntries(
 )
 
 /** A "From" or "To" field that searches TransLink's stations and stops. */
-function StopField({
+export function StopField({
   label,
   value,
   onChange,

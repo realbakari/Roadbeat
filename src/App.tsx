@@ -24,6 +24,9 @@ import { loadTracks, trackBounds } from './api/tracks'
 import { allRouteCodes, type VehicleMode } from './api/translink'
 import { AlertSettingsDialog } from './components/AlertSettingsDialog'
 import { NotificationCenter } from './components/NotificationCenter'
+import { CommuteCard } from './components/CommuteCard'
+import { commuteWindow } from './lib/commute'
+import { useCommute } from './lib/commuteStore'
 import { InstallApp } from './components/InstallApp'
 import { VehicleDetail } from './components/VehicleDetail'
 import { useAlertSettings, useNotifications } from './hooks/useNotifications'
@@ -151,11 +154,14 @@ export default function App() {
   const [fit, setFit] = useState<{ bounds: Bounds; id: number } | null>(null)
 
   const transitOpen = panel === 'transit' || !!sel.transit
+  // During the commute window, the commute card needs live vehicles (for tracked delays) and service alerts.
+  const commute = useCommute()
+  const commuteLive = !!commute?.stopId && !!commuteWindow(commute, now)?.active
   const { vehicles: allVehicles, error: vehicleError } = useLiveVehicles(
-    layers.vehicles || !!sel.vehicle || sel.transit?.kind === 'line' || sel.transit?.kind === 'stop',
+    layers.vehicles || !!sel.vehicle || sel.transit?.kind === 'line' || sel.transit?.kind === 'stop' || commuteLive,
   )
   const { alerts: transitAlerts, error: transitAlertsError } = useTransitAlerts(
-    transitOpen || !!sel.vehicle || alertSettings.routes.length > 0,
+    transitOpen || !!sel.vehicle || alertSettings.routes.length > 0 || (commuteLive && !!commute?.route),
   )
 
   const openHref = useCallback(
@@ -478,6 +484,7 @@ export default function App() {
           onSelect={selectEvent}
           fires={fires}
           onOpenHref={openHref}
+          top={<CommuteCard events={events} fires={fires} vehicles={allVehicles} alerts={transitAlerts} now={now} onOpen={openHref} />}
         />
       ) : panel === 'cameras' ? (
         <CameraGrid cameras={cameras} selectedKey={sel.camera} onOpen={(k) => openKey(`camera/${k}`)} />

@@ -1,6 +1,6 @@
 import { Button, Empty, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
 import { CheckCircleIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
-import { useMemo, useRef, useState, type UIEvent } from 'react'
+import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import type { EventType, TrafficEvent } from '../api/types'
 import { FireList } from './FireList'
@@ -25,6 +25,8 @@ interface Props {
   /** Queensland Fire Department warnings and fires, shown above current events. */
   fires: FireWarning[] | null
   onOpenHref: (hash: string) => void
+  /** Shown above the list, e.g. the My commute card. */
+  top?: ReactNode
 }
 
 export function EventList({
@@ -41,6 +43,7 @@ export function EventList({
   onSelect,
   fires,
   onOpenHref,
+  top,
 }: Props) {
   // On phones the district and priority pickers fold behind a button, so the list starts higher.
   const [moreOpen, setMoreOpen] = useState(false)
@@ -264,6 +267,7 @@ export function EventList({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto" onScroll={onListScroll}>
+        {filters.when === 'now' && top}
         {filters.when === 'now' && fires && <FireList fires={fires} now={now} onOpen={onOpenHref} />}
         {loading ? (
           <div className="flex justify-center py-16">
