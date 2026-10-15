@@ -29,6 +29,8 @@ Roadbeat asks for your location only when you choose a feature that needs it, su
 
 To show live information, your browser requests data from official sources: the Department of Transport and Main Roads (QLDTraffic), Translink, the Queensland Fire Department and Brisbane City Council, and map tiles from OpenFreeMap. Some requests pass through Roadbeat's own small proxy, because those sources do not allow browsers to read them directly. Like any website, these services and Roadbeat's host can see your IP address and the request when your browser connects. Roadbeat does not combine this with any other information.
 
+The **News** tab and the dashboard read headlines from Roadbeat's own server, which collects them from news publishers' and government feeds. To show who published each report, your browser loads each publisher's small site icon from that publisher's own website, which can see your IP address, as with any website. Opening a report takes you to the publisher's site under its privacy terms.
+
 When you open **Directions** for a place, Google Maps opens in a new tab under Google's own privacy terms.
 
 <!--if:GA_MEASUREMENT_ID-->

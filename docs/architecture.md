@@ -30,7 +30,7 @@ src/
   lib/          pure logic: filters, the journey planner, timetable grids, alert rules
   hooks/        polling and shared state (React hooks)
   components/   screens and panels; map/ holds the MapLibre layers and overlays
-  data/         static JSON built from TransLink's GTFS by scripts/
+  data/         static JSON built from published data by scripts/ (qld-places.json is read only by the server)
   test/         fixtures shared by the unit tests
 site/           the About, Privacy, Contact and 404 pages, llms.txt, and the Vite plugin that publishes them
 scripts/        Node scripts that build src/data and public/ from published data
@@ -99,6 +99,14 @@ Map animation follows the same rule as the data. The **Signal traffic** layer do
 In-app notifications need no server. `useNotifications` in `src/hooks/useNotifications.ts` compares each refresh with the last one it saw, which it keeps in `localStorage`. It raises a notification for new or changed items that match the user's settings. Items that changed while the app was closed appear as "While you were away" on the next visit.
 
 Commute push alerts are the one exception, and riders opt in. The browser subscribes with the server's VAPID key (`src/api/push.ts`, `public/sw.js`) and sends the subscription and its commute to `api/push.ts`, which stores them in Upstash Redis. Every five minutes a GitHub Actions workflow calls `api/push-check.ts`. It checks only commutes inside their window, runs `commuteAlerts()` from `src/lib/commute.ts` (the same rules the in-app card uses) and sends each alert once. The service worker shows alerts and caches nothing.
+
+## The news monitor reads feeds on the server
+
+The **News** tab follows the same rule as everything else: it shows what publishers published, and estimates nothing. `api/news-ingest.ts` reads ABC, 7NEWS, Brisbane Times, Guardian Australia and SBS RSS feeds, Queensland Police media releases and Geoscience Australia earthquakes every 5 minutes, and stores the last 48 hours in Upstash Redis. It keeps only each item's headline, link, publisher, date and the first sentence of its summary. `api/news.ts` serves them; without a store it reads the feeds itself, at most once per 5 minutes per warm function.
+
+The pure parts sit where they always do. `src/api/newsFeeds.ts` parses RSS, the BoM's AMOC files and GA's WFS. `src/lib/newsItems.ts` cuts items down and merges runs, `src/lib/newsPlaces.ts` matches place names, and `src/lib/newsStories.ts` groups reports into stories and filters them. The browser groups stories itself, so the News tab, the map, the dashboard strip and news alerts all use one function.
+
+A story is placed only where its stored headline or summary names a place in Queensland's place names gazetteer, exactly. When the text also names a road in that place, the server draws that road's segments there from the state's roads dataset (`src/api/qldRoads.ts`, `src/lib/newsRoads.ts`). It is not placed where the report happened, which no feed publishes. Each story says which name placed it. Reports are grouped only by shared headline words within 12 hours, and a story counts outlets, not truth: nothing is labelled verified, and official items are never grouped with news. See [Data sources](data-sources.md#news-monitor-feeds) for the feeds, their terms and the matching rules.
 
 ## What the browser remembers
 

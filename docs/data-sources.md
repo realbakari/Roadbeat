@@ -50,6 +50,50 @@ Three Brisbane City Council feeds need care:
 
 The QLDTraffic files are the feeds behind qldtraffic.qld.gov.au. They are not part of the published QLDTraffic API specification, so they can change without notice. The documented API at `api.qldtraffic.qld.gov.au` has the same events, but its camera endpoints send no CORS headers. Set `VITE_QLDTRAFFIC_DATA_BASE` to read the files from a mirror.
 
+## News monitor feeds
+
+The **News** tab, its map pins and the dashboard's **What's happening** strip come from these feeds. Most send no CORS headers, so the server reads them, not the browser: `api/news-ingest.ts` every 5 minutes, or `api/news.ts` on demand when there is no store or the stored copy is more than 15 minutes old (see [Deploy the app](deploy.md)). The browser polls `/api/news` every 2 minutes while the tab, the map layer, the dashboard or a news alert needs it. `npm run news:ingest` reads every feed once from your own machine and prints what each one gave.
+
+| Source | Publisher | URL | Kind | Kept | Terms |
+| --- | --- | --- | --- | --- | --- |
+| ABC News Queensland | ABC | `www.abc.net.au/news/feed/50990/rss.xml` | News | All items | [ABC Conditions of Use](https://about.abc.net.au/abc-conditions-of-use/). No RSS-specific licence published. |
+| ABC Brisbane | ABC | `www.abc.net.au/news/feed/13787262/rss.xml` | News | All items | As above |
+| ABC Just In | ABC | `www.abc.net.au/news/feed/51120/rss.xml` | News | Queensland items only | As above |
+| 7NEWS Queensland | Seven West Media | `7news.com.au/news/qld/feed` | News | All items | No RSS-specific licence or terms page found. |
+| 7NEWS Brisbane | Seven West Media | `7news.com.au/news/brisbane/feed` | News | All items | As above |
+| Brisbane Times | Nine | `www.brisbanetimes.com.au/rss/feed.xml` | News | Queensland items only (the feed is its national and world front page) | Nine's site terms; no RSS-specific licence found. Nine sells reuse through its content licensing service. |
+| Guardian Australia | Guardian News & Media | `www.theguardian.com/australia-news/rss` | News | Queensland items only | [Guardian terms of service](https://www.theguardian.com/help/terms-of-service): covers its RSS feeds and says use is "personal and non-commercial". |
+| SBS News | SBS | `www.sbs.com.au/news/topic/latest/feed` | News | Queensland items only | [SBS terms](https://www.sbs.com.au/terms): material may be retrieved for personal, non-commercial purposes. |
+| Police media releases | Queensland Police Service | `mypolice.qld.gov.au/feed/` | Official | All items, with the feed's whole summary paragraph | [QPS copyright](https://www.police.qld.gov.au/copyright): CC BY 4.0 for most material. |
+| Earthquakes (last 7 days) | Geoscience Australia | `earthquakes.ga.gov.au/geoserver/earthquakes/wfs`, layer `earthquakes_seven_days`, `located_in_australia='Y'` | Official | Earthquakes GA describes as in or off QLD | CC BY 4.0 ([GA copyright](https://www.ga.gov.au/copyright)) |
+| Queensland weather warnings | Bureau of Meteorology | `ftp://ftp.bom.gov.au/anon/gen/fwo/IDQ2xxxx.amoc.xml` | Official | Current warnings (product type W, status O, not cancelled or expired). **Off unless `NEWS_BOM_WARNINGS=on`.** | BoM default terms ([copyright](https://www.bom.gov.au/other/copyright.shtml), [anonymous FTP](https://www.bom.gov.au/catalogue/anon-ftp.shtml)): personal or in-house use; publishing is for registered users. Turn it on only once you have that permission. |
+
+Not included:
+
+- **9News** publishes no RSS feed: every `/rss` address on 9news.com.au returns 404. Its pages are not scraped.
+- **The Courier-Mail** and the **Gold Coast Bulletin** (News Corp) return empty bodies from their `/rss` addresses, because they are paywalled.
+- The BoM's HTTP warnings feed (`www.bom.gov.au/fwo/IDZ00056.warnings_qld.xml`) answers non-browser requests with 403.
+
+The news outlets publish no licence for their feeds beyond their site terms, several of which say "personal, non-commercial". Roadbeat therefore uses each feed the way a feed reader does, and no further:
+
+- For news outlets it stores and shows only the headline, the link, the publisher, the publisher's own dates, and the first sentence of the publisher's own summary, cut at 280 characters. Openly licensed official sources (Queensland Police, CC BY 4.0) keep the feed's whole summary paragraph, up to 700 characters. `summary` in `src/api/newsSources.ts` sets this per source. The monitor never fetches, stores or shows an article, an image or a video.
+- Each report shows its publisher's own square site icon, loaded from the publisher's website (`PUBLISHER_ICONS` in `src/api/newsSources.ts`), as feed readers do. Logos are not copied into Roadbeat.
+- Every report names its publisher and links to the original. A story says "Reported by" each outlet that carried it.
+- Items are kept for 48 hours, then deleted.
+
+Check with each publisher before using the monitor commercially or redistributing its feeds.
+
+### How reports are placed and grouped
+
+- **Live blogs** are marked only as their publishers mark them: an ABC title that starts "Live:", or a link with `live` as its own path part (ABC's `-live-` slugs, The Guardian's `/live/`). The label is "Live blog", a format, not a claim that the blog is updating this minute.
+- **Updated** times appear when a feed gives a later date for a link the monitor already holds, as live blogs do. The first date is kept as published; the latest becomes `updated`, and a story sorts by it. An item is kept for 48 hours after its latest date.
+- **Places** come only from exact, case-sensitive matches of whole words in the stored headline and summary against `src/data/qld-places.json`, built from the Department of Resources' *Place names gazetteer - Queensland* (data.qld.gov.au, CC BY 4.0) by `npm run data:places`. Only towns, suburbs, localities and neighbourhoods are used, each at the gazetteer's own point. Names the gazetteer places in more than one spot (The Gap), and names that are everyday words, common names or better-known places elsewhere (Banana, Laura, Manly, Richmond), are left out, as are team and masthead names such as "Brisbane Broncos". A story that names no place stays in the list without a pin. Each story says what located it: "Located from: Toowoomba". Earthquakes are pinned at Geoscience Australia's published epicentre instead.
+- **Roads** are placed only when the stored text names a road and a gazetteer locality together. `roadNames()` in `src/lib/newsRoads.ts` reads names such as "Avaline Boulevard" or "Bruce Hwy" (spelt out as the dataset does), and the server asks the Department of Resources' *Queensland roads and tracks* service (data.qld.gov.au, CC BY 4.0, `spatial-gis.information.qld.gov.au/arcgis/rest/services/Transportation/RoadsAndTracks/MapServer/10`) for every segment of that road with the named locality on either side. The story draws those segments, never a point along them. A name found in localities of two different council areas is left unplaced, as it is most likely two different roads. A road named with no locality ("Bruce Highway" alone) is not drawn. Each run asks about at most 20 new or changed items; an item keeps its roads while its text is unchanged.
+- **Official reports there now** on a story page lists QLDTraffic road events in effect whose locality is a place the story names, and QFD warnings whose area, title or location names one, matched by name only (`officialNow()` in `src/lib/newsOfficial.ts`). The page says they may not be the incident the story describes.
+- **Stories** group news reports whose headlines share at least three content words, making up at least half of the shorter headline, published within 12 hours of a report already in the story. The same link in two ABC feeds is one report. Official items are never grouped, with news or with each other. A story counts each publisher once.
+- **Region** filters use the council area the gazetteer gives each matched place. Police districts and BoM forecast districts are not mapped to council areas.
+- Nothing is labelled verified, and nothing is scored for severity or sorted into categories, because no publisher gives those. Official notices are marked with their agency and drawn as solid dots; news reports are drawn as rings that grow with the number of outlets that carried the story. Stories that name the same place share one pin with a count, which opens the News list for that place, because the gazetteer has one point per name and a pin per story would hide all but the top one. The dashboard's **What's happening** strip ranks the last 6 hours' stories by that count, then by time.
+
 ## Published data built into the app
 
 The `scripts/` build these files from published data. They change when TransLink publishes a new timetable, about every few weeks. See [Refresh the published data](refresh-data.md).
@@ -67,6 +111,7 @@ The `scripts/` build these files from published data. They change when TransLink
 | `public/flood-2022.json` | Brisbane City Council *Flood Awareness: Historic Brisbane River and Creek Floods Feb 2022*: the adopted extent, outlines simplified to about 5 m (771,544 points to about 115,000) | `npm run data:flood2022` | 0.5 MB compressed, loaded when the layer is turned on |
 | `public/bikeways.json` | Brisbane City Council *Bikeway sections*: about 8,000 sections with their type, hierarchy and street, lines simplified to about 3 m | `npm run data:bikeways` | 0.24 MB compressed, loaded when the cycling layer is turned on |
 | `public/qld-gauges.json` | Department of Local Government, Water and Volunteers *Queensland Water Monitoring Hydrology Data* (data.qld.gov.au, CC BY 4.0), the stream gauging station network list: each open station's id, name and position, kept if the portal's web service has a telemetered stream height for it | `npm run data:qld-gauges` | 9 KB compressed, loaded when the gauges layer is turned on |
+| `src/data/qld-places.json` | Department of Resources *Place names gazetteer - Queensland* (data.qld.gov.au, CC BY 4.0): about 3,900 towns, suburbs and localities with one point each, for the news monitor. Read only by the server. | `npm run data:places` | 59 KB compressed, server only |
 | `src/data/gauge-catchments.json` | Bureau of Meteorology *National Flood Gauge Network* (data.gov.au, CC BY 4.0): the flood warning catchment each Brisbane stream gauge is in, and its BoM product id | `npm run data:catchments` | Bundled |
 | `src/data/bcc-intersections.json` | Brisbane City Council's *Traffic Management — Intersection locations — reference*: each signal's SCATS number, suburb, position and street names | `npm run data:intersections` | 24 KB compressed, loaded on demand |
 
@@ -82,6 +127,7 @@ All are optional. Each overrides where the app reads one source.
 | `VITE_TRANSLINK_RT_BASE` | `/translink-rt` | The TransLink GTFS-RT proxy path |
 | `VITE_QLD_GAUGES_URL` | `/qld-gauges` | The statewide stream gauges proxy path |
 | `VITE_QFD_BUSHFIRES_URL` | `/qfd-bushfires` | The bushfire feed proxy path |
+| `VITE_NEWS_URL` | `/api/news` | The news monitor endpoint |
 
 ## What the app links to instead of showing
 

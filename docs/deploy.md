@@ -52,6 +52,16 @@ Push alerts need four environment variables, a database and a scheduler. Until a
 
 GitHub runs scheduled workflows on a best-effort basis, often a few minutes late, and pauses them in repositories with no activity for 60 days. Vercel's Hobby plan runs its own cron jobs only once a day, which is why GitHub does the scheduling.
 
+### Turn on the news monitor
+
+The **News** tab works on Vercel with no setup: `/api/news` reads the feeds itself when a request finds no stored copy, at most once per 5 minutes per warm function. For steadier updates, and to share one copy between functions:
+
+1. Connect the Upstash for Redis database, as for push alerts. The monitor stores one key, `news:snapshot`.
+2. Set `CRON_SECRET` in Vercel and as a GitHub repository secret, as for push alerts. `.github/workflows/news-ingest.yml` then calls `/api/news-ingest` every 5 minutes. If the scheduler stops, `/api/news` reads the feeds itself once the stored copy is 15 minutes old.
+3. Leave `NEWS_BOM_WARNINGS` unset unless you have the Bureau of Meteorology's permission to publish its warnings. Set it to `on` to add Queensland warning headlines from the BoM's anonymous FTP server (see [Data sources](data-sources.md#news-monitor-feeds)).
+
+`npm run dev` serves `/api/news` from `vite.config.ts`, reading the feeds on your machine. `npm run news:ingest` reads every feed once and prints what each one gave. On other hosts, port `api/news.ts` to a function, or point `VITE_NEWS_URL` at a Roadbeat deployment that has one; without it the News tab says it couldn't load.
+
 ## Deploy to Netlify
 
 Add the rewrites to `public/_redirects` before you build:
