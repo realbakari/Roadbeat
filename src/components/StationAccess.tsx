@@ -112,6 +112,20 @@ export function StationFacilitiesSection({ stopId }: { stopId: string }) {
         </details>
       )}
 
+      {f.audio && (
+        <div className="grid gap-1.5">
+          <Text size="xs" variant="secondary" bold>
+            <span className="inline-flex items-center gap-1.5">
+              <SpeakerHighIcon size={14} aria-hidden /> Audio description of the station
+            </span>
+          </Text>
+          {/* preload="none": the recordings are a few megabytes, so nothing downloads until someone presses play. */}
+          <audio controls preload="none" src={f.audio} className="w-full" aria-label={`Audio description of ${f.name} station, from Queensland Rail`}>
+            <a href={f.audio}>Download the audio description</a>
+          </audio>
+        </div>
+      )}
+
       {f.description && (
         <details>
           <summary className="cursor-pointer text-sm font-medium text-kumo-strong">Station layout described</summary>
@@ -125,11 +139,6 @@ export function StationFacilitiesSection({ stopId }: { stopId: string }) {
         {f.guide && (
           <a href={f.guide} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
             Queensland Rail station map (PDF) <ArrowSquareOutIcon size={14} />
-          </a>
-        )}
-        {f.audio && (
-          <a href={f.audio} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
-            <SpeakerHighIcon size={14} /> Audio description <ArrowSquareOutIcon size={14} />
           </a>
         )}
       </div>
