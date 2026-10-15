@@ -20,7 +20,8 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Parking meters and cycling.** Brisbane parking meters with their hours, maximum stay and rates, and the council's bikeway network with bike racks and repair stations.
 - **February 2022 flood extent.** The council's adopted outline of the 2022 Brisbane River and creek flood, as an optional map layer for context.
 - **Council road closures.** Brisbane City Council's planned lane and road closures for today, above the road events list.
-- **Station and terminal access.** Lift and escalator outages from Translink, Queensland Rail's access details and facilities on every train station page, and the council's access details on CityCat and ferry terminal pages.
+- **Council events.** Brisbane City Council's events on today and the next 7 days on the map, each with the council's own date text, venue, cost, age, bookings, meeting point, description and event image, and a link to the council's page.
+- **Station and terminal access.** Lift and escalator outages from Translink, Queensland Rail's access details and facilities on every train station page, the council's access details on CityCat and ferry terminal pages, and its boarding, gradient and cross-fall ratings on Brisbane bus stop pages.
 - **Notifications.** Alerts for events, routes and bushfire warnings that match your settings, while the app is open.
 - **Network dashboard.** A full-screen overview at `/dashboard` for a TV or second monitor: closures and crashes by district, how tracked trains and buses are running, lift outages, bushfire warnings, the fastest-rising Brisbane creeks, the busiest intersections, Brisbane's key corridor travel times, today's council events, yesterday's CBD foot traffic, CBD car park spaces and a ticker of the latest events.
 - **Kiosk departure board.** A large, self-refreshing board for one stop at `/kiosk/<region>/<stop id>`, opened from any stop page.

@@ -34,6 +34,7 @@ export function MapCard({ map, card, onDetails, onClose }: { map: maplibregl.Map
 
   return createPortal(
     <div className="w-[min(300px,calc(100vw-48px))] overflow-hidden rounded-xl bg-kumo-base text-sm text-kumo-default shadow-md ring ring-kumo-line">
+      {card.image && <img src={card.image} alt="" loading="lazy" className="h-[120px] w-full object-cover" />}
       <div className="flex items-start gap-3 py-2.5 pr-2 pl-3">
         <span className="mt-1 h-10 w-1 shrink-0 rounded-full" style={{ backgroundColor: card.color }} aria-hidden />
         <div className="grid min-w-0 flex-1 gap-0.5">

@@ -7,6 +7,7 @@ import type { Gauge } from '../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import type { Clearance } from '../api/clearances'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../api/bccPlaces'
+import type { CouncilEvent } from '../api/bccDashboard'
 import type { FireWarning } from '../api/bushfires'
 import { loadTracks } from '../api/tracks'
 import { loadStopFeatures } from '../lib/stopFeatures'
@@ -30,7 +31,7 @@ import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
 import { MapCard } from './map/MapCard'
 import type { MapCard as MapCardData } from '../lib/mapCard'
-import { boundsOf, clearanceFeatures, clearwayFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, setData, signalFeatures, withLabels } from './map/features'
+import { boundsOf, clearanceFeatures, clearwayFeatures, councilEventFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, setData, signalFeatures, withLabels } from './map/features'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -87,6 +88,7 @@ interface Props {
   accessibleBays: AccessibleBay[]
   parkingMeters: ParkingMeter[]
   bikeStops: BikeStop[]
+  councilEvents: CouncilEvent[]
   selectedVehicleId: string | null
   /** A short card for the selected item, shown on the map while the side panel is hidden. */
   card: MapCardData | null
@@ -130,9 +132,10 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   flood2022: ['flood-2022-fill', 'flood-2022-line'],
   parkingMeters: ['parking-meters'],
   cycling: ['bikeways', 'bike-stops'],
+  councilEvents: ['council-events'],
 }
 
-const CLICKABLE_PLACES = ['clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 
 const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
@@ -177,6 +180,7 @@ export function TrafficMap(props: Props) {
     accessibleBays,
     parkingMeters,
     bikeStops,
+    councilEvents,
     selectedVehicleId,
     card,
     trackCodes,
@@ -329,6 +333,10 @@ export function TrafficMap(props: Props) {
   useEffect(() => {
     if (ready && map) setData(map, 'council-places', councilPlaces)
   }, [map, ready, councilPlaces])
+  const councilEventData = useMemo(() => councilEventFeatures(councilEvents), [councilEvents])
+  useEffect(() => {
+    if (ready && map) setData(map, 'council-events', councilEventData)
+  }, [map, ready, councilEventData])
   // The February 2022 flood extent (0.5 MB) and the bikeway network (0.25 MB) load the first time their layer is turned on.
   const showFlood = layers.flood2022
   useEffect(() => {

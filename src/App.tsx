@@ -171,6 +171,7 @@ export default function App() {
     accessibleParking: layers.accessibleParking || sel.place?.kind === 'bay',
     parkingMeters: layers.parkingMeters || sel.place?.kind === 'meter',
     cycling: layers.cycling || sel.place?.kind === 'bike',
+    councilEvents: layers.councilEvents || sel.place?.kind === 'event',
   })
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
@@ -201,7 +202,7 @@ export default function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events },
     setLayers,
     setFocus,
   )
@@ -244,8 +245,9 @@ export default function App() {
       ...(council.bays ? { accessibleParking: council.bays.length } : {}),
       ...(council.meters ? { parkingMeters: council.meters.length } : {}),
       ...(council.bikeStops ? { cycling: council.bikeStops.length } : {}),
+      ...(council.events ? { councilEvents: council.events.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events],
   )
 
   const locate = useCallback(() => {
@@ -475,6 +477,7 @@ export default function App() {
               accessibleBays={council.bays ?? []}
               parkingMeters={council.meters ?? []}
               bikeStops={council.bikeStops ?? []}
+              councilEvents={council.events ?? []}
               selectedVehicleId={sel.vehicle}
               card={mapCard}
               onCardDetails={revealList}

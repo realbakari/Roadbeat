@@ -1,3 +1,4 @@
+import type { CouncilEvent } from '../api/bccDashboard'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../api/bccPlaces'
 import type { Clearance } from '../api/clearances'
 import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
@@ -16,6 +17,7 @@ export type Place =
   | { kind: 'bay'; data: AccessibleBay }
   | { kind: 'meter'; data: ParkingMeter }
   | { kind: 'bike'; data: BikeStop }
+  | { kind: 'event'; data: CouncilEvent }
 
 /** The loaded lists a place link can point into; null while a list has not loaded. */
 export interface PlaceSources {
@@ -29,6 +31,7 @@ export interface PlaceSources {
   bays: AccessibleBay[] | null
   meters: ParkingMeter[] | null
   bikeStops: BikeStop[] | null
+  councilEvents: CouncilEvent[] | null
 }
 
 /** The map layer a shared link to a place turns on. */
@@ -43,6 +46,7 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   bay: 'accessibleParking',
   meter: 'parkingMeters',
   bike: 'cycling',
+  event: 'councilEvents',
 }
 
 /** The place a #place/<kind>/<id> link names, or null when it is unknown or not loaded yet. */
@@ -88,6 +92,10 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.bikeStops?.find((b) => b.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'event') {
+    const data = s.councilEvents?.find((e) => e.id === id)
+    return data ? { kind, data } : null
+  }
   return null
 }
 
@@ -113,6 +121,8 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
       return { center: place.data.position, zoom: 17 }
     case 'toilet':
       return { center: place.data.position, zoom: 15 }
+    case 'event':
+      return place.data.position ? { center: place.data.position, zoom: 15 } : null
     case 'clearway':
       return { center: firstPoint(place.data.geometry), zoom: 15 }
     case 'rest':

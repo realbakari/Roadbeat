@@ -27,6 +27,8 @@ export interface MapCard {
   facts: string[]
   /** The item's colour on the map, for the card's accent. */
   color: string
+  /** A published picture of the item, shown above the title. */
+  image?: string
   position: LngLat
 }
 
@@ -58,6 +60,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   bay: 'Accessible parking',
   meter: 'Parking meter',
   bike: 'Bike rack',
+  event: 'Council event',
 }
 
 function placeTitle(place: Place): string {
@@ -81,6 +84,8 @@ function placeTitle(place: Place): string {
       return place.data.street ?? PLACE_SUBTITLE[place.kind]
     case 'bike':
       return place.data.name
+    case 'event':
+      return place.data.title
   }
 }
 
@@ -93,6 +98,7 @@ export function placeCard(place: Place): MapCard | null {
   if (place.kind === 'meter' && place.data.rate != null) facts.push(`$${place.data.rate.toFixed(2)} an hour${place.data.maxStayHours != null ? ` · ${place.data.maxStayHours} h max` : ''}`)
   if (place.kind === 'bike' && place.data.kind === 'repair') facts.push('Bike repair station')
   if ((place.kind === 'bay' || place.kind === 'meter') && place.data.suburb) facts.push(place.data.suburb)
+  if (place.kind === 'event') facts.push(...[place.data.when, place.data.venue].filter((f) => f != null))
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,
     dump: LAYER_COLOR.dumpPoint,
@@ -104,6 +110,7 @@ export function placeCard(place: Place): MapCard | null {
     bay: LAYER_COLOR.accessibleParking,
     meter: LAYER_COLOR.parkingMeter,
     bike: LAYER_COLOR.bikeRack,
+    event: LAYER_COLOR.councilEvent,
   }
   return {
     key: `place-${place.kind}-${placeId(place)}`,
@@ -111,6 +118,7 @@ export function placeCard(place: Place): MapCard | null {
     subtitle: place.kind === 'bike' && place.data.kind === 'repair' ? 'Bike repair station' : PLACE_SUBTITLE[place.kind],
     facts: facts.slice(0, 2),
     color: colors[place.kind],
+    ...(place.kind === 'event' && place.data.image ? { image: place.data.image } : {}),
     position: focus.center,
   }
 }

@@ -17,6 +17,7 @@ import {
 import { EVENT_TYPES } from '../lib/eventMeta'
 import { BCC_CLEARANCES_URL, QR_CLEARANCES_URL } from '../api/clearances'
 import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_URL, TOILETS_URL } from '../api/bccPlaces'
+import { EVENTS_URL } from '../api/bccDashboard'
 import { iconUrl, LAYER_COLOR, signalIcon, typeSlug, VEHICLE_COLOR } from '../lib/mapIcons'
 import type { Basemap, MapLayers } from './map/settings'
 
@@ -33,8 +34,8 @@ interface Props {
   vehicleCounts: Partial<Record<VehicleMode, number>>
   vehicleError: string | null
   clearanceError: string | null
-  /** Load errors for the council's clearway, toilet and accessible parking layers. */
-  councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null }
+  /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
+  councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }
 
 const VEHICLE_MODES: { mode: VehicleMode; label: string }[] = [
@@ -502,6 +503,27 @@ export function MapLayersPanel({
                 )}
               </Text>
             </div>
+          </LayerRow>
+          <LayerRow
+            icon={<img src={iconUrl('council-event')} alt="" className="size-5" />}
+            label="Council events"
+            count={counts.councilEvents}
+            checked={layers.councilEvents}
+            onChange={(v) => set('councilEvents', v)}
+          >
+            <Text size="xs" variant={councilErrors.councilEvents ? 'error' : 'secondary'}>
+              {councilErrors.councilEvents ? (
+                `Council events unavailable: ${councilErrors.councilEvents}.`
+              ) : (
+                <>
+                  Events on today and in the next 7 days with a published location, as listed by{' '}
+                  <a href={EVENTS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    Brisbane City Council
+                  </a>
+                  . Zoom in to see them.
+                </>
+              )}
+            </Text>
           </LayerRow>
         </Group>
       </div>

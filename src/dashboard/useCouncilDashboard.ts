@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
 import { fetchCorridors, fetchCouncilEvents, fetchPedestrianDay, type Corridor, type CorridorMonth, type CouncilEvent, type PedestrianHour } from '../api/bccDashboard'
 
+import { brisbaneMidnight } from '../lib/councilEvents'
+
 const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 const HOUR = 3600_000
-
-/** Brisbane midnight that starts the day containing `t`. */
-function brisbaneMidnight(t: number) {
-  return Date.parse(`${day.format(t)}T00:00:00+10:00`)
-}
 
 /** Polls `load` every `every` ms while the page is visible, keeping the last good result. */
 function usePoll<T>(load: (signal: AbortSignal) => Promise<T>, every: number) {

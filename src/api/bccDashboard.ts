@@ -1,4 +1,7 @@
 import { z } from 'zod'
+import { councilEventId, eventsOn } from '../lib/councilEvents'
+import { stripHtml } from '../lib/format'
+import type { LngLat } from '../lib/geo'
 
 // Brisbane City Council datasets for the dashboard (data.brisbane.qld.gov.au,
 // CC BY 4.0): key corridor monthly performance, council events and pedestrian
@@ -88,44 +91,111 @@ export async function fetchCorridors(now: number, signal?: AbortSignal): Promise
 // Council events
 
 export interface CouncilEvent {
+  /** Trumba's event id from the council's link, else a hash of the title and start. */
+  id: string
   title: string
+  description: string | null
   venue: string | null
+  address: string | null
+  venueType: string | null
   start: number
   end: number | null
   /** The council's own wording of the date and time, e.g. "Friday, 6 November 2026, 4:30 - 10pm". */
   when: string | null
   url: string | null
   types: string[]
+  primaryType: string | null
+  cost: string | null
+  age: string | null
+  ageRange: string[]
+  bookings: string | null
+  bookingsRequired: boolean | null
+  meetingPoint: string | null
+  requirements: string | null
+  /** The council's event image, a JPG on trumba.com. */
+  image: string | null
+  /** "Booked out" or "Cancelled", when the council has marked the event. */
+  status: string | null
+  position: LngLat | null
 }
+
+const text = z.string().nullish().transform((v) => {
+  const t = v ? stripHtml(v) : ''
+  return t || null
+})
+const yesNo = z.string().nullish().transform((v) => (v === 'Yes' ? true : v === 'No' ? false : null))
 
 const EventRow = z
   .object({
     subject: z.string(),
+    description: text,
     venue: z.string().nullish(),
     location: z.string().nullish(),
+    venueaddress: text,
+    venuetype: text,
     start_datetime: z.string(),
     end_datetime: z.string().nullish(),
     formatteddatetime: z.string().nullish(),
     web_link: z.string().nullish(),
     event_type: z.array(z.string()).nullish(),
+    primaryeventtype: text,
+    cost: text,
+    age: text,
+    agerange: z.array(z.string()).nullish(),
+    bookings: text,
+    bookingsrequired: yesNo,
+    meetingpoint: text,
+    requirements: text,
+    eventimage: z.string().url().nullish(),
+    status: text,
+    geolocation: z.object({ lon: z.number(), lat: z.number() }).nullish(),
   })
-  .transform(
-    (r): CouncilEvent => ({
+  .transform((r): CouncilEvent => {
+    const start = Date.parse(r.start_datetime)
+    return {
+      id: councilEventId(r.web_link, r.subject, r.start_datetime),
       title: r.subject.trim(),
+      description: r.description,
       venue: r.venue?.trim() || r.location?.trim() || null,
-      start: Date.parse(r.start_datetime),
+      address: r.venueaddress,
+      venueType: r.venuetype,
+      start,
       end: r.end_datetime ? Date.parse(r.end_datetime) : null,
       when: r.formatteddatetime?.trim() || null,
       url: r.web_link || null,
       types: r.event_type ?? [],
-    }),
-  )
+      primaryType: r.primaryeventtype,
+      cost: r.cost,
+      age: r.age,
+      ageRange: r.agerange ?? [],
+      bookings: r.bookings,
+      bookingsRequired: r.bookingsrequired,
+      meetingPoint: r.meetingpoint,
+      requirements: r.requirements,
+      image: r.eventimage ?? null,
+      status: r.status,
+      position: r.geolocation ? [r.geolocation.lon, r.geolocation.lat] : null,
+    }
+  })
+
+/** Rows of the council's events dataset as CouncilEvents, skipping rows that don't match the published shape. */
+export function parseCouncilEvents(list: unknown[]): CouncilEvent[] {
+  return parse(list, EventRow)
+}
+
+const iso = (t: number) => new Date(t).toISOString().slice(0, 19)
 
 /** Council events starting between `from` and `to` (ms), soonest first. */
 export async function fetchCouncilEvents(from: number, to: number, signal?: AbortSignal): Promise<CouncilEvent[]> {
-  const iso = (t: number) => new Date(t).toISOString().slice(0, 19)
   const list = await rows('brisbane-city-council-events', { where: `start_datetime >= '${iso(from)}' and start_datetime < '${iso(to)}'`, order_by: 'start_datetime' }, signal)
-  return parse(list, EventRow)
+  return parseCouncilEvents(list)
+}
+
+/** Council events on at any time between `from` and `to` (ms), including ongoing exhibitions, soonest first. */
+export async function fetchCouncilEventsOn(from: number, to: number, signal?: AbortSignal): Promise<CouncilEvent[]> {
+  const where = `start_datetime < '${iso(to)}' and (end_datetime >= '${iso(from)}' or end_datetime is null)`
+  const list = await rows('brisbane-city-council-events', { where, order_by: 'start_datetime' }, signal)
+  return eventsOn(parseCouncilEvents(list), from, to)
 }
 
 // Pedestrian movements

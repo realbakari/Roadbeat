@@ -37,7 +37,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     if (map.getLayer('building-3d')) map.removeLayer('building-3d')
   }
 
-  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
+  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'council-events', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
     map.addSource(id, { type: 'geojson', data: empty })
   }
   const color = ['get', 'color'] as unknown as string
@@ -197,6 +197,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   iconLayer('parking-meters', 'council-places', ['==', ['get', 'icon'], 'parking-meter'], 13, [13, 0.55, 17, 0.85])
   iconLayer('bike-stops', 'council-places', ['in', ['get', 'icon'], ['literal', ['bike-rack', 'bike-repair']]], 13, [13, 0.5, 17, 0.8])
   iconLayer('accessible-parking', 'council-places', ['==', ['get', 'icon'], 'accessible-parking'], 14, [14, 0.6, 17, 0.85])
+  iconLayer('council-events', 'council-events', ['==', ['get', 'icon'], 'council-event'], 9, [9, 0.55, 15, 0.85])
   // Low clearance signs: lower clearances draw on top where two overlap.
   map.addLayer({
     id: 'clearances',

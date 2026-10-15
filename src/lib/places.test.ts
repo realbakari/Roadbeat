@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { CouncilEvent } from '../api/bccDashboard'
 import type { Clearway, Toilet } from '../api/bccPlaces'
 import { findPlace, placeFocus, type PlaceSources } from './places'
 
@@ -26,6 +27,30 @@ const toilet: Toilet = {
   notes: [],
   url: null,
 }
+const event: CouncilEvent = {
+  id: '182353296',
+  title: 'Precious',
+  description: null,
+  venue: 'Museum of Brisbane',
+  address: null,
+  venueType: null,
+  start: Date.parse('2025-04-06T14:00:00Z'),
+  end: null,
+  when: 'Ongoing through Thursday, 1 April 2027',
+  url: null,
+  types: ['Art'],
+  primaryType: null,
+  cost: 'Free',
+  age: null,
+  ageRange: [],
+  bookings: null,
+  bookingsRequired: null,
+  meetingPoint: null,
+  requirements: null,
+  image: 'https://www.trumba.com/i/x.jpg',
+  status: null,
+  position: [153.0241, -27.4691],
+}
 
 const sources: PlaceSources = {
   restAreas: [],
@@ -38,11 +63,18 @@ const sources: PlaceSources = {
   bays: null,
   meters: null,
   bikeStops: null,
+  councilEvents: [event],
 }
 
 describe('findPlace', () => {
   it('finds a loaded place by kind and id', () => {
     expect(findPlace({ kind: 'clearway', id: '505' }, sources)).toEqual({ kind: 'clearway', data: clearway })
+    expect(findPlace({ kind: 'event', id: '182353296' }, sources)).toEqual({ kind: 'event', data: event })
+  })
+
+  it('flies to an event at its published position, and nowhere when it has none', () => {
+    expect(placeFocus({ kind: 'event', data: event })).toEqual({ center: [153.0241, -27.4691], zoom: 15 })
+    expect(placeFocus({ kind: 'event', data: { ...event, position: null } })).toBeNull()
   })
 
   it('returns null for an unknown id, a list not loaded yet, or an unknown kind', () => {

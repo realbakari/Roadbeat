@@ -16,6 +16,7 @@ import {
   LetterCirclePIcon,
   BicycleIcon,
   WrenchIcon,
+  CalendarStarIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -49,6 +50,7 @@ export const LAYER_COLOR = {
   parkingMeter: '#334155',
   bikeRack: '#16a34a',
   bikeRepair: '#15803d',
+  councilEvent: '#be185d',
 } as const
 
 export const VEHICLE_COLOR = {
@@ -120,6 +122,7 @@ function buildIcons(): Record<string, string> {
   icons['parking-meter'] = square(LAYER_COLOR.parkingMeter, LetterCirclePIcon)
   icons['bike-rack'] = disc(LAYER_COLOR.bikeRack, BicycleIcon)
   icons['bike-repair'] = disc(LAYER_COLOR.bikeRepair, WrenchIcon)
+  icons['council-event'] = square(LAYER_COLOR.councilEvent, CalendarStarIcon)
   icons['vehicle-bus'] = disc(VEHICLE_COLOR.bus, BusIcon)
   icons['vehicle-train'] = disc(VEHICLE_COLOR.train, TrainIcon)
   icons['vehicle-tram'] = disc(VEHICLE_COLOR.tram, TramIcon)

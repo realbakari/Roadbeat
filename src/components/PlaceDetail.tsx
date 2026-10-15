@@ -21,13 +21,15 @@ import {
   LetterCirclePIcon,
   BicycleIcon,
   WrenchIcon,
+  CalendarStarIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { Fragment, type ReactNode } from 'react'
 import { BCC_CLEARANCES_URL, clearanceLabel, QR_BRIDGES_URL, QR_CLEARANCES_URL, type Clearance } from '../api/clearances'
 import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_URL, type AccessibleBay, type BikeStop, type Clearway, type ParkingMeter, type Toilet } from '../api/bccPlaces'
+import { EVENTS_URL, type CouncilEvent } from '../api/bccDashboard'
 import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
-import { formatDay, timeAgo, titleCase } from '../lib/format'
+import { formatDateTime, formatDay, stripHtml, timeAgo, titleCase } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
 import type { Place } from '../lib/places'
 
@@ -127,7 +129,7 @@ function body(place: Place, now: number) {
             variant="error"
             icon={<WarningIcon weight="fill" />}
             title="Heavy vehicle access restricted"
-            description={stripHtml(t.description)}
+            description={stripHtml(t.description).replace(/\n+/g, ' ')}
           />
           <Section title="Roads">
             <Text>{t.roads}</Text>
@@ -181,6 +183,8 @@ function body(place: Place, now: number) {
       return <MeterBody m={place.data} />
     case 'bike':
       return <BikeBody b={place.data} />
+    case 'event':
+      return <EventBody e={place.data} />
   }
 }
 
@@ -310,6 +314,73 @@ function MeterBody({ m }: { m: ParkingMeter }) {
       </Text>
       <ExternalLink href={PARKING_METERS_URL}>Parking meters — Brisbane City Council</ExternalLink>
       <Directions at={m.position} />
+    </>
+  )
+}
+
+function EventBody({ e }: { e: CouncilEvent }) {
+  const rows: [string, ReactNode][] = []
+  if (e.cost) rows.push(['Cost', e.cost])
+  const age = [e.age, ...e.ageRange].filter(Boolean).join(' · ')
+  if (age) rows.push(['Age', age])
+  if (e.bookings || e.bookingsRequired != null) rows.push(['Bookings', e.bookings ?? (e.bookingsRequired ? 'Bookings required.' : 'No bookings required.')])
+  if (e.meetingPoint) rows.push(['Meeting point', e.meetingPoint])
+  if (e.requirements) rows.push(['Bring', e.requirements])
+  const where = [e.venue, e.address && e.address !== e.venue ? e.address : null, e.venueType].filter(Boolean)
+  return (
+    <>
+      {e.image && <img src={e.image} alt={e.title} loading="lazy" className="-mb-2 aspect-[16/9] w-full rounded-lg bg-kumo-recessed object-cover" />}
+      <Header icon={CalendarStarIcon} color={LAYER_COLOR.councilEvent} title={e.title} subtitle={['Brisbane City Council event', e.primaryType].filter(Boolean).join(' · ')} />
+      {e.status && <Banner variant={/cancel/i.test(e.status) ? 'error' : 'alert'} size="sm" icon={<WarningIcon weight="fill" />} title={e.status} description="As marked by the council." />}
+      <div className="grid gap-1 rounded-lg bg-kumo-recessed p-3">
+        <Text size="sm" variant="secondary">
+          When
+        </Text>
+        <span className="text-lg font-semibold">{e.when ?? formatDateTime(new Date(e.start).toISOString()) ?? 'Not published'}</span>
+      </div>
+      {where.length > 0 && (
+        <Section title="Where">
+          <div className="grid gap-0.5 text-sm">
+            {where.map((w) => (
+              <span key={w}>{w}</span>
+            ))}
+          </div>
+        </Section>
+      )}
+      {rows.length > 0 && (
+        <Section title="Details">
+          <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5 text-sm">
+            {rows.map(([k, v]) => (
+              <Fragment key={k}>
+                <dt className="text-kumo-subtle">{k}</dt>
+                <dd className="whitespace-pre-line">{v}</dd>
+              </Fragment>
+            ))}
+          </dl>
+        </Section>
+      )}
+      {e.description && (
+        <Section title="About">
+          <p className="text-sm whitespace-pre-line">{e.description}</p>
+        </Section>
+      )}
+      {e.types.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {e.types.map((t) => (
+            <Badge key={t} variant="outline">
+              {t}
+            </Badge>
+          ))}
+        </div>
+      )}
+      <div className="grid gap-1">
+        {e.url && <ExternalLink href={e.url}>This event on Brisbane City Council's website</ExternalLink>}
+        <ExternalLink href={EVENTS_URL}>Brisbane City Council events (open data)</ExternalLink>
+        <Text size="xs" variant="secondary">
+          Details and image as published by Brisbane City Council (CC BY 4.0).
+        </Text>
+      </div>
+      {e.position && <Directions at={e.position} />}
     </>
   )
 }
@@ -496,8 +567,4 @@ function ExternalLink({ href, children }: { href: string; children: ReactNode })
       <ArrowSquareOutIcon size={14} />
     </a>
   )
-}
-
-function stripHtml(s: string) {
-  return s.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
 }

@@ -54,3 +54,28 @@ export function formatDay(ymd: string | null | undefined): string | null {
   const d = new Date(`${ymd}T00:00:00Z`)
   return Number.isNaN(d.getTime()) ? null : day.format(d)
 }
+
+const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
+
+/**
+ * The text of an HTML fragment: paragraphs, line breaks and list items become
+ * line breaks, tags go, and character references are decoded.
+ */
+export function stripHtml(html: string): string {
+  return html
+    .replace(/<\/(?:p|div|li|h[1-6]|tr)>|<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, ref: string) => {
+      if (ref[0] === '#') {
+        const code = ref[1].toLowerCase() === 'x' ? parseInt(ref.slice(2), 16) : parseInt(ref.slice(1), 10)
+        return Number.isFinite(code) ? String.fromCodePoint(code) : m
+      }
+      return ENTITIES[ref.toLowerCase()] ?? m
+    })
+    .replace(/\u00a0/g, ' ')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}

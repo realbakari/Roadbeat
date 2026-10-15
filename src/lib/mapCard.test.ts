@@ -58,6 +58,44 @@ describe('placeCard and mapCardFor', () => {
     expect(card).toMatchObject({ title: 'Queens Plaza', subtitle: 'Public toilet', facts: ['Accessible toilet'] })
   })
 
+  it("shows an event with its image, the council's date text and its venue", () => {
+    const card = placeCard({
+      kind: 'event',
+      data: {
+        id: '182353296',
+        title: 'Precious',
+        description: null,
+        venue: 'Museum of Brisbane',
+        address: null,
+        venueType: null,
+        start: 0,
+        end: null,
+        when: 'Ongoing through Thursday, 1 April 2027',
+        url: null,
+        types: [],
+        primaryType: null,
+        cost: null,
+        age: null,
+        ageRange: [],
+        bookings: null,
+        bookingsRequired: null,
+        meetingPoint: null,
+        requirements: null,
+        image: 'https://www.trumba.com/i/x.jpg',
+        status: null,
+        position: [153.0241, -27.4691],
+      },
+    })
+    expect(card).toMatchObject({
+      key: 'place-event-182353296',
+      title: 'Precious',
+      subtitle: 'Council event',
+      facts: ['Ongoing through Thursday, 1 April 2027', 'Museum of Brisbane'],
+      image: 'https://www.trumba.com/i/x.jpg',
+      position: [153.0241, -27.4691],
+    })
+  })
+
   it('picks the selected item, and nothing when nothing is selected', () => {
     const none = { event: null, place: null, fire: null, gauge: null, signal: null, signalVolumes: null, vehicle: null }
     expect(mapCardFor(none, NOW)).toBeNull()

@@ -8,8 +8,9 @@
 - Someone wants the next departures from a TransLink stop or station, or a line's full timetable for a given day.
 - Someone wants a direct public transport trip, or a trip with one change at the same station or stop, from Queensland's published timetable.
 - Someone asks about current bushfire warnings in Queensland, or Brisbane creek and river heights and rainfall.
-- Someone needs to know whether a train station or ferry terminal has a working lift, level boarding, accessible toilets or parking.
+- Someone needs to know whether a train station or ferry terminal has a working lift, level boarding, accessible toilets or parking, or how easy a Brisbane bus stop is to board.
 - Someone wants to know if a Brisbane clearway is in effect, or where the nearest accessible public toilet or accessible parking bay is.
+- Someone wants to see what Brisbane City Council events are on this week near a place, with the council's own details.
 - Someone wants a shareable link to a specific road event, stop, line, fire warning or journey search.
 
 ## When not to use Roadbeat
@@ -54,7 +55,7 @@ The app keeps its current view in the URL hash, so these links open a view direc
 - `%SITE_URL%/#fire/<warning id>`: a Queensland Fire Department warning or incident.
 - `%SITE_URL%/#gauge/<sensor id>`: a Brisbane City Council stream or rain gauge.
 - `%SITE_URL%/#signal/<SCATS number>`: a Brisbane City Council signalised intersection.
-- `%SITE_URL%/#place/clearway/<id>`, `#place/toilet/<id>`, `#place/bay/<id>`, `#place/meter/<meter number>`, `#place/bike/<id>` or `#place/clearance/<id>`: a Brisbane clearway, public toilet, accessible parking bay, parking meter, bike rack or low clearance.
+- `%SITE_URL%/#place/clearway/<id>`, `#place/toilet/<id>`, `#place/bay/<id>`, `#place/meter/<meter number>`, `#place/bike/<id>`, `#place/clearance/<id>` or `#place/event/<Trumba event id>`: a Brisbane clearway, public toilet, accessible parking bay, parking meter, bike rack, low clearance or council event.
 
 ## Data sources
 
@@ -63,7 +64,7 @@ All are used under Creative Commons Attribution 4.0 unless noted.
 - Department of Transport and Main Roads: road events, cameras, rest areas and crash history (QLDTraffic feeds and data.qld.gov.au).
 - Translink: GTFS timetables and GTFS-RT vehicle positions, trip updates and service alerts for South East Queensland and Cairns.
 - Queensland Fire Department: current bushfire incidents and warnings.
-- Brisbane City Council: clearways, parking meters, bikeways and bike racks, public toilets (National Public Toilet Map), accessible parking, ferry terminals, the February 2022 flood extent, telemetry gauges, intersection volumes, planned temporary road occupancies, CBD car park spaces, and Queensland Rail's railway station facilities (data.brisbane.qld.gov.au).
+- Brisbane City Council: bus stop audits, clearways, parking meters, bikeways and bike racks, public toilets (National Public Toilet Map), accessible parking, council events, ferry terminals, the February 2022 flood extent, telemetry gauges, intersection volumes, planned temporary road occupancies, CBD car park spaces, and Queensland Rail's railway station facilities (data.brisbane.qld.gov.au).
 - Bureau of Meteorology: National Flood Gauge Network catchments (data.gov.au).
 - OpenFreeMap, OpenMapTiles and OpenStreetMap contributors: base maps (ODbL).
 

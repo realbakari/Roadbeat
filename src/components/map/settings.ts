@@ -33,6 +33,8 @@ export interface MapLayers {
   parkingMeters: boolean
   /** Brisbane City Council bikeways, bike racks and repair stations. */
   cycling: boolean
+  /** Brisbane City Council events on today and the next 7 days. */
+  councilEvents: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -56,4 +58,5 @@ export const DEFAULT_LAYERS: MapLayers = {
   flood2022: false,
   parkingMeters: false,
   cycling: false,
+  councilEvents: false,
 }

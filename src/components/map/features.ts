@@ -5,6 +5,7 @@ import type { Gauge } from '../../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../../api/bccSignals'
 import { clearanceLabel, type Clearance } from '../../api/clearances'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../../api/bccPlaces'
+import type { CouncilEvent } from '../../api/bccDashboard'
 import { clearwayInEffect, parseClearwayTimes } from '../../lib/clearways'
 import type { TrafficEvent } from '../../api/types'
 import { latestReading, rainfallSince } from '../../lib/gauges'
@@ -106,6 +107,24 @@ export function councilPlaceFeatures({
         },
       })),
     ],
+  }
+}
+
+/** Council events that have a position; each carries the hash key its detail page opens at. */
+export function councilEventFeatures(list: CouncilEvent[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: list.flatMap((e) =>
+      e.position
+        ? [
+            {
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: e.position },
+              properties: { key: `place/event/${encodeURIComponent(e.id)}`, icon: 'council-event', label: [e.title, e.when].filter(Boolean).join(' · ') },
+            },
+          ]
+        : [],
+    ),
   }
 }
 
