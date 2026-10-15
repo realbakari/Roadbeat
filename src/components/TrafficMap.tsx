@@ -28,6 +28,8 @@ import {
 import { ensureClearanceIcons, ensureIcons } from '../lib/mapIcons'
 import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
+import { MapCard } from './map/MapCard'
+import type { MapCard as MapCardData } from '../lib/mapCard'
 import { boundsOf, clearanceFeatures, clearwayFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, setData, signalFeatures, withLabels } from './map/features'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
@@ -86,6 +88,10 @@ interface Props {
   parkingMeters: ParkingMeter[]
   bikeStops: BikeStop[]
   selectedVehicleId: string | null
+  /** A short card for the selected item, shown on the map while the side panel is hidden. */
+  card: MapCardData | null
+  onCardDetails: () => void
+  onCardClose: () => void
   /** Route codes whose train, tram or ferry track to highlight (a line shown on the map, or the selected vehicle's route). */
   trackCodes: string[] | null
   /** Keep the map centred on the selected vehicle as it moves. */
@@ -172,6 +178,7 @@ export function TrafficMap(props: Props) {
     parkingMeters,
     bikeStops,
     selectedVehicleId,
+    card,
     trackCodes,
     followVehicle,
     selectedEvent,
@@ -472,6 +479,7 @@ export function TrafficMap(props: Props) {
       {map && selectedCamera && (
         <PinnedCamera map={map} camera={selectedCamera} now={now} onClose={props.onCloseCamera} />
       )}
+      {map && card && !selectedCamera && <MapCard key={card.key} map={map} card={card} onDetails={props.onCardDetails} onClose={props.onCardClose} />}
     </div>
   )
 }

@@ -59,19 +59,33 @@ body {
   display: none;
 }
 
-/* Camera view pinned on the map: the card supplies its own surface. */
-.camera-pin {
+/* Camera view and item card pinned on the map: the card supplies its own surface. */
+.camera-pin,
+.map-card {
   z-index: 3;
 }
-.camera-pin .maplibregl-popup-content {
+.camera-pin .maplibregl-popup-content,
+.map-card .maplibregl-popup-content {
   background: transparent;
   padding: 0;
   box-shadow: none;
   border-radius: 0;
 }
-.camera-pin .maplibregl-popup-tip {
+.camera-pin .maplibregl-popup-tip,
+.map-card .maplibregl-popup-tip {
   display: block;
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
   border-top-color: var(--color-kumo-base) !important;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--color-kumo-base) !important;
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--color-kumo-base) !important;
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--color-kumo-base) !important;
 }
 .maplibregl-marker:has(> button) {
   z-index: 2;

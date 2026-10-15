@@ -23,6 +23,8 @@ import { SidePanel, type Panel } from './components/SidePanel'
 import { TrafficMap } from './components/TrafficMap'
 import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/settings'
 import { useColorMode } from './hooks/useColorMode'
+import { useMediaQuery } from './hooks/useMediaQuery'
+import { mapCardFor } from './lib/mapCard'
 import { usePanelLayout } from './hooks/usePanelLayout'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
@@ -194,11 +196,21 @@ export default function App() {
     setFocus({ center: selectedFire.position, zoom: selectedFire.areaShape ? 10 : 11 })
   }, [selectedFire])
 
+  // With the panel hidden (closed on desktop, the Map view on phones), the selected item gets a card on the map instead.
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
     { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops },
     setLayers,
     setFocus,
+  )
+  const mapCard = useMemo(
+    () =>
+      cardVisible
+        ? mapCardFor({ event: selectedEvent, place: selectedPlace, fire: selectedFire, gauge: selectedGauge, signal: selectedSignal, signalVolumes, vehicle: selectedVehicle }, now)
+        : null,
+    [cardVisible, selectedEvent, selectedPlace, selectedFire, selectedGauge, selectedSignal, signalVolumes, selectedVehicle, now],
   )
 
   // Keep the selected event on the map even if filters would hide it.
@@ -268,14 +280,15 @@ export default function App() {
 
   // Closing a camera returns to whatever was open before it (e.g. an event).
   const cameraReturn = useRef('')
+  // `reveal` opens the panel for the item; a map tap passes false when the item gets a card on the map instead.
   const openKey = useCallback(
-    (hashKey: string) => {
+    (hashKey: string, reveal = true) => {
       if (hashKey.startsWith('camera/')) {
         if (!location.hash.startsWith('#camera/')) cameraReturn.current = location.hash.replace(/^#/, '')
         revealMap()
         const cam = cameras.find((c) => `camera/${cameraKey(c)}` === hashKey)
         if (cam) setLayers((l) => (cam.kind === 'webcam' ? (l.webcams ? l : { ...l, webcams: true }) : l.floodcams ? l : { ...l, floodcams: true }))
-      } else {
+      } else if (reveal) {
         revealList()
       }
       go(hashKey)
@@ -463,6 +476,9 @@ export default function App() {
               parkingMeters={council.meters ?? []}
               bikeStops={council.bikeStops ?? []}
               selectedVehicleId={sel.vehicle}
+              card={mapCard}
+              onCardDetails={revealList}
+              onCardClose={() => go('')}
               trackCodes={trackCodes}
               followVehicle={followVehicle && !!selectedVehicle}
               fit={fit}
@@ -472,9 +488,9 @@ export default function App() {
               userLocation={userLocation}
               onSelectEvent={(id) => {
                 selectEvent(id)
-                revealList()
+                if (!cardVisible) revealList()
               }}
-              onSelectKey={openKey}
+              onSelectKey={(k) => openKey(k, !cardVisible)}
               onCloseCamera={closeCamera}
               onViewChange={setMapView}
             />
