@@ -29,6 +29,8 @@ const INDEXABLE: PageName[] = ['index', 'about', 'privacy', 'contact']
 export interface SiteSettings {
   siteUrl: string
   contactEmail: string
+  /** Google Analytics 4 measurement ID, such as G-XXXXXXX. Empty for no analytics. */
+  gaMeasurementId: string
 }
 
 interface Page {
@@ -50,7 +52,7 @@ export function fillTemplate(text: string, vars: Record<string, string>) {
 }
 
 function vars(s: SiteSettings) {
-  return { SITE_URL: s.siteUrl, CONTACT_EMAIL: s.contactEmail }
+  return { SITE_URL: s.siteUrl, CONTACT_EMAIL: s.contactEmail, GA_MEASUREMENT_ID: s.gaMeasurementId }
 }
 
 export function loadPage(name: PageName, s: SiteSettings): Page {
@@ -100,6 +102,12 @@ export function markdownToHtml(md: string) {
 
 const pagePath = (name: PageName) => (name === 'index' ? '/' : `/${name}/`)
 
+/** Google's gtag.js snippet for a GA4 measurement ID. */
+function googleTag(id: string) {
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${id}');</script>`
+}
+
 /** Meta tags shared by every page: description, canonical, Open Graph and social card. */
 function headTags(page: Page, s: SiteSettings) {
   const url = s.siteUrl ? `${s.siteUrl}${pagePath(page.name)}` : ''
@@ -127,6 +135,7 @@ function headTags(page: Page, s: SiteSettings) {
     `<meta name="twitter:title" content="${escape(page.title)}" />`,
     `<meta name="twitter:description" content="${escape(page.description)}" />`,
     `<meta name="twitter:image" content="${image}" />`,
+    s.gaMeasurementId ? googleTag(s.gaMeasurementId) : '',
   ]
     .filter(Boolean)
     .join('\n    ')
@@ -275,6 +284,8 @@ export function markdownPathFor(path: string) {
 }
 
 export function sitePages(settings: SiteSettings): Plugin {
+  if (settings.gaMeasurementId && !/^G-[A-Z0-9]+$/.test(settings.gaMeasurementId))
+    throw new Error(`GA_MEASUREMENT_ID must look like G-XXXXXXX, got "${settings.gaMeasurementId}"`)
   const s = { ...settings, siteUrl: settings.siteUrl.replace(/\/+$/, '') }
   return {
     name: 'roadbeat-site-pages',

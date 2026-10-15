@@ -20,13 +20,15 @@ const translinkProxy = {
   },
 }
 
-export default defineConfig(({ mode }) => {
-  // SITE_URL and CONTACT_EMAIL feed the SEO and agent pages (see site/plugin.ts and docs/deploy.md).
+export default defineConfig(({ mode, command }) => {
+  // SITE_URL, CONTACT_EMAIL and GA_MEASUREMENT_ID feed the SEO and agent pages (see site/plugin.ts and docs/deploy.md).
   const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env }
   // On Vercel, fall back to the project's production address until SITE_URL is set.
   const siteUrl = env.SITE_URL || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
+  // Analytics only in built sites, so local development doesn't count as visits.
+  const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '' })],
+    plugins: [react(), tailwindcss(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }

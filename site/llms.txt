@@ -21,7 +21,12 @@
 
 - [Home](%SITE_URL%/): the live map and lists.
 - [About](%SITE_URL%/about/): what Roadbeat is, its data sources and its accuracy rule.
+<!--if:GA_MEASUREMENT_ID-->
+- [Privacy](%SITE_URL%/privacy/): no accounts or advertising; Google Analytics counts visits; settings stay in the browser.
+<!--endif-->
+<!--ifnot:GA_MEASUREMENT_ID-->
 - [Privacy](%SITE_URL%/privacy/): no accounts, cookies or analytics; settings stay in the browser.
+<!--endif-->
 - [Contact](%SITE_URL%/contact/): how to reach Roadbeat and where to report problems with official data.
 
 Every page is also available as Markdown: send `Accept: text/markdown`, or add `.md` to the page path (for example `%SITE_URL%/about.md`).

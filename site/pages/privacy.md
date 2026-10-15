@@ -1,11 +1,21 @@
 ---
 title: Privacy
+<!--if:GA_MEASUREMENT_ID-->
+description: Roadbeat has no accounts or advertising and uses Google Analytics to count visits. Your settings and location stay in your browser.
+<!--endif-->
+<!--ifnot:GA_MEASUREMENT_ID-->
 description: Roadbeat has no accounts, no cookies and no analytics. Your settings and location stay in your browser.
+<!--endif-->
 ---
 
 # Privacy
 
-Roadbeat is built to need as little information about you as possible. There are no accounts, no cookies, no advertising and no analytics.
+Roadbeat is built to need as little information about you as possible. <!--if:GA_MEASUREMENT_ID-->
+There are no accounts and no advertising. Roadbeat uses Google Analytics to count visits, as described below.
+<!--endif-->
+<!--ifnot:GA_MEASUREMENT_ID-->
+There are no accounts, no cookies, no advertising and no analytics.
+<!--endif-->
 
 ## What stays in your browser
 
@@ -21,6 +31,12 @@ To show live information, your browser requests data from official sources: the 
 
 When you open **Directions** for a place, Google Maps opens in a new tab under Google's own privacy terms.
 
+<!--if:GA_MEASUREMENT_ID-->
+## Analytics
+
+Roadbeat uses Google Analytics to count visits and see which pages and features people use, so it can improve the app. Google Analytics sets cookies in your browser and receives your IP address, your browser and device type, the pages you view and where you came from. Roadbeat does not send it your saved stops, settings or location. Google handles this data under the [Google Privacy Policy](https://policies.google.com/privacy). To opt out, block cookies for Roadbeat in your browser or install the [Google Analytics opt-out add-on](https://tools.google.com/dlpage/gaoptout).
+
+<!--endif-->
 ## Notifications
 
 Notifications are created in your browser while Roadbeat is open. If you allow system notifications, your browser shows them. Roadbeat has no push server and does not send notifications from anywhere else.

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { fillTemplate, jsonLd, loadPage, markdownPathFor, markdownToHtml, siteFiles } from './plugin.ts'
 
-const withUrl = { siteUrl: 'https://roadbeat.example', contactEmail: 'hello@roadbeat.example' }
-const bare = { siteUrl: '', contactEmail: '' }
+const withUrl = { siteUrl: 'https://roadbeat.example', contactEmail: 'hello@roadbeat.example', gaMeasurementId: 'G-TEST123' }
+const bare = { siteUrl: '', contactEmail: '', gaMeasurementId: '' }
 
 describe('fillTemplate', () => {
   it('keeps or drops conditional blocks and fills placeholders', () => {
@@ -34,6 +34,13 @@ describe('siteFiles', () => {
     expect(siteFiles(withUrl)['/about/index.html'].body).toContain('<link rel="canonical" href="https://roadbeat.example/about/" />')
     expect(siteFiles(bare)['/sitemap.xml']).toBeUndefined()
     expect(siteFiles(bare)['/about/index.html'].body).not.toContain('rel="canonical"')
+  })
+
+  it('adds the Google tag and says so on the Privacy page only when analytics is set', () => {
+    expect(siteFiles(withUrl)['/about/index.html'].body).toContain('gtag/js?id=G-TEST123')
+    expect(loadPage('privacy', withUrl).markdown).toContain('Google Analytics')
+    expect(siteFiles(bare)['/about/index.html'].body).not.toContain('gtag')
+    expect(loadPage('privacy', bare).markdown).toContain('no analytics')
   })
 
   it('gives every trust page at least 500 characters of content', () => {
