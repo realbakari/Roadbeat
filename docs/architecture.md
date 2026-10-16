@@ -8,19 +8,20 @@ The app shows only what an official source publishes. It does not interpolate a 
 
 Some of the choices below look odd until you know this rule. The journey planner changes only at the same station, because a change between two stops needs a walking time, and no source publishes one. A vehicle slides to a new position for one second after a report arrives and then stops, because anything longer would show a position nobody reported.
 
-## The app is a static site with three small proxies
+## The app is a static site with a few small proxies
 
 The browser does almost all of the work. `npm run build` produces a static site in `dist/` that any static host can serve.
 
-Most sources send `Access-Control-Allow-Origin: *`, so the browser reads them directly. Three do not:
+Most sources send `Access-Control-Allow-Origin: *`, so the browser reads them directly. Four do not:
 
 - TransLink's GTFS-RT feeds, read through `/translink-rt`.
 - The Queensland Fire Department bushfire feed, read through `/qfd-bushfires`.
+- The state's live air quality feed, read through `/air-quality`.
 - The Queensland Water Monitoring Information Portal's web service, read through `/qld-gauges`. This proxy is not a plain rewrite: the service wants a POST naming every station, so the proxy sends that request itself and caches the answer for 5 minutes.
 
 Brisbane City Council's gauge and signal feeds also send `Access-Control-Allow-Origin: *`, so the browser reads them directly.
 
-In development, `vite.config.ts` proxies all three paths. In production, a Cloudflare Pages Function in `functions/` proxies each one and caches the response at the edge. `vercel.json` does the same on Vercel. Without a proxy, the app still runs: live vehicles and bushfire warnings show as unavailable.
+In development, `vite.config.ts` proxies all four paths. In production, a Cloudflare Pages Function in `functions/` proxies each one and caches the response at the edge. `vercel.json` does the same on Vercel. Without a proxy, the app still runs: live vehicles and bushfire warnings show as unavailable.
 
 ## Code layout
 
@@ -106,7 +107,9 @@ The **News** tab follows the same rule as everything else: it shows what publish
 
 The pure parts sit where they always do. `src/api/newsFeeds.ts` parses RSS, the BoM's AMOC files and GA's WFS. `src/lib/newsItems.ts` cuts items down and merges runs, `src/lib/newsPlaces.ts` matches place names, and `src/lib/newsStories.ts` groups reports into stories and filters them. The browser groups stories itself, so the News tab, the map, the dashboard strip and news alerts all use one function.
 
-A story is placed only where its stored headline or summary names a place in Queensland's place names gazetteer, exactly. When the text also names a road in that place, the server draws that road's segments there from the state's roads dataset (`src/api/qldRoads.ts`, `src/lib/newsRoads.ts`). It is not placed where the report happened, which no feed publishes. Each story says which name placed it. Reports are grouped only by shared headline words within 12 hours, and a story counts outlets, not truth: nothing is labelled verified, and official items are never grouped with news. See [Data sources](data-sources.md#news-monitor-feeds) for the feeds, their terms and the matching rules.
+A story is placed only where its stored headline or summary names a place in Queensland's place names gazetteer, exactly. When the text also names a road in that place, the server draws that road's segments there from the state's roads dataset (`src/api/qldRoads.ts`, `src/lib/newsRoads.ts`).
+
+The same run reads 58 council disaster dashboards (`src/api/councilDashboard.ts`): their bulletins join the news items as official reports, and the centres, cameras, Energex outages and notices they list go into the same snapshot for the **Council centres**, camera and **Outages and council notices** map layers (`src/lib/councilCentres.ts`, `src/lib/councilCameras.ts`, `src/lib/outages.ts`). It is not placed where the report happened, which no feed publishes. Each story says which name placed it. Reports are grouped only by shared headline words within 12 hours, and a story counts outlets, not truth: nothing is labelled verified, and official items are never grouped with news. See [Data sources](data-sources.md#news-monitor-feeds) for the feeds, their terms and the matching rules.
 
 ## What the browser remembers
 

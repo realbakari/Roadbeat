@@ -108,6 +108,14 @@ npm run data:places
 
 This downloads the Department of Resources' *Place names gazetteer - Queensland* from data.qld.gov.au and writes `src/data/qld-places.json`: towns, suburbs, localities and neighbourhoods, one point each. It leaves out names the gazetteer places in more than one spot, and the everyday words and common names listed in `COMMON` in `scripts/build-places.mjs`. Add a name to `COMMON` if it places news stories where they don't belong. The gazetteer changes rarely; rebuild after it is republished.
 
+## Rebuild the list of council disaster dashboards
+
+```bash
+npm run data:dashboards
+```
+
+This reads the Queensland Government's CSV of local government disaster dashboards, asks each one for the QIT Plus feed, and writes `src/data/council-dashboards.json` with the councils that answer, their council area and the address the server reads them from (http only when Node rejects the site's certificate chain). Rebuild when a council moves or replaces its dashboard; the script prints any council it couldn't match to a council area.
+
 ## Check the result
 
 1. Run the tests and the build:
