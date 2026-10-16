@@ -252,7 +252,7 @@ export function TrafficMap(props: Props) {
     m.touchZoomRotate.disableRotation()
     if (import.meta.env.DEV) (window as unknown as { __map: maplibregl.Map }).__map = m
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
-    m.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right')
+    m.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left')
 
     const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16, maxWidth: '260px' })
 

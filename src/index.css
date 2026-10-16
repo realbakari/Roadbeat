@@ -105,3 +105,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; }
 }
+
+/* The scale bar sits bottom-left, lifted clear of the attribution line, which
+   can span the whole bottom edge on a narrow map. */
+.maplibregl-ctrl-bottom-left {
+  bottom: 22px;
+}

@@ -27,6 +27,7 @@ import { departuresAt, stopHref, type Departure } from '../lib/departures'
 import { minutesUntil } from '../lib/timeFormat'
 import { DelayChip } from './Realtime'
 import { lineMatcher, lineSlug } from '../lib/transitLines'
+import { readableTextOn } from '../lib/routeColor'
 
 const clockTime = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
@@ -53,8 +54,8 @@ export function RouteBadges({ routes, max = 6 }: { routes: ReturnType<typeof sto
       {routes.slice(0, max).map((r) => (
         <span
           key={r.label}
-          className={`rounded px-1.5 text-xs leading-5 font-semibold ${r.color ? 'text-white' : 'bg-kumo-contrast text-kumo-inverse'}`}
-          style={r.color ? { backgroundColor: r.color } : undefined}
+          className={`rounded px-1.5 text-xs leading-5 font-semibold ${r.color ? '' : 'bg-kumo-contrast text-kumo-inverse'}`}
+          style={r.color ? { backgroundColor: r.color, color: readableTextOn(r.color) } : undefined}
         >
           {r.label}
         </span>

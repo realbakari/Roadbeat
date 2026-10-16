@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { routeInfo, routeLabel, type TransitRegion } from '../api/translink'
 import { useLiveVehicles, useNow, useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
 import { departuresAt, type Departure } from '../lib/departures'
+import { readableTextOn } from '../lib/routeColor'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
@@ -90,8 +91,8 @@ export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: strin
               return (
                 <li key={d.key} className={`flex items-center gap-4 py-3 lg:gap-6 lg:py-4 ${cancelled ? 'opacity-60' : ''}`}>
                   <span
-                    className={`flex h-10 min-w-16 shrink-0 items-center justify-center rounded-lg px-2 text-lg font-semibold lg:h-14 lg:min-w-24 lg:text-2xl ${info?.color ? 'text-white' : 'bg-kumo-contrast text-kumo-inverse'}`}
-                    style={info?.color ? { backgroundColor: info.color } : undefined}
+                    className={`flex h-10 min-w-16 shrink-0 items-center justify-center rounded-lg px-2 text-lg font-semibold lg:h-14 lg:min-w-24 lg:text-2xl ${info?.color ? '' : 'bg-kumo-contrast text-kumo-inverse'}`}
+                    style={info?.color ? { backgroundColor: info.color, color: readableTextOn(info.color) } : undefined}
                   >
                     {info?.line?.split(' ')[0] ?? info?.short ?? d.trip.route}
                   </span>

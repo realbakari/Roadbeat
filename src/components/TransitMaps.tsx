@@ -30,7 +30,7 @@ export function TransitMapsDirectory() {
 
   return (
     <div className="grid gap-2">
-      <InputGroup size="sm">
+      <InputGroup>
         <InputGroup.Addon>
           <MagnifyingGlassIcon />
         </InputGroup.Addon>

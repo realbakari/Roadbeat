@@ -24,6 +24,7 @@ import { StopTimetable, TimetableLink } from './Timetable'
 import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
 import { kioskPath } from '../lib/route'
 import { departuresAt, lineDirections, stopHref, type Departure, type DepartureContext } from '../lib/departures'
+import { readableTextOn } from '../lib/routeColor'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
@@ -505,8 +506,8 @@ function DepartureRow({
   const body = (
     <>
       <span
-        className={`flex h-6 min-w-10 shrink-0 items-center justify-center rounded px-1.5 text-xs font-semibold ${info?.color ? 'text-white' : 'bg-kumo-contrast text-kumo-inverse'}`}
-        style={info?.color ? { backgroundColor: info.color } : undefined}
+        className={`flex h-6 min-w-10 shrink-0 items-center justify-center rounded px-1.5 text-xs font-semibold ${info?.color ? '' : 'bg-kumo-contrast text-kumo-inverse'}`}
+        style={info?.color ? { backgroundColor: info.color, color: readableTextOn(info.color) } : undefined}
       >
         {info?.line?.split(' ')[0] ?? info?.short ?? d.trip.route}
       </span>

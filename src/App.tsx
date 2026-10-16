@@ -1,7 +1,6 @@
 import { Banner, Button, Tabs, TooltipProvider } from '@cloudflare/kumo'
 import {
   ArrowsInSimpleIcon,
-  ArrowsOutSimpleIcon,
   CaretLeftIcon,
   CaretRightIcon,
   ClockCounterClockwiseIcon,
@@ -415,6 +414,8 @@ export default function App() {
           loading={loading}
           refreshing={refreshing}
           onRefresh={refresh}
+          panelExpanded={panelMode === 'expanded'}
+          onTogglePanelExpanded={() => setPanelMode((m) => (m === 'expanded' ? 'normal' : 'expanded'))}
         />
 
         {(error || locateError) && (
@@ -439,34 +440,14 @@ export default function App() {
               panelMode === 'closed' ? 'md:hidden' : panelMode === 'expanded' ? 'md:flex md:flex-1' : 'md:flex md:w-[420px]'
             }`}
           >
-            {/* Panel controls, on every screen from tablet width up. */}
-            <div className="hidden shrink-0 items-center justify-end gap-1 border-b border-kumo-line px-2 py-1 md:flex">
-              <nav aria-label="About Roadbeat" className="mr-auto flex gap-3 pl-1 text-xs text-kumo-subtle">
-                <a href="/about/" className="hover:text-kumo-default hover:underline">About</a>
-                <a href="/privacy/" className="hover:text-kumo-default hover:underline">Privacy</a>
-                <a href="/contact/" className="hover:text-kumo-default hover:underline">Contact</a>
-                <a href="/dashboard" className="hover:text-kumo-default hover:underline" title="Network dashboard for a TV or second screen">Dashboard</a>
-                <a href="/status" className="hover:text-kumo-default hover:underline" title="Every feed the app reads, its health and where it comes from">Status</a>
-              </nav>
-              <Button
-                size="xs"
-                variant="ghost"
-                icon={panelMode === 'expanded' ? <ArrowsInSimpleIcon /> : <ArrowsOutSimpleIcon />}
-                title={panelMode === 'expanded' ? 'Back to the map (Esc)' : 'Show this panel full screen'}
-                onClick={() => setPanelMode((m) => (m === 'expanded' ? 'normal' : 'expanded'))}
-              >
-                {panelMode === 'expanded' ? 'Exit full screen' : 'Full screen'}
-              </Button>
-              <Button
-                size="xs"
-                variant="ghost"
-                icon={<SidebarSimpleIcon />}
-                title="Hide this panel for a full map"
-                onClick={() => setPanelMode('closed')}
-              >
-                Hide panel
-              </Button>
-            </div>
+            {/* While the panel fills the window, a clear way back to the map. */}
+            {panelMode === 'expanded' && (
+              <div className="hidden shrink-0 items-center border-b border-kumo-line px-2 py-1 md:flex">
+                <Button size="sm" variant="ghost" icon={<ArrowsInSimpleIcon />} title="Back to the map (Esc)" onClick={() => setPanelMode('normal')}>
+                  Back to the map
+                </Button>
+              </div>
+            )}
             {/* Full screen: keep lines and lists at a readable width. */}
             <div className={`flex min-h-0 w-full flex-1 flex-col ${panelMode === 'expanded' ? 'md:mx-auto md:max-w-5xl' : ''}`}>
               <SidePanel
@@ -558,7 +539,7 @@ export default function App() {
               <Button
                 size="sm"
                 icon={<SidebarSimpleIcon />}
-                className="absolute bottom-10 left-3 z-20 hidden shadow-md md:inline-flex"
+                className="absolute bottom-16 left-3 z-20 hidden shadow-md md:inline-flex"
                 onClick={() => setPanelMode('normal')}
               >
                 Show panel

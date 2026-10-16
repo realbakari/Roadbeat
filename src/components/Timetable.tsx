@@ -20,6 +20,7 @@ import { useNow, useStopIndex, useTimetableIndex, useTripUpdates } from '../hook
 import { stopHref } from '../lib/departures'
 import { timetableCodes } from '../lib/transitLines'
 import { liveLookup, scheduledArrivals, scheduledDepartures, timetableGrid, type GridDirection, type LiveTrip, type ScheduledDeparture } from '../lib/timetable'
+import { readableTextOn } from '../lib/routeColor'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
@@ -674,8 +675,8 @@ function TimetableRow({
   const body = (
     <>
       <span
-        className={`flex h-6 min-w-10 shrink-0 items-center justify-center rounded px-1.5 text-xs font-semibold ${info?.color ? 'text-white' : 'bg-kumo-contrast text-kumo-inverse'}`}
-        style={info?.color ? { backgroundColor: info.color } : undefined}
+        className={`flex h-6 min-w-10 shrink-0 items-center justify-center rounded px-1.5 text-xs font-semibold ${info?.color ? '' : 'bg-kumo-contrast text-kumo-inverse'}`}
+        style={info?.color ? { backgroundColor: info.color, color: readableTextOn(info.color) } : undefined}
       >
         {info?.line?.split(' ')[0] ?? info?.short ?? trip.route}
       </span>

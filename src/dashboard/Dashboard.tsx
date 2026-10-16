@@ -141,7 +141,8 @@ export function Dashboard() {
       {showNews && <WhatsHappening stories={headlines} now={now} />}
 
       {tiles.length > 0 && (
-        <div className={`grid min-h-0 flex-1 gap-4 md:grid-cols-2 xl:grid-cols-4 ${tiles.length > 4 ? 'xl:grid-rows-2' : 'xl:grid-rows-1'}`}>
+        // On a TV-sized screen the panels share the space left on the page; below that they take their natural height and the page scrolls.
+        <div className={`grid gap-4 md:grid-cols-2 xl:min-h-0 xl:flex-1 xl:grid-cols-4 ${tiles.length > 4 ? 'xl:grid-rows-2' : 'xl:grid-rows-1'}`}>
           {tiles.map((id) => (
             <PanelSlot key={id}>{render(id)}</PanelSlot>
           ))}

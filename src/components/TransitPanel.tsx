@@ -15,7 +15,8 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { useMemo, useState, type ReactNode } from 'react'
-import { alertActive, alertNextStart, routeInfo, routeLabel, type LiveVehicle, type TransitAlert } from '../api/translink'
+import { alertActive, alertNextStart, allRouteCodes, routeInfo, routeLabel, type LiveVehicle, type TransitAlert } from '../api/translink'
+import { readableTextOn } from '../lib/routeColor'
 import type { TransitLine, TransitMode, TransitNotice } from '../api/types'
 import type { TransitView } from '../lib/route'
 import { useNow, useTransit } from '../hooks/useTrafficData'
@@ -215,7 +216,7 @@ function Lines({
         <Text size="sm" variant="secondary">
           Open a line for its status, next departures, full timetable and live vehicles.
         </Text>
-        <InputGroup size="sm">
+        <InputGroup>
           <InputGroup.Addon>
             <MagnifyingGlassIcon />
           </InputGroup.Addon>
@@ -308,6 +309,11 @@ function LinePage({ line, alerts, vehicles, watchedRoutes, onNavigate, onToggleW
   // Planned changes can run to a dozen; show the next two so departures stay near the top.
   const [allUpcoming, setAllUpcoming] = useState(false)
   const I = MODE_ICON[line.mode]
+  // The line's official colour from TransLink's published route data, if any of its routes has one.
+  const lineColor = useMemo(() => {
+    const code = match ? allRouteCodes().find((c) => match(c) && routeInfo(c)?.color) : undefined
+    return code ? (routeInfo(code)?.color ?? null) : null
+  }, [match])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -329,7 +335,11 @@ function LinePage({ line, alerts, vehicles, watchedRoutes, onNavigate, onToggleW
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid gap-6 px-4 pt-4 pb-8">
           <header className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-kumo-contrast text-kumo-inverse" aria-hidden>
+            <span
+              className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${lineColor ? '' : 'bg-kumo-contrast text-kumo-inverse'}`}
+              style={lineColor ? { backgroundColor: lineColor, color: readableTextOn(lineColor) } : undefined}
+              aria-hidden
+            >
               <I size={22} weight="fill" />
             </span>
             <div className="grid min-w-0 gap-1">
@@ -516,7 +526,7 @@ function AlertList({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen: (a: Tra
   return (
     <div className="grid gap-3 pt-3">
       <div className="grid gap-2 px-4">
-        <InputGroup size="sm">
+        <InputGroup>
           <InputGroup.Addon>
             <MagnifyingGlassIcon />
           </InputGroup.Addon>

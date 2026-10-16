@@ -70,7 +70,7 @@ export function StatusPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         {groups.map((g) => (
           <Tile key={g.publisher} title={g.publisher} className="xl:overflow-visible">
-            <ul className="grid gap-2">
+            <ul className="divide-y divide-kumo-line">
               {g.feeds.map((f) => (
                 <FeedRow key={f.id} feed={f} outcome={outcomes[f.id]} now={now} />
               ))}
@@ -84,7 +84,7 @@ export function StatusPage() {
 
 function FeedRow({ feed, outcome, now }: { feed: Feed; outcome: FeedOutcome; now: number }) {
   return (
-    <li className="grid gap-1 rounded-md py-2 ring ring-kumo-line px-3">
+    <li className="grid gap-1 py-3 first:pt-0 last:pb-0">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-sm font-medium text-kumo-strong">{feed.name}</span>
         <Outcome outcome={outcome} />

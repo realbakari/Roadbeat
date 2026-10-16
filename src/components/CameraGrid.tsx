@@ -59,7 +59,10 @@ export function CameraThumb({
           {shortName(p.description)}
         </Text>
         <Text size="xs" variant="secondary" truncate>
-          {[p.locality, note].filter(Boolean).join(' · ')}
+          {/* Many flood cameras are named after their locality alone; don't repeat it. */}
+          {[p.locality?.trim().toLowerCase() === shortName(p.description).trim().toLowerCase() ? null : p.locality, note]
+            .filter(Boolean)
+            .join(' · ')}
         </Text>
       </div>
     </button>

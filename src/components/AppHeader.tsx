@@ -1,7 +1,15 @@
-import { Button, Text, Tooltip } from '@cloudflare/kumo'
+import { Button, DropdownMenu, Text, Tooltip } from '@cloudflare/kumo'
 import {
   ArrowClockwiseIcon,
+  ArrowsInSimpleIcon,
+  ArrowsOutSimpleIcon,
   CarProfileIcon,
+  DotsThreeIcon,
+  EnvelopeSimpleIcon,
+  InfoIcon,
+  PulseIcon,
+  ShieldCheckIcon,
+  SquaresFourIcon,
   MoonIcon,
   ProhibitIcon,
   SirenIcon,
@@ -42,6 +50,9 @@ interface Props {
   loading: boolean
   refreshing: boolean
   onRefresh: () => void
+  /** Whether the side panel fills the window (tablet width and up). */
+  panelExpanded: boolean
+  onTogglePanelExpanded: () => void
 }
 
 /** The top bar: logo, quick-filter counts, notifications, data freshness, refresh and colour mode. */
@@ -66,6 +77,8 @@ export function AppHeader({
   loading,
   refreshing,
   onRefresh,
+  panelExpanded,
+  onTogglePanelExpanded,
 }: Props) {
   const stats = useMemo(() => {
     const current = events.filter((e) => !isUpcoming(e, now))
@@ -130,23 +143,26 @@ export function AppHeader({
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-kumo-line bg-kumo-base px-4">
-      <a href="#" onClick={(e) => (e.preventDefault(), onHome())} className="flex min-w-0 items-center gap-2.5">
+      <a href="#" onClick={(e) => (e.preventDefault(), onHome())} className="flex min-w-0 shrink-0 items-center gap-2.5 sm:shrink">
         <img src="/favicon.svg" alt="" className="size-7" />
-        <div className="grid leading-tight">
+        <div className="grid min-w-0 leading-tight">
           <Text variant="heading" as="h1">
             Roadbeat
           </Text>
-          <span className="hidden text-xs text-kumo-subtle sm:block">Live roads and transport across Queensland</span>
+          {/* The tagline gives way to the quick-filter counts where both don't fit. */}
+          <span className="hidden truncate text-xs text-kumo-subtle sm:block lg:hidden 2xl:block">
+            Live roads and transport across Queensland
+          </span>
         </div>
       </a>
 
-      <nav aria-label="Quick filters" className="hidden min-w-0 items-center gap-1.5 md:flex">
+      <nav aria-label="Quick filters" className="hidden min-w-0 items-center gap-1.5 lg:flex">
         {chips.map(({ key, ...chip }) => (
           <StatChip key={key} {...chip} />
         ))}
       </nav>
 
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
         <InstallApp />
         <NotificationCenter
           items={notifications.items}
@@ -160,9 +176,13 @@ export function AppHeader({
           onClear={notifications.clear}
           onSettings={onAlertSettings}
         />
-        <span className="mr-1 hidden items-center gap-1.5 text-sm text-kumo-subtle sm:flex" aria-live="polite">
-          <span className={`size-2 rounded-full ${error ? 'bg-kumo-danger' : 'bg-kumo-success'}`} aria-hidden />
-          {fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
+        <span
+          className="mx-1 flex items-center gap-1.5 text-sm whitespace-nowrap text-kumo-subtle"
+          aria-live="polite"
+          title={fetchedAt ? `Road events updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
+        >
+          <span className={`size-2 shrink-0 rounded-full ${error ? 'bg-kumo-danger' : 'bg-kumo-success'}`} aria-hidden />
+          <span className="hidden lg:inline">{fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}</span>
         </span>
         <Tooltip
           content="Refresh now"
@@ -177,18 +197,48 @@ export function AppHeader({
             />
           }
         />
-        <Tooltip
-          content={mode === 'dark' ? 'Light mode' : 'Dark mode'}
-          render={
-            <Button
-              variant="ghost"
-              shape="square"
-              aria-label="Toggle colour mode"
-              icon={mode === 'dark' ? <SunIcon /> : <MoonIcon />}
-              onClick={onToggleMode}
-            />
-          }
-        />
+        {/* On phones the colour toggle lives in the More menu, so the name keeps its room. */}
+        <span className="hidden sm:contents">
+          <Tooltip
+            content={mode === 'dark' ? 'Light mode' : 'Dark mode'}
+            render={
+              <Button
+                variant="ghost"
+                shape="square"
+                aria-label="Toggle colour mode"
+                icon={mode === 'dark' ? <SunIcon /> : <MoonIcon />}
+                onClick={onToggleMode}
+              />
+            }
+          />
+        </span>
+        <DropdownMenu>
+          <DropdownMenu.Trigger render={<Button variant="ghost" shape="square" aria-label="More" icon={<DotsThreeIcon weight="bold" />} />} />
+          <DropdownMenu.Content align="end">
+            <DropdownMenu.Item icon={panelExpanded ? ArrowsInSimpleIcon : ArrowsOutSimpleIcon} onClick={onTogglePanelExpanded} className="hidden md:flex">
+              {panelExpanded ? 'Back to the map' : 'Expand the panel'}
+            </DropdownMenu.Item>
+            <DropdownMenu.Item icon={mode === 'dark' ? SunIcon : MoonIcon} onClick={onToggleMode} className="sm:hidden">
+              {mode === 'dark' ? 'Light mode' : 'Dark mode'}
+            </DropdownMenu.Item>
+            <DropdownMenu.LinkItem href="/dashboard" icon={SquaresFourIcon}>
+              Network dashboard
+            </DropdownMenu.LinkItem>
+            <DropdownMenu.LinkItem href="/status" icon={PulseIcon}>
+              Feed status
+            </DropdownMenu.LinkItem>
+            <DropdownMenu.Separator />
+            <DropdownMenu.LinkItem href="/about/" icon={InfoIcon}>
+              About
+            </DropdownMenu.LinkItem>
+            <DropdownMenu.LinkItem href="/privacy/" icon={ShieldCheckIcon}>
+              Privacy
+            </DropdownMenu.LinkItem>
+            <DropdownMenu.LinkItem href="/contact/" icon={EnvelopeSimpleIcon}>
+              Contact
+            </DropdownMenu.LinkItem>
+          </DropdownMenu.Content>
+        </DropdownMenu>
       </div>
     </header>
   )

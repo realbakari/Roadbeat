@@ -230,7 +230,7 @@ export function JourneyPlanner({
 
   return (
     <div className="grid gap-4 px-4 pt-4">
-      <div className="grid gap-3 rounded-lg bg-kumo-recessed p-3">
+      <div className="grid gap-3 rounded-lg bg-kumo-base px-3 py-3 ring ring-kumo-line">
         <div className="flex items-end gap-2">
           <div className="grid min-w-0 flex-1 gap-2">
             <StopField label="From" value={from} onChange={setFrom} stops={stops} />
