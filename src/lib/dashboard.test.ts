@@ -1,8 +1,9 @@
+import type { AirStation } from '../api/airQuality'
 import { describe, expect, it } from 'vitest'
 import type { Gauge } from '../api/bccGauges'
 import type { LiveVehicle, TripUpdate } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
-import { busiestSignals, closuresAndCrashesByDistrict, corridorReport, fastestRising, footTraffic, latestEvents, punctuality, upcomingEvents } from './dashboard'
+import { busiestSignals, closuresAndCrashesByDistrict, corridorReport, fastestRising, footTraffic, latestEvents, punctuality, upcomingEvents, worstStations } from './dashboard'
 
 const NOW = Date.parse('2026-10-15T08:00:00+10:00')
 
@@ -158,5 +159,22 @@ describe('footTraffic', () => {
       { precinct: 'Queen St Mall', movements: 1000, measuredHours: 1, hours: 3 },
       { precinct: 'Chinatown Mall', movements: 300, measuredHours: 1, hours: 1 },
     ])
+  })
+})
+
+describe('worstStations', () => {
+  const station = (id: string, ratings: (1 | 2 | 3 | 4 | 5 | null)[]): AirStation => ({
+    id,
+    name: id,
+    region: 'SEQ',
+    link: '',
+    position: [0, 0],
+    measuredAt: 0,
+    measurements: ratings.map((r, i) => ({ name: `m${i}`, units: null, value: r ? 1 : null, gap: r ? null : 'offline', index: null, rating: r, ratingName: null })),
+  })
+
+  it('lists stations rated Fair or worse, worst first, by their worst reading', () => {
+    const list = worstStations([station('b', [1, 3]), station('a', [5, 2]), station('c', [2, null]), station('d', [4])])
+    expect(list.map((w) => [w.station.id, w.rating])).toEqual([['a', 5], ['d', 4], ['b', 3]])
   })
 })

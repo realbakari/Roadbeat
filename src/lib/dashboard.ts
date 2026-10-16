@@ -1,3 +1,4 @@
+import { worstRating, type AirStation } from '../api/airQuality'
 import type { Gauge } from '../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import { FIRE_LEVELS, type FireLevel, type FireWarning } from '../api/bushfires'
@@ -229,4 +230,14 @@ export function footTraffic(hours: { precinct: string | null; sensor: string; co
     row.measuredHours++
   }
   return [...by.values()].sort((a, b) => b.movements - a.movements)
+}
+
+/** Air quality stations rated Fair or worse by their worst reading, worst first, then by name. */
+export function worstStations(stations: AirStation[]): { station: AirStation; rating: 3 | 4 | 5 }[] {
+  return stations
+    .flatMap((station) => {
+      const rating = worstRating(station)
+      return rating && rating >= 3 ? [{ station, rating: rating as 3 | 4 | 5 }] : []
+    })
+    .sort((a, b) => b.rating - a.rating || a.station.name.localeCompare(b.station.name))
 }

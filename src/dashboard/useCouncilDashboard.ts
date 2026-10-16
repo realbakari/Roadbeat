@@ -6,10 +6,11 @@ import { brisbaneMidnight } from '../lib/councilEvents'
 const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 const HOUR = 3600_000
 
-/** Polls `load` every `every` ms while the page is visible, keeping the last good result. */
-function usePoll<T>(load: (signal: AbortSignal) => Promise<T>, every: number) {
+/** Polls `load` every `every` ms while `enabled` and the page is visible, keeping the last good result. */
+function usePoll<T>(load: (signal: AbortSignal) => Promise<T>, every: number, enabled: boolean) {
   const [data, setData] = useState<T | null>(null)
   useEffect(() => {
+    if (!enabled) return
     const c = new AbortController()
     const run = () => load(c.signal).then(setData, () => {})
     run()
@@ -19,8 +20,8 @@ function usePoll<T>(load: (signal: AbortSignal) => Promise<T>, every: number) {
       clearInterval(id)
     }
     // `load` is a module-level function per caller, so it never changes.
-  }, [load, every])
-  return data
+  }, [load, every, enabled])
+  return enabled ? data : null
 }
 
 const loadCorridors = (signal: AbortSignal) => fetchCorridors(Date.now(), signal)
@@ -34,15 +35,15 @@ const loadFootTrafficYesterday = async (signal: AbortSignal) => {
   return { date, hours: await fetchPedestrianDay(date, signal) }
 }
 
-/** The council's corridor results (monthly), today's and tomorrow's events, and yesterday's pedestrian counts (daily), for the dashboard. */
-export function useCouncilDashboard(): {
+/** The council's corridor results (monthly), today's and tomorrow's events, and yesterday's pedestrian counts (daily), each read only while its panel shows. */
+export function useCouncilDashboard(show: { corridors: boolean; events: boolean; pedestrians: boolean }): {
   corridors: { corridors: Corridor[]; months: CorridorMonth[] } | null
   events: CouncilEvent[] | null
   pedestrians: { date: string; hours: PedestrianHour[] } | null
 } {
   return {
-    corridors: usePoll(loadCorridors, 6 * HOUR),
-    events: usePoll(loadEvents, 15 * 60_000),
-    pedestrians: usePoll(loadFootTrafficYesterday, HOUR),
+    corridors: usePoll(loadCorridors, 6 * HOUR, show.corridors),
+    events: usePoll(loadEvents, 15 * 60_000, show.events),
+    pedestrians: usePoll(loadFootTrafficYesterday, HOUR, show.pedestrians),
   }
 }
