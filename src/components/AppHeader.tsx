@@ -16,6 +16,7 @@ import {
   SunIcon,
   TrafficConeIcon,
   VideoCameraIcon,
+  WarningIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { useMemo } from 'react'
@@ -187,8 +188,14 @@ export function AppHeader({
           aria-live="polite"
           title={fetchedAt ? `Road events updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
         >
-          <span className={`size-2 shrink-0 rounded-full ${error ? 'bg-kumo-danger' : 'bg-kumo-success'}`} aria-hidden />
-          <span className="hidden lg:inline">{fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}</span>
+          {/* A feed error swaps the dot for a warning shape, so it never rests on colour alone. */}
+          {error ? (
+            <WarningIcon size={16} weight="fill" className="shrink-0 text-kumo-danger" aria-hidden />
+          ) : (
+            <span className="size-2 shrink-0 rounded-full bg-kumo-success" aria-hidden />
+          )}
+          {/* Screen readers hear the status at every width; sighted users see it from lg up. */}
+          <span className="sr-only lg:not-sr-only">{feedStatus(error, fetchedAt, now)}</span>
         </span>
         <Tooltip
           content="Refresh now"
@@ -257,6 +264,12 @@ export function AppHeader({
   )
 }
 
+/** The header's feed status, in words, so a delay is announced and not only coloured. */
+function feedStatus(error: string | null, fetchedAt: number | null, now: number) {
+  if (!fetchedAt) return error ? 'Road events delayed' : 'Connecting…'
+  return `${error ? 'Delayed, updated' : 'Updated'} ${timeAgo(fetchedAt, now)}`
+}
+
 interface StatChipProps {
   label: string
   /** Null while the first load is in progress, so "0" never stands in for "not loaded yet". */
@@ -279,7 +292,7 @@ function StatChip({ label, value, icon: I, tone, active, apply }: StatChipProps)
       onClick={apply}
       aria-pressed={active}
       title={active ? `Showing ${label.toLowerCase()} — click to clear` : `Show ${label.toLowerCase()}`}
-      className={`inline-flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left ring ${
+      className={`inline-flex shrink-0 items-center gap-2 rounded-md py-1 pr-3 pl-1 text-left ring ${
         active ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'
       }`}
     >

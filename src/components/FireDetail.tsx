@@ -3,6 +3,7 @@ import { ArrowLeftIcon, ArrowSquareOutIcon, FlameIcon } from '@phosphor-icons/re
 import { FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
 import { timeAgo } from '../lib/format'
 import { parseWarningText } from '../lib/warningText'
+import { NewTabNote } from './NewTabNote'
 
 const when = new Intl.DateTimeFormat('en-AU', {
   timeZone: 'Australia/Brisbane',
@@ -97,8 +98,9 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
           )}
 
           <div className="grid gap-1">
-            <a href={QFD_WARNINGS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+            <a href={QFD_WARNINGS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
               Current incidents on the Queensland Fire Department site <ArrowSquareOutIcon size={14} />
+              <NewTabNote />
             </a>
             <Text size="xs" variant="secondary">
               Source: Queensland Fire Department, data.qld.gov.au (CC BY 4.0). If you are in danger, call Triple Zero (000).

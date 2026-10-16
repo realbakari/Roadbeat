@@ -5,6 +5,7 @@ import { BOM_QLD_WARNINGS, floodWarningArea } from '../api/floodWarnings'
 import { qldGaugeUrl, WMIP_PORTAL } from '../api/qldGauges'
 import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, rainfallSince } from '../lib/gauges'
+import { NewTabNote } from './NewTabNote'
 
 const time = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
 const HOUR = 60 * 60_000
@@ -102,12 +103,14 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
               </Text>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {warningArea && (
-                  <a href={warningArea.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+                  <a href={warningArea.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
                     Flood warning for this area (BoM) <ArrowSquareOutIcon size={14} />
+                    <NewTabNote />
                   </a>
                 )}
-                <a href={BOM_QLD_WARNINGS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+                <a href={BOM_QLD_WARNINGS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
                   All Queensland warnings (BoM) <ArrowSquareOutIcon size={14} />
+                  <NewTabNote />
                 </a>
               </div>
             </section>
@@ -115,8 +118,9 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
 
           {council ? (
             <div className="grid gap-1">
-              <a href={GAUGES_DATASET_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+              <a href={GAUGES_DATASET_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
                 Brisbane City Council telemetry data <ArrowSquareOutIcon size={14} />
+                <NewTabNote />
               </a>
               <Text size="xs" variant="secondary">
                 Raw readings from Brisbane City Council's gauges, which also feed the Bureau of Meteorology's flood warnings. CC BY 4.0.
@@ -125,13 +129,15 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
             </div>
           ) : (
             <div className="grid gap-1">
-              <a href={qldGaugeUrl(gauge.id)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+              <a href={qldGaugeUrl(gauge.id)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
                 This station on the Water Monitoring Information Portal <ArrowSquareOutIcon size={14} />
+                <NewTabNote />
               </a>
               <Text size="xs" variant="secondary">
                 Latest telemetered stream water level from the Queensland Government's{' '}
-                <a href={WMIP_PORTAL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                <a href={WMIP_PORTAL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                   Water Monitoring Information Portal
+                  <NewTabNote />
                 </a>
                 , Department of Local Government, Water and Volunteers. CC BY 4.0.
               </Text>

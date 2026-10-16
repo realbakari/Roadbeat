@@ -3,6 +3,7 @@ import { ArrowSquareOutIcon, CaretRightIcon, FilePdfIcon, MagnifyingGlassIcon, X
 import { useMemo, useState } from 'react'
 import MAPS from '../data/translink-maps.json'
 import { findStationMap } from '../lib/transitMaps'
+import { NewTabNote } from './NewTabNote'
 
 type Region = (typeof MAPS)['regions'][number]
 
@@ -63,6 +64,7 @@ export function TransitMapsDirectory() {
                           >
                             <FilePdfIcon size={14} className="text-kumo-subtle" />
                             {m.label}
+                            <NewTabNote />
                           </a>
                         </li>
                       ))}
@@ -82,9 +84,10 @@ export function TransitMapsDirectory() {
         href={MAPS.source}
         target="_blank"
         rel="noreferrer"
-        className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
+        className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
       >
         TransLink maps page <ArrowSquareOutIcon size={14} />
+        <NewTabNote />
       </a>
     </div>
   )
@@ -95,8 +98,9 @@ export function StationMapLink({ name, stopId }: { name: string; stopId: string 
   const map = findStationMap(name, stopId)
   if (!map) return null
   return (
-    <a href={map.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+    <a href={map.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
       <FilePdfIcon size={14} /> Station map (PDF) <ArrowSquareOutIcon size={14} />
+      <NewTabNote />
     </a>
   )
 }

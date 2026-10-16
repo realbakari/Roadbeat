@@ -7,6 +7,7 @@ import { tripHref } from '../lib/trip'
 import { timeAgo } from '../lib/format'
 import { VEHICLE_COLOR } from '../lib/mapIcons'
 import { REGION_NAMES } from '../lib/transitRegions'
+import { NewTabNote } from './NewTabNote'
 
 const MODE: Record<VehicleMode, { label: string; icon: Icon }> = {
   bus: { label: 'Bus', icon: BusIcon },
@@ -177,9 +178,10 @@ export function VehicleDetail({
               href={routeInfo(v.route, v.region)!.url!}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-kumo-link hover:underline"
+              className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
             >
               Timetable on TransLink
+              <NewTabNote />
             </a>
           )}
 

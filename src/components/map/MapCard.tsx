@@ -4,6 +4,7 @@ import * as maplibregl from 'maplibre-gl'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { MapCard as MapCardData } from '../../lib/mapCard'
+import { NewTabNote } from '../NewTabNote'
 
 /**
  * A short card pinned to the selected item on the map, for when the side panel
@@ -60,6 +61,7 @@ export function MapCard({ map, card, onDetails, onClose }: { map: maplibregl.Map
           className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm ring ring-kumo-line hover:bg-kumo-tint"
         >
           <NavigationArrowIcon weight="fill" /> Directions
+          <NewTabNote />
         </a>
         )}
       </div>

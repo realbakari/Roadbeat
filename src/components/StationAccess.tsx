@@ -48,6 +48,7 @@ import { fetchFerryTerminal, FERRY_TERMINALS_URL, type FerryTerminal } from '../
 import { BUS_STOPS_URL, fetchBusStopAudit, type BusStopAudit, type Rating } from '../api/bccBusStops'
 import { formatDay } from '../lib/format'
 import { LightMarkdown } from './LightMarkdown'
+import { NewTabNote } from './NewTabNote'
 
 const QR = 'https://www.queenslandrail.com.au'
 
@@ -70,8 +71,9 @@ export function AccessAlerts({ alerts }: { alerts: TransitAlert[] }) {
             <span className="grid gap-1">
               {a.description && <span>{a.description}</span>}
               {a.url && (
-                <a href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-kumo-link hover:underline">
+                <a href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
                   More from TransLink <ArrowSquareOutIcon size={14} />
+                  <NewTabNote />
                 </a>
               )}
             </span>
@@ -155,14 +157,16 @@ export function StationFacilitiesSection({ stopId }: { stopId: string }) {
             <MapTrifoldIcon size={16} className="text-kumo-subtle" aria-hidden />
             <span className="flex-1">Queensland Rail station map (PDF)</span>
             <ArrowSquareOutIcon size={14} className="text-kumo-subtle" aria-hidden />
+            <NewTabNote />
           </a>
         )}
       </div>
 
       <Text size="xs" variant="secondary">
         Queensland Rail station details, published by Brisbane City Council (
-        <a href={STATION_FACILITIES_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+        <a href={STATION_FACILITIES_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
           Railway station facilities
+          <NewTabNote />
         </a>
         , CC BY 4.0). Lift outages come from TransLink's real-time alerts.
       </Text>
@@ -224,8 +228,9 @@ export function FerryTerminalSection({ stopId }: { stopId: string }) {
       )}
       <Text size="xs" variant="secondary">
         Brisbane City Council (
-        <a href={FERRY_TERMINALS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+        <a href={FERRY_TERMINALS_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
           Ferry terminals
+          <NewTabNote />
         </a>
         , CC BY 4.0){inspected && `, last inspected ${inspected}`}. Lift outages come from TransLink's real-time alerts.
       </Text>
@@ -284,8 +289,9 @@ export function BusStopSection({ stopId }: { stopId: string }) {
       </dl>
       <Text size="xs" variant="secondary">
         Ratings as recorded in Brisbane City Council's bus stop audit (
-        <a href={BUS_STOPS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+        <a href={BUS_STOPS_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
           Brisbane bus stops
+          <NewTabNote />
         </a>
         , CC BY 4.0){audited && `, last audited ${audited}`}. Easy, Medium and Hard are the council's own terms.
       </Text>

@@ -33,6 +33,7 @@ import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
 import { kioskPath } from '../lib/route'
 import { departuresAt, lineDirections, stopHref, type Departure, type DepartureContext } from '../lib/departures'
 import { readableTextOn } from '../lib/routeColor'
+import { NewTabNote } from './NewTabNote'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
@@ -316,9 +317,10 @@ export function StopPage({
                     target="_blank"
                     rel="noreferrer"
                     title="A large departure board for a screen in a lobby or café"
-                    className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
+                    className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
                   >
                     <MonitorIcon size={14} /> Kiosk display
+                    <NewTabNote />
                   </a>
                 )}
               </div>
@@ -401,9 +403,10 @@ export function StopPage({
               href={`https://translink.com.au/stop/${id.padStart(6, '0')}/gtfs/`}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-kumo-link hover:underline"
+              className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
             >
               Full timetable on TransLink
+              <NewTabNote />
             </a>
           )}
         </div>

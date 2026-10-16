@@ -23,6 +23,7 @@ import { GaugesNearby } from './GaugesNearby'
 import { RoadContacts } from './RoadContacts'
 import { TypeIcon } from './EventCard'
 import { eventPlace, eventTitle } from '../lib/eventText'
+import { NewTabNote } from './NewTabNote'
 
 interface Props {
   event: TrafficEvent
@@ -296,10 +297,11 @@ function ExternalLink({ href, children }: { href: string; children: ReactNode })
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
+      className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
     >
       {children}
       <ArrowSquareOutIcon size={14} />
+      <NewTabNote />
     </a>
   )
 }

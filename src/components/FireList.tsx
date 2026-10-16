@@ -1,3 +1,4 @@
+import { Text } from '@cloudflare/kumo'
 import { CaretDownIcon, CaretUpIcon, FlameIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
@@ -47,8 +48,8 @@ export function FireList({ fires, now, onOpen }: { fires: FireWarning[]; now: nu
       {open && (
         <ul className="divide-y divide-kumo-line border-t border-kumo-line">
           {[...warnings, ...shownIncidents].map((f) => (
-            <li key={f.id}>
-              <button type="button" onClick={() => onOpen(`fire/${encodeURIComponent(f.id)}`)} className="flex w-full items-start gap-2.5 px-3 py-2 text-left hover:bg-kumo-tint">
+            // As in EventCard: the name is a heading holding the button, stretched over the row.
+            <li key={f.id} className="relative flex w-full items-start gap-2.5 px-3 py-2 text-left hover:bg-kumo-tint has-[:focus-visible]:bg-kumo-tint has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-kumo-brand has-[:focus-visible]:ring-inset">
                 <span
                   className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-white"
                   style={{ backgroundColor: FIRE_COLOR[f.level] }}
@@ -56,8 +57,16 @@ export function FireList({ fires, now, onOpen }: { fires: FireWarning[]; now: nu
                 >
                   <FlameIcon size={11} weight="fill" />
                 </span>
-                <span className="grid min-w-0 flex-1 gap-0.5">
-                  <span className="truncate text-sm">{f.area ?? f.title}</span>
+                <div className="grid min-w-0 flex-1 gap-0.5">
+                  <Text as="h3" size="sm" truncate>
+                    <button
+                      type="button"
+                      onClick={() => onOpen(`fire/${encodeURIComponent(f.id)}`)}
+                      className="block w-full truncate text-left after:absolute after:inset-0 focus-visible:outline-none"
+                    >
+                      {f.area ?? f.title}
+                    </button>
+                  </Text>
                   <span className="flex flex-wrap gap-x-2 text-xs text-kumo-subtle">
                     <span className="font-medium" style={{ color: f.level === 'Information' ? undefined : FIRE_COLOR[f.level] }}>
                       {f.level === 'Information' ? fireKindLabel(f) : f.levelText}
@@ -66,8 +75,7 @@ export function FireList({ fires, now, onOpen }: { fires: FireWarning[]; now: nu
                     {f.status && <span>{f.status}</span>}
                     {f.issued && <span>{timeAgo(f.issued, now)}</span>}
                   </span>
-                </span>
-              </button>
+                </div>
             </li>
           ))}
           {incidents.length > shownIncidents.length && (

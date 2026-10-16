@@ -42,6 +42,7 @@ import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
 import { formatDateTime, formatDay, stripHtml, timeAgo, titleCase } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
 import type { Place } from '../lib/places'
+import { NewTabNote } from './NewTabNote'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
 const REST_TYPES: Record<string, string> = {
@@ -637,7 +638,7 @@ function Contact({ name, phone }: { name: string | null; phone: string | null })
       {phone && (
         <>
           {name && ' · '}
-          <a href={`tel:${phone.replace(/\s+/g, '')}`} className="text-kumo-link hover:underline">
+          <a href={`tel:${phone.replace(/\s+/g, '')}`} className="text-kumo-link underline decoration-1 underline-offset-2">
             {phone}
           </a>
         </>
@@ -697,6 +698,7 @@ function Directions({ at }: { at: [number, number] }) {
       >
         <MapPinIcon weight="fill" />
         Get directions
+        <NewTabNote />
       </a>
       <span className="inline-flex items-center text-sm text-kumo-subtle tabular-nums">
         {lat.toFixed(4)}, {lng.toFixed(4)}
@@ -707,9 +709,10 @@ function Directions({ at }: { at: [number, number] }) {
 
 function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
       {children}
       <ArrowSquareOutIcon size={14} />
+      <NewTabNote />
     </a>
   )
 }

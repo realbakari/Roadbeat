@@ -9,6 +9,7 @@ import { cadenceLabel, groupByPublisher, readLabel, summarise, type FeedOutcome 
 import { FEEDS, type Feed } from '../lib/feedRegistry'
 import { timeAgo } from '../lib/format'
 import { useFeedHealth } from './useFeedHealth'
+import { NewTabNote } from '../components/NewTabNote'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 const stamp = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
@@ -61,7 +62,7 @@ export function StatusPage() {
       <p className="text-sm text-kumo-subtle">
         Each feed is read from this browser through the same path and parser the app uses, when the page opens and every two minutes after. A result says what this
         browser saw at that moment, nothing more. The list comes from <code className="text-xs">src/lib/feedRegistry.ts</code>; see{' '}
-        <a href="https://github.com/realbakari/Roadbeat/blob/main/docs/data-sources.md" className="underline">
+        <a href="https://github.com/realbakari/Roadbeat/blob/main/docs/data-sources.md" className="underline decoration-1 underline-offset-2">
           Data sources
         </a>{' '}
         for licences and terms in full.
@@ -116,8 +117,9 @@ function FeedRow({ feed, outcome, now }: { feed: Feed; outcome: FeedOutcome; now
           {feed.datasetUrl && (
             <>
               {' · '}
-              <a href={feed.datasetUrl} target="_blank" rel="noreferrer" className="underline">
+              <a href={feed.datasetUrl} target="_blank" rel="noreferrer" className="underline decoration-1 underline-offset-2">
                 Dataset page
+                <NewTabNote />
               </a>
             </>
           )}

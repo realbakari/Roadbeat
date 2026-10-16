@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { alertActive, alertNextStart, type TransitAlert } from '../api/translink'
 import { routeLabels } from '../lib/transitLines'
 import { useNow } from '../hooks/useTrafficData'
+import { NewTabNote } from './NewTabNote'
 
 // Pieces shared by the transit line, route and alert pages.
 
@@ -60,9 +61,10 @@ export function Section({ title, id, children }: { title: string; id?: string; c
 
 export function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
       {children}
       <ArrowSquareOutIcon size={14} />
+      <NewTabNote />
     </a>
   )
 }

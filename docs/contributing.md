@@ -42,6 +42,12 @@ Do not narrate what the next line does.
 
 The UI uses Kumo. Content text is 14px (`text-sm`). Only headings are larger. Headings are sentence case. Hover colours change instantly, without transitions. Use `ring ring-kumo-line` for borders, never `border` with a shadow.
 
+Never rely on colour alone:
+
+- Links in or next to text are underlined (`underline decoration-1 underline-offset-2`). A link that opens a new tab ends with `<NewTabNote />`, which tells screen readers.
+- Status tags are Kumo `Badge` pills. Toggle chips (buttons with `aria-pressed` or `role="radio"`) use `rounded-md`, so a tag never looks clickable.
+- The title of a card in a list is a heading (`Text as="h3"`) holding the card's button, whose `::after` stretches over the card. See `EventCard`.
+
 ## Edit the public pages
 
 The About, Privacy, Contact and 404 pages, and the home page's description, are Markdown files in `site/pages/`. `site/llms.txt` tells AI agents what Roadbeat is for. Edit those files, not generated output. Keep the Privacy page true to the code: if a change stores, sends or asks for new information, update `site/pages/privacy.md` in the same change.
