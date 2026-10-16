@@ -15,6 +15,7 @@ import type { Camera, TrafficEvent } from '../api/types'
 import { priorityBadge, typeMeta } from '../lib/eventMeta'
 import { clean, formatDateTime, timeAgo, titleCase } from '../lib/format'
 import { isClosure } from '../lib/filters'
+import { startLabel } from '../lib/eventStatus'
 import { distanceKm, eventAnchor } from '../lib/geo'
 import { CameraThumb } from './CameraGrid'
 import type { Gauge } from '../api/bccGauges'
@@ -163,7 +164,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
           <Section title="When">
             <Rows
               rows={[
-                ['Started', formatDateTime(d?.start)],
+                [startLabel(d?.start, now), formatDateTime(d?.start)],
                 ['Expected end', formatDateTime(d?.end) ?? 'Until further notice'],
                 ['Next inspection', formatDateTime(p.next_inspection)],
               ]}
