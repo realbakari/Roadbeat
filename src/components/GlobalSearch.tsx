@@ -110,7 +110,7 @@ export function GlobalSearch({ sources, onOpen }: Props) {
 
   return (
     <div
-      className="relative min-w-0 flex-1 md:max-w-xs lg:max-w-sm"
+      className="relative min-w-40 flex-1 md:max-w-xs 2xl:max-w-sm"
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false)
       }}
@@ -127,8 +127,8 @@ export function GlobalSearch({ sources, onOpen }: Props) {
           aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={expanded && activeHit ? optionId(activeHit) : undefined}
-          placeholder="Search roads, cameras, stations, places…"
-          title="Search (press / or ⌘K)"
+          placeholder="Search Roadbeat"
+          title="Search roads, cameras, stations, places and news (press / or ⌘K)"
           autoComplete="off"
           value={query}
           onChange={(e) => {

@@ -145,7 +145,7 @@ export function AppHeader({
           <Text variant="heading" as="h1">
             Roadbeat
           </Text>
-          <span className="hidden text-xs text-kumo-subtle lg:block">Live roads and transport across Queensland</span>
+          <span className="hidden text-xs text-kumo-subtle 2xl:block">Live roads and transport across Queensland</span>
         </div>
       </a>
 
@@ -221,28 +221,33 @@ interface StatChipProps {
  */
 function StatChip({ label, value, icon: I, tone, active, apply }: StatChipProps) {
   const alert = tone === 'danger' && value != null && value > 0
+  // Labels show only on very wide screens; below that the chip is its icon and count, so the search box keeps its room.
   return (
-    <button
-      type="button"
-      onClick={apply}
-      aria-pressed={active}
-      title={active ? `Showing ${label.toLowerCase()} — click to clear` : `Show ${label.toLowerCase()}`}
-      className={`inline-flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left ring ${
-        active ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'
-      }`}
-    >
-      <span
-        className={`flex size-6 items-center justify-center rounded-full ${alert ? 'bg-kumo-danger/10 text-kumo-danger' : 'bg-kumo-recessed text-kumo-subtle'}`}
-        aria-hidden
-      >
-        <I size={14} weight="bold" />
-      </span>
-      <span className={`text-sm font-semibold tabular-nums ${alert ? 'text-kumo-danger' : value == null ? 'text-kumo-subtle' : 'text-kumo-strong'}`}>
-        {value ?? '…'}
-      </span>
-      <span className="hidden text-sm text-kumo-subtle xl:inline">{label}</span>
-      <span className="sr-only xl:hidden">{label}</span>
-    </button>
+    <Tooltip
+      content={active ? `Showing ${label.toLowerCase()} — click to clear` : `Show ${label.toLowerCase()}`}
+      render={
+        <button
+          type="button"
+          onClick={apply}
+          aria-pressed={active}
+          className={`inline-flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left ring ${
+            active ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'
+          }`}
+        >
+          <span
+            className={`flex size-6 items-center justify-center rounded-full ${alert ? 'bg-kumo-danger/10 text-kumo-danger' : 'bg-kumo-recessed text-kumo-subtle'}`}
+            aria-hidden
+          >
+            <I size={14} weight="bold" />
+          </span>
+          <span className={`text-sm font-semibold tabular-nums ${alert ? 'text-kumo-danger' : value == null ? 'text-kumo-subtle' : 'text-kumo-strong'}`}>
+            {value ?? '…'}
+          </span>
+          <span className="hidden text-sm text-kumo-subtle min-[1700px]:inline">{label}</span>
+          <span className="sr-only min-[1700px]:hidden">{label}</span>
+        </button>
+      }
+    />
   )
 }
 
