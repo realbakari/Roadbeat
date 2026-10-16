@@ -153,3 +153,16 @@ All are optional. Each overrides where the app reads one source.
 The Bureau of Meteorology's flood warnings, and the minor, moderate and major flood levels for its gauges, are published under BoM's default terms: personal use only, not to be supplied to anyone else. Its web API says it must not be used. So the app doesn't show warning text or flood levels. A gauge page links to the BoM warning page for the gauge's catchment, using the catchment's product id from the CC BY *National Flood Gauge Network*.
 
 TransLink reports lift and escalator outages as service alerts with the GTFS-RT effect `ACCESSIBILITY_ISSUE`, naming the stops they affect. Stop pages and the dashboard show them as published.
+
+## What the feeds don't carry
+
+TransLink's GTFS-RT feeds don't publish crowding. GTFS-RT has `occupancy_status` and `occupancy_percentage` on a vehicle, `multi_carriage_details` for each carriage, and `departure_occupancy_status` on a trip update's stop times. On 16 October 2026 at 3:05 pm AEST, a weekday afternoon, none of them was set in any feed:
+
+| Feed | Vehicles or trips | With any crowding field |
+|---|---|---|
+| SEQ VehiclePositions | 1,231 (1,138 bus, 64 train, 19 ferry, 10 tram) | 0 |
+| SEQ TripUpdates | 2,140 (1,944 bus, 128 train, 37 ferry, 31 tram) | 0 |
+| CNS VehiclePositions | 35 bus | 0 |
+| CNS TripUpdates | 61 bus | 0 |
+
+The bindings in `gtfs-realtime-bindings` 2.2.0 know all four fields, so a value TransLink sent would have decoded. Crowding that other apps show for SEQ doesn't come from these public feeds, so Roadbeat shows none. If TransLink starts publishing it, parse it in `src/api/gtfsrt.ts` and show it as TransLink's report.
