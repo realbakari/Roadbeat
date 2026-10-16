@@ -131,7 +131,7 @@ TransLink's T-code mapping files each Queensland Rail route under the line it en
 
 ## The map
 
-`src/components/TrafficMap.tsx` creates one MapLibre map and keeps it for the life of the app. Theme and base map changes swap the style. When a style loads, `addLayers()` in `src/components/map/layers.ts` re-adds every app layer, and `ready` changes so the data effects push their data again.
+`src/components/TrafficMap.tsx` creates one MapLibre map and keeps it for the life of the app. Theme and base map changes swap the style. When a style loads, `addLayers()` in `src/components/map/layers.ts` re-adds every app layer, and `ready` changes so the data effects push their data again. Taps and hover labels go through one handler for the whole map rather than one per layer, so a tap opens exactly one feature: `pickTap()` in `src/lib/mapPick.ts` takes a marker over a line and a line over a filled area, then the topmost. Without that, a bushfire warning or outage area would take every tap on the markers inside it.
 
 Track lines come from TransLink's GTFS shapes. Those shapes follow the middle of a rail corridor, about 2 m from each rail of a double track. Storing them more precisely does not bring them closer to the rails. When zoomed in, the map draws them as a translucent band wide enough to cover the corridor, so the base map's individual rails show through.
 
