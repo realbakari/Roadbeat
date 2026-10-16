@@ -16,6 +16,8 @@ import {
   type AlertSettings,
 } from '../lib/alertRules'
 import { eventTitle } from '../lib/eventText'
+import { systemAlertsOn } from '../lib/polling'
+import { setSystemAlerts } from './poll'
 import { publisherList, type NewsStory } from '../lib/newsStories'
 
 export interface AppNotification {
@@ -65,7 +67,8 @@ interface Seen {
  * Watches road events and TransLink alerts for things the user cares about and
  * raises notifications: a toast while the app is in view, a system notification
  * (if allowed) while it's in the background, and an entry in the notification
- * centre either way. Runs only while the app is open in a tab.
+ * centre either way. Runs only while the app is open in a tab; with system
+ * notifications on, the feeds that raise alerts keep polling in a hidden tab.
  */
 export function useAlertSettings() {
   const [settings, setSettingsState] = useState<AlertSettings>(loadSettings)
@@ -109,6 +112,8 @@ export function useNotifications({
   }, [settings, onOpen])
 
   useEffect(() => store(LIST_KEY, items.slice(0, MAX)), [items])
+  // Keeps the alert feeds polling in a hidden tab while system notifications can be shown.
+  useEffect(() => setSystemAlerts('Notification' in window && systemAlertsOn(settings, Notification.permission)), [settings])
 
   const raise = useCallback(
     (list: Omit<AppNotification, 'read'>[]) => {
@@ -116,10 +121,11 @@ export function useNotifications({
       const { settings: s, onOpen: open } = latest.current
       setItems((prev) => [...list.map((n) => ({ ...n, read: false })), ...prev].slice(0, MAX))
       const live = list.filter((n) => !n.away)
-      if (!s.inApp || !live.length) return
+      if (!live.length) return
 
       const hidden = document.visibilityState !== 'visible'
-      const canSystem = s.browser && 'Notification' in window && Notification.permission === 'granted'
+      const canSystem = 'Notification' in window && systemAlertsOn(s, Notification.permission)
+      // The two switches are separate: system notifications don't need in-app toasts on.
       for (const n of live.slice(0, 3)) {
         if (hidden && canSystem) {
           const sys = new Notification(n.title, { body: n.body, tag: n.id, icon: '/favicon.svg' })
@@ -128,7 +134,7 @@ export function useNotifications({
             if (n.href) open(n.href)
             sys.close()
           }
-        } else if (!hidden) {
+        } else if (!hidden && s.inApp) {
           toasts.add({
             title: n.title,
             description: n.body.length > 140 ? `${n.body.slice(0, 137)}…` : n.body,
@@ -138,7 +144,7 @@ export function useNotifications({
           })
         }
       }
-      if (live.length > 3 && !hidden) {
+      if (live.length > 3 && !hidden && s.inApp) {
         toasts.add({ title: `${live.length - 3} more alerts`, description: 'Open the notification centre to see them all.', timeout: 6000 })
       }
     },
