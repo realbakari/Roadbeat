@@ -98,7 +98,7 @@ export default function App() {
   const commute = useCommute()
   const commuteLive = !!commute?.stopId && !!commuteWindow(commute, now)?.active
   const { vehicles: allVehicles, error: vehicleError } = useLiveVehicles(
-    layers.vehicles || !!sel.vehicle || sel.transit?.kind === 'line' || sel.transit?.kind === 'stop' || commuteLive,
+    layers.vehicles || !!sel.vehicle || sel.transit?.kind === 'line' || sel.transit?.kind === 'stop' || sel.transit?.kind === 'trip' || commuteLive,
   )
   const { alerts: transitAlerts, error: transitAlertsError } = useTransitAlerts(
     transitOpen || !!sel.vehicle || alertSettings.routes.length > 0 || (commuteLive && !!commute?.route),

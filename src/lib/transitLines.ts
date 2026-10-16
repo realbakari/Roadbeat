@@ -1,4 +1,4 @@
-import { allRouteCodes, routeInfo, type LiveVehicle, type TransitAlert } from '../api/translink'
+import { allRouteCodes, routeInfo, routeLabel, type LiveVehicle, type TransitAlert } from '../api/translink'
 import { routesAtStops, type TimetableIndex } from '../api/timetables'
 import type { TransitLine } from '../api/types'
 
@@ -30,6 +30,11 @@ function knownCodes() {
 /** The string stored in alert settings when someone watches a line. */
 export function lineWatchKey(line: TransitLine): string | null {
   return lineMatcher(line) ? line.name : null
+}
+
+/** Unique rider-facing names for an alert's routes (several train codes share one T-line). */
+export function routeLabels(a: TransitAlert) {
+  return [...new Set(a.routes.map((r) => routeLabel(r, a.region)))]
 }
 
 export function alertsForCodes(alerts: TransitAlert[], match: (code: string) => boolean) {

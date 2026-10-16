@@ -53,6 +53,14 @@ export function routeInfo(code: string, region: TransitRegion = 'SEQ'): RouteInf
   return ROUTES[`${region}:${code}`] ?? (region === 'SEQ' ? null : (ROUTES[`SEQ:${code}`] ?? null))
 }
 
+/**
+ * The route only if that region publishes it. Unlike routeInfo, this never
+ * falls back to SEQ, so a page for Townsville's "200" can't show Brisbane's.
+ */
+export function regionRouteInfo(code: string, region: TransitRegion): RouteInfo | null {
+  return ROUTES[`${region}:${code}`] ?? null
+}
+
 /** Every SEQ route code in the published data. */
 export function allRouteCodes(): string[] {
   return Object.keys(ROUTES)
@@ -71,7 +79,10 @@ export function routeLabel(code: string, region: TransitRegion = 'SEQ') {
 }
 
 export async function fetchVehicles(regions: TransitRegion[], signal?: AbortSignal): Promise<LiveVehicle[]> {
-  const feeds = await Promise.all(regions.map((r) => feed(r, 'VehiclePositions', signal).then((f) => [r, f] as const)))
+  // A failing regional feed shouldn't take Brisbane's vehicles off the map.
+  const settled = await Promise.allSettled(regions.map((r) => feed(r, 'VehiclePositions', signal).then((f) => [r, f] as const)))
+  const feeds = settled.flatMap((x) => (x.status === 'fulfilled' ? [x.value] : []))
+  if (!feeds.length && settled.length) throw (settled[0] as PromiseRejectedResult).reason
   return feeds.flatMap(([region, f]) => parseVehicles(region, f, routeInfo))
 }
 
@@ -134,7 +145,7 @@ export function alertNextStart(a: TransitAlert, now = Date.now()) {
 
 /** GTFS-RT TripUpdates: TransLink's real-time stop times for running and about-to-start trips. */
 export async function fetchTripUpdates(regions: TransitRegion[], signal?: AbortSignal): Promise<TripUpdates> {
-  // Each region on its own, with a time limit, so a slow Cairns feed doesn't hold up Brisbane's.
+  // Each region on its own, with a time limit, so a slow regional feed doesn't hold up Brisbane's.
   const settled = await Promise.allSettled(
     regions.map((r) => {
       const s = signal ? AbortSignal.any([signal, AbortSignal.timeout(20_000)]) : AbortSignal.timeout(20_000)

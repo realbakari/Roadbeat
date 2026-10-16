@@ -17,7 +17,7 @@ import {
 import { useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
 import { routesAtStops, type TimetableIndex } from '../api/timetables'
-import { routeInfo, routeLabel, type LiveVehicle, type TransitRegion } from '../api/translink'
+import { routeInfo, routeLabel, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
 import type { TransitLine, TransitMode } from '../api/types'
 import { useNow, useStopIndex, useTimetableIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
 import { distanceKm } from '../lib/geo'
@@ -26,8 +26,12 @@ import { clearRecentStops, useRecentStops, useSavedStops } from '../lib/savedSto
 import { departuresAt, stopHref, type Departure } from '../lib/departures'
 import { minutesUntil } from '../lib/timeFormat'
 import { DelayChip } from './Realtime'
+import { SavedTrips } from './SavedTrips'
 import { lineMatcher, lineSlug } from '../lib/transitLines'
 import { readableTextOn } from '../lib/routeColor'
+import { REGION_NAMES } from '../lib/transitRegions'
+import { regionalRoutes, searchRoutes } from '../lib/regionalRoutes'
+import { RouteRows } from './RegionalRoutes'
 
 const clockTime = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
@@ -94,7 +98,10 @@ export function StopRow({
       >
         <I size={18} weight="fill" className="shrink-0 text-kumo-subtle" />
         <span className="grid min-w-0 flex-1 gap-1">
-          <span className="truncate text-sm">{stop.name}</span>
+          <span className="truncate text-sm">
+            {stop.name}
+            {stop.region !== 'SEQ' && <span className="text-kumo-subtle"> · {REGION_NAMES[stop.region]}</span>}
+          </span>
           <RouteBadges routes={routes} />
           {preview && now != null && (
             <span className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-kumo-subtle tabular-nums">
@@ -154,6 +161,8 @@ export function TransitSearch({
   }, [q, lines])
 
   const stopHits = useMemo(() => (stops ? searchStops(stops, q) : []), [q, stops])
+  const routes = useMemo(() => (index ? regionalRoutes(index, routeInfo) : null), [index])
+  const routeHits = useMemo(() => (routes ? searchRoutes(routes, q) : []), [q, routes])
 
   return (
     <div className="grid gap-2">
@@ -192,6 +201,14 @@ export function TransitSearch({
               })}
             </ResultGroup>
           )}
+          {routeHits.length > 0 && (
+            <section className="grid gap-1.5">
+              <Text size="xs" variant="secondary" bold>
+                Regional routes
+              </Text>
+              <RouteRows routes={routeHits} showRegion onNavigate={onNavigate} />
+            </section>
+          )}
           {!stops ? (
             <Loader size="sm" />
           ) : stopHits.length > 0 ? (
@@ -201,7 +218,8 @@ export function TransitSearch({
               ))}
             </ResultGroup>
           ) : (
-            !lineHits.length && (
+            !lineHits.length &&
+            !routeHits.length && (
               <Text variant="secondary">
                 Nothing matches “{query.trim()}”. Try a station or suburb name, a stop number, or a route like 66 or T1.
               </Text>
@@ -243,15 +261,17 @@ function locationError(e: GeolocationPositionError | null) {
 /** Map view below this zoom covers too much ground for "near the map centre" to mean anything. */
 const MAP_MIN_ZOOM = 12
 
-/** "Departures" tab: saved stops, stops near you, and a way into the journey planner. */
+/** "Departures" tab: saved trips and stops, stops near you, and a way into the journey planner. */
 export function DeparturesHome({
   mapView,
   vehicles,
+  alerts,
   onShowMap,
   onNavigate,
 }: {
   mapView: { center: [number, number]; zoom: number } | null
   vehicles: LiveVehicle[]
+  alerts: TransitAlert[] | null
   onShowMap: () => void
   onNavigate: (hash: string) => void
 }) {
@@ -301,6 +321,8 @@ export function DeparturesHome({
 
   return (
     <div className="grid gap-5 px-4 pt-4">
+      <SavedTrips vehicles={vehicles} alerts={alerts} onNavigate={onNavigate} hint="Save a trip in the Planner to see its next departures here." />
+
       <section className="grid gap-2">
         <div className="flex items-center gap-2">
           <StarIcon size={18} weight="fill" className="text-kumo-subtle" />

@@ -50,7 +50,9 @@ The app keeps its current view in the URL hash, so these links open a view direc
 - `%SITE_URL%/#event/<id>`: a QLDTraffic road event.
 - `%SITE_URL%/#camera/webcam-<id>` or `#camera/floodcam-<id>`: a traffic or flood camera.
 - `%SITE_URL%/#transit/line/<mode>/<name>`, for example `#transit/line/train/T1%20Caboolture`: a line's status, departures and timetable.
-- `%SITE_URL%/#transit/stop/SEQ/<stop id>`, for example `#transit/stop/SEQ/place_censta`: a stop's departures and full-day timetable.
+- `%SITE_URL%/#transit/stop/<region>/<stop id>`, for example `#transit/stop/SEQ/place_censta` or `#transit/stop/TSV/890194`: a stop's departures and full-day timetable.
+- `%SITE_URL%/#transit/route/<region>/<route code>`, for example `#transit/route/TSV/V200`: a route outside South East Queensland, with its alerts, departures where TransLink publishes real-time for the region, and its timetable.
+- `%SITE_URL%/#transit/trip/SEQ/<trip id>/<route>[/<YYYY-MM-DD>]`: one trip's stops in order with published times and TransLink's real-time times where reported.
 - `%SITE_URL%/#transit/plan/SEQ/<from stop id>/<to stop id>[/<YYYY-MM-DD>/<minutes after midnight>/<leave|arrive>]`: a journey search.
 - `%SITE_URL%/#fire/<warning id>`: a Queensland Fire Department warning or incident.
 - `%SITE_URL%/#gauge/<sensor id>`: a Brisbane City Council stream or rain gauge (e.g. E1594), or a Queensland Government stream gauging station (e.g. 143001C).
@@ -62,7 +64,7 @@ The app keeps its current view in the URL hash, so these links open a view direc
 All are used under Creative Commons Attribution 4.0 unless noted.
 
 - Department of Transport and Main Roads: road events, cameras, rest areas and crash history (QLDTraffic feeds and data.qld.gov.au).
-- Translink: GTFS timetables and GTFS-RT vehicle positions, trip updates and service alerts for South East Queensland and Cairns.
+- Translink: GTFS timetables and GTFS-RT vehicle positions, trip updates and service alerts for South East Queensland and Cairns, and published timetables for the 17 other regional networks (real-time too where TransLink's feed for that region carries data).
 - Queensland Fire Department: current bushfire incidents and warnings.
 - Brisbane City Council: bus stop audits, clearways, parking meters, bikeways and bike racks, public toilets (National Public Toilet Map), accessible parking, council events, ferry terminals, the February 2022 flood extent, telemetry gauges, intersection volumes, planned temporary road occupancies, CBD car park spaces, and Queensland Rail's railway station facilities (data.brisbane.qld.gov.au).
 - Department of Local Government, Water and Volunteers: the latest stream heights at open gauging stations (Water Monitoring Information Portal, water-monitoring.information.qld.gov.au) and the station list (data.qld.gov.au).

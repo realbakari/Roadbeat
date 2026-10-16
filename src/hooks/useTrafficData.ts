@@ -33,6 +33,9 @@ import {
   type TransitAlert,
   type TransitRegion,
 } from '../api/translink'
+import { watchFeed, type FeedWatch } from '../lib/trip'
+import { liveRegions, MAIN_REGIONS } from '../lib/transitRegions'
+import { feedCounts, recordFeedCount, subscribeFeedCounts, useFeedCounts } from './useRegionFeeds'
 import type {
   Camera,
   DumpPoint,
@@ -176,17 +179,17 @@ export function useNow(intervalMs = 30_000): number {
   return now
 }
 
-const REGIONS: TransitRegion[] = ['SEQ', 'CNS']
-
-/** Live TransLink vehicle positions, polled every 15 s while `enabled`. */
+/** Live TransLink vehicle positions, polled every 15 s while `enabled`, for SEQ, Cairns and any region whose feed lists trips. */
 export function useLiveVehicles(enabled: boolean) {
   const [vehicles, setVehicles] = useState<LiveVehicle[]>([])
   const [error, setError] = useState<string | null>(null)
+  // Re-polls when a region starts or stops listing trips.
+  const regions = liveRegions(useFeedCounts(enabled)).join(',')
   useEffect(() => {
     if (!enabled) return
     const c = new AbortController()
     const load = () =>
-      fetchVehicles(REGIONS, c.signal).then(
+      fetchVehicles(liveRegions(feedCounts()), c.signal).then(
         (v) => (setVehicles(v), setError(null)),
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
@@ -196,19 +199,19 @@ export function useLiveVehicles(enabled: boolean) {
       c.abort()
       clearInterval(id)
     }
-  }, [enabled])
+  }, [enabled, regions])
   return { vehicles: enabled ? vehicles : [], error: enabled ? error : null }
 }
 
-/** TransLink GTFS-RT service alerts, polled every minute while `enabled`. */
-export function useTransitAlerts(enabled: boolean) {
+/** TransLink GTFS-RT service alerts, polled every minute while `enabled`; SEQ and Cairns unless `region` names another. */
+export function useTransitAlerts(enabled: boolean, region?: TransitRegion) {
   const [alerts, setAlerts] = useState<TransitAlert[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     if (!enabled) return
     const c = new AbortController()
     const load = () =>
-      fetchTransitAlerts(REGIONS, c.signal).then(
+      fetchTransitAlerts(region ? [region] : [...MAIN_REGIONS], c.signal).then(
         (a) => (setAlerts(a), setError(null)),
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
@@ -218,7 +221,7 @@ export function useTransitAlerts(enabled: boolean) {
       c.abort()
       clearInterval(id)
     }
-  }, [enabled])
+  }, [enabled, region])
   return { alerts, error }
 }
 
@@ -226,6 +229,8 @@ export function useTransitAlerts(enabled: boolean) {
 // that shows departures, so a line page's departures and timetable fetch it once.
 const tripFeed = {
   updates: null as TripUpdates | null,
+  /** Which trips the feed has listed while polled without a break, for overdue departures. */
+  watch: null as FeedWatch | null,
   error: null as string | null,
   listeners: new Set<() => void>(),
   stop: null as (() => void) | null,
@@ -238,22 +243,44 @@ function subscribeTripUpdates(listener: () => void) {
     const notify = () => tripFeed.listeners.forEach((l) => l())
     // Each region is fetched on its own and shown as soon as it arrives.
     const parts = new Map<TransitRegion, TripUpdates>()
-    const load = () =>
-      REGIONS.forEach((r) =>
-        fetchTripUpdates([r], c.signal).then(
+    const publish = () => {
+      const all = [...parts.values()]
+      tripFeed.updates = { at: Object.assign({}, ...all.map((p) => p.at)), trips: all.flatMap((p) => p.trips) }
+    }
+    const reading = new Set<TransitRegion>()
+    const read = (r: TransitRegion) => {
+      if (reading.has(r)) return
+      reading.add(r)
+      fetchTripUpdates([r], c.signal)
+        .then(
           (u) => {
             parts.set(r, u)
-            const all = [...parts.values()]
-            tripFeed.updates = { at: Object.assign({}, ...all.map((p) => p.at)), trips: all.flatMap((p) => p.trips) }
+            tripFeed.watch = watchFeed(tripFeed.watch, r, u)
+            publish()
             tripFeed.error = null
             notify()
+            if (!MAIN_REGIONS.includes(r)) recordFeedCount(r, u.trips.length)
           },
           (e: Error) => !c.signal.aborted && !parts.size && ((tripFeed.error = e.message), notify()),
-        ),
-      )
-    load()
-    const id = setInterval(() => visible() && load(), 30_000)
-    tripFeed.stop = () => (c.abort(), clearInterval(id))
+        )
+        .finally(() => reading.delete(r))
+    }
+    // A region whose feed has gone quiet keeps none of its last trips; one that starts listing trips is read straight away.
+    const follow = () => {
+      const regions = liveRegions(feedCounts())
+      for (const r of parts.keys()) if (!regions.includes(r)) parts.delete(r)
+      publish()
+      notify()
+      return regions
+    }
+    follow().forEach(read)
+    const id = setInterval(() => visible() && follow().forEach(read), 30_000)
+    const unprobe = subscribeFeedCounts(() =>
+      follow()
+        .filter((r) => !parts.has(r))
+        .forEach(read),
+    )
+    tripFeed.stop = () => (c.abort(), clearInterval(id), unprobe())
   }
   return () => {
     tripFeed.listeners.delete(listener)
@@ -268,7 +295,7 @@ function subscribeTripUpdates(listener: () => void) {
 export function useTripUpdates(enabled: boolean) {
   const [, setTick] = useState(0)
   useEffect(() => (enabled ? subscribeTripUpdates(() => setTick((n) => n + 1)) : undefined), [enabled])
-  return { updates: enabled ? tripFeed.updates : null, error: enabled ? tripFeed.error : null }
+  return { updates: enabled ? tripFeed.updates : null, watch: enabled ? tripFeed.watch : null, error: enabled ? tripFeed.error : null }
 }
 
 /** Published timetable index (which routes serve each stop, and the dates covered). */

@@ -494,7 +494,7 @@ export function MapLayersPanel({
             <Text size="xs" variant={vehicleError ? 'error' : 'secondary'}>
               {vehicleError
                 ? `Live positions unavailable: ${vehicleError}.`
-                : 'TransLink live positions (SEQ and Cairns), every 15 s. Zoom in to see them.'}
+                : 'TransLink live positions (SEQ, Cairns and any other region whose feed is live), every 15 s. Zoom in to see them.'}
             </Text>
           </LayerRow>
         </Group>

@@ -21,6 +21,8 @@ const SAME_RUN = 6 * 3_600_000
 export function liveLookup(updates: TripUpdates | null, vehicles: LiveVehicle[]): LiveLookup {
   const byNumber = new Map<string, TripUpdate[]>()
   for (const u of updates?.trips ?? []) {
+    // ADDED trips aren't in the published timetable, though their ids can share a timetabled trip's number.
+    if (u.relationship === 'added') continue
     const k = `${u.region}-${Number(u.tripId.split('-')[0])}`
     byNumber.set(k, [...(byNumber.get(k) ?? []), u])
   }

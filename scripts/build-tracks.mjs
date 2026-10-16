@@ -1,5 +1,5 @@
 // Builds public/transit-tracks.json: the train, tram and ferry lines as drawn by
-// TransLink's published GTFS shapes (SEQ and Cairns), so the map can show the
+// TransLink's published GTFS shapes (SEQ and regional Queensland), so the map can show the
 // track a line runs on. One feature per route code, holding the shapes that
 // together cover its track; geometry is simplified to ~3 m, which keeps the file
 // small. TransLink's shapes follow the middle of a corridor (about 2 m from each
@@ -7,14 +7,14 @@
 // precisely doesn't bring them closer to the rails; the map draws them as a
 // corridor-wide band when zoomed in instead.
 // Run with `npm run data:tracks` when TransLink publishes a new timetable. Needs `unzip`.
-// Set TRANSLINK_GTFS_DIR to a folder holding SEQ.zip and CNS.zip to skip the download.
+// Set TRANSLINK_GTFS_DIR to a folder holding SEQ.zip, CNS.zip, TSV.zip… to skip the download.
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { FEEDS, MODES, download, eachRow, parseCsv, unzip } from './lib/gtfs.mjs'
 import { simplify } from './lib/simplify.mjs'
 
-const SOURCE = 'TransLink GTFS (SEQ, Cairns), data.qld.gov.au, CC BY 4.0'
+const SOURCE = 'TransLink GTFS (SEQ and regional Queensland), data.qld.gov.au, CC BY 4.0'
 const TOLERANCE = 0.00003 // degrees, ~3 m
 
 const features = []

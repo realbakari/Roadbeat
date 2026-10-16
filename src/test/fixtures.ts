@@ -35,6 +35,7 @@ export function trip(number: number, route: string, stops: [string, number, numb
     region: 'SEQ',
     route,
     number,
+    date: '2026-10-15',
     headsign: 'Somewhere',
     direction: 0,
     stops: stops.map(

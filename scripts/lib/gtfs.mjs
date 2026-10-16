@@ -5,10 +5,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline'
 
-export const FEEDS = {
-  SEQ: 'https://gtfsrt.api.translink.com.au/GTFS/SEQ_GTFS.zip',
-  CNS: 'https://gtfsrt.api.translink.com.au/GTFS/CNS_GTFS.zip',
-}
+// Every feed on data.qld.gov.au's "Translink General transit feed specification
+// (GTFS)" dataset (checked 16 Oct 2026): South East Queensland and 18 regional
+// networks. Keep in step with TRANSIT_REGIONS in src/api/transitTypes.ts.
+// https://www.data.qld.gov.au/dataset/general-transit-feed-specification-gtfs-translink
+const REGIONS = ['SEQ', 'CNS', 'NSI', 'MHB', 'BOW', 'INN', 'TSV', 'MKY', 'BUN', 'GLT', 'GYM', 'KIL', 'MAG', 'MIF', 'MAL', 'RKY', 'TWB', 'WAR', 'WHT']
+export const FEEDS = Object.fromEntries(REGIONS.map((r) => [r, `https://gtfsrt.api.translink.com.au/GTFS/${r}_GTFS.zip`]))
+/** South East Queensland and Cairns: the feeds whose stops and trips ship in the main data files. */
+export const MAIN_REGIONS = ['SEQ', 'CNS']
 export const MODES = { 0: 'tram', 2: 'train', 3: 'bus', 4: 'ferry' }
 
 const dir = mkdtempSync(join(tmpdir(), 'translink-'))

@@ -10,16 +10,12 @@ You need Node.js 22 or later, `unzip` on your `PATH`, and an internet connection
 
 ## Rebuild everything from one download
 
-The GTFS files are about 36 MB. To download them once and share them between the scripts:
+The GTFS files are about 40 MB, almost all of it SEQ. To download them once and share them between the scripts:
 
-1. Download the two feeds into an empty folder:
-
-   ```bash
-   mkdir -p /tmp/gtfs && curl -L -o /tmp/gtfs/SEQ.zip https://gtfsrt.api.translink.com.au/GTFS/SEQ_GTFS.zip
-   ```
+1. Download every region's feed (the list in `scripts/lib/gtfs.mjs`) into an empty folder:
 
    ```bash
-   curl -L -o /tmp/gtfs/CNS.zip https://gtfsrt.api.translink.com.au/GTFS/CNS_GTFS.zip
+   mkdir -p /tmp/gtfs && for r in SEQ CNS NSI MHB BOW INN TSV MKY BUN GLT GYM KIL MAG MIF MAL RKY TWB WAR WHT; do curl -sL -o /tmp/gtfs/$r.zip https://gtfsrt.api.translink.com.au/GTFS/${r}_GTFS.zip; done
    ```
 
 2. Run the scripts with `TRANSLINK_GTFS_DIR` pointing at that folder:

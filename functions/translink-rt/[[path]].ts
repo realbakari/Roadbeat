@@ -3,7 +3,7 @@
 // a few seconds so many viewers share one upstream request.
 
 const UPSTREAM = 'https://gtfsrt.api.translink.com.au/api/realtime'
-const ALLOWED = /^(SEQ|CNS)\/(VehiclePositions|TripUpdates|alerts)$/
+const ALLOWED = /^(SEQ|CNS|NSI|MHB|BOW|INN|TSV|MKY|BUN|GLT|GYM|KIL|MAG|MAL|RKY|TWB|WAR|WHT)\/(VehiclePositions|TripUpdates|alerts)$/
 
 interface Context {
   params: { path?: string[] }

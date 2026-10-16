@@ -55,6 +55,8 @@ export interface ScheduledTrip {
   route: string
   /** Leading number of the GTFS trip id, which real-time TripUpdates carry too. */
   number: number
+  /** The service day it runs on (a Brisbane date); its times can run past that day's midnight. */
+  date: string
   headsign: string
   direction: 0 | 1
   stops: ScheduledStop[]
@@ -154,6 +156,7 @@ export function tripsOnDay(f: RouteFile, date: string): ScheduledTrip[] {
       key: `${f.region}-${number}-${date}`,
       region: f.region,
       route: f.route,
+      date,
       number,
       headsign: f.heads[head],
       direction,

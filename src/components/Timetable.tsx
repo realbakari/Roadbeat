@@ -21,6 +21,8 @@ import { stopHref } from '../lib/departures'
 import { timetableCodes } from '../lib/transitLines'
 import { liveLookup, scheduledArrivals, scheduledDepartures, timetableGrid, type GridDirection, type LiveTrip, type ScheduledDeparture } from '../lib/timetable'
 import { readableTextOn } from '../lib/routeColor'
+import { timetableTripHref } from '../lib/trip'
+import { bandOf, lastServices, TIME_BANDS, type TimeBand } from '../lib/timeBands'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
@@ -62,11 +64,13 @@ function liveStop(live: LiveTrip | null, s: ScheduledStop): { rt: StopTime | nul
 
 /** A line's full published timetable: a day picker and a stop × trip grid per direction. */
 export function LineTimetable({
+  region = 'SEQ',
   match,
   mode,
   vehicles,
   onNavigate,
 }: {
+  region?: TransitRegion
   match: (code: string) => boolean
   mode: string
   vehicles: LiveVehicle[]
@@ -74,12 +78,12 @@ export function LineTimetable({
 }) {
   const now = useNow(30_000)
   const { index, failed } = useTimetableIndex(true)
-  const { today, dates, date, setDate } = useDay(index, 'SEQ', now)
+  const { today, dates, date, setDate } = useDay(index, region, now)
   const codes = useMemo(() => {
-    const all = index?.regions.SEQ?.routes
-    return all ? timetableCodes(all.filter(match), index!, mode) : null
-  }, [index, match, mode])
-  const trips = useTripsOn('SEQ', codes, date)
+    const all = index?.regions[region]?.routes
+    return all ? (region === 'SEQ' ? timetableCodes(all.filter(match), index!, mode) : all.filter(match)) : null
+  }, [index, region, match, mode])
+  const trips = useTripsOn(region, codes, date)
   const stops = useStopIndex(true, mode === 'bus')
   const { updates } = useTripUpdates(true)
   const grid = useMemo(() => (trips ? timetableGrid(trips, stops) : null), [trips, stops])
@@ -146,9 +150,6 @@ function Grid({
   const [openedAt] = useState(now)
   const manyHeads = dir.headsigns.length > 1
   const liveTrips = useMemo(() => dir.trips.map((t) => live.get(t)), [dir, live])
-  // The service picked to see its stops in order, as transit apps do.
-  const [picked, setPicked] = useState<string | null>(null)
-  const sel = dir.trips.findIndex((t) => t.key === picked)
 
   // Jump to the first service at or after `t` at the reference stop (today opens at "now", as TransLink's does).
   const jump = (t: number) => {
@@ -206,13 +207,13 @@ function Grid({
                 <th
                   key={t.key}
                   data-col={i}
-                  className={`sticky top-0 z-10 border-b border-kumo-line px-2 py-1.5 text-left align-bottom font-normal whitespace-nowrap ${i === sel ? 'bg-kumo-tint' : 'bg-kumo-base'}`}
+                  className="sticky top-0 z-10 border-b border-kumo-line bg-kumo-base px-2 py-1.5 text-left align-bottom font-normal whitespace-nowrap"
                 >
                   <button
                     type="button"
                     className="grid w-full text-left"
                     title={`To ${t.headsign} · ${info?.long ?? t.route} · show its stops`}
-                    onClick={() => setPicked(i === sel ? null : t.key)}
+                    onClick={() => onNavigate(timetableTripHref(t))}
                   >
                     {manyHeads && <span className="max-w-20 truncate text-xs text-kumo-subtle">{shortName(t.headsign)}</span>}
                     <LiveTag live={l} />
@@ -251,7 +252,7 @@ function Grid({
                 const s = col[r]
                 if (!s)
                   return (
-                    <td key={c} className={`h-9 px-2 text-center text-kumo-inactive ${c === sel ? 'bg-kumo-tint' : ''}`}>
+                    <td key={c} className="h-9 px-2 text-center text-kumo-inactive">
                       —
                     </td>
                   )
@@ -262,9 +263,9 @@ function Grid({
                 return (
                   <td
                     key={c}
-                    className={`h-9 cursor-pointer px-2 leading-tight whitespace-nowrap ${past && !here ? 'text-kumo-subtle' : ''} ${here ? 'bg-kumo-success/15 font-medium ring-2 ring-kumo-success ring-inset' : c === sel ? 'bg-kumo-tint' : 'hover:bg-kumo-tint'}`}
+                    className={`h-9 cursor-pointer px-2 leading-tight whitespace-nowrap ${past && !here ? 'text-kumo-subtle' : ''} ${here ? 'bg-kumo-success/15 font-medium ring-2 ring-kumo-success ring-inset' : 'hover:bg-kumo-tint'}`}
                     title={`${here ? `${VEHICLE_STATUS[l!.vehicle!.status ?? 'moving']} · ` : ''}${cellTitle(s, rt, l)} · tap for this service's stops`}
-                    onClick={() => setPicked(c === sel ? null : dir.trips[c].key)}
+                    onClick={() => onNavigate(timetableTripHref(dir.trips[c]))}
                   >
                     <span className={gone || late ? 'line-through decoration-1' : ''}>{short(s.time)}</span>
                     {/* After midnight, the day, as TransLink shows it ("12:30 am Friday"). */}
@@ -285,114 +286,6 @@ function Grid({
         </tbody>
       </table>
     </div>
-    {sel >= 0 && (
-      <TripView
-        trip={dir.trips[sel]}
-        live={liveTrips[sel]}
-        now={now}
-        stops={stops}
-        onClose={() => setPicked(null)}
-        onNavigate={onNavigate}
-      />
-    )}
-    </div>
-  )
-}
-
-/**
- * One service's stops in order with its published times, like the trip view in
- * transit apps. Today, the real-time feed adds reported times, skipped stops and
- * where the vehicle is.
- */
-function TripView({
-  trip,
-  live,
-  now,
-  stops,
-  onClose,
-  onNavigate,
-}: {
-  trip: ScheduledTrip
-  live: LiveTrip | null
-  now: number | null
-  stops: StopIndex | null
-  onClose: () => void
-  onNavigate: (hash: string) => void
-}) {
-  const info = routeInfo(trip.route, trip.region)
-  const first = stops?.get(trip.region, trip.stops[0].stopId)
-  const vehicleAtIdx = live?.vehicle ? trip.stops.findIndex((s) => vehicleAt(live.vehicle!, s.stopId, stops)) : -1
-  return (
-    <div className="grid gap-2 rounded-lg p-3 ring ring-kumo-line">
-      <div className="flex items-start justify-between gap-2">
-        <div className="grid gap-0.5">
-          <Text bold>
-            {clock.format(trip.stops[0].time)} {first ? shortName(stops!.station(first).name) : ''} to {shortName(trip.headsign)}
-          </Text>
-          <Text size="xs" variant="secondary">
-            {info?.line ?? info?.short ?? trip.route} · {info?.long ?? ''}
-            {live?.cancelled && <span className="font-medium text-kumo-danger"> · Cancelled</span>}
-          </Text>
-        </div>
-        <div className="flex shrink-0 gap-1">
-          {live?.vehicle && (
-            <Button size="sm" variant="secondary" icon={<BroadcastIcon />} onClick={() => onNavigate(`vehicle/${encodeURIComponent(live.vehicle!.id)}`)}>
-              Vehicle
-            </Button>
-          )}
-          <Button size="sm" variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      </div>
-      <ol className="grid">
-        {trip.stops.map((s, i) => {
-          const stop = stops?.get(trip.region, s.stopId)
-          const station = stop ? stops!.station(stop) : null
-          const { rt, late, gone } = liveStop(live, s)
-          const shown = rt?.time ?? s.time
-          // The feed drops stops a tracked trip has passed.
-          const passed = now != null && (live?.vehicle ? (vehicleAtIdx >= 0 ? i < vehicleAtIdx : !rt && s.time < now) : shown < now - 60_000)
-          const here = i === vehicleAtIdx
-          const last = i === trip.stops.length - 1
-          return (
-            <li key={i} className="flex items-stretch gap-3">
-              <span className="relative flex w-4 shrink-0 justify-center" aria-hidden>
-                {!last && <span className={`absolute top-1/2 h-full w-0.5 ${passed ? 'bg-kumo-line' : 'bg-kumo-contrast/40'}`} />}
-                {i > 0 && <span className={`absolute bottom-1/2 h-full w-0.5 ${passed || here ? 'bg-kumo-line' : 'bg-kumo-contrast/40'}`} />}
-                <span
-                  className={`relative z-10 my-auto size-3 rounded-full ring-2 ${here ? 'bg-kumo-success ring-kumo-success' : passed ? 'bg-kumo-base ring-kumo-line' : 'bg-kumo-base ring-kumo-contrast'}`}
-                />
-              </span>
-              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 py-1.5">
-                <span className="grid min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate(stopHref(trip.region, station?.id ?? s.stopId))}
-                    className={`truncate text-left hover:underline ${passed ? 'text-kumo-subtle' : ''} ${gone ? 'line-through' : ''}`}
-                  >
-                    {station?.name ?? `Stop ${s.stopId}`}
-                  </button>
-                  <span className="flex flex-wrap gap-x-2 text-xs text-kumo-subtle">
-                    {stop?.platform && <span>Platform {stop.platform}</span>}
-                    {s.kind !== 'normal' && <StopKindBadge kind={s.kind} />}
-                    {rt?.skipped && <span className="text-kumo-danger">Not stopping</span>}
-                    {here && <span className="text-kumo-success">{VEHICLE_STATUS[live!.vehicle!.status ?? 'moving']}</span>}
-                  </span>
-                </span>
-                <span className="grid shrink-0 justify-items-end tabular-nums">
-                  <span className={late || gone ? 'text-xs text-kumo-subtle line-through' : passed ? 'text-kumo-subtle' : 'font-medium'}>
-                    {clock.format(s.time)}
-                  </span>
-                  {late && !gone && (
-                    <span className={`font-medium ${rt!.time! > s.time ? 'text-kumo-warning' : 'text-kumo-info'}`}>{clock.format(rt!.time!)}</span>
-                  )}
-                </span>
-              </div>
-            </li>
-          )
-        })}
-      </ol>
     </div>
   )
 }
@@ -447,7 +340,7 @@ function GridLegend({ today }: { today: boolean }) {
           means the vehicle is reporting its position, and a reported time different from the timetable is shown under it.
           A{' '}
           <span className="rounded-sm px-1 ring-2 ring-kumo-success ring-inset">highlighted</span> time is the stop a
-          vehicle is at or heading to now; tap it to follow the vehicle. Updates every 30 seconds.
+          vehicle is at or heading to now. Updates every 30 seconds.
         </>
       )}
     </Text>
@@ -506,7 +399,8 @@ export function StopTimetable({
   // including the previous service day's trips after midnight.
   const trips = useTripsOn(region, codes, date, true)
   const [route, setRoute] = useState('all')
-  const [earlier, setEarlier] = useState(false)
+  // As on Transit Pulse: today from now on, or one part of the day. Other days start with the whole day.
+  const [band, setBand] = useState<'now' | 'all' | TimeBand>('now')
   // As in the TransLink app: departures or drop-off-only arrivals, ordered by time or grouped by route.
   const [kind, setKind] = useState<'departures' | 'arrivals'>('departures')
   const [order, setOrder] = useState<'time' | 'route'>('time')
@@ -519,6 +413,20 @@ export function StopTimetable({
     const at = (d: ScheduledDeparture) => (kind === 'arrivals' ? d.stop.arrival : d.stop.time)
     return list.filter((d) => at(d) >= from && at(d) < from + 86_400_000)
   }, [trips, stopIds, date, kind])
+  // The last departure of each service day on each line to each destination ("the last T1 to Nambour").
+  // A service day can run past midnight, so this looks at every loaded departure, not just this calendar day's.
+  const last = useMemo(
+    () =>
+      trips && kind === 'departures'
+        ? lastServices(
+            scheduledDepartures(trips, stopIds),
+            (d) => `${d.trip.date}/${routeInfo(d.trip.route, region)?.line ?? d.trip.route}/${d.trip.headsign}`,
+            (d) => d.stop.time,
+            (d) => d.key,
+          )
+        : null,
+    [trips, stopIds, kind, region],
+  )
 
   if (failed) return <Unavailable />
   if (!index || !date) return index ? <Unavailable /> : <Loader size="sm" />
@@ -532,8 +440,10 @@ export function StopTimetable({
     const rt = live.get(d.trip)?.stops.get(d.stop.stopId)?.time
     return Math.max(timeOf(d), rt ?? 0) < now - 60_000
   }
-  const shown = filtered && isToday && !earlier ? filtered.filter((d) => !gone(d)) : filtered
-  const hidden = filtered && shown ? filtered.length - shown.length : 0
+  const view = band === 'now' && !isToday ? 'all' : band
+  const shown =
+    filtered && (view === 'now' ? filtered.filter((d) => !gone(d)) : view === 'all' ? filtered : filtered.filter((d) => bandOf(timeOf(d)) === view))
+  const hidden = filtered && shown && view === 'now' ? filtered.length - shown.length : 0
   const routeKey = (d: ScheduledDeparture) => routeInfo(d.trip.route, region)?.line ?? routeInfo(d.trip.route, region)?.short ?? d.trip.route
   const list =
     shown && order === 'route'
@@ -565,6 +475,15 @@ export function StopTimetable({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <DayPicker dates={dates} value={date} today={today} onChange={setDate} />
+        <Tabs
+          size="sm"
+          value={view}
+          onValueChange={(v) => setBand(v as typeof band)}
+          tabs={[
+            isToday ? { value: 'now', label: 'Now' } : { value: 'all', label: 'All day' },
+            ...TIME_BANDS.map((b) => ({ value: b.band, label: b.label })),
+          ]}
+        />
         {codes && codes.length > 1 && (
           <Select
             aria-label="Route"
@@ -581,7 +500,7 @@ export function StopTimetable({
       ) : (
         <>
           {hidden > 0 && (
-            <Button size="sm" variant="ghost" className="justify-self-start" onClick={() => setEarlier(true)}>
+            <Button size="sm" variant="ghost" className="justify-self-start" onClick={() => setBand('all')}>
               Show {hidden} earlier {kind} today
             </Button>
           )}
@@ -604,6 +523,7 @@ export function StopTimetable({
                       arriving={kind === 'arrivals'}
                       origin={kind === 'arrivals' ? originName(stops, d.trip) : null}
                       format={format}
+                      last={!!last?.has(d.key)}
                       onNavigate={onNavigate}
                     />
                   </li>
@@ -612,13 +532,18 @@ export function StopTimetable({
             </ul>
           ) : (
             <Text variant="secondary">
-              {filtered?.length ? `No more ${kind} today.` : `No ${kind} on ${dayLabel.format(Date.parse(date))}.`}
+              {!filtered?.length
+                ? `No ${kind} on ${dayLabel.format(Date.parse(date))}.`
+                : view === 'now'
+                  ? `No more ${kind} today.`
+                  : `No ${kind} ${TIME_BANDS.find((b) => b.band === view)?.hours ?? ''}.`}
             </Text>
           )}
           <Text size="xs" variant="secondary">
             {kind === 'arrivals'
               ? "Arrivals are services that finish here or only set down here, at TransLink's published arrival times."
               : "Times are TransLink's published timetable."}
+            {` ${TIME_BANDS.map((b) => `${b.label} is ${b.hours}`).join(', ')}.`}
             {isToday && ' Where the real-time feed reports a service, its delay (+/− minutes) or cancellation is shown.'}
           </Text>
         </>
@@ -650,6 +575,7 @@ function TimetableRow({
   arriving,
   origin,
   format,
+  last,
   onNavigate,
 }: {
   trip: ScheduledTrip
@@ -661,6 +587,8 @@ function TimetableRow({
   arriving: boolean
   origin: string | null
   format: TimeFormat
+  /** The last departure of its service day on this line to this destination. */
+  last: boolean
   onNavigate: (hash: string) => void
 }) {
   const info = routeInfo(trip.route, trip.region)
@@ -687,6 +615,11 @@ function TimetableRow({
         <span className="flex flex-wrap items-center gap-x-2 text-xs text-kumo-subtle">
           {platform && <span>Platform {platform}</span>}
           {stop.kind === 'pickup' && <StopKindBadge kind="pickup" />}
+          {last && (
+            <span className="rounded bg-kumo-warning/15 px-1 font-semibold text-kumo-warning" title="The last departure on this line to this destination in today's timetable">
+              Last
+            </span>
+          )}
           {live?.cancelled ? (
             <span className="font-medium text-kumo-danger">Cancelled</span>
           ) : rt?.skipped ? (
@@ -709,17 +642,15 @@ function TimetableRow({
       </span>
     </>
   )
-  return live?.vehicle ? (
+  return (
     <button
       type="button"
-      title="Show this vehicle"
-      onClick={() => onNavigate(`vehicle/${encodeURIComponent(live.vehicle!.id)}`)}
+      title="This service's stops"
+      onClick={() => onNavigate(timetableTripHref(trip))}
       className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-kumo-tint"
     >
       {body}
     </button>
-  ) : (
-    <div className="flex items-center gap-3 px-3 py-2">{body}</div>
   )
 }
 

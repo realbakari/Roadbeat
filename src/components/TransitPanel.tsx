@@ -1,7 +1,6 @@
 import { Badge, Banner, Button, Empty, InputGroup, Loader, Tabs, Text } from '@cloudflare/kumo'
 import {
   ArrowLeftIcon,
-  ArrowSquareOutIcon,
   BellIcon,
   BellRingingIcon,
   BoatIcon,
@@ -18,14 +17,20 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { alertActive, alertNextStart, allRouteCodes, routeInfo, routeLabel, type LiveVehicle, type TransitAlert } from '../api/translink'
 import { readableTextOn } from '../lib/routeColor'
 import type { TransitLine, TransitMode, TransitNotice } from '../api/types'
-import type { TransitView } from '../lib/route'
-import { useNow, useTransit } from '../hooks/useTrafficData'
+import { planHash, routeHref, type TransitView } from '../lib/route'
+import { useNow, useTransit, useTransitAlerts } from '../hooks/useTrafficData'
+import { isTransitRegion } from '../api/transitTypes'
+import { MAIN_REGIONS } from '../lib/transitRegions'
+import { RoutePage } from './RoutePage'
+import { RegionalRoutesDirectory } from './RegionalRoutes'
 import { LineDepartures, StopPage } from './Departures'
 import { JourneyPlanner } from './JourneyPlanner'
 import { LineTimetable, TimetableLink } from './Timetable'
 import { DeparturesHome, ModeChips, TransitSearch } from './TransitHome'
 import { TransitMapsDirectory } from './TransitMaps'
-import { alertsForCodes, lineMatcher, lineSlug, lineWatchKey, vehiclesForCodes } from '../lib/transitLines'
+import { TripPage } from './TripPage'
+import { AlertCards, ExternalLink, Section } from './TransitParts'
+import { alertsForCodes, lineMatcher, lineSlug, lineWatchKey, routeLabels, vehiclesForCodes } from '../lib/transitLines'
 
 const MODES: { mode: TransitMode; label: string; icon: Icon }[] = [
   { mode: 'train', label: 'Trains', icon: TrainIcon },
@@ -68,6 +73,10 @@ interface Props {
 export function TransitPanel(props: Props) {
   const { data, error } = useTransit(true)
   const { view, alerts } = props
+  // Alerts are ids like "TSV-123"; outside SEQ and Cairns they're read only while their page is open.
+  const alertRegion = view.kind === 'alert' ? view.id.split('-')[0] : undefined
+  const regional = isTransitRegion(alertRegion) && !MAIN_REGIONS.includes(alertRegion) ? alertRegion : undefined
+  const regionalAlerts = useTransitAlerts(!!regional, regional)
 
   if (view.kind === 'line') {
     const line = data?.lines.find((l) => l.mode === view.mode && l.name === view.name)
@@ -75,12 +84,19 @@ export function TransitPanel(props: Props) {
     if (!line) return <BackOnly onBack={() => props.onNavigate('transit')} />
     return <LinePage line={line} {...props} />
   }
+  if (view.kind === 'route') {
+    return <RoutePage region={view.region} code={view.code} alerts={alerts} vehicles={props.vehicles} onNavigate={props.onNavigate} onShowOnMap={props.onShowOnMap} />
+  }
   if (view.kind === 'stop') {
     return <StopPage region={view.region} id={view.id} vehicles={props.vehicles} alerts={alerts} onNavigate={props.onNavigate} />
   }
+  if (view.kind === 'trip') {
+    return <TripPage region={view.region} tripId={view.tripId} route={view.route} date={view.date} vehicles={props.vehicles} onNavigate={props.onNavigate} />
+  }
   if (view.kind === 'alert') {
-    const a = alerts?.find((x) => x.id === view.id)
-    if (!alerts) return <Centered>{props.alertsError ? <Offline /> : <Loader />}</Centered>
+    const list = regional ? regionalAlerts.alerts : alerts
+    const a = list?.find((x) => x.id === view.id)
+    if (!list) return <Centered>{(regional ? regionalAlerts.error : props.alertsError) ? <Offline /> : <Loader />}</Centered>
     if (!a) return <BackOnly onBack={() => props.onNavigate('transit')} />
     return <AlertPage alert={a} {...props} />
   }
@@ -138,7 +154,7 @@ function Home({
       <div className="min-h-0 flex-1 overflow-y-auto pb-6">
         {tab === 'plan' ? (
           <JourneyPlanner
-            key={plan ? `${plan.region}/${plan.from}/${plan.to}/${plan.date}/${plan.minutes}/${plan.arrive}` : 'new'}
+            key={plan ? planHash(plan) : 'new'}
             vehicles={vehicles}
             alerts={alerts}
             initial={plan}
@@ -152,14 +168,17 @@ function Home({
               </Text>
               <TransitSearch lines={data?.lines ?? null} query={query} onQuery={setQuery} onNavigate={onNavigate} />
             </div>
-            {!query.trim() && <DeparturesHome mapView={mapView} vehicles={vehicles} onShowMap={onShowMap} onNavigate={onNavigate} />}
+            {!query.trim() && <DeparturesHome mapView={mapView} vehicles={vehicles} alerts={alerts} onShowMap={onShowMap} onNavigate={onNavigate} />}
           </>
         ) : tab === 'lines' ? (
-          !data ? (
-            <Centered>{error ? <Offline /> : <Loader />}</Centered>
-          ) : (
-            <Lines lines={data.lines} onOpen={(l) => onNavigate(`transit/line/${lineSlug(l)}`)} onShowOnMap={onShowOnMap} />
-          )
+          <div className="grid gap-6 pb-6">
+            {!data ? (
+              <Centered>{error ? <Offline /> : <Loader />}</Centered>
+            ) : (
+              <Lines lines={data.lines} onOpen={(l) => onNavigate(`transit/line/${lineSlug(l)}`)} onShowOnMap={onShowOnMap} />
+            )}
+            <RegionalRoutesDirectory onNavigate={onNavigate} />
+          </div>
         ) : alerts ? (
           <AlertList alerts={alerts} onOpen={(a) => onNavigate(`transit/alert/${encodeURIComponent(a.id)}`)} />
         ) : alertsError ? (
@@ -470,7 +489,24 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
               </ul>
             </Section>
           )}
-          {a.routes.length > 0 && (
+          {a.routes.length > 0 && !MAIN_REGIONS.includes(a.region) && (
+            // Route alerts are watched across SEQ and Cairns only, so a regional route links to its page instead.
+            <Section title={`Affected routes (${a.routes.length})`}>
+              <div className="flex flex-wrap gap-1.5">
+                {a.routes.map((code) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => onNavigate(routeHref(a.region, code))}
+                    className="rounded-md px-2 py-0.5 text-sm ring ring-kumo-line hover:bg-kumo-tint"
+                  >
+                    {routeLabel(code, a.region)}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          )}
+          {a.routes.length > 0 && MAIN_REGIONS.includes(a.region) && (
             <Section title={`Affected routes (${routeLabels(a).length})`}>
               <div className="flex flex-wrap gap-1.5">
                 {routeLabels(a).map((r) => {
@@ -556,41 +592,6 @@ function AlertList({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen: (a: Tra
   )
 }
 
-function AlertCards({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen: (a: TransitAlert) => void }) {
-  const now = useNow(60_000)
-  return (
-    <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
-      {alerts.map((a) => {
-        const next = alertActive(a, now) ? null : alertNextStart(a, now)
-        return (
-          <li key={a.id}>
-            <button type="button" onClick={() => onOpen(a)} className="grid w-full gap-1 px-3 py-2.5 text-left hover:bg-kumo-tint">
-              <Text bold>{a.header}</Text>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Badge variant="outline">{a.effect}</Badge>
-                {next && <Text size="xs" variant="secondary" as="span">From {when.format(next)}</Text>}
-                {a.routes.length > 0 && (
-                  <Text size="xs" variant="secondary" as="span">
-                    {(() => {
-                      const labels = routeLabels(a)
-                      return `${labels.slice(0, 4).join(', ')}${labels.length > 4 ? ` +${labels.length - 4}` : ''}`
-                    })()}
-                  </Text>
-                )}
-              </div>
-            </button>
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-
-/** Unique rider-facing names for an alert's routes (several train codes share one T-line). */
-function routeLabels(a: TransitAlert) {
-  return [...new Set(a.routes.map((r) => routeLabel(r, a.region)))]
-}
-
 function Notices({ notices }: { notices: TransitNotice[] }) {
   return (
     <ul className="divide-y divide-kumo-line border-t border-kumo-line">
@@ -607,26 +608,6 @@ function Notices({ notices }: { notices: TransitNotice[] }) {
           </li>
         ))}
     </ul>
-  )
-}
-
-function Section({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
-  return (
-    <section id={id} className="grid scroll-mt-4 gap-2">
-      <Text as="h3" variant="heading">
-        {title}
-      </Text>
-      {children}
-    </section>
-  )
-}
-
-function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
-      {children}
-      <ArrowSquareOutIcon size={14} />
-    </a>
   )
 }
 

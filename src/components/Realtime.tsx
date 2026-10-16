@@ -27,8 +27,8 @@ export function TimeFormatToggle() {
       value={f}
       onValueChange={(v) => setF(v as TimeFormat)}
       tabs={[
-        { value: 'clock', label: '5:42 pm' },
         { value: 'minutes', label: 'In 5 min' },
+        { value: 'clock', label: '5:42 pm' },
       ]}
     />
   )

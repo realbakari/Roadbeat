@@ -18,6 +18,7 @@ The browser reads these while the app is open.
 | Vehicle positions | Translink | `gtfsrt.api.translink.com.au/api/realtime/{SEQ,CNS}/VehiclePositions` | Proxy `/translink-rt` (protobuf) | 15 s | `src/api/translink.ts` |
 | Trip updates | Translink | `gtfsrt.api.translink.com.au/api/realtime/{SEQ,CNS}/TripUpdates` | Proxy `/translink-rt` (protobuf) | 30 s | `src/api/translink.ts` |
 | Service alerts | Translink | `gtfsrt.api.translink.com.au/api/realtime/{SEQ,CNS}/alerts` | Proxy `/translink-rt` (protobuf) | 60 s | `src/api/translink.ts` |
+| Regional real-time feeds | Translink | `gtfsrt.api.translink.com.au/api/realtime/{NSI,MHB,BOW,INN,TSV,MKY,BUN,GLT,GYM,KIL,MAG,MAL,RKY,TWB,WAR,WHT}/{TripUpdates,VehiclePositions,alerts}` | Proxy `/translink-rt` (protobuf). TransLink answers all of these, but on 16 October 2026 only North Stradbroke Island's listed any trips; the rest sent empty 15-byte feeds. Magnetic Island ferry (`MIF`) has no real-time endpoint (404). | TripUpdates every 5 min while transit is shown. A region whose feed lists trips is read with SEQ and Cairns (15 s vehicles, 30 s trips) until it goes empty; any other region's stop pages say **Timetable only**. A region's alerts are read every 60 s while one of its stops is open. | `src/hooks/useRegionFeeds.ts`, `src/lib/transitRegions.ts` |
 | Bushfire warnings and incidents | Queensland Fire Department | `publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json` | Proxy `/qfd-bushfires` | 2 min | `src/api/bushfires.ts` |
 | Stream height and rain gauges | Brisbane City Council | `data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/telemetry-sensors-rainfall-and-stream-heights/exports/csv` (last 24 hours) and `…-metadata/exports/json` (gauge list) | Direct | 5 min, while the layer or a flooding event is open | `src/api/bccGauges.ts` |
 | Statewide stream gauges | Department of Local Government, Water and Volunteers (Water Monitoring Information Portal) | `water-monitoring.information.qld.gov.au/cgi/webservice.pl`, `get_latest_ts_values` for datasource `AT`, variable 100 (stream water level), POSTed for every station in `public/qld-gauges.json` | Proxy `/qld-gauges` (`api/qld-gauges.ts`, `functions/qld-gauges.ts`, dev plugin in `vite.config.ts`), cached 5 min at the edge | 5 min, while the layer, a gauge page or a flooding event is open | `src/api/qldGauges.ts`, `src/api/qldGaugesFeed.ts` |
@@ -115,12 +116,13 @@ The `scripts/` build these files from published data. They change when TransLink
 
 | File | Built from | Script | Size |
 | --- | --- | --- | --- |
-| `src/data/translink-routes.json` | TransLink GTFS `routes.txt` (SEQ, Cairns) and the Train T Code Route Mapping (data.qld.gov.au) | `npm run data:routes` | Bundled |
-| `src/data/translink-stops.json` | GTFS `stops.txt` and `stop_times.txt`: train, tram and ferry stops | `npm run data:stops` | 12 KB compressed |
-| `src/data/translink-stops-bus.json` | The same, for every other stop | `npm run data:stops` | 240 KB compressed, loaded on demand |
-| `src/data/translink-trips.json` | GTFS `trips.txt`: headsign and direction per trip | `npm run data:stops` | 78 KB compressed, loaded on demand |
-| `public/timetables/<region>/<route>.json` | GTFS `stop_times.txt`, `trips.txt`, `calendar.txt`, `calendar_dates.txt` | `npm run data:timetables` | 1.1 MB compressed in total, loaded per route |
-| `public/timetables/index.json` | The same: routes per stop and the calendar window | `npm run data:timetables` | 53 KB compressed |
+| `src/data/translink-routes.json` | TransLink GTFS `routes.txt` (every region) and the Train T Code Route Mapping (data.qld.gov.au) | `npm run data:routes` | Bundled, 14 KB compressed |
+| `src/data/translink-stops.json` | GTFS `stops.txt` and `stop_times.txt`: SEQ and Cairns train, tram and ferry stops | `npm run data:stops` | 12 KB compressed |
+| `src/data/translink-stops-bus.json` | The same, for every other SEQ and Cairns stop | `npm run data:stops` | 234 KB compressed, loaded on demand |
+| `src/data/translink-stops-regional.json` | The same, for every stop of the other 17 regional networks (about 3,550) | `npm run data:stops` | 66 KB compressed, loaded on demand with the bus stops |
+| `src/data/translink-trips.json` | GTFS `trips.txt`: headsign and direction per trip, every region | `npm run data:stops` | 81 KB compressed, loaded on demand |
+| `public/timetables/<region>/<route>.json` | GTFS `stop_times.txt`, `trips.txt`, `calendar.txt`, `calendar_dates.txt`, every region | `npm run data:timetables` | 1.2 MB compressed in total, loaded per route |
+| `public/timetables/index.json` | The same: routes per stop and the calendar window | `npm run data:timetables` | 64 KB compressed |
 | `public/transit-tracks.json` | GTFS `shapes.txt` for train, tram and ferry routes | `npm run data:tracks` | 74 KB compressed |
 | `src/data/translink-maps.json` | The list of PDFs on translink.com.au/plan-your-journey/maps | `npm run data:maps` | Bundled |
 | `public/flood-2022.json` | Brisbane City Council *Flood Awareness: Historic Brisbane River and Creek Floods Feb 2022*: the adopted extent, outlines simplified to about 5 m (771,544 points to about 115,000) | `npm run data:flood2022` | 0.5 MB compressed, loaded when the layer is turned on |
@@ -131,7 +133,7 @@ The `scripts/` build these files from published data. They change when TransLink
 | `src/data/gauge-catchments.json` | Bureau of Meteorology *National Flood Gauge Network* (data.gov.au, CC BY 4.0): the flood warning catchment each Brisbane stream gauge is in, and its BoM product id | `npm run data:catchments` | Bundled |
 | `src/data/bcc-intersections.json` | Brisbane City Council's *Traffic Management — Intersection locations — reference*: each signal's SCATS number, suburb, position and street names | `npm run data:intersections` | 24 KB compressed, loaded on demand |
 
-TransLink's GTFS files are at `gtfsrt.api.translink.com.au/GTFS/SEQ_GTFS.zip` and `CNS_GTFS.zip`.
+TransLink's GTFS files are at `gtfsrt.api.translink.com.au/GTFS/<region>_GTFS.zip`, one per network, as listed on data.qld.gov.au's [Translink GTFS dataset](https://www.data.qld.gov.au/dataset/general-transit-feed-specification-gtfs-translink) (checked 16 October 2026): `SEQ` (South East Queensland), `CNS` (Cairns), `NSI` (North Stradbroke Island), `MHB` (Maryborough–Hervey Bay), `BOW` (Bowen), `INN` (Innisfail), `TSV` (Townsville), `MKY` (Mackay), `BUN` (Bundaberg), `GLT` (Gladstone), `GYM` (Gympie), `KIL` (Kilcoy), `MAG` (Magnetic Island), `MIF` (Magnetic Island ferry), `MAL` (Maleny–Landsborough), `RKY` (Rockhampton–Yeppoon), `TWB` (Toowoomba), `WAR` (Warwick) and `WHT` (Whitsundays). The list is kept in `scripts/lib/gtfs.mjs` and `TRANSIT_REGIONS` in `src/api/transitTypes.ts`.
 
 ## Environment variables
 

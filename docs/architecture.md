@@ -52,7 +52,7 @@ The app itself needs JavaScript, so `site/plugin.ts` gives search engines and AI
 
 ## Navigation lives in the URL hash
 
-Every page has a hash route, so any view can be shared or bookmarked: `#event/123`, `#fire/WARN-10208`, `#transit/stop/SEQ/place_censta`, `#transit/plan/SEQ/place_fersta/place_dbnsta`. `parseHash()` in `src/lib/route.ts` parses the hash into a selection, `useHashSelection()` in `src/hooks/useSelection.ts` keeps it in step with the URL, and `SidePanel` in `src/components/SidePanel.tsx` renders whatever is selected. There is no router library, because the app has one screen with a side panel and a map.
+Every page has a hash route, so any view can be shared or bookmarked: `#event/123`, `#fire/WARN-10208`, `#transit/stop/SEQ/place_censta`, `#transit/route/TSV/V200` (a route outside SEQ, where TransLink's network status lists no lines), `#transit/plan/SEQ/place_fersta/place_dbnsta`, with an optional date, time, leave or arrive, and mode filter after the stops. `parseHash()` in `src/lib/route.ts` parses the hash into a selection, `useHashSelection()` in `src/hooks/useSelection.ts` keeps it in step with the URL, and `SidePanel` in `src/components/SidePanel.tsx` renders whatever is selected. There is no router library, because the app has one screen with a side panel and a map.
 
 ## A locality page gathers every source at one place
 
@@ -87,9 +87,35 @@ Two TransLink feeds overlay the timetable:
 - **TripUpdates** report predicted times and delays for trips running now or starting within about 85 minutes.
 - **VehiclePositions** report where each tracked vehicle is.
 
-`liveLookup()` in `src/lib/timetable.ts` matches a timetabled trip to its TripUpdate by the trip number at the start of the GTFS trip id. A trip id repeats on every day the trip runs, so a match counts only within six hours of the timetabled time.
+`liveLookup()` in `src/lib/timetable.ts` matches a timetabled trip to its TripUpdate by the trip number at the start of the GTFS trip id. A trip id repeats on every day the trip runs, so a match counts only within six hours of the timetabled time. ADDED trips are never matched: their ids can carry an older timetable version (`QR 26_27-44306` against the published `44307`) and reuse a timetabled trip's number, and an ADDED trip from the night before can stay in the feed into the next afternoon.
 
 The app follows the TransLink app's convention for delays: the scheduled time, with the reported delay beside it as `+3` or `+0`. It shows `+0` only when a vehicle is reporting its position. Without a tracked vehicle, a zero delay is a schedule, not an observation.
+
+Departure lists lead with minutes to go, as station screens and the kiosk do, counting to the reported time. The scheduled clock time stays beside or below the countdown, and a departure an hour or more away shows its clock time instead. The stop page's time toggle switches back to clock times and is remembered in `qldt-time-format`.
+
+## The trip page shows one run, stop by stop
+
+Tapping a departure on a stop page, a line page, a timetable or a vehicle opens `#transit/trip/<region>/<trip id>/<route>[/<service day>]`, rendered by `TripPage` in `src/components/TripPage.tsx`. The trip id is the GTFS trip id from the real-time feed, or only its leading number for a trip picked from the timetable. The route names the timetable file to load, and the service day picks one run when the link names it. Without a day, `pickRun()` in `src/lib/trip.ts` takes the run the TripUpdates feed reports, or else the run in progress or nearest now.
+
+`tripStops()` lists the published stops in order. For each stop it adds only what the TripUpdate reports for that stop, matched by stop id or another platform of the same station. Stops the feed omits show the timetable alone; nothing is filled in between, and an omitted stop is never called skipped, because the feed often leaves out a trip's last stops. Where the feed's stops differ from the timetable, the page says so, stop by stop: a stop the feed marks SKIPPED is struck out as not stopping, a stop on another platform of the same station shows the feed's platform with the timetabled one beside it, and a stop the feed lists that the timetable doesn't is placed after the feed stop before it and drawn on a dashed stretch of the line. Bus diversions show up this way, for example a stop named "… CLOSED" on a route that normally misses it. A line above the stops counts the changes. A stop is marked passed only when the reporting vehicle names a later stop as its current one. A trip the timetable lacks, such as an extra service, lists the feed's own stops. The page says the trip is cancelled only when its TripUpdate has the CANCELED relationship.
+
+## Overdue departures are stated, not judged
+
+A stop page lists a published departure as "Due 3:15 pm · 10 min past, no vehicle reporting" when `overdueMinutes()` in `src/lib/trip.ts` finds all of these:
+
+- its time passed within the last 30 minutes;
+- no vehicle reports the trip;
+- the TripUpdates feed never listed the trip while the app polled it without a break, from before the trip's timetabled start until after the due time.
+
+The last condition matters because TransLink often drops a trip's final stops from TripUpdates. In October 2026 about 30% of trips in the feed ended before their timetabled last stop, some by two hours, so a trip missing from one snapshot may simply have passed its last listed stop. The shared TripUpdates poller in `src/hooks/useTrafficData.ts` records every trip it sees with `watchFeed()`, and restarts the watch after a gap of more than three minutes, such as while the page was hidden. So the flag appears only for trips that start after the page began checking. Vehicle positions must have loaded too, so an outage on our side never reads as a missing vehicle. The row says what the feeds show and nothing more: it never says cancelled, because only TransLink's feed can.
+
+## Stop pages lead with the next service
+
+A stop page puts its next service from TransLink's real-time feed in a card of its own, with the scheduled clock time, minutes to go, route, platform and whether it is tracked, as Transit Pulse's route page does. The published timetable below it splits the day into Now, AM (4am to noon), PM (noon to 7pm) and Night (7pm to 4am), using `bandOf()` in `src/lib/timeBands.ts`. A "Last" badge marks the last departure of each service day on each line to each destination, from `lastServices()`. It looks at every departure loaded for the day, including those after midnight, because a service day can run past midnight and an 11:30 pm train is not the last if the same day's timetable has a 12:15 am one.
+
+## Saved trips re-plan from the timetable
+
+"My trips" follows TripView: a saved from → to pair, with the planner's mode and "direct only" filters, shown on the Transit home with its next four departures. Each card runs the same `planJourneys()` as the planner over today's published trips, then `filterJourneys()` and `nextJourneys()` in `src/lib/savedTrips.ts`. A journey stays listed until both its published departure and the departure TransLink reports for its first ride have passed, so a late service is not dropped early. The card copies TripView's layout: the trip edged in the colour of the line it next leaves on, and each departure with its minutes to go in a block of that line's colour, the boarding platform and published departure on the left, and the published arrival and route on the right. Each line is labelled Real-time when a vehicle on the first ride is reporting its position, and Scheduled otherwise. "On time" appears only for a tracked vehicle, and a reported delay without one reads "Scheduled · reported 3 min late". TransLink service alerts on the shown routes sit under the card, and the list ends with the time of the real-time feed it used. Tapping a card opens the planner at `#transit/plan/<region>/<from>/<to>/now/now/leave/<modes>`, built by `planHash()` in `src/lib/route.ts`. The list, with each trip's name and order, is kept in `qldt-saved-trips`.
 
 ## Train lines come from two official sources that disagree
 

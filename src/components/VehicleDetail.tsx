@@ -3,8 +3,10 @@ import { ArrowLeftIcon, CrosshairIcon, BellIcon, BellRingingIcon, BoatIcon, BusI
 import { alertActive, routeInfo, type LiveVehicle, type TransitAlert, type VehicleMode } from '../api/translink'
 import { useStopIndex, useTripIndex } from '../hooks/useTrafficData'
 import { stopHref } from '../lib/departures'
+import { tripHref } from '../lib/trip'
 import { timeAgo } from '../lib/format'
 import { VEHICLE_COLOR } from '../lib/mapIcons'
+import { REGION_NAMES } from '../lib/transitRegions'
 
 const MODE: Record<VehicleMode, { label: string; icon: Icon }> = {
   bus: { label: 'Bus', icon: BusIcon },
@@ -104,7 +106,7 @@ export function VehicleDetail({
                 {v.mode === 'train' ? (v.lineName ?? `Train ${v.route}`) : `${m.label} ${routeInfo(v.route, v.region)?.short ?? v.route}`}
               </Text>
               <Text variant="secondary">
-                {v.routeName ?? (v.region === 'CNS' ? 'Cairns' : 'South East Queensland')}
+                {v.routeName ?? REGION_NAMES[v.region]}
               </Text>
             </div>
           </header>
@@ -139,6 +141,16 @@ export function VehicleDetail({
             <dt className="text-kumo-subtle">Last reported</dt>
             <dd>{v.timestamp ? timeAgo(v.timestamp, now) : 'Not reported'}</dd>
           </dl>
+
+          {v.tripId && (
+            <button
+              type="button"
+              className="justify-self-start text-sm text-kumo-link hover:underline"
+              onClick={() => onOpenHref(tripHref(v.region, v.tripId!, v.route))}
+            >
+              This trip's stops and times
+            </button>
+          )}
 
           <section className="grid gap-2">
             <Text as="h3" variant="heading">

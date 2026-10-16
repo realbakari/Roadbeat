@@ -13,14 +13,22 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
 import { alertActive, isAccessibilityAlert, routeInfo, routeLabel, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
-import { routesAtStops } from '../api/timetables'
-import { useNow, useStopIndex, useTimetableIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { brisbaneDate, routesAtStops } from '../api/timetables'
+import { useTripsOn } from '../hooks/useTimetable'
+import { useNow, useStopIndex, useTimetableIndex, useTransitAlerts, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { useRealtimeState } from '../hooks/useRegionFeeds'
+import { MAIN_REGIONS, REGION_NAMES, type RealtimeState } from '../lib/transitRegions'
+import { regionRoutes } from '../lib/regionalRoutes'
+import { RouteRows } from './RegionalRoutes'
+import { scheduledDepartures, type ScheduledDeparture } from '../lib/timetable'
+import { overdueMinutes, reportingTrips, timetableTripHref, tripHref, type FeedWatch } from '../lib/trip'
 import { timetableCodes } from '../lib/transitLines'
 import { recordRecentStop, toggleSavedStop, useSavedStops } from '../lib/savedStops'
 import { DelayChip, TimeFormatToggle } from './Realtime'
 import { StationMapLink } from './TransitMaps'
 import { AccessAlerts, BusStopSection, FerryTerminalSection, StationFacilitiesSection } from './StationAccess'
 import { StopTimetable, TimetableLink } from './Timetable'
+import { NextService } from './NextService'
 import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
 import { kioskPath } from '../lib/route'
 import { departuresAt, lineDirections, stopHref, type Departure, type DepartureContext } from '../lib/departures'
@@ -73,23 +81,28 @@ function Legend() {
       <span className="inline-flex items-center gap-1">
         <span className="size-2 rounded-full ring-2 ring-kumo-line ring-inset" /> Scheduled
       </span>{' '}
-      — not tracked yet. Times are scheduled, with the reported delay beside them as in the TransLink app:{' '}
+      — not tracked yet. Countdowns run to the reported time. Clock times are scheduled, with the reported delay beside them as in the
+      TransLink app:{' '}
       <span className="rounded bg-kumo-success/15 px-1 font-semibold text-kumo-success">+0</span> on time,{' '}
       <span className="rounded bg-kumo-danger/10 px-1 font-semibold text-kumo-danger">+3</span> minutes late or early.
       TransLink's real-time feed covers services running now or starting soon; the published timetable is below.
+      “Due … min past, no vehicle reporting” means a timetabled departure has passed, no vehicle reports that trip, and
+      TransLink's real-time feed hasn't listed it at any point while this page has been checking since before the trip
+      started. It isn't a cancellation: only TransLink's feed marks a trip cancelled.
+      Tap a service to see its stops.
     </Text>
   )
 }
 
 function useDepartureContext(vehicles: LiveVehicle[]) {
-  const { updates, error } = useTripUpdates(true)
+  const { updates, watch, error } = useTripUpdates(true)
   const trips = useTripIndex(true)
   const now = useNow(15_000)
   const ctx: DepartureContext | null = useMemo(
     () => (updates ? { updates, vehicles, trips, now } : null),
     [updates, vehicles, trips, now],
   )
-  return { ctx, error, now }
+  return { ctx, watch, error, now }
 }
 
 function FeedError() {
@@ -105,11 +118,13 @@ function FeedError() {
 
 /** "Next departures" on a line page: one tab per direction, each stop with its next services. */
 export function LineDepartures({
+  region = 'SEQ',
   match,
   mode,
   vehicles,
   onNavigate,
 }: {
+  region?: TransitRegion
   match: (code: string) => boolean
   mode: string
   vehicles: LiveVehicle[]
@@ -120,15 +135,15 @@ export function LineDepartures({
   // Same routes as the line's timetable, so trains running through the line's terminus are listed too.
   const { index } = useTimetableIndex(true)
   const codes = useMemo(() => {
-    const all = index?.regions.SEQ?.routes
-    return all ? new Set(timetableCodes(all.filter(match), index!, mode)) : null
-  }, [index, match, mode])
+    const all = index?.regions[region]?.routes
+    return all ? new Set(region === 'SEQ' ? timetableCodes(all.filter(match), index!, mode) : all.filter(match)) : null
+  }, [index, region, match, mode])
   const dirs = useMemo(
     () =>
       ctx && ctx.trips
-        ? lineDirections(ctx, stops, (code, region) => region === 'SEQ' && (codes ? codes.has(code) : match(code)))
+        ? lineDirections(ctx, stops, (code, r) => r === region && (codes ? codes.has(code) : match(code)))
         : null,
-    [ctx, stops, match, codes],
+    [ctx, stops, region, match, codes],
   )
   const [tab, setTab] = useState(0)
 
@@ -153,25 +168,51 @@ export function LineDepartures({
       </Text>
       <ol className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
         {dir.stops.map((s) => (
-          <li key={s.region + s.id}>
+          <li key={s.region + s.id} className="flex items-center justify-between gap-3 px-3 py-1">
             <button
               type="button"
               onClick={() => onNavigate(stopHref(s.region, s.id))}
-              className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-kumo-tint"
+              className="min-w-0 truncate py-1 text-left text-sm hover:underline"
             >
-              <span className="min-w-0 truncate text-sm">{s.name ?? `Stop ${s.id}`}</span>
-              <span className="flex shrink-0 gap-3 text-sm">
-                {s.departures.length ? (
-                  s.departures.map((d) => <Time key={d.key} d={d} now={now} compact />)
-                ) : (
-                  <span className="text-kumo-subtle">—</span>
-                )}
-              </span>
+              {s.name ?? `Stop ${s.id}`}
             </button>
+            <span className="flex shrink-0 gap-1 text-sm">
+              {s.departures.length ? (
+                s.departures.map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    title="This service's stops"
+                    onClick={() => onNavigate(tripHref(d.trip.region, d.trip.tripId, d.trip.route))}
+                    className="rounded px-1.5 py-1 hover:bg-kumo-tint"
+                  >
+                    <Time d={d} now={now} compact />
+                  </button>
+                ))
+              ) : (
+                <span className="text-kumo-subtle">—</span>
+              )}
+            </span>
           </li>
         ))}
       </ol>
       <Legend />
+    </div>
+  )
+}
+
+/** In place of next departures where TransLink's real-time feed has nothing for the region. */
+export function TimetableOnly({ region, state }: { region: TransitRegion; state: Exclude<RealtimeState, 'live'> }) {
+  if (state === 'checking') return <Loader size="sm" />
+  return (
+    <div className="grid gap-1">
+      <Badge variant="outline" className="w-fit">
+        Timetable only
+      </Badge>
+      <Text variant="secondary">
+        TransLink isn't publishing real-time information for {REGION_NAMES[region]} right now, so there are no live times here. The
+        published timetable is below.
+      </Text>
     </div>
   )
 }
@@ -186,21 +227,29 @@ export function StopPage({
   region,
   id,
   vehicles,
-  alerts,
+  alerts: mainAlerts,
   onNavigate,
 }: {
   region: TransitRegion
   id: string
   vehicles: LiveVehicle[]
-  /** TransLink service alerts, or null while loading. */
+  /** TransLink service alerts for SEQ and Cairns, or null while loading. */
   alerts: TransitAlert[] | null
   onNavigate: (hash: string) => void
 }) {
   const stops = useStopIndex(true, true)
-  const { ctx, error, now } = useDepartureContext(vehicles)
+  const { ctx, watch, error, now } = useDepartureContext(vehicles)
+  const realtime = useRealtimeState(region)
+  const main = MAIN_REGIONS.includes(region)
+  // Other regions' alerts are read only while one of their stops is open.
+  const own = useTransitAlerts(!main, region)
+  const alerts = main ? mainAlerts : own.alerts
   const stop = stops?.get(region, id) ?? null
   const ids = useMemo(() => (stop && stops ? stopIds(stops, stop) : new Set([id])), [stops, stop, id])
-  const list = useMemo(() => (ctx ? departuresAt(ctx, region, ids) : null), [ctx, region, ids])
+  const list = useMemo(() => (ctx && realtime === 'live' ? departuresAt(ctx, region, ids) : null), [ctx, realtime, region, ids])
+  const nextService = list?.find((d) => d.trip.relationship !== 'cancelled') ?? null
+  const overdueAll = useOverdue(region, ids, ctx, watch, vehicles)
+  const overdue = realtime === 'live' ? overdueAll : []
   useEffect(() => {
     if (stop) recordRecentStop({ region, id: stop.id })
   }, [region, stop])
@@ -254,25 +303,29 @@ export function StopPage({
                   </button>
                 )}
                 {!stop.parent && /^\d+$/.test(stop.id) && <Badge variant="outline">Stop {stop.id}</Badge>}
+                {region !== 'SEQ' && <Badge variant="outline">{REGION_NAMES[region]}</Badge>}
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <TimetableLink target="stop-timetable" />
                 <SaveStopButton region={region} id={stop.id} />
-                <StationMapLink name={stops.station(stop).name} stopId={stops.station(stop).id} />
-                <a
-                  href={kioskPath(region, stop.id)}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="A large departure board for a screen in a lobby or café"
-                  className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
-                >
-                  <MonitorIcon size={14} /> Kiosk display
-                </a>
+                {main && <StationMapLink name={stops.station(stop).name} stopId={stops.station(stop).id} />}
+                {/* The kiosk board lists real-time departures only. */}
+                {realtime === 'live' && (
+                  <a
+                    href={kioskPath(region, stop.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="A large departure board for a screen in a lobby or café"
+                    className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
+                  >
+                    <MonitorIcon size={14} /> Kiosk display
+                  </a>
+                )}
               </div>
             </header>
           )}
 
-          <StopStats list={list} now={now} routes={routes} alerts={stopAlerts} region={region} />
+          <StopStats list={list} now={now} routes={routes} alerts={stopAlerts} region={region} realtime={realtime === 'live'} />
 
           <AccessAlerts alerts={accessAlerts} />
 
@@ -285,26 +338,48 @@ export function StopPage({
               </Text>
               <TimeFormatToggle />
             </div>
-            {!list ? (
+            {realtime !== 'live' ? (
+              <TimetableOnly region={region} state={realtime} />
+            ) : !list ? (
               error ? (
                 <FeedError />
               ) : (
                 <Loader size="sm" />
               )
-            ) : list.length ? (
-              <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
-                {list.map((d) => (
-                  <DepartureRow key={d.key} d={d} now={now} stops={stops} onNavigate={onNavigate} />
-                ))}
-              </ul>
+            ) : list.length || overdue.length ? (
+              <>
+                {nextService && <NextService d={nextService} now={now} stops={stops} onNavigate={onNavigate} />}
+                {(overdue.length > 0 || list.length > 1) && (
+                  <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
+                    {overdue.map((o) => (
+                      <OverdueRow key={o.d.key} d={o.d} minutes={o.minutes} since={o.since} stops={stops} onNavigate={onNavigate} />
+                    ))}
+                    {list
+                      .filter((d) => d !== nextService)
+                      .map((d) => (
+                        <DepartureRow key={d.key} d={d} now={now} stops={stops} onNavigate={onNavigate} />
+                      ))}
+                  </ul>
+                )}
+              </>
             ) : (
               <Text variant="secondary">No departures from here in TransLink's real-time feed right now.</Text>
             )}
           </section>
-          <Legend />
-          {stop && <StationFacilitiesSection stopId={stops?.station(stop).id ?? stop.id} />}
-          {stop && <FerryTerminalSection stopId={stop.id} />}
-          {stop && <BusStopSection stopId={stop.id} />}
+          {realtime === 'live' && <Legend />}
+          {/* SEQ lines have pages from TransLink's network status; elsewhere each route has its own. */}
+          {region !== 'SEQ' && routes && routes.length > 0 && (
+            <section className="grid gap-2">
+              <Text as="h3" variant="heading">
+                Routes
+              </Text>
+              <RouteRows routes={regionRoutes(region, routes, routeInfo)} onNavigate={onNavigate} />
+            </section>
+          )}
+          {/* Facilities, terminal and bus stop records are SEQ datasets, keyed by TransLink's SEQ stop ids. */}
+          {stop && region === 'SEQ' && <StationFacilitiesSection stopId={stops?.station(stop).id ?? stop.id} />}
+          {stop && region === 'SEQ' && <FerryTerminalSection stopId={stop.id} />}
+          {stop && region === 'SEQ' && <BusStopSection stopId={stop.id} />}
           <section id="stop-timetable" className="grid scroll-mt-4 gap-2">
             <Text as="h3" variant="heading">
               Timetable
@@ -423,27 +498,31 @@ function StopStats({
   routes,
   alerts,
   region,
+  realtime,
 }: {
   list: Departure[] | null
   region: TransitRegion
   now: number
   routes: string[] | null
   alerts: TransitAlert[] | null
+  /** False where the region has no real-time feed to count from: only the alert and route tiles show. */
+  realtime: boolean
 }) {
   const next = list?.find((d) => d.trip.relationship !== 'cancelled') ?? null
   const due = next ? (dueIn(next.time, now) ?? clock.format(next.time)) : list ? '—' : '…'
   const tracked = list?.filter((d) => d.vehicle).length ?? null
   const late = list?.filter((d) => d.trip.relationship === 'cancelled' || (d.delay ?? 0) >= 60).length ?? null
-  const tiles: { label: string; value: string; tone?: 'danger' | 'warning' | 'success'; target: string; live?: boolean; title: string }[] = [
+  const tiles: { label: string; value: string; tone?: 'danger' | 'warning' | 'success'; target: string; live?: boolean; fromFeed?: boolean; title: string }[] = [
     {
       label: next ? `Next · ${routeLabel(next.trip.route, next.trip.region).split(' ')[0]}` : 'Next',
       value: due,
       target: 'stop-next',
       live: !!next?.vehicle,
+      fromFeed: true,
       title: next ? `${next.headsign ? `To ${next.headsign}` : 'Next service'} at ${clock.format(next.time)}` : 'Next departure',
     },
-    { label: 'Tracked now', value: tracked == null ? '…' : String(tracked), tone: tracked ? 'success' : undefined, target: 'stop-next', title: 'Upcoming services whose vehicle is reporting its position' },
-    { label: 'Late or cancelled', value: late == null ? '…' : String(late), tone: late ? 'warning' : undefined, target: 'stop-next', title: 'Upcoming services the real-time feed reports at least a minute late, or cancelled' },
+    { label: 'Tracked now', value: tracked == null ? '…' : String(tracked), tone: tracked ? 'success' : undefined, target: 'stop-next', fromFeed: true, title: 'Upcoming services whose vehicle is reporting its position' },
+    { label: 'Late or cancelled', value: late == null ? '…' : String(late), tone: late ? 'warning' : undefined, target: 'stop-next', fromFeed: true, title: 'Upcoming services the real-time feed reports at least a minute late, or cancelled' },
     {
       label: 'Alerts',
       value: alerts == null ? '…' : String(alerts.length),
@@ -462,7 +541,7 @@ function StopStats({
   const TONE = { danger: 'text-kumo-danger', warning: 'text-kumo-warning', success: 'text-kumo-success' }
   return (
     <div className="flex flex-wrap gap-x-5 gap-y-2 border-y border-kumo-line py-2.5">
-      {tiles.map((t) => (
+      {tiles.filter((t) => realtime || !t.fromFeed).map((t) => (
         <button
           key={t.label}
           type="button"
@@ -531,25 +610,86 @@ function DepartureRow({
       <span className="grid shrink-0 justify-items-end gap-0.5">
         <Time d={d} now={now} />
         <span className="text-xs text-kumo-subtle tabular-nums">
-          {format === 'minutes' ? (minutesUntil(d.time, now) ? clock.format(d.time) : '') : (due ?? '')}
+          {format === 'minutes' ? (minutesUntil(d.time, now) ? (d.scheduled != null ? `${clock.format(d.scheduled)} scheduled` : clock.format(d.time)) : '') : (due ?? '')}
         </span>
       </span>
     </>
   )
   return (
     <li>
-      {d.vehicle ? (
-        <button
-          type="button"
-          title="Show this vehicle"
-          onClick={() => onNavigate(`vehicle/${encodeURIComponent(d.vehicle!.id)}`)}
-          className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-kumo-tint"
-        >
-          {body}
-        </button>
-      ) : (
-        <div className="flex items-center gap-3 px-3 py-2">{body}</div>
-      )}
+      <button
+        type="button"
+        title="This service's stops"
+        onClick={() => onNavigate(tripHref(d.trip.region, d.trip.tripId, d.trip.route))}
+        className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-kumo-tint"
+      >
+        {body}
+      </button>
+    </li>
+  )
+}
+
+/**
+ * Published departures from these stops that are past due with nothing in
+ * TransLink's real-time feeds for them, latest first (see `overdueMinutes`).
+ * Needs vehicle positions loaded, so an outage on our side never reads as a
+ * missing vehicle.
+ */
+function useOverdue(region: TransitRegion, ids: Set<string>, ctx: DepartureContext | null, watch: FeedWatch | null, vehicles: LiveVehicle[]) {
+  const { index } = useTimetableIndex(true)
+  const today = ctx ? brisbaneDate(ctx.now) : null
+  const codes = useMemo(() => (index ? routesAtStops(index, region, ids) : null), [index, region, ids])
+  const trips = useTripsOn(region, codes, today, true)
+  return useMemo(() => {
+    if (!ctx || !trips || !vehicles.length) return []
+    const reporting = reportingTrips(vehicles)
+    return scheduledDepartures(trips, ids)
+      .flatMap((d) => {
+        const minutes = overdueMinutes(d, watch, reporting, ctx.now)
+        return minutes == null ? [] : [{ d, minutes, since: watch!.since[region]! }]
+      })
+      .reverse()
+  }, [ctx, trips, watch, vehicles, ids, region])
+}
+
+/** A published departure that is past due with no vehicle or real-time update reporting it, stated as just that. */
+function OverdueRow({
+  d,
+  minutes,
+  since,
+  stops,
+  onNavigate,
+}: {
+  d: ScheduledDeparture
+  minutes: number
+  /** When Roadbeat began watching the feed without a break. */
+  since: number
+  stops: StopIndex | null
+  onNavigate: (hash: string) => void
+}) {
+  const info = routeInfo(d.trip.route, d.trip.region)
+  const platform = stops?.get(d.trip.region, d.stop.stopId)?.platform
+  return (
+    <li>
+      <button
+        type="button"
+        title={`TransLink's real-time feed hasn't listed this trip since Roadbeat began checking at ${clock.format(since)}. Tap for its stops.`}
+        onClick={() => onNavigate(timetableTripHref(d.trip))}
+        className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-kumo-tint"
+      >
+        <span className="flex h-6 min-w-10 shrink-0 items-center justify-center rounded px-1.5 text-xs font-semibold ring ring-kumo-line">
+          {info?.line?.split(' ')[0] ?? info?.short ?? d.trip.route}
+        </span>
+        <span className="grid min-w-0 flex-1 gap-0.5">
+          <span className="truncate text-sm text-kumo-subtle">To {d.trip.headsign}</span>
+          <span className="flex flex-wrap items-center gap-x-2 text-xs text-kumo-warning">
+            {platform && <span className="text-kumo-subtle">Platform {platform}</span>}
+            <span>
+              Due {clock.format(d.stop.time)} · {minutes} min past, no vehicle reporting
+            </span>
+          </span>
+        </span>
+      </button>
     </li>
   )
 }

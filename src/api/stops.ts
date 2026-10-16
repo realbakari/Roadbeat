@@ -1,8 +1,9 @@
 import type { TransitRegion } from './transitTypes.js'
 
 // Stop names and trip headsigns from TransLink's published GTFS (see
-// scripts/build-stops.mjs). Loaded on demand: rail/tram/ferry stops are small,
-// bus stops and the trip table are fetched only when something needs them.
+// scripts/build-stops.mjs). Loaded on demand: SEQ and Cairns rail/tram/ferry
+// stops are small; bus stops, the other regional networks' stops and the trip
+// table are fetched only when something needs them.
 
 export interface Stop {
   id: string
@@ -56,13 +57,15 @@ export class StopIndex {
 let core: Promise<StopIndex> | null = null
 let full: Promise<StopIndex> | null = null
 
-/** Train, tram and ferry stops; with `withBus`, every stop (a larger download). */
+/** SEQ and Cairns train, tram and ferry stops; with `withBus`, every stop in every region (a larger download). */
 export function loadStops(withBus: boolean): Promise<StopIndex> {
   core ??= import('../data/translink-stops.json').then((m) => new StopIndex().add(m.default as unknown as StopFile))
   if (!withBus) return full ?? core
-  full ??= Promise.all([import('../data/translink-stops.json'), import('../data/translink-stops-bus.json')]).then(
-    ([a, b]) => new StopIndex().add(a.default as unknown as StopFile).add(b.default as unknown as StopFile),
-  )
+  full ??= Promise.all([
+    import('../data/translink-stops.json'),
+    import('../data/translink-stops-bus.json'),
+    import('../data/translink-stops-regional.json'),
+  ]).then((files) => files.reduce((index, f) => index.add(f.default as unknown as StopFile), new StopIndex()))
   return full
 }
 

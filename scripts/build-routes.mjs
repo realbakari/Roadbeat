@@ -1,5 +1,5 @@
 // Builds src/data/translink-routes.json from TransLink's official open data:
-//  - GTFS static feeds (routes.txt) for SEQ and Cairns: route names, type, colour, timetable URL
+//  - GTFS static feeds (routes.txt) for SEQ and every regional network: route names, type, colour, timetable URL
 //  - "Train T Code Route Mapping" (data.qld.gov.au): Queensland Rail route codes → T-line ("T1 Caboolture")
 // Run with `npm run data:routes` when TransLink publishes a new timetable. Needs `unzip` on PATH.
 import { writeFileSync } from 'node:fs'
@@ -49,7 +49,7 @@ for (const [code, t, name] of tcodes) {
 }
 
 const out = {
-  source: 'TransLink GTFS (SEQ, Cairns) and Train T Code Route Mapping, data.qld.gov.au, CC BY 4.0',
+  source: 'TransLink GTFS (SEQ and regional Queensland) and Train T Code Route Mapping, data.qld.gov.au, CC BY 4.0',
   generated: new Date().toISOString().slice(0, 10),
   routes,
 }

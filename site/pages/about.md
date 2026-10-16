@@ -14,7 +14,7 @@ Every time, position, delay and count in Roadbeat comes from an official source.
 ## Where the data comes from
 
 - **Road events, cameras, rest areas and rain radar:** the Department of Transport and Main Roads, through the feeds behind qldtraffic.qld.gov.au.
-- **Public transport:** Translink's published timetables (GTFS) and live feeds (GTFS-RT) for South East Queensland and Cairns.
+- **Public transport:** Translink's published timetables (GTFS) and live feeds (GTFS-RT) for South East Queensland and Cairns, and the published timetables of Translink's 17 other regional networks, with live times wherever TransLink's feed for that region carries them.
 - **Bushfire warnings:** the Queensland Fire Department's current incidents feed.
 - **Stream heights, rainfall, signal traffic, planned council road closures and CBD car park spaces:** Brisbane City Council's open data.
 - **Clearways, public toilets, accessible parking, ferry terminal access and the February 2022 flood extent:** Brisbane City Council's open data. Toilets come from the National Public Toilet Map.

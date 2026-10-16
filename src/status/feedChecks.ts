@@ -14,11 +14,12 @@ import { fetchCrashSummary } from '../api/crashes'
 import { fetchNews } from '../api/news'
 import { fetchQldGauges } from '../api/qldGauges'
 import { parseStationFacilities, STATION_FACILITIES_API } from '../api/stationFacilities'
-import { fetchTransitAlerts, fetchTripUpdates, fetchVehicles, type TransitRegion } from '../api/translink'
+import { fetchTransitAlerts, fetchTripUpdates, fetchVehicles } from '../api/translink'
 import type { Gauge } from '../api/gaugeTypes'
 import type { SourceStatus } from '../api/newsTypes'
 import type { PublisherTime } from '../lib/feedHealth'
 import type { FeedId } from '../lib/feedRegistry'
+import { MAIN_REGIONS, PROBED_REGIONS } from '../lib/transitRegions'
 
 // One check per feed in the registry, through the same fetch and parse
 // functions the app uses, so a feed counts as healthy only when its data
@@ -34,7 +35,7 @@ export interface CheckResult {
 
 export type FeedCheck = (signal: AbortSignal) => Promise<CheckResult>
 
-const REGIONS: TransitRegion[] = ['SEQ', 'CNS']
+const REGIONS = [...MAIN_REGIONS]
 const dayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 /** Brisbane's GPO, for a crash summary that exercises the live query. */
 const BRISBANE: [number, number] = [153.0251, -27.4698]
@@ -93,6 +94,8 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
   vehicles: (signal) => fetchVehicles(REGIONS, signal).then(none),
   'trip-updates': (signal) => fetchTripUpdates(REGIONS, signal).then(none),
   'service-alerts': (signal) => fetchTransitAlerts(REGIONS, signal).then(none),
+  // Healthy when any regional feed parses, empty or not; most are empty.
+  'regional-realtime': (signal) => fetchTripUpdates([...PROBED_REGIONS], signal).then(none),
   bushfires: (signal) => fetchBushfires(signal).then(none),
   'bcc-gauges': (signal) => fetchGauges(signal).then((g) => ({ publisherTime: latestReading(g) })),
   'qld-gauges': (signal) => fetchQldGauges(signal).then((g) => ({ publisherTime: latestReading(g) })),

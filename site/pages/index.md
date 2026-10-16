@@ -11,7 +11,7 @@ Roadbeat is a free web app that puts Queensland's live road and public transport
 
 - See current road events across Queensland: crashes, hazards, flooding, congestion, roadworks and closures, from the QLDTraffic feed, refreshed every minute.
 - Watch traffic and flood cameras.
-- Follow TransLink buses, trains, trams and ferries in South East Queensland and Cairns, with next departures and delays.
+- Follow TransLink buses, trains, trams and ferries in South East Queensland and Cairns, with next departures and delays, and see published timetables for Townsville, Toowoomba, Mackay and Translink's other regional networks.
 - Read the full published timetable for any line or stop, for any day it covers.
 - Plan a trip from the published timetable: direct services, or one change at the same station or stop.
 - See Queensland Fire Department bushfire warnings, and Brisbane City Council stream heights, rainfall and traffic signal volumes.

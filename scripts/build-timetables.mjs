@@ -1,4 +1,5 @@
-// Builds the published timetables from TransLink's GTFS (SEQ and Cairns) as one
+// Builds the published timetables from TransLink's GTFS (SEQ and every regional
+// network) as one
 // small file per route, fetched only when a line or stop page needs it:
 //  - public/timetables/<region>/<route>.json  every trip on that route over the
 //                                             feed's calendar window
@@ -26,13 +27,13 @@
 //             trip id, which is what real-time TripUpdates are matched on.
 //
 // Run with `npm run data:timetables` when TransLink publishes a new timetable. Needs `unzip`.
-// Set TRANSLINK_GTFS_DIR to a folder holding SEQ.zip and CNS.zip to skip the download.
+// Set TRANSLINK_GTFS_DIR to a folder holding SEQ.zip, CNS.zip, TSV.zip… to skip the download.
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { FEEDS, download, eachRow, parseCsv, unzip } from './lib/gtfs.mjs'
 
-const SOURCE = 'TransLink GTFS (SEQ, Cairns), data.qld.gov.au, CC BY 4.0'
+const SOURCE = 'TransLink GTFS (SEQ and regional Queensland), data.qld.gov.au, CC BY 4.0'
 const OUT = new URL('../public/timetables/', import.meta.url)
 const DAY = 86_400_000
 
