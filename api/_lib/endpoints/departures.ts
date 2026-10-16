@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { routeInfo, stops, transitRealtime, trips } from './_lib/feeds.js'
-import { json, Limit, preflight, query, Region, upstream } from './_lib/http.js'
-import { nextDepartures, resolveStop } from './_lib/tools.js'
+import { routeInfo, stops, transitRealtime, trips } from '../feeds.js'
+import { json, Limit, preflight, query, Region, upstream } from '../http.js'
+import { nextDepartures, resolveStop } from '../tools.js'
 
 const Query = z.object({ stop: z.string().min(1).max(100), region: Region.optional(), route: z.string().max(40).optional(), limit: Limit.optional() })
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { isCameraImage } from '../src/api/cameraHosts.js'
-import { json, query } from './_lib/http.js'
+import { isCameraImage } from '../../../src/api/cameraHosts.js'
+import { json, query } from '../http.js'
 
 // GET /api/camera-time?url=<image>: when the camera host last changed that
 // image, from its Last-Modified header, so the app can date a camera view by

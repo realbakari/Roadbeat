@@ -13,7 +13,7 @@
     "api/news.ts": {
       "maxDuration": 60
     },
-    "api/history.ts": {
+    "api/[endpoint].ts": {
       "maxDuration": 60
     }
   },

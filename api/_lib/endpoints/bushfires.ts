@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { bushfires } from './_lib/feeds.js'
-import { json, Limit, preflight, query, upstream } from './_lib/http.js'
-import { searchBushfires } from './_lib/tools.js'
+import { bushfires } from '../feeds.js'
+import { json, Limit, preflight, query, upstream } from '../http.js'
+import { searchBushfires } from '../tools.js'
 
 const Query = z.object({
   level: z.enum(['Emergency Warning', 'Watch and Act', 'Advice', 'Information']).optional(),

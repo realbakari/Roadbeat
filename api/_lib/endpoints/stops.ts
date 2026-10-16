@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { stops } from './_lib/feeds.js'
-import { json, Limit, preflight, query, Region } from './_lib/http.js'
-import { findStops } from './_lib/tools.js'
+import { stops } from '../feeds.js'
+import { json, Limit, preflight, query, Region } from '../http.js'
+import { findStops } from '../tools.js'
 
 const Query = z.object({ q: z.string().min(1).max(100), region: Region.optional(), limit: Limit.optional() })
 

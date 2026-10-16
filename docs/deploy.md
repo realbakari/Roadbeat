@@ -39,6 +39,8 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 The functions in `api/` serve the public API (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`), the news monitor (`/api/news`), camera image times (`/api/camera-time`, also `functions/camera-time.ts` on Cloudflare) and the MCP server at `/mcp`. Vercel builds them with no extra setup. On other hosts the app still works; only these endpoints are missing.
 
+Vercel's Hobby plan deploys at most 12 functions, and every file directly in `api/` is one, as is `middleware.ts`. So the small read-only endpoints (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`, `/api/history` and `/api/camera-time`) share one function, `api/[endpoint].ts`, which routes by path to handlers in `api/_lib/endpoints/`. Add a new small endpoint there rather than as a new file in `api/`; Vercel doesn't deploy files under `api/_lib/` as functions. The deployment currently has 8 functions.
+
 Vercel compiles each file in `api/` on its own for Node, without bundling. So every relative import in `api/`, and in the `src/` modules it imports, must end in `.js`, and JSON imports need `with { type: 'json' }`. `api/tsconfig.json` checks this, and `npm run build` runs it.
 
 ### Turn on commute push alerts

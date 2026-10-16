@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { roadEvents } from './_lib/feeds.js'
-import { Bool, json, Limit, preflight, query, upstream } from './_lib/http.js'
-import { searchRoadEvents } from './_lib/tools.js'
+import { roadEvents } from '../feeds.js'
+import { Bool, json, Limit, preflight, query, upstream } from '../http.js'
+import { searchRoadEvents } from '../tools.js'
 
 const Query = z.object({
   q: z.string().max(200).optional(),
