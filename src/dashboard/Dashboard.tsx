@@ -80,7 +80,7 @@ export function Dashboard() {
     liftOutages: useMemo(() => (alerts ?? []).filter((a) => isAccessibilityAlert(a) && alertActive(a, now)), [alerts, now]),
     fires,
     fireLevels: useMemo(() => (fires ? firesByLevel(fires) : null), [fires]),
-    rising: useMemo(() => (gauges ? fastestRising(gauges, 60 * 60_000, 6) : null), [gauges]),
+    rising: useMemo(() => (gauges ? fastestRising(gauges, 60 * 60_000, 6, now) : null), [gauges, now]),
     busy: useMemo(() => (sites && volumes ? busiestSignals(sites, volumes, 6) : null), [sites, volumes]),
     corridorRows: useMemo(() => (council.corridors ? corridorReport(council.corridors.corridors, council.corridors.months) : null), [council.corridors]),
     todaysEvents,

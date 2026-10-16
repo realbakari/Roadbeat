@@ -5,7 +5,6 @@ import { FIRE_LEVELS, type FireLevel, type FireWarning } from '../api/bushfires'
 import type { LiveVehicle, TripUpdate, TripUpdates, VehicleMode } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
 import { hasEnded, isClosure, isUpcoming } from './filters'
-import { changeWithin } from './gauges'
 import { siteLoad } from './signals'
 
 /** Events in effect now: published, not future roadworks or events, and not past their end date. */
@@ -109,13 +108,22 @@ export interface RisingGauge {
   at: number
 }
 
-/** Stream gauges that rose the most over `windowMs`, between two reported readings. Falling or flat gauges are left out. */
-export function fastestRising(gauges: Gauge[], windowMs: number, limit: number): RisingGauge[] {
+/**
+ * Stream gauges that rose the most over the `windowMs` before `now`, between
+ * two readings reported in that time. Falling or flat gauges are left out, and
+ * so is a gauge that has stopped reporting: a rise before it went quiet is not
+ * a rise in the last hour.
+ */
+export function fastestRising(gauges: Gauge[], windowMs: number, limit: number, now: number): RisingGauge[] {
   return gauges
     .filter((g) => g.kind === 'stream')
     .flatMap((gauge) => {
-      const c = changeWithin(gauge, windowMs)
-      return c && c.delta > 0 ? [{ gauge, delta: c.delta, latest: c.to.value, at: c.to.time }] : []
+      const inWindow = gauge.readings.filter((r) => r.time >= now - windowMs && r.time <= now)
+      const from = inWindow[0]
+      const to = inWindow.at(-1)
+      if (!from || !to || from === to) return []
+      const delta = to.value - from.value
+      return delta > 0 ? [{ gauge, delta, latest: to.value, at: to.time }] : []
     })
     .sort((a, b) => b.delta - a.delta)
     .slice(0, limit)

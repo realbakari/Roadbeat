@@ -95,11 +95,21 @@ describe('fastestRising', () => {
   })
 
   it('ranks rising gauges by their rise between real readings and leaves out falling ones', () => {
-    const list = fastestRising([gauge('slow', [1, 1.1]), gauge('fast', [1, 1.5]), gauge('falling', [2, 1])], 60 * 60_000, 5)
+    const list = fastestRising([gauge('slow', [1, 1.1]), gauge('fast', [1, 1.5]), gauge('falling', [2, 1])], 60 * 60_000, 5, NOW)
     expect(list.map((r) => [r.gauge.id, Math.round(r.delta * 10) / 10])).toEqual([
       ['fast', 0.5],
       ['slow', 0.1],
     ])
+  })
+
+  it("leaves out a gauge whose rise was before it stopped reporting", () => {
+    const quiet = { ...gauge('quiet', [1.45, 1.85]), readings: gauge('quiet', [1.45, 1.85]).readings.map((r) => ({ ...r, time: r.time - 18 * 3_600_000 })) }
+    expect(fastestRising([quiet, gauge('now', [1, 1.2])], 60 * 60_000, 5, NOW).map((r) => r.gauge.id)).toEqual(['now'])
+  })
+
+  it('measures only the part of a rise within the hour before now', () => {
+    const g = { ...gauge('g', [1]), readings: [{ time: NOW - 90 * 60_000, value: 1 }, { time: NOW - 50 * 60_000, value: 1.3 }, { time: NOW - 10 * 60_000, value: 1.4 }] }
+    expect(fastestRising([g], 60 * 60_000, 5, NOW)[0].delta).toBeCloseTo(0.1)
   })
 })
 
