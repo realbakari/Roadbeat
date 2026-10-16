@@ -114,7 +114,7 @@ This downloads the Department of Resources' *Place names gazetteer - Queensland*
 npm run data:dashboards
 ```
 
-This reads the Queensland Government's CSV of local government disaster dashboards, asks each one for the QIT Plus feed, and writes `src/data/council-dashboards.json` with the councils that answer, their council area and the address the server reads them from (http only when Node rejects the site's certificate chain). Rebuild when a council moves or replaces its dashboard; the script prints any council it couldn't match to a council area.
+This reads the Queensland Government's CSV of local government disaster dashboards, asks each one for the QIT Plus feed, and writes `src/data/council-dashboards.json` with the councils that answer, their council area, the address the server reads them from (http only when Node rejects the site's certificate chain) and the icon the council's website declares (its Apple touch icon, else its largest favicon), with any icon file shared by two councils dropped as a platform default. Rebuild when a council moves or replaces its dashboard; the script prints any council it couldn't match to a council area.
 
 ## Check the result
 

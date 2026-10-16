@@ -56,7 +56,7 @@ Every page has a hash route, so any view can be shared or bookmarked: `#event/12
 
 ## The dashboard and kiosk board have their own paths
 
-`/dashboard` and `/kiosk/<region>/<stop id>` are separate full-screen views, not panels in the app. `parsePath()` in `src/lib/route.ts` picks the screen in `src/Root.tsx`, and each screen is loaded only when opened. Hosts serve `index.html` for these paths: `vercel.json` and `public/_redirects` rewrite them. The dashboard's figures come from pure functions in `src/lib/dashboard.ts`. Its on-time share counts only trips with a vehicle reporting its position, because TransLink's feed also lists trips that haven't started, whose delay is just the timetable.
+`/dashboard` and `/kiosk/<region>/<stop id>` are separate full-screen views, not panels in the app. `parsePath()` in `src/lib/route.ts` picks the screen in `src/Root.tsx`, and each screen is loaded only when opened. The dashboard is a set of panels the viewer chooses and orders: `src/lib/dashboardLayout.ts` holds the registry and the layout rules, `src/dashboard/panels.tsx` and `panelsMonitor.tsx` hold one view per panel, and `Dashboard.tsx` reads only the feeds the shown panels need. The layout lives in the page link (`/dashboard?show=events,news,fires`), so a TV can be set up by URL, and otherwise in this browser. Hosts serve `index.html` for these paths: `vercel.json` and `public/_redirects` rewrite them. The dashboard's figures come from pure functions in `src/lib/dashboard.ts`. Its on-time share counts only trips with a vehicle reporting its position, because TransLink's feed also lists trips that haven't started, whose delay is just the timetable.
 
 ## The API and MCP server share the app's parsing
 
@@ -121,3 +121,4 @@ Preferences live in `localStorage`, so they stay in one browser and never reach 
 | `qldt-notifications`, `qldt-seen` | The notification list and the last state seen |
 | `qldt-saved-stops`, `qldt-recent-stops`, `qldt-saved-trips` | My stops, Recent stops and My trips |
 | `qldt-panel`, `qldt-basemap`, `qldt-time-format` | Panel size, base map style and departure time format |
+| `qldt-dashboard` | Which dashboard panels show, in what order |

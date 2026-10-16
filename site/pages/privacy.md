@@ -19,7 +19,7 @@ There are no accounts, no cookies, no advertising and no analytics.
 
 ## What stays in your browser
 
-Roadbeat saves your preferences in your browser's local storage, on your device only. That includes your notification settings and notification list, your saved stops, recent stops and saved trips, your commute (roads, stop, line, time and days), and display choices such as the colour theme, base map, panel size and time format. Roadbeat never sends this information to a server. Clearing your browser's site data for Roadbeat deletes it.
+Roadbeat saves your preferences in your browser's local storage, on your device only. That includes your notification settings and notification list, your saved stops, recent stops and saved trips, your commute (roads, stop, line, time and days), and display choices such as the colour theme, base map, panel size, time format and which dashboard panels show. Roadbeat never sends this information to a server. Clearing your browser's site data for Roadbeat deletes it.
 
 ## Your location
 

@@ -37,7 +37,7 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 ### The API and MCP server run only on Vercel
 
-The functions in `api/` serve the public API (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`) and the MCP server at `/mcp`. Vercel builds them with no extra setup. On other hosts the app still works; only these endpoints are missing.
+The functions in `api/` serve the public API (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`), the news monitor (`/api/news`), camera image times (`/api/camera-time`, also `functions/camera-time.ts` on Cloudflare) and the MCP server at `/mcp`. Vercel builds them with no extra setup. On other hosts the app still works; only these endpoints are missing.
 
 Vercel compiles each file in `api/` on its own for Node, without bundling. So every relative import in `api/`, and in the `src/` modules it imports, must end in `.js`, and JSON imports need `with { type: 'json' }`. `api/tsconfig.json` checks this, and `npm run build` runs it.
 
