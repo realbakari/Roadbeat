@@ -259,7 +259,7 @@ export function EventList({
           )}
           <Select
             aria-label="Sort events"
-            size="xs"
+            size="sm"
             value={filters.sort}
             onValueChange={(v) => {
               const sort = (v as SortKey) ?? 'priority'

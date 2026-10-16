@@ -25,6 +25,9 @@ import { TrafficMap } from './components/TrafficMap'
 import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/settings'
 import { useColorMode } from './hooks/useColorMode'
 import { useVisitors } from './hooks/useVisitors'
+import { SkipLinks } from './components/SkipLinks'
+import { pageTitle } from './lib/pageTitle'
+import { eventTitle } from './lib/eventText'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { mapCardFor } from './lib/mapCard'
 import { usePanelLayout } from './hooks/usePanelLayout'
@@ -270,6 +273,16 @@ export default function App() {
     setFocus({ center: selectedFire.position, zoom: selectedFire.areaShape ? 10 : 11 })
   }, [selectedFire])
 
+  // The tab title names the open view, for history, bookmarks, shared links and screen readers.
+  const baseTitle = useRef(document.title)
+  useEffect(() => {
+    document.title = pageTitle(
+      sel,
+      { event: selectedEvent ? eventTitle(selectedEvent) : null, locality: locality.found?.name, fire: selectedFire?.title },
+      baseTitle.current,
+    )
+  }, [sel, selectedEvent, locality.found, selectedFire])
+
   // With the panel hidden (closed on desktop, the Map view on phones), the selected item gets a card on the map instead.
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
@@ -391,6 +404,7 @@ export default function App() {
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col bg-kumo-canvas">
+        <SkipLinks />
         <AppHeader
           mode={mode}
           onToggleMode={toggle}
@@ -534,7 +548,7 @@ export default function App() {
               onClick={() => setPanelMode((m) => (m === 'closed' ? 'normal' : 'closed'))}
               aria-label={panelMode === 'closed' ? 'Show panel' : 'Hide panel'}
               title={panelMode === 'closed' ? 'Show panel' : 'Hide panel for a full map'}
-              className="absolute top-1/2 left-0 z-20 hidden h-12 w-5 -translate-y-1/2 items-center justify-center rounded-r-md bg-kumo-base text-kumo-subtle shadow-sm ring ring-kumo-line hover:text-kumo-default md:flex"
+              className="absolute top-1/2 left-0 z-20 hidden h-12 w-6 -translate-y-1/2 items-center justify-center rounded-r-md bg-kumo-base text-kumo-subtle shadow-sm ring ring-kumo-line hover:text-kumo-default md:flex"
             >
               {panelMode === 'closed' ? <CaretRightIcon size={14} weight="bold" /> : <CaretLeftIcon size={14} weight="bold" />}
             </button>
