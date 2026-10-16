@@ -30,6 +30,10 @@ All government data is used under the Creative Commons Attribution 4.0 licence.
 
 Three directories list what the app covers, as plain pages a search engine can read: every [train station, tram stop and ferry terminal](/stations/) in South East Queensland, every [TransLink line and regional route](/lines/), and every [Queensland town, suburb and locality](/places/). Each page names only what TransLink and the Queensland place names gazetteer publish, and opens the live view in the app.
 
+## Support Roadbeat
+
+Roadbeat is free to use, with no ads and no account. If it's useful to you, you can support it at [Buy Me a Coffee](https://buymeacoffee.com/realbakari).
+
 ## What Roadbeat is not
 
 Roadbeat is an independent project. It is not run, affiliated with or endorsed by the Queensland Government, Translink, the Queensland Fire Department or Brisbane City Council. It is not an emergency service. For emergencies, call Triple Zero (000). For official road information, call 13 19 40 or visit qldtraffic.qld.gov.au. For public transport, call 13 12 30 or visit translink.com.au.

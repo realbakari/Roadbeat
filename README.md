@@ -33,6 +33,10 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Visitor count.** The header shows how many people are using Roadbeat now and today, counted on the server without cookies from a daily-rotating hash, and Vercel Web Analytics counts page views for the dashboard.
 - **Maps.** Every printable map TransLink publishes, by place, and a choice of base map styles with 3D buildings.
 
+## Support
+
+Roadbeat is free, with no ads or accounts. If it's useful to you, you can support it at [Buy Me a Coffee](https://buymeacoffee.com/realbakari).
+
 ## Run it locally
 
 You need Node.js 22 or later and `unzip` (for the data build scripts).

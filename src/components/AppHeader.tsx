@@ -2,6 +2,7 @@ import { Button, DropdownMenu, Text, Tooltip } from '@cloudflare/kumo'
 import {
   ArrowClockwiseIcon,
   ArrowsInSimpleIcon,
+  CoffeeIcon,
   ArrowsOutSimpleIcon,
   CarProfileIcon,
   DotsThreeIcon,
@@ -20,6 +21,8 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { useMemo } from 'react'
+import { SUPPORT_URL } from '../lib/support'
+import { NewTabNote } from './NewTabNote'
 import type { TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
 import { DEFAULT_FILTERS, isClosure, isUpcoming, type EventFilters } from '../lib/filters'
@@ -256,6 +259,11 @@ export function AppHeader({
             </DropdownMenu.LinkItem>
             <DropdownMenu.LinkItem href="/contact/" icon={EnvelopeSimpleIcon}>
               Contact
+            </DropdownMenu.LinkItem>
+            <DropdownMenu.Separator />
+            <DropdownMenu.LinkItem href={SUPPORT_URL} target="_blank" rel="noopener" icon={CoffeeIcon}>
+              Buy me a coffee
+              <NewTabNote />
             </DropdownMenu.LinkItem>
           </DropdownMenu.Content>
         </DropdownMenu>
