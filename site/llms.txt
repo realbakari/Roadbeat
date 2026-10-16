@@ -31,6 +31,11 @@
 - [Privacy](%SITE_URL%/privacy/): no accounts, cookies or analytics; settings stay in the browser.
 <!--endif-->
 - [Contact](%SITE_URL%/contact/): how to reach Roadbeat and where to report problems with official data.
+- [Stations](%SITE_URL%/stations/): a page per train station, tram stop and ferry terminal in South East Queensland (`%SITE_URL%/stations/central-station/`), with its lines, platforms, published position and nearby localities.
+- [Lines and routes](%SITE_URL%/lines/): a page per TransLink line and regional route (`%SITE_URL%/lines/t1-caboolture/`, `%SITE_URL%/lines/tsv-200/`), with the stops it serves.
+- [Places](%SITE_URL%/places/): a page per Queensland town, suburb or locality (`%SITE_URL%/places/goodna/`), with its council area, gazetteer position and nearby stations.
+
+The directory pages hold published facts only; each ends with the app link for live departures or what is happening there now.
 
 Every page is also available as Markdown: send `Accept: text/markdown`, or add `.md` to the page path (for example `%SITE_URL%/about.md`).
 

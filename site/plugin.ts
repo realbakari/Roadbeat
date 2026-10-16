@@ -15,6 +15,8 @@ import { readFileSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { mcpCard, openApi } from './agents.ts'
+import { loadDirectory } from './directory.ts'
+import { directoryPages, type Crumb, type StaticPage } from './directoryPages.ts'
 
 export const SITE = {
   name: 'Roadbeat',
@@ -25,7 +27,6 @@ export const SITE = {
 
 const PAGES = ['index', 'about', 'privacy', 'contact', '404'] as const
 type PageName = (typeof PAGES)[number]
-const INDEXABLE: PageName[] = ['index', 'about', 'privacy', 'contact']
 
 export interface SiteSettings {
   siteUrl: string
@@ -34,14 +35,18 @@ export interface SiteSettings {
   gaMeasurementId: string
 }
 
-interface Page {
-  name: PageName
-  title: string
-  description: string
-  markdown: string
+type Page = StaticPage
+
+const CRUMBS: Record<PageName, Crumb[]> = {
+  index: [{ name: SITE.name, path: '/' }],
+  about: [{ name: SITE.name, path: '/' }, { name: 'About', path: '/about/' }],
+  privacy: [{ name: SITE.name, path: '/' }, { name: 'Privacy', path: '/privacy/' }],
+  contact: [{ name: SITE.name, path: '/' }, { name: 'Contact', path: '/contact/' }],
+  '404': [{ name: SITE.name, path: '/' }],
 }
 
 const read = (file: string) => readFileSync(new URL(file, import.meta.url), 'utf8')
+const pagePath = (name: PageName) => (name === 'index' ? '/' : name === '404' ? '/404.html' : `/${name}/`)
 
 /** Resolves `<!--if:VAR-->…<!--endif-->` and `<!--ifnot:VAR-->…<!--endif-->` blocks, then `%VAR%` placeholders. */
 export function fillTemplate(text: string, vars: Record<string, string>) {
@@ -60,7 +65,7 @@ export function loadPage(name: PageName, s: SiteSettings): Page {
   const raw = fillTemplate(read(`./pages/${name}.md`), vars(s))
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
   const meta = Object.fromEntries((match?.[1] ?? '').split('\n').map((l) => [l.slice(0, l.indexOf(':')).trim(), l.slice(l.indexOf(':') + 1).trim()]))
-  return { name, title: meta.title ?? SITE.name, description: meta.description ?? '', markdown: (match?.[2] ?? raw).trim() + '\n' }
+  return { path: pagePath(name), title: meta.title ?? SITE.name, description: meta.description ?? '', markdown: (match?.[2] ?? raw).trim() + '\n', crumbs: CRUMBS[name], noindex: name === '404' }
 }
 
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -101,8 +106,6 @@ export function markdownToHtml(md: string) {
   return out.join('\n')
 }
 
-const pagePath = (name: PageName) => (name === 'index' ? '/' : `/${name}/`)
-
 /** Google's gtag.js snippet for a GA4 measurement ID. */
 function googleTag(id: string) {
   return `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
@@ -111,12 +114,12 @@ function googleTag(id: string) {
 
 /** Meta tags shared by every page: description, canonical, Open Graph and social card. */
 function headTags(page: Page, s: SiteSettings) {
-  const url = s.siteUrl ? `${s.siteUrl}${pagePath(page.name)}` : ''
+  const url = s.siteUrl ? `${s.siteUrl}${page.path}` : ''
   const image = s.siteUrl ? `${s.siteUrl}/og-image.jpg` : '/og-image.jpg'
   return [
     `<meta name="description" content="${escape(page.description)}" />`,
-    url && page.name !== '404' ? `<link rel="canonical" href="${url}" />` : '',
-    page.name === '404' ? '<meta name="robots" content="noindex" />' : '',
+    url && !page.noindex ? `<link rel="canonical" href="${url}" />` : '',
+    page.noindex ? '<meta name="robots" content="noindex" />' : '',
     `<meta name="theme-color" content="${SITE.themeColor}" />`,
     '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />',
     '<link rel="apple-touch-icon" href="/apple-touch-icon.png" />',
@@ -126,7 +129,7 @@ function headTags(page: Page, s: SiteSettings) {
     '<meta name="mobile-web-app-capable" content="yes" />',
     '<meta name="apple-mobile-web-app-capable" content="yes" />',
     '<meta name="apple-mobile-web-app-status-bar-style" content="default" />',
-    '<link rel="alternate" type="text/markdown" href="' + (page.name === 'index' ? '/index.md' : `/${page.name}.md`) + '" />',
+    `<link rel="alternate" type="text/markdown" href="${markdownPathFor(page.path)}" />`,
     `<meta property="og:site_name" content="${SITE.name}" />`,
     `<meta property="og:type" content="website" />`,
     `<meta property="og:locale" content="${SITE.locale}" />`,
@@ -147,7 +150,20 @@ function headTags(page: Page, s: SiteSettings) {
     .join('\n    ')
 }
 
-/** JSON-LD for the home page: the app itself and the project behind it. */
+/** A page's breadcrumb trail as schema.org's BreadcrumbList, with absolute links when the site address is known. */
+export function breadcrumbList(crumbs: Crumb[], s: SiteSettings) {
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, ...(s.siteUrl ? { item: `${s.siteUrl}${c.path}` } : {}) })),
+  }
+}
+
+/** JSON-LD for a directory or trust page: its breadcrumbs and whatever the page describes (a station, a place). */
+export function pageJsonLd(page: Page, s: SiteSettings) {
+  return { '@context': 'https://schema.org', '@graph': [breadcrumbList(page.crumbs, s), ...(page.jsonLd ?? [])] }
+}
+
+/** JSON-LD for the home page: the site, the app itself and the project behind it. */
 export function jsonLd(page: Page, s: SiteSettings) {
   const org = {
     '@type': 'Organization',
@@ -158,6 +174,24 @@ export function jsonLd(page: Page, s: SiteSettings) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
+      {
+        '@type': 'WebSite',
+        name: SITE.name,
+        ...(s.siteUrl ? { url: `${s.siteUrl}/` } : {}),
+        inLanguage: 'en-AU',
+        publisher: org,
+        // The app opens any Queensland locality's page by name (#place/locality/<name>).
+        ...(s.siteUrl
+          ? {
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: { '@type': 'EntryPoint', urlTemplate: `${s.siteUrl}/#place/locality/{search_term_string}` },
+                'query-input': 'required name=search_term_string',
+              },
+            }
+          : {}),
+      },
+      breadcrumbList(page.crumbs, s),
       {
         '@type': 'WebApplication',
         name: SITE.name,
@@ -196,12 +230,21 @@ header a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:
 header img{width:28px;height:28px}main{padding-top:8px;padding-bottom:32px}
 h1{font-size:24px;line-height:1.25;margin:20px 0 8px}h2{font-size:16px;margin:24px 0 6px}p,ul{margin:6px 0}ul{padding-left:20px}li{margin:3px 0}
 a{color:var(--link)}code{font-size:.9em}footer{border-top:1px solid var(--line);padding-top:12px;padding-bottom:28px;color:var(--sub)}
-footer nav{display:flex;flex-wrap:wrap;gap:4px 16px}footer a{color:var(--sub)}`
+footer nav{display:flex;flex-wrap:wrap;gap:4px 16px}footer a{color:var(--sub)}
+nav.crumbs{margin:14px 0 -10px;color:var(--sub)}nav.crumbs ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px}nav.crumbs li+li::before{content:"›";margin-right:4px}
+a.open{display:inline-block;margin:12px 0 4px;padding:10px 16px;border-radius:8px;background:var(--brand);color:#fff;font-weight:600;text-decoration:none}a.open:hover{filter:brightness(1.1)}`
 
-const FOOTER = `<footer><nav><a href="/">Open the app</a><a href="/about/">About</a><a href="/privacy/">Privacy</a><a href="/contact/">Contact</a><a href="/llms.txt">For AI agents</a></nav><p>Roadbeat is independent and not affiliated with the Queensland Government. Data © State of Queensland and Brisbane City Council, CC BY 4.0.</p></footer>`
+const FOOTER = `<footer><nav><a href="/">Open the app</a><a href="/stations/">Stations</a><a href="/lines/">Lines</a><a href="/places/">Places</a><a href="/about/">About</a><a href="/privacy/">Privacy</a><a href="/contact/">Contact</a><a href="/llms.txt">For AI agents</a></nav><p>Roadbeat is independent and not affiliated with the Queensland Government. Data © State of Queensland and Brisbane City Council, CC BY 4.0.</p></footer>`
 
-/** A full static HTML page for About, Privacy, Contact and the 404 page. */
+function crumbsNav(crumbs: Crumb[]) {
+  if (crumbs.length < 2) return ''
+  const items = crumbs.map((c, i) => (i === crumbs.length - 1 ? `<li aria-current="page">${escape(c.name)}</li>` : `<li><a href="${c.path}">${escape(c.name)}</a></li>`))
+  return `<nav class="crumbs" aria-label="Breadcrumb"><ol>${items.join('')}</ol></nav>\n`
+}
+
+/** A full static HTML page: the trust pages, the 404 page and every directory page. */
 export function pageHtml(page: Page, s: SiteSettings) {
+  const open = page.open ? `\n<p><a class="open" href="/#${page.open.hash}">${escape(page.open.label)}</a></p>` : ''
   return `<!doctype html>
 <html lang="en-AU">
   <head>
@@ -209,12 +252,13 @@ export function pageHtml(page: Page, s: SiteSettings) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escape(page.title)} · ${SITE.name}</title>
     ${headTags(page, s)}
+    <script type="application/ld+json">${JSON.stringify(pageJsonLd(page, s))}</script>
     <style>${STYLE}</style>
   </head>
   <body>
     <header><a href="/"><img src="/favicon.svg" alt="" />${SITE.name}</a></header>
     <main>
-${markdownToHtml(page.markdown)}
+${crumbsNav(page.crumbs)}${markdownToHtml(page.markdown)}${open}
     </main>
     ${FOOTER}
   </body>
@@ -233,14 +277,28 @@ Disallow: /mcp
 ${s.siteUrl ? `\nSitemap: ${s.siteUrl}/sitemap.xml\n` : ''}`
 }
 
-function sitemap(s: SiteSettings) {
+/** The sitemap protocol's limit on URLs per file. */
+export const SITEMAP_LIMIT = 50_000
+
+const XML = '<?xml version="1.0" encoding="UTF-8"?>\n'
+const NS = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
+
+/**
+ * sitemap.xml listing every indexable page. Over `limit` URLs, sitemap.xml
+ * becomes a sitemap index of sitemap-1.xml, sitemap-2.xml and so on.
+ */
+export function sitemapFiles(s: SiteSettings, paths: string[], limit = SITEMAP_LIMIT): Record<string, string> {
   const today = new Date().toISOString().slice(0, 10)
-  const urls = INDEXABLE.map((n) => `  <url><loc>${s.siteUrl}${pagePath(n)}</loc><lastmod>${today}</lastmod></url>`).join('\n')
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>
-`
+  const urlset = (list: string[]) => `${XML}<urlset ${NS}>\n${list.map((p) => `  <url><loc>${s.siteUrl}${p}</loc><lastmod>${today}</lastmod></url>`).join('\n')}\n</urlset>\n`
+  if (paths.length <= limit) return { '/sitemap.xml': urlset(paths) }
+  const files: Record<string, string> = {}
+  const parts: string[] = []
+  for (let i = 0; i * limit < paths.length; i++) {
+    files[`/sitemap-${i + 1}.xml`] = urlset(paths.slice(i * limit, (i + 1) * limit))
+    parts.push(`  <sitemap><loc>${s.siteUrl}/sitemap-${i + 1}.xml</loc><lastmod>${today}</lastmod></sitemap>`)
+  }
+  files['/sitemap.xml'] = `${XML}<sitemapindex ${NS}>\n${parts.join('\n')}\n</sitemapindex>\n`
+  return files
 }
 
 function manifest() {
@@ -269,28 +327,38 @@ function manifest() {
   )
 }
 
-/** Every generated file, keyed by its URL path. */
-export function siteFiles(s: SiteSettings): Record<string, { body: string; type: string }> {
-  const files: Record<string, { body: string; type: string }> = {
+export type SiteFiles = Record<string, { body: string; type: string }>
+
+/**
+ * Every generated file, keyed by its URL path: the trust pages, the directory
+ * pages (`directory`, by default the one built from the repo's data), their
+ * Markdown twins, the sitemap and the agent files.
+ */
+export function siteFiles(s: SiteSettings, directory: StaticPage[] = directoryPages(loadDirectory())): SiteFiles {
+  const files: SiteFiles = {
     '/robots.txt': { body: robots(s), type: 'text/plain; charset=utf-8' },
     '/llms.txt': { body: fillTemplate(read('./llms.txt'), vars(s)), type: 'text/plain; charset=utf-8' },
     '/manifest.webmanifest': { body: manifest(), type: 'application/manifest+json' },
     '/openapi.json': { body: JSON.stringify(openApi(s.siteUrl), null, 2), type: 'application/json' },
     '/.well-known/mcp.json': { body: JSON.stringify(mcpCard(s.siteUrl), null, 2), type: 'application/json' },
   }
-  if (s.siteUrl) files['/sitemap.xml'] = { body: sitemap(s), type: 'application/xml; charset=utf-8' }
-  for (const name of PAGES) {
-    const page = loadPage(name, s)
-    files[`/${name}.md`] = { body: page.markdown, type: 'text/markdown; charset=utf-8' }
-    if (name === '404') files['/404.html'] = { body: pageHtml(page, s), type: 'text/html; charset=utf-8' }
-    else if (name !== 'index') files[`/${name}/index.html`] = { body: pageHtml(page, s), type: 'text/html; charset=utf-8' }
+  const pages = [...PAGES.map((name) => loadPage(name, s)), ...directory]
+  for (const page of pages) {
+    const markdown = page.open ? `${page.markdown}\n\nOpen in Roadbeat: ${s.siteUrl}/#${page.open.hash}\n` : page.markdown
+    files[markdownPathFor(page.path)] = { body: markdown, type: 'text/markdown; charset=utf-8' }
+    if (page.path === '/') continue
+    files[page.path.endsWith('/') ? `${page.path}index.html` : page.path] = { body: pageHtml(page, s), type: 'text/html; charset=utf-8' }
+  }
+  if (s.siteUrl) {
+    const indexable = pages.filter((p) => !p.noindex).map((p) => p.path)
+    for (const [path, body] of Object.entries(sitemapFiles(s, indexable))) files[path] = { body, type: 'application/xml; charset=utf-8' }
   }
   return files
 }
 
 /** The Markdown file for a request path, for `Accept: text/markdown`: "/" → "/index.md", "/about/" → "/about.md". */
 export function markdownPathFor(path: string) {
-  const clean = path.replace(/\/+$/, '') || '/'
+  const clean = path.replace(/\/+$/, '').replace(/\.html$/, '') || '/'
   return clean === '/' ? '/index.md' : `${clean}.md`
 }
 
@@ -298,6 +366,9 @@ export function sitePages(settings: SiteSettings): Plugin {
   if (settings.gaMeasurementId && !/^G-[A-Z0-9]+$/.test(settings.gaMeasurementId))
     throw new Error(`GA_MEASUREMENT_ID must look like G-XXXXXXX, got "${settings.gaMeasurementId}"`)
   const s = { ...settings, siteUrl: settings.siteUrl.replace(/\/+$/, '') }
+  // Thousands of directory pages: rendered once per build or dev server, not per request.
+  let files: SiteFiles | null = null
+  const allFiles = () => (files ??= siteFiles(s))
   return {
     name: 'roadbeat-site-pages',
     transformIndexHtml(html) {
@@ -308,12 +379,12 @@ export function sitePages(settings: SiteSettings): Plugin {
         .replace('<!--site-static-home-->', `<div class="static-home">\n${markdownToHtml(home.markdown)}\n</div>`)
     },
     generateBundle() {
-      for (const [path, f] of Object.entries(siteFiles(s))) this.emitFile({ type: 'asset', fileName: path.slice(1), source: f.body })
+      for (const [path, f] of Object.entries(allFiles())) this.emitFile({ type: 'asset', fileName: path.slice(1), source: f.body })
     },
     configureServer(server) {
       server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
         const path = (req.url ?? '/').split('?')[0]
-        const files = siteFiles(s)
+        const files = allFiles()
         const wantsMarkdown = (req.headers.accept ?? '').includes('text/markdown')
         const key = wantsMarkdown ? markdownPathFor(path) : files[path] ? path : files[`${path.replace(/\/?$/, '/')}index.html`] ? `${path.replace(/\/?$/, '/')}index.html` : null
         const hit = key ? files[key] : null

@@ -120,4 +120,6 @@ This reads the Queensland Government's CSV of local government disaster dashboar
    npm test && npm run build
    ```
 
+   The build also regenerates the directory pages under `dist/stations/`, `dist/lines/` and `dist/places/` and the sitemap from the refreshed stop, route, timetable index and gazetteer files (see [Architecture](architecture.md)); no separate step is needed. A route that disappears from the timetable loses its page, and `sitemap.xml` lists only pages that exist.
+
 2. Start the app with `npm run dev`, open a line page such as T1 Caboolture, and compare a few times in the **Timetable** grid with the same line on [TransLink's timetable pages](https://jp.translink.com.au/plan-your-journey/timetables).

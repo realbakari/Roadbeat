@@ -1,4 +1,4 @@
-import { TRANSIT_REGIONS, type TransitRegion } from '../api/transitTypes'
+import { TRANSIT_REGIONS, type TransitRegion } from '../api/transitTypes.js'
 
 /** Each feed's network, as data.qld.gov.au names its GTFS file. */
 export const REGION_NAMES: Record<TransitRegion, string> = {
