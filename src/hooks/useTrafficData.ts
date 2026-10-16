@@ -34,6 +34,7 @@ import {
   type TransitRegion,
 } from '../api/translink'
 import { watchFeed, type FeedWatch } from '../lib/trip'
+import { mergeTripParts } from '../lib/tripFeed'
 import { liveRegions, MAIN_REGIONS } from '../lib/transitRegions'
 import { feedCounts, recordFeedCount, subscribeFeedCounts, useFeedCounts } from './useRegionFeeds'
 import type {
@@ -243,10 +244,7 @@ function subscribeTripUpdates(listener: () => void) {
     const notify = () => tripFeed.listeners.forEach((l) => l())
     // Each region is fetched on its own and shown as soon as it arrives.
     const parts = new Map<TransitRegion, TripUpdates>()
-    const publish = () => {
-      const all = [...parts.values()]
-      tripFeed.updates = { at: Object.assign({}, ...all.map((p) => p.at)), trips: all.flatMap((p) => p.trips) }
-    }
+    const publish = () => (tripFeed.updates = mergeTripParts([...parts.values()]))
     const reading = new Set<TransitRegion>()
     const read = (r: TransitRegion) => {
       if (reading.has(r)) return
