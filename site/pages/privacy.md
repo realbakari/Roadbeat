@@ -1,21 +1,16 @@
 ---
 title: Privacy
 <!--if:GA_MEASUREMENT_ID-->
-description: Roadbeat has no accounts or advertising and uses Google Analytics to count visits. Your settings and location stay in your browser unless you turn on commute push alerts.
+description: Roadbeat has no accounts or advertising. It counts visits without identifying you, and uses Google Analytics. Your settings and location stay in your browser unless you turn on commute push alerts.
 <!--endif-->
 <!--ifnot:GA_MEASUREMENT_ID-->
-description: Roadbeat has no accounts, no cookies and no analytics. Your settings and location stay in your browser unless you turn on commute push alerts.
+description: Roadbeat has no accounts, no advertising and no cookies. It counts visits without identifying you. Your settings and location stay in your browser unless you turn on commute push alerts.
 <!--endif-->
 ---
 
 # Privacy
 
-Roadbeat is built to need as little information about you as possible. <!--if:GA_MEASUREMENT_ID-->
-There are no accounts and no advertising. Roadbeat uses Google Analytics to count visits, as described below.
-<!--endif-->
-<!--ifnot:GA_MEASUREMENT_ID-->
-There are no accounts, no cookies, no advertising and no analytics.
-<!--endif-->
+Roadbeat is built to need as little information about you as possible. There are no accounts and no advertising. Roadbeat counts how many people use it without cookies and without identifying you, as described under [Analytics](#analytics).<!--if:GA_MEASUREMENT_ID--> It also uses Google Analytics, described below.<!--endif-->
 
 ## What stays in your browser
 
@@ -35,8 +30,15 @@ The **News** tab and the dashboard read headlines from Roadbeat's own server, wh
 
 When you open **Directions** for a place, Google Maps opens in a new tab under Google's own privacy terms.
 
-<!--if:GA_MEASUREMENT_ID-->
 ## Analytics
+
+Roadbeat counts how many people use it, so the count can be shown in the app and so it is clear whether the app is used. Two things count, and neither uses cookies or receives your saved stops, settings or location:
+
+- **Vercel Web Analytics**, run by Roadbeat's host, records page views. It tells visits apart within a day using a hash of your IP address and browser that changes every day, so it cannot identify you or follow you between days. Vercel describes this in its [Web Analytics privacy policy](https://vercel.com/docs/analytics/privacy-policy).
+- **The visitor count in the header** comes from Roadbeat's own server. While the app is open, your browser tells the server every five minutes that someone is here. The server counts you under an id made by hashing your IP address, your browser and the date with a secret it keeps, so the id cannot be turned back into your address and changes every day. The id itself is not stored: it goes into a counter that keeps only an estimate of how many different ids it saw today and in the last ten minutes, and each day's counter is deleted after two days.
+
+<!--if:GA_MEASUREMENT_ID-->
+## Google Analytics
 
 Roadbeat uses Google Analytics to count visits and see which pages and features people use, so it can improve the app. Google Analytics sets cookies in your browser and receives your IP address, your browser and device type, the pages you view and where you came from. Roadbeat does not send it your saved stops, settings or location. Google handles this data under the [Google Privacy Policy](https://policies.google.com/privacy). To opt out, block cookies for Roadbeat in your browser or install the [Google Analytics opt-out add-on](https://tools.google.com/dlpage/gaoptout).
 

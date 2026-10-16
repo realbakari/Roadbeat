@@ -39,9 +39,18 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 The functions in `api/` serve the public API (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`), the news monitor (`/api/news`), camera image times (`/api/camera-time`, also `functions/camera-time.ts` on Cloudflare) and the MCP server at `/mcp`. Vercel builds them with no extra setup. On other hosts the app still works; only these endpoints are missing.
 
-Vercel's Hobby plan deploys at most 12 functions, and every file directly in `api/` is one, as is `middleware.ts`. So the small read-only endpoints (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`, `/api/history` and `/api/camera-time`) share one function, `api/[endpoint].ts`, which routes by path to handlers in `api/_lib/endpoints/`. Add a new small endpoint there rather than as a new file in `api/`; Vercel doesn't deploy files under `api/_lib/` as functions. The deployment currently has 8 functions.
+Vercel's Hobby plan deploys at most 12 functions, and every file directly in `api/` is one, as is `middleware.ts`. So the small read-only endpoints (`/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`, `/api/history`, `/api/camera-time` and `/api/visits`) share one function, `api/[endpoint].ts`, which routes by path to handlers in `api/_lib/endpoints/`. Add a new small endpoint there rather than as a new file in `api/`; Vercel doesn't deploy files under `api/_lib/` as functions. The deployment currently has 8 functions.
 
 Vercel compiles each file in `api/` on its own for Node, without bundling. So every relative import in `api/`, and in the `src/` modules it imports, must end in `.js`, and JSON imports need `with { type: 'json' }`. `api/tsconfig.json` checks this, and `npm run build` runs it.
+
+### Count visitors
+
+Two counts run, and both are off until set up:
+
+- **Vercel Web Analytics** shows visitors, page views, countries, devices and referrers in the Vercel dashboard. The app includes Vercel's `<Analytics />` component (`src/main.tsx`), which does nothing until you open the project in Vercel, choose **Analytics** and click **Enable**; redeploy after enabling. It sets no cookies. The Hobby plan counts 50,000 events a month.
+- **The visitor count in the app's header** ("14 online · 312 today") comes from `/api/visits` (`api/_lib/endpoints/visits.ts`) and needs the Upstash for Redis database, connected as for push alerts. Each open tab pings every five minutes and is counted under a daily-rotating hash of its address and browser (`api/_lib/visits.ts`), in HyperLogLogs that keep an estimate, not the ids. Set `VISITS_SALT` to a long random string so the hash can't be recomputed by anyone without it; without it, `CRON_SECRET` is used. Without the database, the endpoint answers `{ "available": false }` and the header shows no count.
+
+The count costs four Redis commands per open tab every five minutes, about 1,150 a day for a tab left open all day. Upstash's free tier allows 500,000 commands a month, so the count stays free up to roughly 14 tabs open around the clock, or many more briefly; past that, upgrade the database or lengthen the ping in `src/hooks/useVisitors.ts`.
 
 ### Turn on commute push alerts
 

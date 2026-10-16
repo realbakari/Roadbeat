@@ -24,6 +24,7 @@ import { ReplayBanner, Timeline } from './components/Timeline'
 import { TrafficMap } from './components/TrafficMap'
 import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/settings'
 import { useColorMode } from './hooks/useColorMode'
+import { useVisitors } from './hooks/useVisitors'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { mapCardFor } from './lib/mapCard'
 import { usePanelLayout } from './hooks/usePanelLayout'
@@ -51,6 +52,7 @@ export default function App() {
 
   const [panelChoice, setPanel] = useState<Panel>('events')
   const [sel, go] = useHashSelection()
+  const visitors = useVisitors()
   // #news and #news/<story> open the News tab whichever tab was last chosen.
   const panel: Panel = sel.news != null ? 'news' : panelChoice
   const occupancies = useRoadOccupancies(panel === 'events')
@@ -416,6 +418,7 @@ export default function App() {
           onRefresh={refresh}
           panelExpanded={panelMode === 'expanded'}
           onTogglePanelExpanded={() => setPanelMode((m) => (m === 'expanded' ? 'normal' : 'expanded'))}
+          visitors={visitors}
         />
 
         {(error || locateError) && (

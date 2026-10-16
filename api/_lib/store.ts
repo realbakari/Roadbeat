@@ -24,6 +24,22 @@ export async function redis<T>(command: (string | number)[]): Promise<T> {
   return body.result as T
 }
 
+/** Runs several commands in one request, in order, and returns each one's result. */
+export async function redisPipeline<T>(commands: (string | number)[][]): Promise<T[]> {
+  const res = await fetch(`${URL_!.replace(/\/$/, '')}/pipeline`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+    body: JSON.stringify(commands),
+    signal: AbortSignal.timeout(10_000),
+  })
+  const body = (await res.json()) as { result?: T; error?: string }[] | { error?: string }
+  if (!res.ok || !Array.isArray(body)) throw new Error(`Redis store: ${(body as { error?: string }).error ?? res.status}`)
+  return body.map((b) => {
+    if (b.error) throw new Error(`Redis store: ${b.error}`)
+    return b.result as T
+  })
+}
+
 /** A stable id for a subscription, so the endpoint URL isn't the key. */
 export const subscriptionId = (endpoint: string) => createHash('sha256').update(endpoint).digest('hex').slice(0, 32)
 

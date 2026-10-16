@@ -57,8 +57,8 @@ function qldGaugesProxy(): Plugin {
   }
 }
 
-// A Vercel function from api/ served in development: the module's GET handler
-// gets a Request for the same path and its Response is written back.
+// A Vercel function from api/ served in development: the module's handler for
+// the request's method gets a Request for the same path and its Response is written back.
 function devApi(path: string, module: string): Plugin {
   return {
     name: `dev-api:${path}`,
@@ -67,7 +67,11 @@ function devApi(path: string, module: string): Plugin {
         if (req.url?.split('?')[0] !== path) return next()
         server
           .ssrLoadModule(module)
-          .then((m) => (m as { GET: (r: Request) => Promise<Response> }).GET(new Request(`http://localhost${req.url}`)))
+          .then((m) => {
+            const handlers = m as Record<string, (r: Request) => Promise<Response>>
+            const method = req.method ?? 'GET'
+            return (handlers[method] ?? handlers.GET)(new Request(`http://localhost${req.url}`, { method }))
+          })
           .then(async (r) => res.writeHead(r.status, { 'content-type': r.headers.get('content-type') ?? 'application/json' }).end(await r.text()))
           .catch((e: Error) => res.writeHead(500, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message })))
       })
@@ -110,7 +114,7 @@ export default defineConfig(({ mode, command }) => {
   // Analytics only in built sites, so local development doesn't count as visits.
   const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/[endpoint].ts'), devApi('/api/history', '/api/[endpoint].ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
+    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/[endpoint].ts'), devApi('/api/history', '/api/[endpoint].ts'), devApi('/api/visits', '/api/[endpoint].ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }

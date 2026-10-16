@@ -40,7 +40,8 @@ describe('siteFiles', () => {
     expect(siteFiles(withUrl)['/about/index.html'].body).toContain('gtag/js?id=G-TEST123')
     expect(loadPage('privacy', withUrl).markdown).toContain('Google Analytics')
     expect(siteFiles(bare)['/about/index.html'].body).not.toContain('gtag')
-    expect(loadPage('privacy', bare).markdown).toContain('no analytics')
+    expect(loadPage('privacy', bare).markdown).toContain('without identifying you')
+    expect(loadPage('privacy', bare).markdown).not.toContain('Google Analytics')
   })
 
   it('gives every trust page at least 500 characters of content', () => {

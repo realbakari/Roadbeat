@@ -25,6 +25,8 @@ import { DEFAULT_FILTERS, isClosure, isUpcoming, type EventFilters } from '../li
 import { timeAgo } from '../lib/format'
 import { InstallApp } from './InstallApp'
 import { NotificationCenter } from './NotificationCenter'
+import { VisitorCount } from './VisitorCount'
+import type { Visitors } from '../api/visits'
 import type { Panel } from './SidePanel'
 
 interface Props {
@@ -53,6 +55,8 @@ interface Props {
   /** Whether the side panel fills the window (tablet width and up). */
   panelExpanded: boolean
   onTogglePanelExpanded: () => void
+  /** How many people are using the app, or null where the server doesn't count. */
+  visitors: Visitors | null
 }
 
 /** The top bar: logo, quick-filter counts, notifications, data freshness, refresh and colour mode. */
@@ -79,6 +83,7 @@ export function AppHeader({
   onRefresh,
   panelExpanded,
   onTogglePanelExpanded,
+  visitors,
 }: Props) {
   const stats = useMemo(() => {
     const current = events.filter((e) => !isUpcoming(e, now))
@@ -163,6 +168,7 @@ export function AppHeader({
       </nav>
 
       <div className="flex shrink-0 items-center gap-1">
+        <VisitorCount visitors={visitors} className="mr-2 hidden xl:flex" />
         <InstallApp />
         <NotificationCenter
           items={notifications.items}
@@ -215,6 +221,14 @@ export function AppHeader({
         <DropdownMenu>
           <DropdownMenu.Trigger render={<Button variant="ghost" shape="square" aria-label="More" icon={<DotsThreeIcon weight="bold" />} />} />
           <DropdownMenu.Content align="end">
+            {visitors && (
+              <>
+                <DropdownMenu.Label className="xl:hidden">
+                  <VisitorCount visitors={visitors} className="flex" />
+                </DropdownMenu.Label>
+                <DropdownMenu.Separator className="xl:hidden" />
+              </>
+            )}
             <DropdownMenu.Item icon={panelExpanded ? ArrowsInSimpleIcon : ArrowsOutSimpleIcon} onClick={onTogglePanelExpanded} className="hidden md:flex">
               {panelExpanded ? 'Back to the map' : 'Expand the panel'}
             </DropdownMenu.Item>

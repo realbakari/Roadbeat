@@ -4,17 +4,20 @@ import * as departures from './_lib/endpoints/departures.js'
 import * as events from './_lib/endpoints/events.js'
 import * as history from './_lib/endpoints/history.js'
 import * as stops from './_lib/endpoints/stops.js'
+import * as visits from './_lib/endpoints/visits.js'
 import { json } from './_lib/http.js'
 
-// One Vercel function for the small read-only endpoints: /api/events,
-// /api/stops, /api/departures, /api/bushfires, /api/history and
-// /api/camera-time. Vercel's Hobby plan deploys at most 12 functions, and each
-// file in api/ (plus middleware.ts) is one, so these share a file. The
-// handlers live in api/_lib/endpoints/, which Vercel doesn't deploy on its own.
+// One Vercel function for the small endpoints: /api/events, /api/stops,
+// /api/departures, /api/bushfires, /api/history, /api/camera-time and
+// /api/visits (the only one that takes POST). Vercel's Hobby plan deploys at
+// most 12 functions, and each file in api/ (plus middleware.ts) is one, so
+// these share a file. The handlers live in api/_lib/endpoints/, which Vercel
+// doesn't deploy on its own.
 
 type Handler = (request: Request) => Response | Promise<Response>
 interface Endpoint {
   GET: Handler
+  POST?: Handler
   OPTIONS?: Handler
 }
 
@@ -25,6 +28,7 @@ const ENDPOINTS: Record<string, Endpoint> = {
   events,
   history,
   stops,
+  visits,
 }
 
 /** The endpoint named by the last path segment: "/api/events?q=…" → events. */
@@ -36,6 +40,12 @@ function endpointFor(request: Request): Endpoint | null {
 export function GET(request: Request) {
   const endpoint = endpointFor(request)
   return endpoint ? endpoint.GET(request) : json({ error: 'No such endpoint. See /openapi.json.' }, 404)
+}
+
+export function POST(request: Request) {
+  const endpoint = endpointFor(request)
+  if (!endpoint) return json({ error: 'No such endpoint. See /openapi.json.' }, 404)
+  return endpoint.POST ? endpoint.POST(request) : new Response(null, { status: 405, headers: { allow: 'GET' } })
 }
 
 export function OPTIONS(request: Request) {
