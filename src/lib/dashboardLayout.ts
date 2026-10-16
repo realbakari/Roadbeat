@@ -33,6 +33,7 @@ export const PANELS = [
   { id: 'centres', title: 'Council centres open', kind: 'tile', source: 'Council disaster dashboards' },
   { id: 'air', title: 'Air quality', kind: 'tile', source: 'Department of Environment, Tourism, Science and Innovation' },
   { id: 'ticker', title: 'Latest road events ticker', kind: 'strip', source: 'QLDTraffic' },
+  { id: 'timeline', title: 'Replay the last 48 hours', kind: 'strip', source: 'QLDTraffic reads and the news monitor' },
 ] as const satisfies readonly { id: string; title: string; kind: PanelKind; source: string }[]
 
 export type PanelId = (typeof PANELS)[number]['id']

@@ -6,7 +6,9 @@ import { z } from 'zod'
 // The council's API sends CORS headers, so the browser reads it directly.
 
 export const STATION_FACILITIES_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/railway-station-facilities/information/'
-const API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/railway-station-facilities/records'
+/** The records endpoint, for a status check. */
+export const STATION_FACILITIES_API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/railway-station-facilities/records'
+const API = STATION_FACILITIES_API
 const QR = 'https://www.queenslandrail.com.au'
 
 const text = z.string().nullish().transform((s) => (s && s.trim() ? s.trim() : null))

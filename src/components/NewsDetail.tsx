@@ -121,9 +121,16 @@ export function NewsDetail({
                         </>
                       )}
                     </span>
-                    <Button size="xs" variant="ghost" icon={<MapPinIcon />} onClick={() => onShowPlace(p)}>
-                      Show
-                    </Button>
+                    <span className="flex shrink-0 items-center gap-1">
+                      {p.via === 'gazetteer' && (
+                        <Button size="xs" variant="ghost" onClick={() => onOpenHref(`place/locality/${encodeURIComponent(p.name)}`)} title={`Everything Roadbeat has at ${p.name}`}>
+                          More at {p.name}
+                        </Button>
+                      )}
+                      <Button size="xs" variant="ghost" icon={<MapPinIcon />} onClick={() => onShowPlace(p)}>
+                        Show
+                      </Button>
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -14,10 +14,12 @@ interface Props {
   large: boolean
   onToggleSize: () => void
   onClose: () => void
+  /** Opens the page for the locality the camera's owner files it under. */
+  onOpenLocality?: (name: string) => void
 }
 
 /** Live camera view that sits on the map, pinned above the camera's location. */
-export function CameraCard({ camera, now, large, onToggleSize, onClose }: Props) {
+export function CameraCard({ camera, now, large, onToggleSize, onClose, onOpenLocality }: Props) {
   const p = camera.properties
   const src = cameraSrc(camera, now)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
@@ -31,6 +33,7 @@ export function CameraCard({ camera, now, large, onToggleSize, onClose }: Props)
     return () => c.abort()
   }, [p.image_url, src])
   const note = clean(p.extra_info)
+  const locality = p.locality
 
   return (
     <div
@@ -44,7 +47,15 @@ export function CameraCard({ camera, now, large, onToggleSize, onClose }: Props)
             {shortName(p.description)}
           </Text>
           <Text size="xs" variant="secondary" truncate>
-            {[p.locality, p.direction && `facing ${p.direction}`].filter(Boolean).join(' · ')}
+            {locality && onOpenLocality ? (
+              <button type="button" onClick={() => onOpenLocality(locality)} className="hover:text-kumo-default hover:underline" title={`Everything at ${locality}`}>
+                {locality}
+              </button>
+            ) : (
+              locality
+            )}
+            {locality && p.direction && ' · '}
+            {p.direction && `facing ${p.direction}`}
           </Text>
         </div>
         <div className="flex shrink-0">

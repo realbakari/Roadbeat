@@ -6,7 +6,9 @@ import type { Feature } from './stationFacilities'
 // TransLink's stop id, so a ferry stop page can look itself up. CORS is open.
 
 export const FERRY_TERMINALS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/ferry-terminals/information/'
-const API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/ferry-terminals/records'
+/** The records endpoint, for a status check. */
+export const FERRY_TERMINALS_API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/ferry-terminals/records'
+const API = FERRY_TERMINALS_API
 
 const text = z.string().nullish().transform((s) => (s && s.trim() ? s.trim() : null))
 const yes = z.string().nullish().transform((s) => s?.trim().toLowerCase() === 'yes')

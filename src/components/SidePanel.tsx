@@ -10,15 +10,18 @@ import type { useNotifications } from '../hooks/useNotifications'
 import type { AlertSettings } from '../lib/alertRules'
 import type { EventFilters } from '../lib/filters'
 import type { LngLat } from '../lib/geo'
+import type { Locality, LocalitySources } from '../lib/locality'
 import type { NewsStory, StoryFilter } from '../lib/newsStories'
 import type { Place } from '../lib/places'
 import type { Selection } from '../lib/route'
+import type { MapLayers } from './map/settings'
 import { CameraGrid } from './CameraGrid'
 import { CommuteCard } from './CommuteCard'
 import { EventDetail } from './EventDetail'
 import { EventList } from './EventList'
 import { FireDetail } from './FireDetail'
 import { GaugeDetail } from './GaugeDetail'
+import { LocalityPage } from './LocalityPage'
 import { NewsDetail } from './NewsDetail'
 import { NewsPanel } from './NewsPanel'
 import { PlaceDetail } from './PlaceDetail'
@@ -85,6 +88,15 @@ interface Props {
 
   alertSettings: AlertSettings
   notifications: ReturnType<typeof useNotifications>
+
+  /** The gazetteer locality #place/locality/<name> names, and what the loaded sources publish there. */
+  locality: {
+    found: Locality | null
+    loading: boolean
+    sources: LocalitySources
+    onShowOnMap: (center: LngLat, layers: (keyof MapLayers)[]) => void
+    onTurnOnLayer: (key: keyof MapLayers) => void
+  }
 }
 
 /** The side panel: the open detail page if there is one, else the Road events, Cameras, Transit or News tab. */
@@ -128,7 +140,23 @@ export function SidePanel(p: Props) {
       />
     )
   }
-  if (p.selectedPlace) return <PlaceDetail place={p.selectedPlace} now={now} onBack={back} />
+  if (p.selectedPlace) return <PlaceDetail place={p.selectedPlace} now={now} onBack={back} onOpenHref={p.onOpenHref} />
+  if (sel.locality) {
+    return (
+      <LocalityPage
+        name={sel.locality}
+        locality={p.locality.found}
+        loading={p.locality.loading}
+        sources={p.locality.sources}
+        now={now}
+        onBack={() => (history.length > 1 ? history.back() : go(''))}
+        onOpenHref={p.onOpenHref}
+        onOpenCamera={p.onOpenCamera}
+        onShowOnMap={p.locality.onShowOnMap}
+        onTurnOnLayer={p.locality.onTurnOnLayer}
+      />
+    )
+  }
   if (p.selectedFire) return <FireDetail fire={p.selectedFire} now={now} onBack={back} />
   if (p.selectedGauge) {
     return <GaugeDetail gauge={p.selectedGauge} now={now} onBack={() => (history.length > 1 ? history.back() : go(''))} />

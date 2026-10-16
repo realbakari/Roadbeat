@@ -20,11 +20,13 @@ export function PinnedCamera({
   camera,
   now,
   onClose,
+  onOpenLocality,
 }: {
   map: maplibregl.Map
   camera: Camera
   now: number
   onClose: () => void
+  onOpenLocality: (name: string) => void
 }) {
   const [node] = useState(() => document.createElement('div'))
   const [large, setLarge] = useState(false)
@@ -77,7 +79,7 @@ export function PinnedCamera({
   }, [onClose])
 
   return createPortal(
-    <CameraCard camera={camera} now={now} large={large} onToggleSize={() => setLarge((v) => !v)} onClose={onClose} />,
+    <CameraCard camera={camera} now={now} large={large} onToggleSize={() => setLarge((v) => !v)} onClose={onClose} onOpenLocality={onOpenLocality} />,
     node,
   )
 }

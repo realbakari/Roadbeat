@@ -20,7 +20,8 @@ import type {
 // api.qldtraffic.qld.gov.au endpoints, every feed here sends
 // Access-Control-Allow-Origin: *, so the app works as a plain static site:
 // no proxy and no API key.
-const DATA = import.meta.env.VITE_QLDTRAFFIC_DATA_BASE ?? 'https://data.qldtraffic.qld.gov.au'
+export const QLDTRAFFIC_DATA_BASE: string = import.meta.env.VITE_QLDTRAFFIC_DATA_BASE ?? 'https://data.qldtraffic.qld.gov.au'
+const DATA = QLDTRAFFIC_DATA_BASE
 const LOOKUP = 'https://r8s97t2t19.execute-api.ap-southeast-2.amazonaws.com/prod/lookuproad'
 export const RAIN_RADAR = 'https://rainradar.qldtraffic.qld.gov.au/radarimage'
 

@@ -1,0 +1,63 @@
+import type { Geometry, Position } from 'geojson'
+import type { TrafficEvent } from '../api/types.js'
+
+// Where a QLDTraffic event sits on the map, from its published geometry alone.
+// Free of browser-only code, so the server's event history (api/) shares it.
+
+export type LngLat = [number, number]
+export type Bounds = [LngLat, LngLat]
+
+/** Splits GeometryCollections so MapLibre gets plain geometries. */
+export function flatten(g: Geometry | null): Geometry[] {
+  if (!g) return []
+  if (g.type === 'GeometryCollection') return g.geometries.flatMap(flatten)
+  return [g]
+}
+
+export function positions(g: Geometry): Position[] {
+  switch (g.type) {
+    case 'Point':
+      return [g.coordinates]
+    case 'MultiPoint':
+    case 'LineString':
+      return g.coordinates
+    case 'MultiLineString':
+    case 'Polygon':
+      return g.coordinates.flat()
+    case 'MultiPolygon':
+      return g.coordinates.flat(2)
+    default:
+      return []
+  }
+}
+
+export function eventBounds(e: TrafficEvent): Bounds | null {
+  const pts = flatten(e.geometry).flatMap(positions)
+  if (!pts.length) return null
+  let [minX, minY] = pts[0]
+  let [maxX, maxY] = pts[0]
+  for (const [x, y] of pts) {
+    if (x < minX) minX = x
+    if (x > maxX) maxX = x
+    if (y < minY) minY = y
+    if (y > maxY) maxY = y
+  }
+  return [
+    [minX, minY],
+    [maxX, maxY],
+  ]
+}
+
+/** A point to pin the event marker on: the first point, or the middle of the first line. */
+export function eventAnchor(e: TrafficEvent): LngLat | null {
+  const geoms = flatten(e.geometry)
+  const point = geoms.find((g) => g.type === 'Point' || g.type === 'MultiPoint')
+  if (point) return positions(point)[0] as LngLat
+  const line = geoms.find((g) => g.type === 'LineString' || g.type === 'MultiLineString')
+  if (line) {
+    const pts = line.type === 'LineString' ? line.coordinates : line.coordinates[0]
+    return pts[Math.floor(pts.length / 2)] as LngLat
+  }
+  const any = geoms.flatMap(positions)[0]
+  return any ? (any as LngLat) : null
+}

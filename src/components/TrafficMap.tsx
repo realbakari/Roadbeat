@@ -83,6 +83,8 @@ interface Props {
   /** Queensland Fire Department warnings and incidents. */
   fires: FireWarning[]
   gauges: Gauge[]
+  /** The replayed time while the timeline is scrubbed, or null when live: gauge labels are read as of this time. */
+  replayAt: number | null
   signalSites: SignalSite[]
   signalVolumes: SignalVolumes | null
   clearances: Clearance[]
@@ -118,6 +120,8 @@ interface Props {
   onSelectEvent: (id: number) => void
   onSelectKey: (hashKey: string) => void
   onCloseCamera: () => void
+  /** Opens the locality page named on the pinned camera's card. */
+  onOpenLocality: (name: string) => void
   /** Reports the map's centre and zoom after each move. */
   onViewChange?: (view: { center: LngLat; zoom: number }) => void
 }
@@ -188,6 +192,7 @@ export function TrafficMap(props: Props) {
     vehicles,
     fires,
     gauges,
+    replayAt,
     signalSites,
     signalVolumes,
     clearances,
@@ -402,7 +407,7 @@ export function TrafficMap(props: Props) {
     if (ready && map) setData(map, 'districts', districts)
   }, [map, ready, districts])
   const fireData = useMemo(() => fireFeatures(fires), [fires])
-  const gaugeData = useMemo(() => gaugeFeatures(gauges, now), [gauges, now])
+  const gaugeData = useMemo(() => gaugeFeatures(gauges, replayAt ?? now), [gauges, replayAt, now])
   useEffect(() => {
     if (ready && map) setData(map, 'gauges', gaugeData)
   }, [map, ready, gaugeData])
@@ -527,7 +532,7 @@ export function TrafficMap(props: Props) {
         />
       )}
       {map && selectedCamera && (
-        <PinnedCamera map={map} camera={selectedCamera} now={now} onClose={props.onCloseCamera} />
+        <PinnedCamera map={map} camera={selectedCamera} now={now} onClose={props.onCloseCamera} onOpenLocality={props.onOpenLocality} />
       )}
       {map && card && !selectedCamera && <MapCard key={card.key} map={map} card={card} onDetails={props.onCardDetails} onClose={props.onCardClose} />}
     </div>

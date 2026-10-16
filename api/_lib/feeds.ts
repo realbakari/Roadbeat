@@ -38,11 +38,11 @@ async function get(url: string): Promise<Response> {
   return res
 }
 
-/** QLDTraffic road events, as published. */
-export function roadEvents(): Promise<{ events: TrafficEvent[]; fetchedAt: number }> {
+/** QLDTraffic road events, as published, with the feed's own `published` stamp. */
+export function roadEvents(): Promise<{ events: TrafficEvent[]; fetchedAt: number; published: string | null }> {
   return cached('events', 60_000, async () => {
     const data = (await (await get(SOURCES.events)).json()) as FeatureCollection<TrafficEvent['geometry'], EventProperties>
-    return { events: data.features ?? [], fetchedAt: Date.now() }
+    return { events: data.features ?? [], fetchedAt: Date.now(), published: data.published ?? null }
   })
 }
 

@@ -6,7 +6,9 @@ import { z } from 'zod'
 // The council's API sends CORS headers, so the browser reads it directly.
 
 export const BUS_STOPS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/brisbane-bus-stops/information/'
-const API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-bus-stops/records'
+/** The records endpoint, for a status check. */
+export const BUS_STOPS_API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-bus-stops/records'
+const API = BUS_STOPS_API
 
 /** The council's three-step ratings, as published. */
 export type Rating = 'Easy' | 'Medium' | 'Hard'

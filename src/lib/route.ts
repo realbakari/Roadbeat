@@ -23,6 +23,8 @@ export interface Selection {
   event: number | null
   camera: string | null
   place: { kind: string; id: string } | null
+  /** A gazetteer locality's page (#place/locality/Goodna), by the locality's name. */
+  locality: string | null
   fire: string | null
   gauge: string | null
   signal: string | null
@@ -32,7 +34,7 @@ export interface Selection {
 
 /**
  * Selection lives in the URL hash so links can be shared:
- * #event/123, #camera/webcam-5, #place/rest/long007, #place/truck/1,
+ * #event/123, #camera/webcam-5, #place/rest/long007, #place/truck/1, #place/locality/Goodna,
  * #vehicle/SEQ-…, #transit, #transit/line/train/T1%20Caboolture, #transit/alert/SEQ-500656,
  * #fire/WARN-1, #gauge/E1594, #signal/546, #news, #news/k3j9x2, #transit/stop/SEQ/place_albsta, #transit/plan/SEQ/place_censta/place_cabstn[/2026-10-16/480/arrive]
  */
@@ -65,7 +67,8 @@ export function parseHash(hash: string): Selection {
     transit,
     event: parts[0] === 'event' && /^\d+$/.test(parts[1] ?? '') ? Number(parts[1]) : null,
     camera: parts[0] === 'camera' && parts[1] ? parts[1] : null,
-    place: parts[0] === 'place' && parts[1] && parts[2] ? { kind: parts[1], id: decodeURIComponent(parts.slice(2).join('/')) } : null,
+    place: parts[0] === 'place' && parts[1] && parts[1] !== 'locality' && parts[2] ? { kind: parts[1], id: decodeURIComponent(parts.slice(2).join('/')) } : null,
+    locality: parts[0] === 'place' && parts[1] === 'locality' && parts[2] ? decodeURIComponent(parts.slice(2).join('/')) : null,
     fire: parts[0] === 'fire' && parts[1] ? decodeURIComponent(parts.slice(1).join('/')) : null,
     gauge: parts[0] === 'gauge' && parts[1] ? decodeURIComponent(parts[1]) : null,
     signal: parts[0] === 'signal' && parts[1] ? decodeURIComponent(parts[1]) : null,
@@ -74,12 +77,13 @@ export function parseHash(hash: string): Selection {
 }
 
 /** Screens that live at their own path rather than in the hash. */
-export type Screen = { kind: 'app' } | { kind: 'dashboard' } | { kind: 'kiosk'; region: TransitRegion; stopId: string }
+export type Screen = { kind: 'app' } | { kind: 'dashboard' } | { kind: 'status' } | { kind: 'kiosk'; region: TransitRegion; stopId: string }
 
-/** Which screen a path opens: /dashboard, /kiosk/SEQ/place_censta, or the app. */
+/** Which screen a path opens: /dashboard, /status, /kiosk/SEQ/place_censta, or the app. */
 export function parsePath(path: string): Screen {
   const parts = path.split('/').filter(Boolean)
   if (parts[0] === 'dashboard' && parts.length === 1) return { kind: 'dashboard' }
+  if (parts[0] === 'status' && parts.length === 1) return { kind: 'status' }
   if (parts[0] === 'kiosk' && (parts[1] === 'SEQ' || parts[1] === 'CNS') && parts[2]) {
     return { kind: 'kiosk', region: parts[1], stopId: decodeURIComponent(parts[2]) }
   }

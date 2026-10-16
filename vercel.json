@@ -12,6 +12,9 @@
     },
     "api/news.ts": {
       "maxDuration": 60
+    },
+    "api/history.ts": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
@@ -25,6 +28,10 @@
     },
     {
       "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/status",
       "destination": "/index.html"
     },
     {

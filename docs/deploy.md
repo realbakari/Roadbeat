@@ -57,9 +57,11 @@ GitHub runs scheduled workflows on a best-effort basis, often a few minutes late
 
 The **News** tab works on Vercel with no setup: `/api/news` reads the feeds itself when a request finds no stored copy, at most once per 5 minutes per warm function. For steadier updates, and to share one copy between functions:
 
-1. Connect the Upstash for Redis database, as for push alerts. The monitor stores one key, `news:snapshot`.
+1. Connect the Upstash for Redis database, as for push alerts. The monitor stores its items under one key, `news:snapshot`.
 2. Set `CRON_SECRET` in Vercel and as a GitHub repository secret, as for push alerts. `.github/workflows/news-ingest.yml` then calls `/api/news-ingest` every 5 minutes. If the scheduler stops, `/api/news` reads the feeds itself once the stored copy is 15 minutes old.
 3. Leave `NEWS_BOM_WARNINGS` unset unless you have the Bureau of Meteorology's permission to publish its warnings. Set it to `on` to add Queensland warning headlines from the BoM's anonymous FTP server (see [Data sources](data-sources.md#news-monitor-feeds)).
+
+The same run records the road event history for the app's timeline under a second key, `events:history`. It holds the last 48 hours of 5-minute reads of the events feed (at most 600 reads) and is capped at 900 KB: `src/lib/eventHistory.ts` drops the oldest reads first when the cap is reached. Without the store, `/api/history` serves only what that warm function has read since it started, and the timeline says so.
 
 `npm run dev` serves `/api/news` from `vite.config.ts`, reading the feeds on your machine. `npm run news:ingest` reads every feed once and prints what each one gave. On other hosts, port `api/news.ts` to a function, or point `VITE_NEWS_URL` at a Roadbeat deployment that has one; without it the News tab says it couldn't load.
 

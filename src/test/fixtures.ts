@@ -1,6 +1,8 @@
+import type { AirStation } from '../api/airQuality'
 import type { FireWarning } from '../api/bushfireFeed'
-import type { NewsItem, NewsPlace } from '../api/newsTypes'
-import type { TrafficEvent } from '../api/types'
+import type { Gauge } from '../api/gaugeTypes'
+import type { CouncilCentre, NewsItem, NewsPlace, Outage } from '../api/newsTypes'
+import type { Camera, TrafficEvent } from '../api/types'
 import { StopIndex } from '../api/stops'
 import type { ScheduledStop, ScheduledTrip, StopKind } from '../api/timetables'
 
@@ -124,4 +126,51 @@ export function fireWarning(id: string, area: string | null, title = 'Bushfire')
     published: null,
     expires: null,
   }
+}
+
+/** A QLDTraffic camera at a point, filed under a locality. */
+export function camera(id: number, locality: string | null, coordinates: [number, number], kind: Camera['kind'] = 'webcam'): Camera {
+  return {
+    type: 'Feature',
+    kind,
+    geometry: { type: 'Point', coordinates },
+    properties: { id, url: '', description: `${locality ?? 'Camera'} - Road`, direction: null, district: null, locality, postcode: null, image_url: `https://cameras.qldtraffic.qld.gov.au/${id}.jpg` },
+  }
+}
+
+/** An air quality station at a point, with no readings. */
+export function airStation(id: string, position: [number, number]): AirStation {
+  return { id, name: id, region: 'South East Queensland', link: `https://apps.des.qld.gov.au/air-quality/stations/?station=${id}`, position, measuredAt: 0, measurements: [] }
+}
+
+/** A council's evacuation centre at a point. */
+export function councilCentre(id: string, position: [number, number]): CouncilCentre {
+  return { id, council: 'Ipswich City Council', area: 'Ipswich City', type: 'Evacuation Centre', name: id, address: null, status: null, note: null, position, dashboard: 'https://disaster.ipswich.qld.gov.au' }
+}
+
+/** An Energex outage placed by its suburb's gazetteer point, or a council notice with no suburb when `suburb` is null. */
+export function outage(id: string, suburb: string | null): Outage {
+  return {
+    id,
+    source: suburb ? 'energex' : 'council',
+    council: 'Ipswich City Council',
+    area: 'Ipswich City',
+    type: suburb ? 'Power' : 'Water',
+    title: suburb ? `Power outage, ${suburb}` : 'Water works',
+    details: null,
+    status: null,
+    customers: null,
+    streets: [],
+    start: null,
+    end: null,
+    updated: null,
+    geometry: null,
+    place: suburb ? gazetteerPlace(suburb, 'Ipswich City') : null,
+    dashboard: 'https://disaster.ipswich.qld.gov.au',
+  }
+}
+
+/** A council stream gauge at a point, with no readings. */
+export function gauge(id: string, position: [number, number]): Gauge {
+  return { id, name: id, kind: 'stream', source: 'bcc', unit: 'm', position, readings: [] }
 }

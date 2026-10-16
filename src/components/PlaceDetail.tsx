@@ -62,9 +62,11 @@ interface Props {
   place: Place
   now: number
   onBack: () => void
+  /** Opens another app page from a link, such as an outage's suburb page. */
+  onOpenHref?: (href: string) => void
 }
 
-export function PlaceDetail({ place, now, onBack }: Props) {
+export function PlaceDetail({ place, now, onBack, onOpenHref }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center border-b border-kumo-line px-2 py-2">
@@ -73,13 +75,13 @@ export function PlaceDetail({ place, now, onBack }: Props) {
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-6 px-4 pt-4 pb-8">{body(place, now)}</div>
+        <div className="grid gap-6 px-4 pt-4 pb-8">{body(place, now, onOpenHref)}</div>
       </div>
     </div>
   )
 }
 
-function body(place: Place, now: number) {
+function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
   switch (place.kind) {
     case 'rest': {
       const r = place.data
@@ -197,7 +199,7 @@ function body(place: Place, now: number) {
     case 'centre':
       return <CentreBody c={place.data} />
     case 'outage':
-      return <OutageBody o={place.data} now={now} />
+      return <OutageBody o={place.data} now={now} onOpenHref={onOpenHref} />
     case 'air':
       return <AirBody s={place.data} now={now} />
   }
@@ -409,8 +411,9 @@ function AirBody({ s, now }: { s: AirStation; now: number }) {
 }
 
 /** An Energex outage or a council notice, as the council's dashboard relays it. */
-function OutageBody({ o, now }: { o: Outage; now: number }) {
+function OutageBody({ o, now, onOpenHref }: { o: Outage; now: number; onOpenHref?: (href: string) => void }) {
   const energex = o.source === 'energex'
+  const suburb = o.place?.name
   const rows: [string, ReactNode][] = []
   if (o.status) rows.push(['Status', o.status])
   if (o.customers != null) rows.push(['Customers affected', o.customers.toLocaleString('en-AU')])
@@ -442,6 +445,11 @@ function OutageBody({ o, now }: { o: Outage; now: number }) {
             ? `Located from: ${o.place.name}. Energex names the suburb and streets, not a point, so the marker is at the suburb's gazetteer point.`
             : `At the shape ${o.council} published.`}
         </Text>
+        {suburb && onOpenHref && (
+          <Button size="xs" variant="ghost" className="w-fit" icon={<MapPinIcon />} onClick={() => onOpenHref(`place/locality/${encodeURIComponent(suburb)}`)}>
+            More at {suburb}
+          </Button>
+        )}
       </Section>
       <div className="grid gap-1">
         <ExternalLink href={o.dashboard}>{o.council.replace(/ Council$/, '')} disaster dashboard</ExternalLink>

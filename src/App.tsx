@@ -4,6 +4,7 @@ import {
   ArrowsOutSimpleIcon,
   CaretLeftIcon,
   CaretRightIcon,
+  ClockCounterClockwiseIcon,
   SidebarSimpleIcon,
   ListIcon,
   MapTrifoldIcon,
@@ -20,12 +21,15 @@ import { useCommute } from './lib/commuteStore'
 import { useAlertSettings, useNotifications } from './hooks/useNotifications'
 import { MapLayersPanel } from './components/MapLayersPanel'
 import { SidePanel, type Panel } from './components/SidePanel'
+import { ReplayBanner, Timeline } from './components/Timeline'
 import { TrafficMap } from './components/TrafficMap'
 import { DEFAULT_LAYERS, type Basemap, type MapLayers } from './components/map/settings'
 import { useColorMode } from './hooks/useColorMode'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { mapCardFor } from './lib/mapCard'
 import { usePanelLayout } from './hooks/usePanelLayout'
+import { useEventHistory, useTimeline } from './hooks/useTimeline'
+import { useLocality } from './hooks/useLocality'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { useAirQuality } from './hooks/useTrafficData'
@@ -33,7 +37,9 @@ import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, type EventFilters } from './lib/filters'
+import { asTrafficEvent, replayAt } from './lib/timeline'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
+import type { LocalitySources } from './lib/locality'
 
 export default function App() {
   const { mode, toggle } = useColorMode()
@@ -82,6 +88,11 @@ export default function App() {
   const [vehicleFilter, setVehicleFilter] = useState<{ title: string; match: (code: string) => boolean } | null>(null)
   const [followVehicle, setFollowVehicle] = useState(false)
   const [fit, setFit] = useState<{ bounds: Bounds; id: number } | null>(null)
+  // The 48-hour timeline. While a time is chosen, road events, news pins and gauge labels show what was published by then; every other layer stays live.
+  const [timelineOpen, setTimelineOpen] = useState(false)
+  const timeline = useTimeline()
+  const replayTime = timelineOpen ? timeline.at : null
+  const eventHistory = useEventHistory(timelineOpen)
 
   const transitOpen = panel === 'transit' || !!sel.transit
   // During the commute window, the commute card needs live vehicles (for tracked delays) and service alerts.
@@ -97,7 +108,7 @@ export default function App() {
   const [newsFilter, setNewsFilter] = useState<StoryFilter>(DEFAULT_STORY_FILTER)
   // The news snapshot also carries council centres, cameras and outages, so it is read whenever any of those shows.
   const news = useNews(
-    panel === 'news' || layers.news || layers.councilCentres || layers.outages || layers.webcams || layers.floodcams || sel.place?.kind === 'centre' || sel.place?.kind === 'outage' || alertSettings.kinds.news || alertSettings.kinds.newsOfficial,
+    panel === 'news' || timelineOpen || !!sel.locality || layers.news || layers.councilCentres || layers.outages || layers.webcams || layers.floodcams || sel.place?.kind === 'centre' || sel.place?.kind === 'outage' || alertSettings.kinds.news || alertSettings.kinds.newsOfficial,
   )
   const stories = useMemo(() => (news.snapshot ? groupStories(news.snapshot.items) : null), [news.snapshot])
   // Council dashboard cameras join QLDTraffic's, less any QLDTraffic already publishes.
@@ -225,6 +236,31 @@ export default function App() {
   }, [selectedGauge, selectedSignal])
 
   const selectedFire = useMemo(() => (sel.fire ? (fires?.find((f) => f.id === sel.fire) ?? null) : null), [fires, sel.fire])
+
+  // A locality page loads the gazetteer on demand and flies the map to the locality once.
+  const locality = useLocality(sel.locality)
+  const focusedLocality = useRef<string | null>(null)
+  useEffect(() => {
+    if (!locality.found || focusedLocality.current === locality.found.name) return
+    focusedLocality.current = locality.found.name
+    setFocus({ center: locality.found.position, zoom: 13, ring: false })
+  }, [locality.found])
+  const localitySources = useMemo(
+    (): LocalitySources => ({
+      events,
+      fires,
+      cameras,
+      airStations: air.stations,
+      centres: news.snapshot?.centres ?? null,
+      outages: news.snapshot?.outages ?? null,
+      stories,
+      gauges,
+    }),
+    [events, fires, cameras, air.stations, news.snapshot, stories, gauges],
+  )
+  const turnOnLayers = useCallback((keys: (keyof MapLayers)[]) => {
+    setLayers((l) => (keys.every((k) => l[k]) ? l : { ...l, ...Object.fromEntries(keys.map((k) => [k, true])) }))
+  }, [])
   // Opening a fire flies the map to it (once per fire, not on every refresh).
   const focusedFire = useRef<string | null>(null)
   useEffect(() => {
@@ -255,13 +291,19 @@ export default function App() {
     () => (selectedEvent && !visible.includes(selectedEvent) ? [...visible, selectedEvent] : visible),
     [visible, selectedEvent],
   )
+  const replay = useMemo(
+    () => (replayTime == null ? null : replayAt(replayTime, eventHistory.history, news.snapshot?.items ?? [], gauges ?? [])),
+    [replayTime, eventHistory.history, news.snapshot, gauges],
+  )
+  const replayEvents = useMemo(() => replay?.events.map(asTrafficEvent) ?? [], [replay])
+  const replayStories = useMemo(() => (replay ? filterStories(groupStories(replay.items), newsFilter, replay.at).filter((s) => s.places.length) : []), [replay, newsFilter])
 
   // Header chips: open the event list with a filter applied.
   const showEvents = (next: (f: EventFilters) => EventFilters) => {
     setFilters(next)
     setPanel('events')
     revealList()
-    if (sel.transit || sel.event || sel.camera || sel.place || sel.vehicle || sel.fire || sel.gauge || sel.signal || sel.news != null) go('')
+    if (sel.transit || sel.event || sel.camera || sel.place || sel.locality || sel.vehicle || sel.fire || sel.gauge || sel.signal || sel.news != null) go('')
   }
 
   const layerCounts = useMemo(
@@ -404,6 +446,7 @@ export default function App() {
                 <a href="/privacy/" className="hover:text-kumo-default hover:underline">Privacy</a>
                 <a href="/contact/" className="hover:text-kumo-default hover:underline">Contact</a>
                 <a href="/dashboard" className="hover:text-kumo-default hover:underline" title="Network dashboard for a TV or second screen">Dashboard</a>
+                <a href="/status" className="hover:text-kumo-default hover:underline" title="Every feed the app reads, its health and where it comes from">Status</a>
               </nav>
               <Button
                 size="xs"
@@ -482,6 +525,17 @@ export default function App() {
                 }}
                 alertSettings={alertSettings}
                 notifications={notifications}
+                locality={{
+                  found: locality.found,
+                  loading: locality.loading,
+                  sources: localitySources,
+                  onShowOnMap: (center, keys) => {
+                    turnOnLayers(keys)
+                    setFocus({ center, zoom: 13, ring: false })
+                    revealMap()
+                  },
+                  onTurnOnLayer: (key) => turnOnLayers([key]),
+                }}
               />
             </div>
 
@@ -514,7 +568,7 @@ export default function App() {
               mode={mode}
               basemap={basemap}
               now={now}
-              events={mapEvents}
+              events={replay ? replayEvents : mapEvents}
               cameras={cameras}
               restAreas={ref.restAreas}
               dumpPoints={ref.dumpPoints}
@@ -526,7 +580,8 @@ export default function App() {
               crashFilter={crashFilter}
               vehicles={mapVehicles}
               fires={fires ?? []}
-              gauges={gauges ?? []}
+              gauges={replay ? replay.gauges : (gauges ?? [])}
+              replayAt={replay?.at ?? null}
               signalSites={signalSites ?? []}
               signalVolumes={signalVolumes}
               clearances={clearances ?? []}
@@ -539,7 +594,7 @@ export default function App() {
               councilCentres={news.snapshot?.centres ?? []}
               outages={news.snapshot?.outages ?? []}
               airStations={air.stations ?? []}
-              newsStories={mapStories}
+              newsStories={replay ? replayStories : mapStories}
               selectedStory={selectedStory}
               selectedVehicleId={sel.vehicle}
               card={mapCard}
@@ -558,6 +613,7 @@ export default function App() {
               }}
               onSelectKey={(k) => openKey(k, !cardVisible)}
               onCloseCamera={closeCamera}
+              onOpenLocality={(name) => openHref(`place/locality/${encodeURIComponent(name)}`)}
               onViewChange={setMapView}
             />
             <MapLayersPanel
@@ -576,8 +632,29 @@ export default function App() {
               airError={air.error}
               councilErrors={council.errors}
             />
+            {timelineOpen ? (
+              <>
+                {replay && <ReplayBanner at={replay.at} run={replay.run} className="absolute inset-x-3 top-14 z-10 text-center xl:inset-x-auto xl:top-3 xl:left-1/2 xl:-translate-x-1/2 xl:whitespace-nowrap" />}
+                <Timeline
+                  now={now}
+                  state={timeline}
+                  history={eventHistory.history}
+                  error={eventHistory.error}
+                  run={replay?.run ?? null}
+                  onClose={() => {
+                    timeline.live()
+                    setTimelineOpen(false)
+                  }}
+                  className="absolute inset-x-3 bottom-8 z-10 md:mx-auto md:max-w-2xl"
+                />
+              </>
+            ) : (
+              <Button size="sm" icon={<ClockCounterClockwiseIcon />} className="absolute right-3 bottom-10 z-10 shadow-md" title="Replay the last 48 hours as it was published" onClick={() => setTimelineOpen(true)}>
+                Replay
+              </Button>
+            )}
             {vehicleFilter && layers.vehicles && (
-              <div className="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line">
+              <div className={`absolute ${timelineOpen ? 'bottom-36' : 'bottom-10'} left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line`}>
                 <span className="whitespace-nowrap">
                   Showing <span className="font-medium">{vehicleFilter.title}</span> · {mapVehicles.length} live
                 </span>

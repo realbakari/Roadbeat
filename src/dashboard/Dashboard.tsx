@@ -12,6 +12,7 @@ import { CustomiseDialog } from './CustomiseDialog'
 import { PANEL_VIEWS, type DashboardData } from './panels'
 import { MONITOR_VIEWS, type MonitorData } from './panelsMonitor'
 import { Ticker } from './Ticker'
+import { TimelineStrip } from './TimelineStrip'
 import { useCouncilDashboard } from './useCouncilDashboard'
 import { WhatsHappening } from './WhatsHappening'
 
@@ -55,7 +56,7 @@ export function Dashboard() {
   const { alerts } = useTransitAlerts(has('transit'))
   const parking = useCarParkSpaces(has('parking'))
   const council = useCouncilDashboard({ corridors: has('corridors'), events: has('council-events'), pedestrians: has('foot-traffic') })
-  const { snapshot: news } = useNews(has('news') || has('outages') || has('centres'))
+  const { snapshot: news } = useNews(has('news') || has('outages') || has('centres') || has('timeline'))
   const { stations: airStations } = useAirQuality(has('air') || has('air-count'))
   const { mode, toggle } = useColorMode()
 
@@ -111,6 +112,9 @@ export function Dashboard() {
             {error ? 'Road events delayed' : fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
           </span>
           <span className="text-base font-medium text-kumo-strong tabular-nums">{clock.format(now)}</span>
+          <a href="/status" className="hover:text-kumo-default hover:underline" title="Every feed the app reads, its health and where it comes from">
+            Status
+          </a>
           <Button variant="ghost" size="sm" icon={<SlidersHorizontalIcon />} onClick={() => setCustomising(true)}>
             Customise
           </Button>
@@ -145,6 +149,8 @@ export function Dashboard() {
       )}
 
       {has('ticker') && <Ticker events={ticker} now={now} />}
+
+      {has('timeline') && <TimelineStrip now={now} news={news} />}
 
       <CustomiseDialog open={customising} onOpenChange={setCustomising} layout={layout} onChange={setLayout} />
     </div>
