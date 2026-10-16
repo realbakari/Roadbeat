@@ -36,7 +36,7 @@ import type { CouncilCentre, Outage } from '../api/newsTypes'
 import { OUTAGE_COLOR } from '../lib/outages'
 import { AirHistory } from './AirHistory'
 import { ClampedText } from './ClampedText'
-import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS, worstRating, type AirStation } from '../api/airQuality'
+import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS, AIR_TEXT, worstRating, type AirStation } from '../api/airQuality'
 import { CENTRE_COLOR, centreKind } from '../lib/councilCentres'
 import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
 import { formatDateTime, formatDay, stripHtml, timeAgo, titleCase } from '../lib/format'
@@ -380,7 +380,7 @@ function AirBody({ s, now }: { s: AirStation; now: number }) {
         <Text size="sm" variant="secondary">
           Readings for {when.format(s.measuredAt)} · {timeAgo(s.measuredAt, now)}
         </Text>
-        <span className="text-lg font-semibold" style={{ color: worst ? AIR_COLOR[worst] : undefined }}>
+        <span className={`text-lg font-semibold ${worst ? AIR_TEXT[worst] : ''}`}>
           {worst ? AIR_RATINGS[worst - 1] : 'No rated reading'}
         </span>
         <Text size="xs" variant="secondary">
@@ -393,7 +393,7 @@ function AirBody({ s, now }: { s: AirStation; now: number }) {
             <Fragment key={m.name}>
               <dt>{m.name}</dt>
               <dd className="text-right tabular-nums">{m.value != null ? `${m.value} ${m.units ?? ''}`.trim() : m.gap === 'offline' ? 'Offline' : 'No data'}</dd>
-              <dd className="text-right font-medium" style={{ color: m.rating ? AIR_COLOR[m.rating] : undefined }}>
+              <dd className={`text-right font-medium ${m.rating ? AIR_TEXT[m.rating] : ''}`}>
                 {m.ratingName ?? '–'}
               </dd>
             </Fragment>

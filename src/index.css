@@ -11,6 +11,21 @@ body,
   height: 100%;
 }
 
+/*
+ * Contrast fixes over Kumo's light-mode tokens (WCAG AA, 4.5:1 for text);
+ * dark mode already passes, so it keeps Kumo's values.
+ * - Warning text, such as the Roadworks tags and Advice banners, measured
+ *   4.18:1 on white. This value gives 5.3:1 on white and 4.8:1 on the grey
+ *   recessed panels.
+ * - Secondary (subtle) text, such as inactive tab labels and the notes on
+ *   grey summary cards, measured 4.27:1 on the grey recessed surfaces. This
+ *   slightly darker grey gives 4.95:1 there and 5.5:1 on white.
+ */
+:root:not([data-mode="dark"]) {
+  --text-color-kumo-warning: oklch(54% 0.135 57.5);
+  --text-color-kumo-subtle: oklch(52% 0 0);
+}
+
 /* Contain in-page z-indexes (e.g. Kumo inputs use z-index: 1) so portaled dialogs stay on top. */
 #root {
   isolation: isolate;
@@ -38,7 +53,8 @@ body {
 }
 .maplibregl-ctrl-attrib {
   background: color-mix(in srgb, var(--color-kumo-base) 80%, transparent) !important;
-  color: var(--text-color-kumo-subtle);
+  /* !important beats MapLibre's compact style, which sets black text and left it unreadable in dark mode. */
+  color: var(--text-color-kumo-subtle) !important;
   font-size: 11px;
 }
 .maplibregl-ctrl-attrib a {

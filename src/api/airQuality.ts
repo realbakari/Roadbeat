@@ -31,6 +31,19 @@ export type AirRating = 1 | 2 | 3 | 4 | 5
 /** Roadbeat's colour for each rating (green to dark red), and grey for a station with no rated reading. */
 export const AIR_COLOR: Record<AirRating | 0, string> = { 0: '#9ca3af', 1: '#15803d', 2: '#65a30d', 3: '#d97706', 4: '#dc2626', 5: '#7f1d1d' }
 
+/**
+ * Text classes for a rating's name, in the same hues as AIR_COLOR but shaded
+ * to keep at least 4.5:1 on light and dark surfaces. The marker colours are
+ * too light for text in light mode, or too dark in dark mode.
+ */
+export const AIR_TEXT: Record<AirRating, string> = {
+  1: 'text-green-800 dark:text-green-400',
+  2: 'text-lime-800 dark:text-lime-400',
+  3: 'text-amber-800 dark:text-amber-400',
+  4: 'text-red-700 dark:text-red-400',
+  5: 'text-red-900 dark:text-red-300',
+}
+
 export interface AirMeasurement {
   name: string
   units: string | null

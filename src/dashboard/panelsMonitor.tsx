@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { AIR_COLOR, AIR_RATINGS, type AirStation } from '../api/airQuality'
+import { AIR_COLOR, AIR_RATINGS, AIR_TEXT, type AirStation } from '../api/airQuality'
 import { worstStations } from '../lib/dashboard'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { PanelId } from '../lib/dashboardLayout'
@@ -70,7 +70,7 @@ export const MONITOR_VIEWS: Partial<Record<PanelId, (d: MonitorData) => ReactNod
           worst?.length ? (
             <ul className="grid gap-1">
               {worst.slice(0, 7).map(({ station, rating }) => (
-                <Row key={station.id} label={station.name} detail={station.region} value={<span style={{ color: AIR_COLOR[rating] }}>{AIR_RATINGS[rating - 1]}</span>} href={`/#place/air/${encodeURIComponent(station.id)}`} />
+                <Row key={station.id} label={station.name} detail={station.region} value={<span className={AIR_TEXT[rating]}>{AIR_RATINGS[rating - 1]}</span>} href={`/#place/air/${encodeURIComponent(station.id)}`} />
               ))}
             </ul>
           ) : (
