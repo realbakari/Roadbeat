@@ -221,13 +221,12 @@ export function AppHeader({
         <DropdownMenu>
           <DropdownMenu.Trigger render={<Button variant="ghost" shape="square" aria-label="More" icon={<DotsThreeIcon weight="bold" />} />} />
           <DropdownMenu.Content align="end">
+            {/* A plain element, not DropdownMenu.Label: Base UI's Label must sit in a Group and throws otherwise, which blanked the whole app once a count existed. */}
             {visitors && (
-              <>
-                <DropdownMenu.Label className="xl:hidden">
-                  <VisitorCount visitors={visitors} className="flex" />
-                </DropdownMenu.Label>
-                <DropdownMenu.Separator className="xl:hidden" />
-              </>
+              <div className="xl:hidden">
+                <VisitorCount visitors={visitors} className="flex px-2 py-1.5" />
+                <DropdownMenu.Separator />
+              </div>
             )}
             <DropdownMenu.Item icon={panelExpanded ? ArrowsInSimpleIcon : ArrowsOutSimpleIcon} onClick={onTogglePanelExpanded} className="hidden md:flex">
               {panelExpanded ? 'Back to the map' : 'Expand the panel'}
