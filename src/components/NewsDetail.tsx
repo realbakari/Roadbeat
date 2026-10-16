@@ -9,6 +9,7 @@ import { officialNow } from '../lib/newsOfficial'
 import { lastDate } from '../lib/newsItems'
 import { reportedAgo, storySourceLine, type NewsStory } from '../lib/newsStories'
 import { LiveBlogBadge, PublisherIcon, StoryMark } from './NewsStoryRow'
+import { NewTabNote } from './NewTabNote'
 
 const when = new Intl.DateTimeFormat('en-AU', {
   timeZone: 'Australia/Brisbane',
@@ -84,8 +85,9 @@ export function NewsDetail({
                   </span>
                   {story.items.length > 1 && <span className="text-sm leading-snug font-medium text-kumo-strong">{it.title}</span>}
                   {it.summary && <span className="text-sm leading-snug text-kumo-default">{it.summary}</span>}
-                  <a href={it.link} target="_blank" rel="noreferrer" className="inline-flex w-fit items-center gap-1 text-sm text-kumo-link hover:underline">
+                  <a href={it.link} target="_blank" rel="noreferrer" className="inline-flex w-fit items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
                     Read at {it.publisher} <ArrowSquareOutIcon size={13} aria-hidden />
+                    <NewTabNote />
                   </a>
                 </li>
               ))}

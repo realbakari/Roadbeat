@@ -122,7 +122,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.events.map((e) => (
               <li key={e.properties.id}>
-                <EventCard event={e} now={now} onSelect={(id) => onOpenHref(`event/${id}`)} />
+                <EventCard event={e} now={now} headingAs="h4" onSelect={(id) => onOpenHref(`event/${id}`)} />
               </li>
             ))}
           </ul>

@@ -10,6 +10,7 @@ import type { BusySignal, DistrictCount, FootTraffic, Punctuality, RisingGauge, 
 import { ON_TIME } from '../lib/dashboard'
 import type { PanelId } from '../lib/dashboardLayout'
 import { EmptyNote, Row, Stat, Tile } from './Tile'
+import { NewTabNote } from '../components/NewTabNote'
 
 // The dashboard's panels, each rendered from the data Dashboard.tsx gathers.
 // A panel shows only what its source published; the source line says which.
@@ -48,8 +49,9 @@ function mmss(sec: number | null) {
 }
 
 const sourceLink = (href: string, children: ReactNode) => (
-  <a href={href} target="_blank" rel="noreferrer" className="hover:underline">
+  <a href={href} target="_blank" rel="noreferrer" className="underline decoration-1 underline-offset-2">
     {children}
+    <NewTabNote />
   </a>
 )
 

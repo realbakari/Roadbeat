@@ -36,9 +36,11 @@ interface Props {
   distanceKm?: number | null
   upcoming?: boolean
   onSelect: (id: number) => void
+  /** The title's heading level: h3 in the side panel's list, h4 under a place page's section heading. */
+  headingAs?: 'h3' | 'h4'
 }
 
-export function EventCard({ event, now, distanceKm, upcoming, onSelect }: Props) {
+export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingAs = 'h3' }: Props) {
   const p = event.properties
   const meta = typeMeta(p.event_type)
   const pr = priorityBadge(p.event_priority)
@@ -53,18 +55,19 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect }: Props)
       : timeAgo(p.last_updated, now)
   const place = eventPlace(event)
 
+  // The title is a heading holding the button, and the button's ::after
+  // stretches over the card, so the whole card stays one click target while
+  // screen readers can jump from event to event by heading.
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(p.id)}
-      className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-kumo-tint focus-visible:bg-kumo-tint focus-visible:outline-none"
-    >
+    <div className="relative flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-kumo-tint has-[:focus-visible]:bg-kumo-tint">
       <TypeIcon type={p.event_type} />
       <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5">
         <div className="grid min-w-0 gap-0.5">
           <div className="flex min-w-0 items-start justify-between gap-2">
-            <Text bold truncate>
-              {eventTitle(event)}
+            <Text as={headingAs} bold truncate>
+              <button type="button" onClick={() => onSelect(p.id)} className="block w-full truncate text-left after:absolute after:inset-0 focus-visible:outline-none">
+                {eventTitle(event)}
+              </button>
             </Text>
             {updated && (
               <span className="shrink-0 text-xs leading-5 text-kumo-subtle">{updated}</span>
@@ -94,6 +97,6 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect }: Props)
           </Badge>
         </div>
       </div>
-    </button>
+    </div>
   )
 }

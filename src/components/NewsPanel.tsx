@@ -53,7 +53,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
               type="button"
               aria-pressed={filter.kind === k.value}
               onClick={() => set('kind', k.value)}
-              className={`inline-flex h-7 items-center rounded-full px-2.5 text-sm ring ${
+              className={`inline-flex h-7 items-center rounded-md px-2.5 text-sm ring ${
                 filter.kind === k.value ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
               }`}
             >
@@ -64,7 +64,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
             type="button"
             aria-pressed={filter.live}
             onClick={() => set('live', !filter.live)}
-            className={`inline-flex h-7 items-center rounded-full px-2.5 text-sm ring ${
+            className={`inline-flex h-7 items-center rounded-md px-2.5 text-sm ring ${
               filter.live ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
             }`}
           >
@@ -75,7 +75,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
             aria-expanded={moreOpen}
             aria-controls="news-more-filters"
             onClick={() => setMoreOpen((v) => !v)}
-            className={`ml-auto inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-sm ring md:hidden ${
+            className={`ml-auto inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-sm ring md:hidden ${
               moreOpen || dropdownsSet ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
             }`}
           >
@@ -116,7 +116,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
           <button
             type="button"
             onClick={() => set('place', null)}
-            className="inline-flex w-fit items-center gap-1.5 rounded-full bg-kumo-tint py-1 pr-2 pl-2.5 text-sm text-kumo-strong ring ring-kumo-brand hover:bg-kumo-recessed"
+            className="inline-flex w-fit items-center gap-1.5 rounded-md bg-kumo-tint py-1 pr-2 pl-2.5 text-sm text-kumo-strong ring ring-kumo-brand hover:bg-kumo-recessed"
             title="Show stories from everywhere"
           >
             <MapPinIcon size={14} aria-hidden /> Naming {filter.place}

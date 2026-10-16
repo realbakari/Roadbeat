@@ -23,6 +23,7 @@ import { CENTRE_COLOR } from '../lib/councilCentres'
 import { OUTAGE_COLOR } from '../lib/outages'
 import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS } from '../api/airQuality'
 import type { Basemap, MapLayers } from './map/settings'
+import { NewTabNote } from './NewTabNote'
 
 interface Props {
   basemap: Basemap
@@ -275,8 +276,9 @@ export function MapLayersPanel({
                 ) : (
                   <>
                     Each station's worst-rated reading this hour, with the ratings the{' '}
-                    <a href={AIR_QUALITY_DATASET} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    <a href={AIR_QUALITY_DATASET} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                       state's live feed
+                      <NewTabNote />
                     </a>{' '}
                     gives. Readings are hourly.
                   </>
@@ -399,12 +401,14 @@ export function MapLayersPanel({
                 : 'Signed clearances of low bridges and structures, as published by '}
               {!clearanceError && (
                 <>
-                  <a href={BCC_CLEARANCES_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                  <a href={BCC_CLEARANCES_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                     Brisbane City Council
+                    <NewTabNote />
                   </a>{' '}
                   and{' '}
-                  <a href={QR_CLEARANCES_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                  <a href={QR_CLEARANCES_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                     Queensland Rail
+                    <NewTabNote />
                   </a>
                   . Not every low structure is listed; always obey the signs on the road.
                 </>
@@ -433,8 +437,9 @@ export function MapLayersPanel({
                 ) : (
                   <>
                     From the signed times in{' '}
-                    <a href={CLEARWAYS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    <a href={CLEARWAYS_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                       Brisbane City Council's records
+                      <NewTabNote />
                     </a>
                     . Zoom in to see them. The signs on the road are what count.
                   </>
@@ -480,7 +485,7 @@ export function MapLayersPanel({
                     type="button"
                     aria-pressed={on}
                     onClick={() => onVehicleModesChange(on ? vehicleModes.filter((m) => m !== mode) : [...vehicleModes, mode])}
-                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring ${
+                    className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ring ${
                       on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
                     }`}
                   >
@@ -523,8 +528,9 @@ export function MapLayersPanel({
               ) : (
                 <>
                   Blue: accessible toilet. Grey: no accessible toilet listed. Brisbane only, from the National Public Toilet Map via{' '}
-                  <a href={TOILETS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                  <a href={TOILETS_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                     Brisbane City Council
+                    <NewTabNote />
                   </a>
                   .
                 </>
@@ -544,8 +550,9 @@ export function MapLayersPanel({
               ) : (
                 <>
                   Disability permit bays on council streets, with their signed times, from{' '}
-                  <a href={ACCESSIBLE_PARKING_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                  <a href={ACCESSIBLE_PARKING_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                     Brisbane City Council
+                    <NewTabNote />
                   </a>
                   . Zoom in to see them.
                 </>
@@ -565,8 +572,9 @@ export function MapLayersPanel({
               ) : (
                 <>
                   Hours, maximum stay and hourly rates as the council lists them, from{' '}
-                  <a href={PARKING_METERS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                  <a href={PARKING_METERS_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                     Brisbane City Council
+                    <NewTabNote />
                   </a>
                   . Zoom in to see them.
                 </>
@@ -601,8 +609,9 @@ export function MapLayersPanel({
                 ) : (
                   <>
                     Brisbane City Council's bikeway network, bike racks and repair stations (
-                    <a href={BIKE_RACKS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                    <a href={BIKE_RACKS_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                       open data
+                      <NewTabNote />
                     </a>
                     ). Zoom in to see them.
                   </>
@@ -623,8 +632,9 @@ export function MapLayersPanel({
               ) : (
                 <>
                   Events on today and in the next 7 days with a published location, as listed by{' '}
-                  <a href={EVENTS_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                  <a href={EVENTS_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                     Brisbane City Council
+                    <NewTabNote />
                   </a>
                   . Zoom in to see them.
                 </>
@@ -676,7 +686,7 @@ function CrashControls({ filter, onChange }: { filter: CrashFilter; onChange: (f
               type="button"
               aria-pressed={on}
               onClick={() => toggle(s)}
-              className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring ${
+              className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ring ${
                 on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
               }`}
             >
@@ -688,8 +698,9 @@ function CrashControls({ filter, onChange }: { filter: CrashFilter; onChange: (f
       </div>
       <Text size="xs" variant="secondary">
         Property-damage-only crashes were recorded until 2010. Data to {CRASH_DATA_END}.{' '}
-        <a href={CRASH_DATASET_URL} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+        <a href={CRASH_DATASET_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
           TMR, CC BY 4.0
+          <NewTabNote />
         </a>
       </Text>
     </div>

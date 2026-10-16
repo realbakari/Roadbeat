@@ -180,7 +180,7 @@ export function EventList({
                     type="button"
                     aria-pressed={active}
                     onClick={() => toggleType(m.type)}
-                    className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm whitespace-nowrap ring ${
+                    className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${
                       active
                         ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand'
                         : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
@@ -197,7 +197,7 @@ export function EventList({
                 type="button"
                 aria-pressed={filters.closuresOnly}
                 onClick={() => set('closuresOnly', !filters.closuresOnly)}
-                className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm whitespace-nowrap ring ${
+                className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${
                   filters.closuresOnly ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
                 }`}
               >

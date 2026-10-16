@@ -31,6 +31,7 @@ import { TransitMapsDirectory } from './TransitMaps'
 import { TripPage } from './TripPage'
 import { AlertCards, ExternalLink, Section } from './TransitParts'
 import { alertsForCodes, lineMatcher, lineSlug, lineWatchKey, routeLabels, vehiclesForCodes } from '../lib/transitLines'
+import { NewTabNote } from './NewTabNote'
 
 const MODES: { mode: TransitMode; label: string; icon: Icon }[] = [
   { mode: 'train', label: 'Trains', icon: TrainIcon },
@@ -604,6 +605,7 @@ function Notices({ notices }: { notices: TransitNotice[] }) {
               <Text size="sm" variant="secondary">
                 {n.description.replace(/,\s*$/, '')}
               </Text>
+              <NewTabNote />
             </a>
           </li>
         ))}

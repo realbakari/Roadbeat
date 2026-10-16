@@ -32,6 +32,7 @@ import { readableTextOn } from '../lib/routeColor'
 import { REGION_NAMES } from '../lib/transitRegions'
 import { regionalRoutes, searchRoutes } from '../lib/regionalRoutes'
 import { RouteRows } from './RegionalRoutes'
+import { NewTabNote } from './NewTabNote'
 
 const clockTime = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
@@ -439,9 +440,10 @@ export function DeparturesHome({
           href="https://jp.translink.com.au/plan-your-journey/journey-planner"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
         >
           Plan a journey on TransLink <ArrowSquareOutIcon size={14} />
+          <NewTabNote />
         </a>
       </section>
     </div>
@@ -469,7 +471,7 @@ export function ModeChips({ value, onChange }: { value: TransitMode | 'all'; onC
             role="radio"
             aria-checked={on}
             onClick={() => onChange(mode)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ring ${on ? 'bg-kumo-tint ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm ring ${on ? 'bg-kumo-tint ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
           >
             {I && <I size={14} weight="fill" />}
             {label}

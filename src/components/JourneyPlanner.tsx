@@ -26,6 +26,7 @@ import { changeTime, planJourneys, searchStops, stopAndChildren, translinkPlanne
 import { liveLookup, type LiveLookup } from '../lib/timetable'
 import { RouteBadges } from './TransitHome'
 import { REGION_NAMES } from '../lib/transitRegions'
+import { NewTabNote } from './NewTabNote'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
@@ -294,7 +295,7 @@ export function JourneyPlanner({
                     return next
                   })
                 }
-                className={`rounded-full px-2.5 py-0.5 text-xs capitalize ring ${on ? 'bg-kumo-tint text-kumo-default ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
+                className={`rounded-md px-2.5 py-0.5 text-xs capitalize ring ${on ? 'bg-kumo-tint text-kumo-default ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
               >
                 {m}
               </button>
@@ -305,7 +306,7 @@ export function JourneyPlanner({
             type="button"
             aria-pressed={directOnly}
             onClick={() => setDirectOnly((v) => !v)}
-            className={`rounded-full px-2.5 py-0.5 text-xs ring ${directOnly ? 'bg-kumo-tint text-kumo-default ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
+            className={`rounded-md px-2.5 py-0.5 text-xs ring ${directOnly ? 'bg-kumo-tint text-kumo-default ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
           >
             Direct only
           </button>
@@ -329,7 +330,7 @@ export function JourneyPlanner({
                   key={`${t.from}>${t.to}`}
                   type="button"
                   onClick={() => openTrip(t)}
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm ring ring-kumo-line hover:bg-kumo-tint"
+                  className="inline-flex items-center gap-1 rounded-md px-3 py-1 text-sm ring ring-kumo-line hover:bg-kumo-tint"
                 >
                   <StarIcon size={12} weight="fill" className="text-kumo-warning" />
                   {t.name ?? `${shortName(a.name)} → ${shortName(b.name)}`}
@@ -424,8 +425,9 @@ export function JourneyPlanner({
           TransLink's journey planner plans door-to-door trips with walking, any number of changes and fares.
           {from || to ? ' Your search is filled in.' : ''}
         </Text>
-        <a href={plannerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+        <a href={plannerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
           Open in TransLink journey planner <ArrowSquareOutIcon size={14} />
+          <NewTabNote />
         </a>
       </div>
     </div>
