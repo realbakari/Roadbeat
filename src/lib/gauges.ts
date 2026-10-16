@@ -30,6 +30,16 @@ export function rainfallSince(g: Gauge, since: number): { mm: number; readings: 
   return { mm: Math.round(mm * 10) / 10, readings }
 }
 
+/**
+ * Rain since `since` in mm, or null when the gauge reported nothing in that
+ * time. Intervals with no report are left out of the readings, so a gauge
+ * that has gone offline must never read as a dry one.
+ */
+export function rainfallTotal(g: Gauge, since: number): number | null {
+  const { mm, readings } = rainfallSince(g, since)
+  return readings ? mm : null
+}
+
 /** Gauges of one kind within `km` of a point, nearest first. */
 export function nearbyGauges(gauges: Gauge[], at: LngLat, km: number, kind: Gauge['kind']) {
   return gauges

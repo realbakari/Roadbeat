@@ -8,7 +8,7 @@ import type { TrafficEvent } from '../api/types'
 import { typeMeta } from './eventMeta'
 import { eventPlace, eventTitle } from './eventText'
 import { clean, timeAgo } from './format'
-import { latestReading, rainfallSince } from './gauges'
+import { latestReading, rainfallTotal } from './gauges'
 import { eventAnchor, type LngLat } from './geo'
 import { LAYER_COLOR, VEHICLE_COLOR } from './mapIcons'
 import { placeFocus, type Place } from './places'
@@ -178,12 +178,15 @@ export function fireCard(f: FireWarning): MapCard {
 
 export function gaugeCard(g: Gauge, now: number): MapCard {
   const latest = latestReading(g)
+  const rain = g.kind === 'rain' ? rainfallTotal(g, now - 3600_000) : null
   const fact =
     g.kind === 'stream'
       ? latest
         ? `${latest.value.toFixed(2)} m${g.source === 'bcc' ? ' AHD' : ''} at ${clock.format(latest.time)}`
         : 'No reading in the last 24 hours'
-      : `${rainfallSince(g, now - 3600_000).mm} mm in the last hour`
+      : rain != null
+        ? `${rain} mm in the last hour`
+        : `No reading in the last hour${latest ? ` · last at ${clock.format(latest.time)}` : ''}`
   return {
     key: `gauge-${g.id}`,
     title: g.name,

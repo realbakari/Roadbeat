@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Gauge } from '../api/bccGauges'
-import { changeWithin, nearbyGauges, rainfallSince } from './gauges'
+import { changeWithin, nearbyGauges, rainfallSince, rainfallTotal } from './gauges'
 
 const T = Date.parse('2026-10-15T10:00:00+10:00')
 const min = (m: number) => T + m * 60_000
@@ -31,5 +31,13 @@ describe('nearbyGauges', () => {
     const far = gauge({ id: 'far', position: [153.2, -27.5] })
     const rain = gauge({ id: 'rain', kind: 'rain', position: [153, -27.5] })
     expect(nearbyGauges([far, rain, near], [153, -27.5], 5, 'stream').map((x) => x.gauge.id)).toEqual(['near'])
+  })
+})
+
+describe('rainfallTotal', () => {
+  it('sums the readings, but has no total for a gauge that reported nothing', () => {
+    const g = gauge({ kind: 'rain', readings: [{ time: min(-120), value: 4 }] })
+    expect(rainfallTotal(g, min(-180))).toBe(4)
+    expect(rainfallTotal(g, min(-60))).toBeNull()
   })
 })

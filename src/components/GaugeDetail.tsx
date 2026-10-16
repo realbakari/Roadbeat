@@ -4,7 +4,7 @@ import { GAUGES_DATASET_URL, type Gauge, type GaugeReading } from '../api/bccGau
 import { BOM_QLD_WARNINGS, floodWarningArea } from '../api/floodWarnings'
 import { qldGaugeUrl, WMIP_PORTAL } from '../api/qldGauges'
 import { timeAgo } from '../lib/format'
-import { changeWithin, latestReading, rainfallSince } from '../lib/gauges'
+import { changeWithin, latestReading, rainfallTotal } from '../lib/gauges'
 import { NewTabNote } from './NewTabNote'
 
 const time = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
@@ -70,8 +70,8 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
           ) : (
             <div className="grid gap-1">
               <div className="flex flex-wrap gap-x-6 gap-y-1">
-                <Total label="Last hour" mm={rainfallSince(gauge, now - HOUR).mm} />
-                <Total label="Last 24 hours" mm={rainfallSince(gauge, now - 24 * HOUR).mm} />
+                <Total label="Last hour" mm={rainfallTotal(gauge, now - HOUR)} />
+                <Total label="Last 24 hours" mm={rainfallTotal(gauge, now - 24 * HOUR)} />
               </div>
               <Text size="sm" variant="secondary">
                 Sums of the gauge's 5-minute readings. Last reading {time.format(latest.time)} ({timeAgo(latest.time, now)}).
@@ -164,10 +164,10 @@ function Change({ label, change }: { label: string; change: ReturnType<typeof ch
   )
 }
 
-function Total({ label, mm }: { label: string; mm: number }) {
+function Total({ label, mm }: { label: string; mm: number | null }) {
   return (
     <span className="grid">
-      <span className="text-base font-semibold tabular-nums">{mm} mm</span>
+      <span className="text-base font-semibold tabular-nums">{mm != null ? `${mm} mm` : 'No reading'}</span>
       <span className="text-xs text-kumo-subtle">{label}</span>
     </span>
   )
