@@ -21,6 +21,8 @@ There are no accounts, no cookies, no advertising and no analytics.
 
 Roadbeat saves your preferences in your browser's local storage, on your device only. That includes your notification settings and notification list, your saved stops, recent stops and saved trips, your commute (roads, stop, line, time and days), and display choices such as the colour theme, base map, panel size, time format and which dashboard panels show. Roadbeat never sends this information to a server. Clearing your browser's site data for Roadbeat deletes it.
 
+Saved trips, with the names, order and travel modes you give them, stay in this browser too: Roadbeat plans their next departures on your device and never sends them anywhere.
+
 ## Your location
 
 Roadbeat asks for your location only when you choose a feature that needs it, such as **Find stops near me**, sorting events by distance, or alerts near you. Your browser asks for your permission first. Roadbeat uses your location inside your browser to sort and filter what you see, and does not send it to any server. If you turn on alerts near you, your chosen location is saved in local storage with your other settings.

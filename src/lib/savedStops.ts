@@ -1,7 +1,9 @@
 import { useSyncExternalStore } from 'react'
 import type { TransitRegion } from '../api/translink'
+import { moveTrip, removeTrip, renameTrip, saveTrip, type SavedTrip } from './savedTrips'
 
-// Stops a rider has saved ("My stops") and recently opened, kept in this browser only.
+// Stops a rider has saved ("My stops") and recently opened, and their saved trips
+// ("My trips"), kept in this browser only.
 
 export interface SavedStop {
   region: TransitRegion
@@ -62,16 +64,10 @@ export function clearRecentStops() {
 }
 export const useRecentStops = recent.use
 
-/** A journey a rider has saved ("My trips"), re-planned from now when opened. */
-export interface SavedTrip {
-  region: TransitRegion
-  from: string
-  to: string
-}
 const trips = storedList<SavedTrip>('qldt-saved-trips')
-const sameTrip = (a: SavedTrip, b: SavedTrip) => a.region === b.region && a.from === b.from && a.to === b.to
-export function toggleSavedTrip(t: SavedTrip) {
-  const list = trips.read()
-  trips.write(list.some((x) => sameTrip(x, t)) ? list.filter((x) => !sameTrip(x, t)) : [...list, t])
-}
+/** Saves a trip, or updates the saved one between the same stops. */
+export const keepSavedTrip = (t: SavedTrip) => trips.write(saveTrip(trips.read(), t))
+export const removeSavedTrip = (t: SavedTrip) => trips.write(removeTrip(trips.read(), t))
+export const renameSavedTrip = (t: SavedTrip, name: string) => trips.write(renameTrip(trips.read(), t, name))
+export const moveSavedTrip = (t: SavedTrip, by: number) => trips.write(moveTrip(trips.read(), t, by))
 export const useSavedTrips = trips.use

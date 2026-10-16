@@ -15,14 +15,17 @@ import { useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
 import { brisbaneDate, dayStart, routesAtStops, timetableDates } from '../api/timetables'
 import { alertActive, routeInfo, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
-import { toggleSavedTrip, useSavedTrips } from '../lib/savedStops'
-import type { PlanQuery } from '../lib/route'
+import { keepSavedTrip, removeSavedTrip, useSavedTrips } from '../lib/savedStops'
+import { planHash, type PlanQuery } from '../lib/route'
+import { filterJourneys, sameTrip, TRIP_MODES, tripFilter, type SavedTrip } from '../lib/savedTrips'
+import { SavedTrips } from './SavedTrips'
 import { useTripsOn } from '../hooks/useTimetable'
 import { useNow, useStopIndex, useTimetableIndex, useTripUpdates } from '../hooks/useTrafficData'
 import { stopHref } from '../lib/departures'
 import { changeTime, planJourneys, searchStops, stopAndChildren, translinkPlannerUrl, type Journey, type Leg } from '../lib/planner'
 import { liveLookup, type LiveLookup } from '../lib/timetable'
 import { RouteBadges } from './TransitHome'
+import { REGION_NAMES } from '../lib/transitRegions'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
@@ -105,6 +108,7 @@ export function StopField({
                 >
                   {s.name}
                   {/^\d+$/.test(s.id) && <span className="ml-2 text-xs text-kumo-subtle">Stop {s.id}</span>}
+                  {s.region !== 'SEQ' && <span className="ml-2 text-xs text-kumo-subtle">{REGION_NAMES[s.region]}</span>}
                 </button>
               </li>
             ))
@@ -143,7 +147,6 @@ export function JourneyPlanner({
   const { index } = useTimetableIndex(true)
   const { updates } = useTripUpdates(true)
   const today = brisbaneDate(now)
-  const dates = useMemo(() => (index ? timetableDates(index, 'SEQ', today) : []), [index, today])
 
   // Stops are kept by id so a search from the URL can name them before the stop list has loaded.
   type Ref = { region: TransitRegion; id: string }
@@ -152,15 +155,27 @@ export function JourneyPlanner({
   const from = (fromRef && stops?.get(fromRef.region, fromRef.id)) || null
   const to = (toRef && stops?.get(toRef.region, toRef.id)) || null
   const setFrom = (s: Stop | null) => setFromRef(s && { region: s.region, id: s.id })
+  const dateRegion = fromRef?.region ?? 'SEQ'
+  const dates = useMemo(() => (index ? timetableDates(index, dateRegion, today) : []), [index, dateRegion, today])
   const setTo = (s: Stop | null) => setToRef(s && { region: s.region, id: s.id })
   const [date, setDate] = useState<string | null>(initial?.date ?? null)
   const [arrive, setArrive] = useState(initial?.arrive ?? false)
   const [minutes, setMinutes] = useState<number | null>(initial?.minutes ?? null)
   // As in the TransLink app: which modes to use and how many changes.
-  const [modes, setModes] = useState<Set<string>>(() => new Set(['train', 'bus', 'ferry', 'tram']))
-  const [directOnly, setDirectOnly] = useState(false)
+  const [modes, setModes] = useState<Set<string>>(() => new Set(initial?.modes?.length ? initial.modes : TRIP_MODES))
+  const [directOnly, setDirectOnly] = useState(initial?.direct ?? false)
   const savedTrips = useSavedTrips()
   const [shared, setShared] = useState(false)
+  // Opens a saved trip here, from now, rather than through the URL, which may already name it.
+  const openTrip = (t: SavedTrip) => {
+    setFromRef({ region: t.region, id: t.from })
+    setToRef({ region: t.region, id: t.to })
+    setDate(null)
+    setMinutes(null)
+    setArrive(false)
+    setModes(new Set(t.modes?.length ? t.modes : TRIP_MODES))
+    setDirectOnly(!!t.direct)
+  }
   const day = date && dates.includes(date) ? date : (dates[0] ?? today)
   // Until a time is picked, today searches from this minute (the picker shows it rounded down to 5).
   const nowMinutes = Math.floor((now - dayStart(today)) / 60_000)
@@ -182,12 +197,7 @@ export function JourneyPlanner({
     () => (trips && stops && fromIds && toIds ? planJourneys(trips, stops, fromIds, toIds) : null),
     [trips, stops, fromIds, toIds],
   )
-  const modeOf = (l: Leg) => routeInfo(l.trip.route, l.trip.region)?.mode ?? 'bus'
-  const allowed = useMemo(
-    () => all?.filter((j) => (!directOnly || j.legs.length === 1) && j.legs.every((l) => modes.has(modeOf(l)))) ?? null,
-    // modeOf is pure.
-    [all, directOnly, modes],
-  )
+  const allowed = useMemo(() => (all ? filterJourneys(all, { modes: [...modes], direct: directOnly }, modeOf) : null), [all, directOnly, modes])
   const [more, setMore] = useState(0)
   const options = useMemo(() => {
     const all = allowed
@@ -206,10 +216,14 @@ export function JourneyPlanner({
     dates.map((d) => [d, d === today ? `Today, ${dayLabel.format(Date.parse(d))}` : dayLabel.format(Date.parse(d))]),
   )
   const plannerUrl = translinkPlannerUrl(from, to, day, at, arrive)
-  const tripSaved = !!from && !!to && savedTrips.some((t) => t.region === from.region && t.from === from.id && t.to === to.id)
+  const thisTrip = from && to ? { region: from.region, from: from.id, to: to.id, ...tripFilter(modes, directOnly) } : null
+  const savedTrip = thisTrip ? savedTrips.find((t) => sameTrip(t, thisTrip)) : undefined
+  // A saved trip whose modes or "direct only" differ from the planner's can be updated to them.
+  const filterChanged = !!savedTrip && !!thisTrip && (savedTrip.modes?.join() !== thisTrip.modes?.join() || !!savedTrip.direct !== !!thisTrip.direct)
   const share = async () => {
     if (!from || !to) return
-    const hash = `transit/plan/${from.region}/${encodeURIComponent(from.id)}/${encodeURIComponent(to.id)}/${day}/${at}/${arrive ? 'arrive' : 'leave'}`
+    const f = tripFilter(modes, directOnly)
+    const hash = planHash({ region: from.region, from: from.id, to: to.id, date: day, minutes: at, arrive, modes: f.modes ?? null, direct: directOnly })
     const url = `${location.origin}${location.pathname}#${hash}`
     const title = `${from.name} to ${to.name}`
     try {
@@ -265,7 +279,7 @@ export function JourneyPlanner({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          {(['train', 'bus', 'ferry', 'tram'] as const).map((m) => {
+          {TRIP_MODES.map((m) => {
             const on = modes.has(m)
             return (
               <button
@@ -298,7 +312,9 @@ export function JourneyPlanner({
         </div>
       </div>
 
-      {savedTrips.length > 0 && stops && (
+      {(!from || !to) && <SavedTrips vehicles={vehicles} alerts={alerts} onNavigate={onNavigate} onOpen={openTrip} />}
+
+      {from && to && savedTrips.length > 0 && stops && (
         <section className="grid gap-1.5">
           <Text size="xs" variant="secondary" bold>
             My trips
@@ -312,17 +328,11 @@ export function JourneyPlanner({
                 <button
                   key={`${t.from}>${t.to}`}
                   type="button"
-                  onClick={() => {
-                    setFromRef({ region: t.region, id: t.from })
-                    setToRef({ region: t.region, id: t.to })
-                    setDate(null)
-                    setMinutes(null)
-                    setArrive(false)
-                  }}
+                  onClick={() => openTrip(t)}
                   className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm ring ring-kumo-line hover:bg-kumo-tint"
                 >
                   <StarIcon size={12} weight="fill" className="text-kumo-warning" />
-                  {shortName(a.name)} → {shortName(b.name)}
+                  {t.name ?? `${shortName(a.name)} → ${shortName(b.name)}`}
                 </button>
               )
             })}
@@ -346,14 +356,20 @@ export function JourneyPlanner({
               Your options
             </Text>
             <div className="flex gap-1">
-              <Button
-                size="sm"
-                variant={tripSaved ? 'secondary' : 'ghost'}
-                icon={<StarIcon weight={tripSaved ? 'fill' : 'regular'} />}
-                onClick={() => toggleSavedTrip({ region: from.region, from: from.id, to: to.id })}
-              >
-                {tripSaved ? 'Saved' : 'Save trip'}
-              </Button>
+              {filterChanged ? (
+                <Button size="sm" variant="secondary" icon={<StarIcon weight="fill" />} onClick={() => thisTrip && keepSavedTrip(thisTrip)}>
+                  Update saved trip
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant={savedTrip ? 'secondary' : 'ghost'}
+                  icon={<StarIcon weight={savedTrip ? 'fill' : 'regular'} />}
+                  onClick={() => thisTrip && (savedTrip ? removeSavedTrip(thisTrip) : keepSavedTrip(thisTrip))}
+                >
+                  {savedTrip ? 'Saved' : 'Save this trip'}
+                </Button>
+              )}
               <Button size="sm" variant="ghost" icon={<ShareNetworkIcon />} onClick={share}>
                 {shared ? 'Link copied' : 'Share'}
               </Button>
@@ -415,6 +431,8 @@ export function JourneyPlanner({
     </div>
   )
 }
+
+const modeOf = (l: Leg) => routeInfo(l.trip.route, l.trip.region)?.mode ?? 'bus'
 
 function minutesText(ms: number) {
   const m = Math.round(ms / 60_000)

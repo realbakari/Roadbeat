@@ -1,7 +1,17 @@
 // Types for TransLink's GTFS-RT feeds, shared by the app and the server functions in api/.
-// Kept free of runtime imports so server code can import them directly.
+// Kept free of imports so server code can import them directly.
 
-export type TransitRegion = 'SEQ' | 'CNS'
+/**
+ * TransLink's GTFS feeds, by the region code in their URLs: South East
+ * Queensland and every regional network on data.qld.gov.au. Keep in step with
+ * scripts/lib/gtfs.mjs.
+ */
+export const TRANSIT_REGIONS = ['SEQ', 'CNS', 'NSI', 'MHB', 'BOW', 'INN', 'TSV', 'MKY', 'BUN', 'GLT', 'GYM', 'KIL', 'MAG', 'MIF', 'MAL', 'RKY', 'TWB', 'WAR', 'WHT'] as const
+export type TransitRegion = (typeof TRANSIT_REGIONS)[number]
+
+export function isTransitRegion(s: string | undefined): s is TransitRegion {
+  return (TRANSIT_REGIONS as readonly (string | undefined)[]).includes(s)
+}
 export type VehicleMode = 'bus' | 'train' | 'tram' | 'ferry'
 
 export interface LiveVehicle {
