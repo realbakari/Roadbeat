@@ -7,6 +7,10 @@ import { clearanceLabel, type Clearance } from '../../api/clearances'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../../api/bccPlaces'
 import type { CouncilEvent } from '../../api/bccDashboard'
 import type { NewsStory } from '../../lib/newsStories'
+import type { CouncilCentre, Outage } from '../../api/newsTypes'
+import { OUTAGE_COLOR, outagePosition } from '../../lib/outages'
+import { AIR_COLOR, AIR_RATINGS, worstRating, type AirStation } from '../../api/airQuality'
+import { CENTRE_COLOR, centreKind } from '../../lib/councilCentres'
 import { clearwayInEffect, parseClearwayTimes } from '../../lib/clearways'
 import type { TrafficEvent } from '../../api/types'
 import { latestReading, rainfallSince } from '../../lib/gauges'
@@ -87,6 +91,54 @@ export function newsRoadFeatures(stories: NewsStory[]): GeoJSON.FeatureCollectio
         },
       })),
     ),
+  }
+}
+
+/** Council centres, coloured by the kind their type names; each opens its place page. */
+export function councilCentreFeatures(centres: CouncilCentre[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: centres.map((c) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: c.position },
+      properties: {
+        key: `place/centre/${encodeURIComponent(c.id)}`,
+        color: CENTRE_COLOR[centreKind(c.type)],
+        label: `${c.type}${c.status ? ` (${c.status})` : ''} · ${c.name}`,
+      },
+    })),
+  }
+}
+
+/**
+ * Outages: a marker at each one's position, plus the council's published shape
+ * for a notice that has a line or area. All open the outage's place page.
+ */
+export function outageFeatures(outages: Outage[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: outages.flatMap((o) => {
+      const position = outagePosition(o)
+      if (!position) return []
+      const properties = { key: `place/outage/${encodeURIComponent(o.id)}`, color: OUTAGE_COLOR[o.source], label: `${o.type}: ${o.title}${o.status ? ` (${o.status})` : ''}` }
+      const shape = o.geometry && o.geometry.type !== 'Point' ? [{ type: 'Feature' as const, geometry: o.geometry as GeoJSON.LineString | GeoJSON.Polygon, properties }] : []
+      return [...shape, { type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: position }, properties }]
+    }),
+  }
+}
+
+/** Air quality stations, coloured by the department's worst rating at each; each opens its station page. */
+export function airFeatures(stations: AirStation[]): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: stations.map((s) => {
+      const worst = worstRating(s)
+      return {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: s.position },
+        properties: { key: `place/air/${encodeURIComponent(s.id)}`, color: AIR_COLOR[worst ?? 0], label: `${s.name} · ${worst ? AIR_RATINGS[worst - 1] : 'no rated reading'}` },
+      }
+    }),
   }
 }
 

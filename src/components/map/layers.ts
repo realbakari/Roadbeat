@@ -37,7 +37,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     if (map.getLayer('building-3d')) map.removeLayer('building-3d')
   }
 
-  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'council-events', 'news', 'news-roads', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
+  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'council-events', 'council-centres', 'outages', 'air', 'news', 'news-roads', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
     map.addSource(id, { type: 'geojson', data: empty })
   }
   const color = ['get', 'color'] as unknown as string
@@ -487,6 +487,61 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   // News monitor pins, above road events so they aren't hidden. News reports are
   // purple rings, official notices solid dark dots, and a place both kinds name is
   // a dark dot with a purple ring. A shared pin shows how many stories it holds.
+  // Outages: the council's shape where it published one, and a marker at every outage.
+  map.addLayer({
+    id: 'outages-area',
+    type: 'fill',
+    source: 'outages',
+    filter: ['==', ['geometry-type'], 'Polygon'],
+    layout: { visibility: 'none' },
+    paint: { 'fill-color': color, 'fill-opacity': 0.15 },
+  })
+  map.addLayer({
+    id: 'outages-line',
+    type: 'line',
+    source: 'outages',
+    filter: ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]] as never,
+    layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': color, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 16, 5] as never, 'line-dasharray': [2, 1.5] },
+  })
+  map.addLayer({
+    id: 'outages',
+    type: 'circle',
+    source: 'outages',
+    filter: ['==', ['geometry-type'], 'Point'],
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 5, 13, 9] as never,
+      'circle-color': color,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 2,
+    },
+  })
+  map.addLayer({
+    id: 'air-quality',
+    type: 'circle',
+    source: 'air',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 6, 13, 10] as never,
+      'circle-color': color,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 2,
+    },
+  })
+  // Council centres: a ring in the kind's colour, so they read apart from event icons.
+  map.addLayer({
+    id: 'council-centres',
+    type: 'circle',
+    source: 'council-centres',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 4, 13, 8] as never,
+      'circle-color': ['get', 'color'] as never,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 2,
+    },
+  })
   map.addLayer({
     id: 'news-roads',
     type: 'line',

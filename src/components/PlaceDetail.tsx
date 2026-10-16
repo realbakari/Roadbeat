@@ -22,12 +22,20 @@ import {
   BicycleIcon,
   WrenchIcon,
   CalendarStarIcon,
+  HouseLineIcon,
+  LightningIcon,
+  WindIcon,
+  PackageIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { Fragment, type ReactNode } from 'react'
 import { BCC_CLEARANCES_URL, clearanceLabel, QR_BRIDGES_URL, QR_CLEARANCES_URL, type Clearance } from '../api/clearances'
 import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_URL, type AccessibleBay, type BikeStop, type Clearway, type ParkingMeter, type Toilet } from '../api/bccPlaces'
 import { EVENTS_URL, type CouncilEvent } from '../api/bccDashboard'
+import type { CouncilCentre, Outage } from '../api/newsTypes'
+import { OUTAGE_COLOR } from '../lib/outages'
+import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS, worstRating, type AirStation } from '../api/airQuality'
+import { CENTRE_COLOR, centreKind } from '../lib/councilCentres'
 import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
 import { formatDateTime, formatDay, stripHtml, timeAgo, titleCase } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
@@ -185,6 +193,12 @@ function body(place: Place, now: number) {
       return <BikeBody b={place.data} />
     case 'event':
       return <EventBody e={place.data} />
+    case 'centre':
+      return <CentreBody c={place.data} />
+    case 'outage':
+      return <OutageBody o={place.data} now={now} />
+    case 'air':
+      return <AirBody s={place.data} now={now} />
   }
 }
 
@@ -314,6 +328,124 @@ function MeterBody({ m }: { m: ParkingMeter }) {
       </Text>
       <ExternalLink href={PARKING_METERS_URL}>Parking meters — Brisbane City Council</ExternalLink>
       <Directions at={m.position} />
+    </>
+  )
+}
+
+const CENTRE_ICON = { shelter: HouseLineIcon, sandbag: PackageIcon, other: MapPinIcon } as const
+
+/** A centre exactly as its council lists it on its disaster dashboard. */
+function CentreBody({ c }: { c: CouncilCentre }) {
+  const kind = centreKind(c.type)
+  return (
+    <>
+      <Header icon={CENTRE_ICON[kind]} color={CENTRE_COLOR[kind]} title={c.name} subtitle={`${c.type} · ${c.council}`} />
+      <div className="grid gap-1 rounded-lg bg-kumo-recessed p-3">
+        <Text size="sm" variant="secondary">
+          Status
+        </Text>
+        <span className="text-lg font-semibold">{c.status ?? 'Not given'}</span>
+        <Text size="xs" variant="secondary">
+          As the council lists it. Check the council's dashboard before you travel.
+        </Text>
+      </div>
+      {c.address && (
+        <Section title="Address">
+          <p className="text-sm">{c.address}</p>
+        </Section>
+      )}
+      {c.note && (
+        <Section title="Council note">
+          <p className="text-sm whitespace-pre-line">{c.note}</p>
+        </Section>
+      )}
+      <ExternalLink href={c.dashboard}>{c.council} disaster dashboard</ExternalLink>
+    </>
+  )
+}
+
+const when = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+
+/** A station's readings for the hour, each with the department's own index and rating. */
+function AirBody({ s, now }: { s: AirStation; now: number }) {
+  const worst = worstRating(s)
+  return (
+    <>
+      <Header icon={WindIcon} color={AIR_COLOR[worst ?? 0]} title={s.name} subtitle={`Air quality station · ${s.region}`} />
+      <div className="grid gap-1 rounded-lg bg-kumo-recessed p-3">
+        <Text size="sm" variant="secondary">
+          Readings for {when.format(s.measuredAt)} · {timeAgo(s.measuredAt, now)}
+        </Text>
+        <span className="text-lg font-semibold" style={{ color: worst ? AIR_COLOR[worst] : undefined }}>
+          {worst ? AIR_RATINGS[worst - 1] : 'No rated reading'}
+        </span>
+        <Text size="xs" variant="secondary">
+          The worst rating among this hour's readings, as the department rates each one.
+        </Text>
+      </div>
+      <Section title="Readings">
+        <dl className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1.5 text-sm">
+          {s.measurements.map((m) => (
+            <Fragment key={m.name}>
+              <dt>{m.name}</dt>
+              <dd className="text-right tabular-nums">{m.value != null ? `${m.value} ${m.units ?? ''}`.trim() : m.gap === 'offline' ? 'Offline' : 'No data'}</dd>
+              <dd className="text-right font-medium" style={{ color: m.rating ? AIR_COLOR[m.rating] : undefined }}>
+                {m.ratingName ?? '–'}
+              </dd>
+            </Fragment>
+          ))}
+        </dl>
+      </Section>
+      <div className="grid gap-1">
+        <ExternalLink href={s.link}>This station on the department's site</ExternalLink>
+        <ExternalLink href={AIR_QUALITY_DATASET}>Air Quality Monitoring live data feed (open data)</ExternalLink>
+        <Text size="xs" variant="secondary">
+          Values, indexes and ratings as published by the Department of Environment, Tourism, Science and Innovation (CC BY 4.0). Units from its Air Quality Query API.
+        </Text>
+      </div>
+    </>
+  )
+}
+
+/** An Energex outage or a council notice, as the council's dashboard relays it. */
+function OutageBody({ o, now }: { o: Outage; now: number }) {
+  const energex = o.source === 'energex'
+  const rows: [string, ReactNode][] = []
+  if (o.status) rows.push(['Status', o.status])
+  if (o.customers != null) rows.push(['Customers affected', o.customers.toLocaleString('en-AU')])
+  if (o.start) rows.push(['From', when.format(o.start)])
+  if (o.end) rows.push([energex ? 'Estimated restore' : 'Until', when.format(o.end)])
+  if (o.streets.length) rows.push(['Streets', o.streets.join(', ')])
+  if (o.updated) rows.push(['Updated', `${when.format(o.updated)} · ${timeAgo(o.updated, now)}`])
+  return (
+    <>
+      <Header icon={LightningIcon} color={OUTAGE_COLOR[o.source]} title={o.title} subtitle={energex ? `${o.type} outage · reported by Energex` : `${o.type} · ${o.council} notice`} />
+      {o.details && (
+        <Section title="Details">
+          <p className="text-sm whitespace-pre-line">{o.details}</p>
+        </Section>
+      )}
+      {rows.length > 0 && (
+        <dl className="grid grid-cols-[9rem_1fr] gap-x-4 gap-y-1.5 text-sm">
+          {rows.map(([k, v]) => (
+            <Fragment key={k}>
+              <dt className="text-kumo-subtle">{k}</dt>
+              <dd>{v}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      )}
+      <Section title="On the map">
+        <Text size="sm" variant="secondary">
+          {o.place
+            ? `Located from: ${o.place.name}. Energex names the suburb and streets, not a point, so the marker is at the suburb's gazetteer point.`
+            : `At the shape ${o.council} published.`}
+        </Text>
+      </Section>
+      <div className="grid gap-1">
+        <ExternalLink href={o.dashboard}>{o.council.replace(/ Council$/, '')} disaster dashboard</ExternalLink>
+        {energex && <ExternalLink href="https://www.energex.com.au/home/power-outages/outage-finder">Energex outage finder</ExternalLink>}
+      </div>
     </>
   )
 }

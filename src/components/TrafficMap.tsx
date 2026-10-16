@@ -31,8 +31,10 @@ import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
 import { MapCard } from './map/MapCard'
 import type { MapCard as MapCardData } from '../lib/mapCard'
-import { boundsOf, clearanceFeatures, clearwayFeatures, councilEventFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, newsFeatures, newsRoadFeatures, setData, signalFeatures, withLabels } from './map/features'
+import { boundsOf, clearanceFeatures, clearwayFeatures, councilEventFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, newsFeatures, newsRoadFeatures, councilCentreFeatures, outageFeatures, airFeatures, setData, signalFeatures, withLabels } from './map/features'
 import type { NewsStory } from '../lib/newsStories'
+import type { CouncilCentre, Outage } from '../api/newsTypes'
+import type { AirStation } from '../api/airQuality'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -92,6 +94,11 @@ interface Props {
   councilEvents: CouncilEvent[]
   /** News monitor stories that name a place. */
   newsStories: NewsStory[]
+  /** Centres listed on council disaster dashboards. */
+  councilCentres: CouncilCentre[]
+  /** Power outages and council notices from the council disaster dashboards. */
+  outages: Outage[]
+  airStations: AirStation[]
   /** The open news story: its places are ringed and its roads drawn wider. */
   selectedStory: NewsStory | null
   selectedVehicleId: string | null
@@ -139,9 +146,12 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   cycling: ['bikeways', 'bike-stops'],
   councilEvents: ['council-events'],
   news: ['news-pins', 'news-count', 'news-selected', 'news-roads', 'news-roads-selected'],
+  councilCentres: ['council-centres'],
+  outages: ['outages', 'outages-line', 'outages-area'],
+  airQuality: ['air-quality'],
 }
 
-const CLICKABLE_PLACES = ['news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['air-quality', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 
 const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
@@ -188,6 +198,9 @@ export function TrafficMap(props: Props) {
     bikeStops,
     councilEvents,
     newsStories,
+    councilCentres,
+    outages,
+    airStations,
     selectedStory,
     selectedVehicleId,
     card,
@@ -342,6 +355,15 @@ export function TrafficMap(props: Props) {
     if (ready && map) setData(map, 'council-places', councilPlaces)
   }, [map, ready, councilPlaces])
   const newsData = useMemo(() => newsFeatures(newsStories), [newsStories])
+  const centreData = useMemo(() => councilCentreFeatures(councilCentres), [councilCentres])
+  const outageData = useMemo(() => outageFeatures(outages), [outages])
+  const airData = useMemo(() => airFeatures(airStations), [airStations])
+  useEffect(() => {
+    if (!ready || !map) return
+    setData(map, 'council-centres', centreData)
+    setData(map, 'outages', outageData)
+    setData(map, 'air', airData)
+  }, [map, ready, centreData, outageData, airData])
   const newsRoadData = useMemo(() => newsRoadFeatures(newsStories), [newsStories])
   useEffect(() => {
     if (!ready || !map) return

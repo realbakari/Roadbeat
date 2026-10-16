@@ -1,4 +1,4 @@
-import { CloudLightningIcon, MapPinIcon, NewspaperIcon, SirenIcon, WaveformIcon, type Icon } from '@phosphor-icons/react'
+import { BuildingsIcon, CloudLightningIcon, MapPinIcon, NewspaperIcon, SirenIcon, WaveformIcon, type Icon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { PUBLISHER_ICONS } from '../api/newsSources'
 import type { NewsItem } from '../api/newsTypes'
@@ -23,7 +23,8 @@ export function PublisherIcon({ publisher, kind, size = 'md' }: { publisher: str
   const { box, px } = SIZES[size]
   const color = kind === 'official' ? LAYER_COLOR.newsOfficial : LAYER_COLOR.news
   const src = PUBLISHER_ICONS[publisher]
-  const Fallback = FALLBACK_ICON[publisher] ?? NewspaperIcon
+  // Councils have no entry, so an official source without one gets a building.
+  const Fallback = FALLBACK_ICON[publisher] ?? (kind === 'official' ? BuildingsIcon : NewspaperIcon)
   return (
     <span
       className={`${box} flex shrink-0 items-center justify-center overflow-hidden bg-kumo-base`}

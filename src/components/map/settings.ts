@@ -37,6 +37,12 @@ export interface MapLayers {
   councilEvents: boolean
   /** News monitor stories and official notices that name a Queensland place. */
   news: boolean
+  /** Evacuation centres, places of refuge and sandbag points that councils list on their disaster dashboards. */
+  councilCentres: boolean
+  /** Energex power outages and council notices (water works, fuel supply) from the council disaster dashboards. */
+  outages: boolean
+  /** The state's air quality monitoring stations, coloured by the department's worst rating at each. */
+  airQuality: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -62,4 +68,7 @@ export const DEFAULT_LAYERS: MapLayers = {
   cycling: false,
   councilEvents: false,
   news: false,
+  councilCentres: true,
+  outages: true,
+  airQuality: false,
 }

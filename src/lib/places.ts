@@ -1,9 +1,12 @@
 import type { CouncilEvent } from '../api/bccDashboard'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../api/bccPlaces'
 import type { Clearance } from '../api/clearances'
+import type { AirStation } from '../api/airQuality'
+import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
 import type { MapLayers } from '../components/map/settings'
 import type { LngLat } from './geo'
+import { outagePosition } from './outages'
 
 /** A map item that has its own detail page, reached by #place/<kind>/<id>. */
 export type Place =
@@ -18,6 +21,9 @@ export type Place =
   | { kind: 'meter'; data: ParkingMeter }
   | { kind: 'bike'; data: BikeStop }
   | { kind: 'event'; data: CouncilEvent }
+  | { kind: 'centre'; data: CouncilCentre }
+  | { kind: 'outage'; data: Outage }
+  | { kind: 'air'; data: AirStation }
 
 /** The loaded lists a place link can point into; null while a list has not loaded. */
 export interface PlaceSources {
@@ -32,6 +38,9 @@ export interface PlaceSources {
   meters: ParkingMeter[] | null
   bikeStops: BikeStop[] | null
   councilEvents: CouncilEvent[] | null
+  councilCentres: CouncilCentre[] | null
+  outages: Outage[] | null
+  airStations: AirStation[] | null
 }
 
 /** The map layer a shared link to a place turns on. */
@@ -47,6 +56,9 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   meter: 'parkingMeters',
   bike: 'cycling',
   event: 'councilEvents',
+  centre: 'councilCentres',
+  outage: 'outages',
+  air: 'airQuality',
 }
 
 /** The place a #place/<kind>/<id> link names, or null when it is unknown or not loaded yet. */
@@ -96,6 +108,18 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.councilEvents?.find((e) => e.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'centre') {
+    const data = s.councilCentres?.find((c) => c.id === id)
+    return data ? { kind, data } : null
+  }
+  if (kind === 'outage') {
+    const data = s.outages?.find((o) => o.id === id)
+    return data ? { kind, data } : null
+  }
+  if (kind === 'air') {
+    const data = s.airStations?.find((a) => a.id === id)
+    return data ? { kind, data } : null
+  }
   return null
 }
 
@@ -120,9 +144,16 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
     case 'bike':
       return { center: place.data.position, zoom: 17 }
     case 'toilet':
+    case 'centre':
       return { center: place.data.position, zoom: 15 }
+    case 'air':
+      return { center: place.data.position, zoom: 12 }
     case 'event':
       return place.data.position ? { center: place.data.position, zoom: 15 } : null
+    case 'outage': {
+      const p = outagePosition(place.data)
+      return p ? { center: p, zoom: place.data.place ? 13 : 15 } : null
+    }
     case 'clearway':
       return { center: firstPoint(place.data.geometry), zoom: 15 }
     case 'rest':

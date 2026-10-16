@@ -99,7 +99,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
             onValueChange={(v) => set('region', (v as string) ?? 'all')}
             items={{
               all: 'All areas',
-              unlocated: 'No place named',
+              unlocated: 'No council area',
               ...Object.fromEntries(regions.map((r) => [r.lga, `${r.lga} (${r.count})`])),
             }}
           />

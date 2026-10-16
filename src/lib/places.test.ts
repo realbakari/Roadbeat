@@ -64,6 +64,9 @@ const sources: PlaceSources = {
   meters: null,
   bikeStops: null,
   councilEvents: [event],
+  councilCentres: null,
+  outages: null,
+  airStations: null,
 }
 
 describe('findPlace', () => {

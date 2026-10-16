@@ -28,6 +28,8 @@ import { mapCardFor } from './lib/mapCard'
 import { usePanelLayout } from './hooks/usePanelLayout'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
+import { useAirQuality } from './hooks/useTrafficData'
+import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, type EventFilters } from './lib/filters'
@@ -35,7 +37,7 @@ import { cameraKey, type Bounds, type LngLat } from './lib/geo'
 
 export default function App() {
   const { mode, toggle } = useColorMode()
-  const { events, cameras, waze, loading, refreshing, error, fetchedAt, refresh } = useTrafficData()
+  const { events, cameras: tmrCameras, waze, loading, refreshing, error, fetchedAt, refresh } = useTrafficData()
   // Bushfire warnings are always fetched: they're on the map and list by default and feed notifications.
   const { fires } = useBushfires(true)
   const firstLoad = loading && fetchedAt == null
@@ -93,8 +95,13 @@ export default function App() {
   )
 
   const [newsFilter, setNewsFilter] = useState<StoryFilter>(DEFAULT_STORY_FILTER)
-  const news = useNews(panel === 'news' || layers.news || alertSettings.kinds.news || alertSettings.kinds.newsOfficial)
+  // The news snapshot also carries council centres, cameras and outages, so it is read whenever any of those shows.
+  const news = useNews(
+    panel === 'news' || layers.news || layers.councilCentres || layers.outages || layers.webcams || layers.floodcams || sel.place?.kind === 'centre' || sel.place?.kind === 'outage' || alertSettings.kinds.news || alertSettings.kinds.newsOfficial,
+  )
   const stories = useMemo(() => (news.snapshot ? groupStories(news.snapshot.items) : null), [news.snapshot])
+  // Council dashboard cameras join QLDTraffic's, less any QLDTraffic already publishes.
+  const cameras = useMemo(() => (news.snapshot?.cameras.length ? [...tmrCameras, ...asCameras(news.snapshot.cameras, tmrCameras)] : tmrCameras), [tmrCameras, news.snapshot])
   // The map shows the stories the News tab's filters leave, and only those that name a place.
   const mapStories = useMemo(() => (stories ? filterStories(stories, newsFilter, now).filter((s) => s.places.length) : []), [stories, newsFilter, now])
   const selectedStory = useMemo(() => (sel.news ? (stories?.find((s) => s.id === sel.news) ?? null) : null), [stories, sel.news])
@@ -201,6 +208,7 @@ export default function App() {
     cycling: layers.cycling || sel.place?.kind === 'bike',
     councilEvents: layers.councilEvents || sel.place?.kind === 'event',
   })
+  const air = useAirQuality(layers.airQuality || sel.place?.kind === 'air')
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
     () => (sel.signal ? (signalSites?.find((s) => s.tsc === sel.signal) ?? null) : null),
@@ -230,7 +238,7 @@ export default function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations },
     setLayers,
     setFocus,
   )
@@ -274,9 +282,11 @@ export default function App() {
       ...(council.meters ? { parkingMeters: council.meters.length } : {}),
       ...(council.bikeStops ? { cycling: council.bikeStops.length } : {}),
       ...(council.events ? { councilEvents: council.events.length } : {}),
+      ...(news.snapshot ? { councilCentres: news.snapshot.centres.length, outages: news.snapshot.outages.length } : {}),
+      ...(air.stations ? { airQuality: air.stations.length } : {}),
       ...(stories ? { news: mapStories.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations],
   )
 
   const locate = useCallback(() => {
@@ -526,6 +536,9 @@ export default function App() {
               parkingMeters={council.meters ?? []}
               bikeStops={council.bikeStops ?? []}
               councilEvents={council.events ?? []}
+              councilCentres={news.snapshot?.centres ?? []}
+              outages={news.snapshot?.outages ?? []}
+              airStations={air.stations ?? []}
               newsStories={mapStories}
               selectedStory={selectedStory}
               selectedVehicleId={sel.vehicle}
@@ -560,6 +573,7 @@ export default function App() {
               vehicleCounts={vehicleCounts}
               vehicleError={vehicleError}
               clearanceError={clearanceError}
+              airError={air.error}
               councilErrors={council.errors}
             />
             {vehicleFilter && layers.vehicles && (

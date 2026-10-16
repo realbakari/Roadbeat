@@ -12,6 +12,9 @@ import { latestReading, rainfallSince } from './gauges'
 import { eventAnchor, type LngLat } from './geo'
 import { LAYER_COLOR, VEHICLE_COLOR } from './mapIcons'
 import { placeFocus, type Place } from './places'
+import { CENTRE_COLOR, centreKind } from './councilCentres'
+import { OUTAGE_COLOR, outageFacts } from './outages'
+import { AIR_COLOR, AIR_RATINGS, worstRating } from '../api/airQuality'
 import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
 import { dsColor, siteLoad } from './signals'
 
@@ -64,6 +67,9 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   meter: 'Parking meter',
   bike: 'Bike rack',
   event: 'Council event',
+  centre: 'Council centre',
+  outage: 'Outage',
+  air: 'Air quality station',
 }
 
 function placeTitle(place: Place): string {
@@ -89,6 +95,12 @@ function placeTitle(place: Place): string {
       return place.data.name
     case 'event':
       return place.data.title
+    case 'centre':
+      return place.data.name
+    case 'outage':
+      return place.data.title
+    case 'air':
+      return place.data.name
   }
 }
 
@@ -102,6 +114,12 @@ export function placeCard(place: Place): MapCard | null {
   if (place.kind === 'bike' && place.data.kind === 'repair') facts.push('Bike repair station')
   if ((place.kind === 'bay' || place.kind === 'meter') && place.data.suburb) facts.push(place.data.suburb)
   if (place.kind === 'event') facts.push(...[place.data.when, place.data.venue].filter((f) => f != null))
+  if (place.kind === 'centre') facts.push(...[place.data.status ? `Status: ${place.data.status}` : null, place.data.address].filter((f) => f != null))
+  if (place.kind === 'outage') facts.push(...outageFacts(place.data))
+  if (place.kind === 'air') {
+    const worst = worstRating(place.data)
+    facts.push(worst ? `${AIR_RATINGS[worst - 1]} · worst rated reading` : 'No rated reading this hour', `Readings for ${clock.format(place.data.measuredAt)}`)
+  }
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,
     dump: LAYER_COLOR.dumpPoint,
@@ -114,11 +132,21 @@ export function placeCard(place: Place): MapCard | null {
     meter: LAYER_COLOR.parkingMeter,
     bike: LAYER_COLOR.bikeRack,
     event: LAYER_COLOR.councilEvent,
+    centre: place.kind === 'centre' ? CENTRE_COLOR[centreKind(place.data.type)] : '',
+    outage: place.kind === 'outage' ? OUTAGE_COLOR[place.data.source] : '',
+    air: place.kind === 'air' ? AIR_COLOR[worstRating(place.data) ?? 0] : '',
   }
   return {
     key: `place-${place.kind}-${placeId(place)}`,
     title: placeTitle(place),
-    subtitle: place.kind === 'bike' && place.data.kind === 'repair' ? 'Bike repair station' : PLACE_SUBTITLE[place.kind],
+    subtitle:
+      place.kind === 'bike' && place.data.kind === 'repair'
+        ? 'Bike repair station'
+        : place.kind === 'centre'
+          ? `${place.data.type} · ${place.data.council}`
+          : place.kind === 'outage'
+            ? `${place.data.type} ${place.data.source === 'energex' ? 'outage reported by Energex' : `notice · ${place.data.council}`}`
+            : PLACE_SUBTITLE[place.kind],
     facts: facts.slice(0, 2),
     color: colors[place.kind],
     ...(place.kind === 'event' && place.data.image ? { image: place.data.image } : {}),

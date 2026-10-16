@@ -1,5 +1,5 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, NewspaperIcon, StackIcon, XIcon } from '@phosphor-icons/react'
+import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon } from '@phosphor-icons/react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
@@ -19,6 +19,9 @@ import { BCC_CLEARANCES_URL, QR_CLEARANCES_URL } from '../api/clearances'
 import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_URL, TOILETS_URL } from '../api/bccPlaces'
 import { EVENTS_URL } from '../api/bccDashboard'
 import { iconUrl, LAYER_COLOR, signalIcon, typeSlug, VEHICLE_COLOR } from '../lib/mapIcons'
+import { CENTRE_COLOR } from '../lib/councilCentres'
+import { OUTAGE_COLOR } from '../lib/outages'
+import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS } from '../api/airQuality'
 import type { Basemap, MapLayers } from './map/settings'
 
 interface Props {
@@ -34,6 +37,7 @@ interface Props {
   vehicleCounts: Partial<Record<VehicleMode, number>>
   vehicleError: string | null
   clearanceError: string | null
+  airError: string | null
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }
@@ -128,6 +132,7 @@ export function MapLayersPanel({
   vehicleCounts,
   vehicleError,
   clearanceError,
+  airError,
   councilErrors,
   basemap,
   onBasemapChange,
@@ -245,6 +250,85 @@ export function MapLayersPanel({
               </div>
               <Text size="xs" variant="secondary">
                 Pinned only where a headline or summary names a Queensland place in the official gazetteer. Reports aren't verified.
+              </Text>
+            </div>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={AIR_COLOR[2]} icon={<WindIcon size={12} weight="fill" />} />}
+            label="Air quality"
+            count={counts.airQuality}
+            checked={layers.airQuality}
+            onChange={(v) => set('airQuality', v)}
+          >
+            <div className="grid gap-1">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+                {AIR_RATINGS.map((name, i) => (
+                  <span key={name} className="inline-flex items-center gap-1">
+                    <span className="size-2 rounded-full" style={{ background: AIR_COLOR[(i + 1) as 1 | 2 | 3 | 4 | 5] }} />
+                    {name}
+                  </span>
+                ))}
+              </div>
+              <Text size="xs" variant={airError ? 'error' : 'secondary'}>
+                {airError ? (
+                  `Air quality unavailable: ${airError}.`
+                ) : (
+                  <>
+                    Each station's worst-rated reading this hour, with the ratings the{' '}
+                    <a href={AIR_QUALITY_DATASET} target="_blank" rel="noreferrer" className="text-kumo-link hover:underline">
+                      state's live feed
+                    </a>{' '}
+                    gives. Readings are hourly.
+                  </>
+                )}
+              </Text>
+            </div>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={OUTAGE_COLOR.energex} icon={<LightningIcon size={12} weight="fill" />} />}
+            label="Outages and council notices"
+            count={counts.outages}
+            checked={layers.outages}
+            onChange={(v) => set('outages', v)}
+          >
+            <div className="grid gap-1">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+                <span className="inline-flex items-center gap-1">
+                  <span className="size-2 rounded-full" style={{ background: OUTAGE_COLOR.energex }} /> Energex power outage, placed at its suburb
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="size-2 rounded-full" style={{ background: OUTAGE_COLOR.council }} /> Council notice, at the shape the council drew
+                </span>
+              </div>
+              <Text size="xs" variant="secondary">
+                As relayed by council disaster dashboards. Energex names a suburb and streets, not a point; Ergon's area has no feed.
+              </Text>
+            </div>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={CENTRE_COLOR.shelter} icon={<HouseLineIcon size={12} weight="fill" />} />}
+            label="Council centres"
+            count={counts.councilCentres}
+            checked={layers.councilCentres}
+            onChange={(v) => set('councilCentres', v)}
+          >
+            <div className="grid gap-1">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+                {(
+                  [
+                    [CENTRE_COLOR.shelter, 'Evacuation or refuge'],
+                    [CENTRE_COLOR.sandbag, 'Sandbags'],
+                    [CENTRE_COLOR.other, 'Other'],
+                  ] as const
+                ).map(([c, l]) => (
+                  <span key={l} className="inline-flex items-center gap-1">
+                    <span className="size-2 rounded-full" style={{ background: c }} />
+                    {l}
+                  </span>
+                ))}
+              </div>
+              <Text size="xs" variant="secondary">
+                Centres councils list on their disaster dashboards, with the status each council gives. Opened as needed, so often few or none.
               </Text>
             </div>
           </LayerRow>
