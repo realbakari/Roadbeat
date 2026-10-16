@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { plainText } from '../lib/newsText.js'
+import { firstSentence, plainText } from '../lib/newsText.js'
 
 // Queensland council disaster dashboards on the QIT Plus platform: about 58 of
 // the 78 councils on the state's list (src/data/council-dashboards.json). Each
@@ -89,6 +89,7 @@ const Cameras = z.object({
         locality: z.string().nullable().optional(),
         image_url: z.string().nullable(),
         typeName: z.string().nullable().optional(),
+        additional_detail: z.string().nullable().optional(),
       }),
       geometry: z.object({ type: z.literal('Point'), coordinates: z.tuple([z.number(), z.number()]) }).nullable(),
     }),
@@ -104,6 +105,8 @@ export interface CameraListing {
   locality: string | null
   direction: string | null
   image: string
+  /** The first sentence of the council's note on the camera: often how often its images update. */
+  note: string | null
   position: [number, number]
 }
 
@@ -113,7 +116,7 @@ export function parseCameras(json: unknown): CameraListing[] {
     const description = p.description?.trim()
     const image = p.image_url?.trim()
     if (!description || !image || !geometry) return []
-    return [{ id: p.id, description, type: p.typeName?.trim() || null, locality: p.locality?.trim() || null, direction: p.direction?.trim() || null, image, position: geometry.coordinates }]
+    return [{ id: p.id, description, type: p.typeName?.trim() || null, locality: p.locality?.trim() || null, direction: p.direction?.trim() || null, image, note: firstSentence(p.additional_detail ?? ''), position: geometry.coordinates }]
   })
 }
 

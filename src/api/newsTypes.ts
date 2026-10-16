@@ -82,6 +82,8 @@ export const CouncilCamera = z.object({
   direction: z.string().nullable(),
   /** The address of the camera's latest image, on the council's camera host. */
   image: z.string(),
+  /** The council's note on the camera, often how often its images update. */
+  note: z.string().nullable().default(null),
   position: LngLat,
   dashboard: z.string(),
 })

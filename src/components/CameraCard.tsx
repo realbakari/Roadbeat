@@ -1,9 +1,11 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowsInIcon, ArrowsOutIcon, CameraSlashIcon, XIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { fetchCameraTime, isCameraImage } from '../api/cameraTime'
 import type { Camera } from '../api/types'
 import { clean, timeAgo } from '../lib/format'
 import { cameraSrc, shortName } from '../lib/cameras'
+import { ClampedText } from './ClampedText'
 
 
 interface Props {
@@ -20,6 +22,15 @@ export function CameraCard({ camera, now, large, onToggleSize, onClose }: Props)
   const src = cameraSrc(camera, now)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const [loadedAt, setLoadedAt] = useState<number | null>(null)
+  // The camera host's own time for the image, asked for again each time the image is reloaded (once a minute).
+  const [publishedAt, setPublishedAt] = useState<number | null>(null)
+  useEffect(() => {
+    if (!isCameraImage(p.image_url)) return
+    const c = new AbortController()
+    fetchCameraTime(p.image_url, c.signal).then(setPublishedAt, () => {})
+    return () => c.abort()
+  }, [p.image_url, src])
+  const note = clean(p.extra_info)
 
   return (
     <div
@@ -69,14 +80,17 @@ export function CameraCard({ camera, now, large, onToggleSize, onClose }: Props)
           />
         )}
       </button>
-      <div className="flex items-center justify-between gap-2 px-3 py-2">
-        <Badge variant={camera.kind === 'floodcam' ? 'blue' : 'neutral'}>
-          {camera.kind === 'floodcam' ? 'Flood camera' : 'Traffic camera'}
-        </Badge>
-        <Text size="xs" variant="secondary" truncate>
-          {loadedAt ? `Updated ${timeAgo(loadedAt, now)}` : 'Loading…'}
-          {clean(p.image_sourced_from) && ` · ${clean(p.image_sourced_from)}`}
-        </Text>
+      <div className="grid min-w-0 gap-1 px-3 py-2">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <Badge className="shrink-0" variant={camera.kind === 'floodcam' ? 'blue' : 'neutral'}>
+            {camera.kind === 'floodcam' ? 'Flood camera' : 'Traffic camera'}
+          </Badge>
+          <span className="min-w-0 truncate text-xs text-kumo-subtle">
+            {publishedAt ? `Image dated ${timeAgo(publishedAt, now)} by its host` : loadedAt ? `Fetched ${timeAgo(loadedAt, now)}` : 'Loading…'}
+            {clean(p.image_sourced_from) && ` · ${clean(p.image_sourced_from)}`}
+          </span>
+        </div>
+        <ClampedText className="text-xs text-kumo-subtle" text={`${note ?? 'The camera owner publishes no update interval.'} Roadbeat reloads the image every minute.`} />
       </div>
     </div>
   )

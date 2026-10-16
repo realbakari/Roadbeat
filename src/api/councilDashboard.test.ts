@@ -84,14 +84,14 @@ describe('parseCameras', () => {
         {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [152.90006, -27.60364] },
-          properties: { id: 174, url: null, description: 'Brisbane River - Goodna Boat Ramp, Goodna', direction: null, district: 'Div 2', locality: 'Goodna', image_url: 'https://portal.sightmaster.com.au/latest/3211', typeName: 'Flood Camera', showInCameraPage: true },
+          properties: { id: 174, url: null, description: 'Brisbane River - Goodna Boat Ramp, Goodna', direction: null, district: 'Div 2', locality: 'Goodna', image_url: 'https://portal.sightmaster.com.au/latest/3211', typeName: 'Flood Camera', additional_detail: '<p><span>Images are typically updated every 10 minutes.</span></p>', showInCameraPage: true },
         },
         { geometry: null, properties: { id: 1, description: 'No point', image_url: 'https://x/1.jpg' } },
         { geometry: { type: 'Point', coordinates: [1, 1] }, properties: { id: 2, description: 'No image', image_url: null } },
       ],
     }
     expect(parseCameras(json)).toEqual([
-      { id: 174, description: 'Brisbane River - Goodna Boat Ramp, Goodna', type: 'Flood Camera', locality: 'Goodna', direction: null, image: 'https://portal.sightmaster.com.au/latest/3211', position: [152.90006, -27.60364] },
+      { id: 174, description: 'Brisbane River - Goodna Boat Ramp, Goodna', type: 'Flood Camera', locality: 'Goodna', direction: null, image: 'https://portal.sightmaster.com.au/latest/3211', note: 'Images are typically updated every 10 minutes.', position: [152.90006, -27.60364] },
     ])
   })
 })

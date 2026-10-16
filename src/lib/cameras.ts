@@ -40,6 +40,7 @@ export function asCameras(list: CouncilCamera[], qldtraffic: Camera[]): Camera[]
         postcode: null,
         image_url: c.image,
         image_sourced_from: c.council,
+        extra_info: c.note,
       },
     }))
 }

@@ -23,6 +23,7 @@ export function toCouncilCamera(d: CouncilDashboard, c: CameraListing): CouncilC
     locality: c.locality,
     direction: c.direction,
     image: c.image,
+    note: c.note,
     position: c.position,
     dashboard: d.page,
   }

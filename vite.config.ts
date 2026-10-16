@@ -57,6 +57,24 @@ function qldGaugesProxy(): Plugin {
   }
 }
 
+// A Vercel function from api/ served in development: the module's GET handler
+// gets a Request for the same path and its Response is written back.
+function devApi(path: string, module: string): Plugin {
+  return {
+    name: `dev-api:${path}`,
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.split('?')[0] !== path) return next()
+        server
+          .ssrLoadModule(module)
+          .then((m) => (m as { GET: (r: Request) => Promise<Response> }).GET(new Request(`http://localhost${req.url}`)))
+          .then(async (r) => res.writeHead(r.status, { 'content-type': r.headers.get('content-type') ?? 'application/json' }).end(await r.text()))
+          .catch((e: Error) => res.writeHead(500, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message })))
+      })
+    },
+  }
+}
+
 // The news monitor's feeds are read on the server (api/news.ts on Vercel). In
 // development this middleware runs the same ingest, loaded through Vite, and
 // keeps the result for 5 minutes. `npm run news:ingest` prints one run.
@@ -92,7 +110,7 @@ export default defineConfig(({ mode, command }) => {
   // Analytics only in built sites, so local development doesn't count as visits.
   const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
+    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/camera-time.ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }

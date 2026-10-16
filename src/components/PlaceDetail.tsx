@@ -34,6 +34,7 @@ import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_U
 import { EVENTS_URL, type CouncilEvent } from '../api/bccDashboard'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import { OUTAGE_COLOR } from '../lib/outages'
+import { ClampedText } from './ClampedText'
 import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS, worstRating, type AirStation } from '../api/airQuality'
 import { CENTRE_COLOR, centreKind } from '../lib/councilCentres'
 import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
@@ -356,7 +357,7 @@ function CentreBody({ c }: { c: CouncilCentre }) {
       )}
       {c.note && (
         <Section title="Council note">
-          <p className="text-sm whitespace-pre-line">{c.note}</p>
+          <ClampedText className="text-sm whitespace-pre-line" lines={3} text={c.note} />
         </Section>
       )}
       <ExternalLink href={c.dashboard}>{c.council} disaster dashboard</ExternalLink>
@@ -422,7 +423,7 @@ function OutageBody({ o, now }: { o: Outage; now: number }) {
       <Header icon={LightningIcon} color={OUTAGE_COLOR[o.source]} title={o.title} subtitle={energex ? `${o.type} outage · reported by Energex` : `${o.type} · ${o.council} notice`} />
       {o.details && (
         <Section title="Details">
-          <p className="text-sm whitespace-pre-line">{o.details}</p>
+          <ClampedText className="text-sm whitespace-pre-line" lines={3} text={o.details} />
         </Section>
       )}
       {rows.length > 0 && (
