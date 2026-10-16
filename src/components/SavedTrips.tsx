@@ -152,7 +152,7 @@ function TripCard({
     () => (trips && fromIds && toIds ? filterJourneys(planJourneys(trips, stops, fromIds, toIds), t, modeOf) : null),
     [trips, stops, fromIds, toIds, t],
   )
-  const reportedDep = (j: Journey) => live.get(j.legs[0].trip)?.stops.get(j.legs[0].from.stopId)?.time ?? null
+  const reportedDep = (j: Journey) => live.get(j.legs[0].trip)?.stopTime(j.legs[0].from)?.time ?? null
   const next = journeys ? nextJourneys(journeys, now, SHOWN, reportedDep) : null
 
   const title = t.name ?? (from && to ? `${shortName(from.name)} to ${shortName(to.name)}` : 'Saved trip')
@@ -251,7 +251,7 @@ function JourneyLine({ j, live, stops, now }: { j: Journey; live: LiveLookup; st
   const first = j.legs[0]
   const last = j.legs[j.legs.length - 1]
   const tracked = live.get(first.trip)
-  const reported = tracked?.stops.get(first.from.stopId)?.time ?? null
+  const reported = tracked?.stopTime(first.from)?.time ?? null
   const delay = delayOf(reported, first.from.time)
   const late = delay != null ? Math.round(delay / 60) : null
   const cancelled = j.legs.some((l) => live.get(l.trip)?.cancelled)

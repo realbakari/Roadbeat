@@ -33,3 +33,9 @@ export function hasEnded(e: TrafficEvent, now = Date.now()): boolean {
   const end = e.properties.duration?.end
   return !!end && brisbaneDay.format(new Date(end)) < brisbaneDay.format(now)
 }
+
+/** "Starts" for a start time still to come, else "Started": upcoming roadworks haven't begun. */
+export function startLabel(start: string | null | undefined, now = Date.now()): 'Starts' | 'Started' {
+  const t = start ? Date.parse(start) : NaN
+  return Number.isFinite(t) && t > now ? 'Starts' : 'Started'
+}

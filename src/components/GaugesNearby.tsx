@@ -3,7 +3,7 @@ import { ArrowSquareOutIcon, CaretRightIcon } from '@phosphor-icons/react'
 import type { Gauge } from '../api/bccGauges'
 import { floodWarningArea } from '../api/floodWarnings'
 import { timeAgo } from '../lib/format'
-import { changeWithin, latestReading, nearbyGauges, rainfallSince } from '../lib/gauges'
+import { changeWithin, latestReading, nearbyGauges, rainfallTotal } from '../lib/gauges'
 import type { LngLat } from '../lib/geo'
 import { NewTabNote } from './NewTabNote'
 
@@ -38,6 +38,7 @@ export function GaugesNearby({
         {[...streams, ...rain].map(({ gauge: g, km }) => {
           const latest = latestReading(g)
           const hour = g.kind === 'stream' ? changeWithin(g, HOUR) : null
+          const mm = g.kind === 'rain' ? rainfallTotal(g, now - HOUR) : null
           return (
             <li key={g.id}>
               <button
@@ -65,7 +66,7 @@ export function GaugesNearby({
                     </>
                   ) : (
                     <>
-                      <span className="font-medium">{rainfallSince(g, now - HOUR).mm} mm</span>
+                      <span className="font-medium">{mm != null ? `${mm} mm` : 'No reading'}</span>
                       <span className="text-xs text-kumo-subtle">last hour</span>
                     </>
                   )}

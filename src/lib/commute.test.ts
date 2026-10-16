@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { FireWarning } from '../api/bushfireFeed'
 import type { LiveVehicle, TripUpdate } from '../api/transitTypes'
 import type { TrafficEvent } from '../api/types'
-import { commuteAlerts, commuteWindow, DEFAULT_COMMUTE, firesNear, roadEventsFor, type Commute } from './commute'
+import { commuteAlerts, commuteWindow, DEFAULT_COMMUTE, firesNear, roadEventsFor, roadsBriefing, type Commute } from './commute'
 import type { Departure } from './departures'
 
 // Thursday 15 October 2026, Brisbane time.
@@ -54,6 +54,19 @@ describe('roadEventsFor', () => {
   it('matches the commute roads and puts closures first', () => {
     const list = roadEventsFor(commute, [event(1, 'Ipswich Motorway'), event(2, 'Ipswich Motorway', { closure: true }), event(3, 'Logan Motorway')], at('07:00'))
     expect(list.map((e) => e.properties.id)).toEqual([2, 1])
+  })
+})
+
+describe('roadsBriefing', () => {
+  it("never reads as all clear before QLDTraffic's events have loaded", () => {
+    expect(roadsBriefing(commute, [], null, null, at('07:00'))).toEqual({ state: 'loading' })
+    expect(roadsBriefing(commute, [], null, 'QLDTraffic responded with 502', at('07:00'))).toEqual({ state: 'failed', error: 'QLDTraffic responded with 502' })
+  })
+
+  it('lists the roads once events have been read, even if a later refresh failed', () => {
+    const b = roadsBriefing(commute, [event(1, 'Ipswich Motorway')], at('06:59'), 'timeout', at('07:00'))
+    expect(b.state === 'ok' && b.events.map((e) => e.properties.id)).toEqual([1])
+    expect(roadsBriefing(commute, [], at('06:59'), null, at('07:00'))).toEqual({ state: 'ok', events: [] })
   })
 })
 

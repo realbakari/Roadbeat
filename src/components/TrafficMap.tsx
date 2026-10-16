@@ -27,6 +27,7 @@ import {
   type LngLat,
 } from '../lib/geo'
 import { ensureClearanceIcons, ensureIcons } from '../lib/mapIcons'
+import { pickTap, pickTop } from '../lib/mapPick'
 import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
 import { MapCard } from './map/MapCard'
@@ -271,31 +272,25 @@ export function TrafficMap(props: Props) {
 
     const read = (f: MapGeoJSONFeature | undefined) => f?.properties as Record<string, unknown> | undefined
 
-    for (const layer of [...EVENT_LAYERS, ...CLICKABLE_PLACES]) {
-      m.on('click', layer, (e) => {
-        const p = read(e.features?.[0])
-        if (!p) return
-        // A vehicle drawn over a stop takes the tap, so only one of them opens.
-        if (layer.startsWith('stops-') && m.queryRenderedFeatures(e.point, { layers: ['vehicles'] }).length) return
-        popup.remove()
-        if (EVENT_LAYERS.includes(layer)) handlers.current.onSelectEvent(Number(p.id))
-        else if (p.key) handlers.current.onSelectKey(String(p.key))
-      })
-      m.on('mouseenter', layer, () => (m.getCanvas().style.cursor = 'pointer'))
-      m.on('mousemove', layer, (e) => {
-        const p = read(e.features?.[0])
-        if (p?.label) popup.setLngLat(e.lngLat).setText(String(p.label)).addTo(m)
-      })
-      m.on('mouseleave', layer, () => {
-        m.getCanvas().style.cursor = ''
-        popup.remove()
-      })
+    // One handler for the whole map, so a tap opens one feature rather than one per layer under it.
+    const under = (point: maplibregl.PointLike, extra: string[] = []) => {
+      const layers = [...EVENT_LAYERS, ...CLICKABLE_PLACES, ...extra].filter((l) => m.getLayer(l))
+      return layers.length ? m.queryRenderedFeatures(point, { layers }) : []
     }
-    m.on('mousemove', 'crash-points', (e) => {
-      const p = read(e.features?.[0])
-      if (p?.label) popup.setLngLat(e.lngLat).setText(String(p.label)).addTo(m)
+    m.on('click', (e) => {
+      const t = pickTap(under(e.point), EVENT_LAYERS)
+      if (!t) return
+      popup.remove()
+      if (t.kind === 'event') handlers.current.onSelectEvent(t.id)
+      else handlers.current.onSelectKey(t.key)
     })
-    m.on('mouseleave', 'crash-points', () => popup.remove())
+    m.on('mousemove', (e) => {
+      const fs = under(e.point, ['crash-points'])
+      m.getCanvas().style.cursor = fs.some((f) => f.layer.id !== 'crash-points') ? 'pointer' : ''
+      const label = read(pickTop(fs) ?? undefined)?.label
+      if (label) popup.setLngLat(e.lngLat).setText(String(label)).addTo(m)
+      else popup.remove()
+    })
 
     const ro = new ResizeObserver(() => m.resize())
     ro.observe(container.current)

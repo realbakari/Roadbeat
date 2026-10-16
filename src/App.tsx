@@ -42,13 +42,15 @@ import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type St
 import { applyFilters, DEFAULT_FILTERS, districtsOf, type EventFilters } from './lib/filters'
 import { asTrafficEvent, replayAt } from './lib/timeline'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
+import { feedNotice } from './lib/feedNotice'
 import type { LocalitySources } from './lib/locality'
 
 export default function App() {
   const { mode, toggle } = useColorMode()
   const { events, cameras: tmrCameras, waze, loading, refreshing, error, fetchedAt, refresh } = useTrafficData()
   // Bushfire warnings are always fetched: they're on the map and list by default and feed notifications.
-  const { fires } = useBushfires(true)
+  const { fires, error: fireError, fetchedAt: firesAt } = useBushfires(true)
+  const fireNotice = feedNotice('Bushfire warnings', fires != null, fireError, firesAt)
   const firstLoad = loading && fetchedAt == null
   const ref = useReferenceData()
   const now = useNow()
@@ -212,7 +214,7 @@ export default function App() {
   const selectedCamera = useMemo(() => cameras.find((c) => cameraKey(c) === sel.camera) ?? null, [cameras, sel.camera])
 
   // Brisbane City Council gauges and signals load only when something shows them.
-  const { gauges } = useGauges(layers.gauges || !!sel.gauge || selectedEvent?.properties.event_type === 'Flooding')
+  const { gauges, notice: gaugeNotice } = useGauges(layers.gauges || !!sel.gauge || selectedEvent?.properties.event_type === 'Flooding')
   const { sites: signalSites, volumes: signalVolumes } = useSignals(layers.signals || !!sel.signal)
   const { clearances, error: clearanceError } = useClearances(layers.clearances || sel.place?.kind === 'clearance')
   const council = useCouncilPlaces({
@@ -259,8 +261,9 @@ export default function App() {
       outages: news.snapshot?.outages ?? null,
       stories,
       gauges,
+      errors: { fires: fireError ?? undefined, airStations: air.error ?? undefined, gauges: gaugeNotice ?? undefined },
     }),
-    [events, fires, cameras, air.stations, news.snapshot, stories, gauges],
+    [events, fires, fireError, cameras, air.stations, air.error, news.snapshot, stories, gauges, gaugeNotice],
   )
   const turnOnLayers = useCallback((keys: (keyof MapLayers)[]) => {
     setLayers((l) => (keys.every((k) => l[k]) ? l : { ...l, ...Object.fromEntries(keys.map((k) => [k, true])) }))
@@ -479,6 +482,8 @@ export default function App() {
                 onPanelChange={choosePanel}
                 transitOpen={transitOpen}
                 events={events}
+                eventsAt={fetchedAt}
+                eventsError={error}
                 visibleEvents={visible}
                 selectedEvent={selectedEvent}
                 districts={districts}
@@ -504,8 +509,10 @@ export default function App() {
                 mapView={mapView}
                 selectedPlace={selectedPlace}
                 fires={fires}
+                fireNotice={fireNotice}
                 selectedFire={selectedFire}
                 gauges={gauges}
+                gaugeNotice={gaugeNotice}
                 selectedGauge={selectedGauge}
                 selectedSignal={selectedSignal}
                 signalVolumes={signalVolumes}
@@ -628,6 +635,8 @@ export default function App() {
               vehicleError={vehicleError}
               clearanceError={clearanceError}
               airError={air.error}
+              fireNotice={fireNotice}
+              gaugeNotice={gaugeNotice}
               councilErrors={council.errors}
             />
             {timelineOpen ? (

@@ -57,7 +57,7 @@ function Unavailable() {
 
 /** Reported state of one timetabled stop: delay, skip or cancellation. */
 function liveStop(live: LiveTrip | null, s: ScheduledStop): { rt: StopTime | null; late: boolean; gone: boolean } {
-  const rt = live?.stops.get(s.stopId) ?? null
+  const rt = live?.stopTime(s) ?? null
   const late = rt?.time != null && Math.abs(rt.time - s.time) >= 60_000
   return { rt, late, gone: !!live?.cancelled || !!rt?.skipped }
 }
@@ -437,7 +437,7 @@ export function StopTimetable({
   const filtered = all?.filter((d) => route === 'all' || d.trip.route === route) ?? null
   // Today, hide what has already left (by the reported time when the feed has one).
   const gone = (d: ScheduledDeparture) => {
-    const rt = live.get(d.trip)?.stops.get(d.stop.stopId)?.time
+    const rt = live.get(d.trip)?.stopTime(d.stop)?.time
     return Math.max(timeOf(d), rt ?? 0) < now - 60_000
   }
   const view = band === 'now' && !isToday ? 'all' : band

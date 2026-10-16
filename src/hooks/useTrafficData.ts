@@ -18,6 +18,7 @@ import { fetchNews } from '../api/news'
 import type { NewsSnapshot } from '../api/newsTypes'
 import { fetchClearances, type Clearance } from '../api/clearances'
 import { fetchCouncilEventsOn, type CouncilEvent } from '../api/bccDashboard'
+import { poll } from './poll'
 import { eventsWeek } from '../lib/councilEvents'
 import { fetchAccessibleBays, fetchBikeStops, fetchClearways, fetchParkingMeters, fetchToilets, type AccessibleBay, type BikeStop, type Clearway, type ParkingMeter, type Toilet } from '../api/bccPlaces'
 import { fetchRoadOccupancies, type RoadOccupancy } from '../api/bccRoadOccupancies'
@@ -34,6 +35,8 @@ import {
   type TransitRegion,
 } from '../api/translink'
 import { watchFeed, type FeedWatch } from '../lib/trip'
+import { mergeTripParts } from '../lib/tripFeed'
+import { gaugeNotice, type GaugeFailure } from '../lib/feedNotice'
 import { liveRegions, MAIN_REGIONS } from '../lib/transitRegions'
 import { feedCounts, recordFeedCount, subscribeFeedCounts, useFeedCounts } from './useRegionFeeds'
 import type {
@@ -62,7 +65,6 @@ interface State {
   fetchedAt: number | null
 }
 
-const visible = () => document.visibilityState === 'visible'
 
 export function useTrafficData() {
   const [state, setState] = useState<State>({
@@ -111,11 +113,11 @@ export function useTrafficData() {
   useEffect(() => {
     loadEvents()
     loadCameras()
-    const e = setInterval(() => visible() && loadEvents(), EVENTS_INTERVAL)
-    const c = setInterval(() => visible() && loadCameras(), CAMERAS_INTERVAL)
+    const stopEvents = poll(loadEvents, EVENTS_INTERVAL, true)
+    const stopCameras = poll(loadCameras, CAMERAS_INTERVAL)
     return () => {
-      clearInterval(e)
-      clearInterval(c)
+      stopEvents()
+      stopCameras()
       ctrl.current?.abort()
     }
   }, [loadEvents, loadCameras])
@@ -160,10 +162,10 @@ export function useTransit(enabled: boolean) {
         () => live && setError(true),
       )
     load()
-    const id = setInterval(() => visible() && load(), 2 * 60_000)
+    const stop = poll(load, 2 * 60_000)
     return () => {
       live = false
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
   return { data, error }
@@ -194,10 +196,10 @@ export function useLiveVehicles(enabled: boolean) {
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
-    const id = setInterval(() => visible() && load(), 15_000)
+    const stop = poll(load, 15_000)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled, regions])
   return { vehicles: enabled ? vehicles : [], error: enabled ? error : null }
@@ -216,10 +218,10 @@ export function useTransitAlerts(enabled: boolean, region?: TransitRegion) {
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
-    const id = setInterval(() => visible() && load(), 60_000)
+    const stop = poll(load, 60_000, !region)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled, region])
   return { alerts, error }
@@ -243,10 +245,7 @@ function subscribeTripUpdates(listener: () => void) {
     const notify = () => tripFeed.listeners.forEach((l) => l())
     // Each region is fetched on its own and shown as soon as it arrives.
     const parts = new Map<TransitRegion, TripUpdates>()
-    const publish = () => {
-      const all = [...parts.values()]
-      tripFeed.updates = { at: Object.assign({}, ...all.map((p) => p.at)), trips: all.flatMap((p) => p.trips) }
-    }
+    const publish = () => (tripFeed.updates = mergeTripParts([...parts.values()]))
     const reading = new Set<TransitRegion>()
     const read = (r: TransitRegion) => {
       if (reading.has(r)) return
@@ -274,13 +273,13 @@ function subscribeTripUpdates(listener: () => void) {
       return regions
     }
     follow().forEach(read)
-    const id = setInterval(() => visible() && follow().forEach(read), 30_000)
+    const stop = poll(() => follow().forEach(read), 30_000)
     const unprobe = subscribeFeedCounts(() =>
       follow()
         .filter((r) => !parts.has(r))
         .forEach(read),
     )
-    tripFeed.stop = () => (c.abort(), clearInterval(id), unprobe())
+    tripFeed.stop = () => (c.abort(), stop(), unprobe())
   }
   return () => {
     tripFeed.listeners.delete(listener)
@@ -345,22 +344,23 @@ export function useTripIndex(enabled: boolean) {
 export function useBushfires(enabled: boolean) {
   const [fires, setFires] = useState<FireWarning[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null)
   useEffect(() => {
     if (!enabled) return
     const c = new AbortController()
     const load = () =>
       fetchBushfires(c.signal).then(
-        (f) => (setFires(f), setError(null)),
+        (f) => (setFires(f), setError(null), setFetchedAt(Date.now())),
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
-    const id = setInterval(() => visible() && load(), 120_000)
+    const stop = poll(load, 120_000, true)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
-  return { fires: enabled ? fires : null, error: enabled ? error : null }
+  return { fires: enabled ? fires : null, error: enabled ? error : null, fetchedAt: enabled ? fetchedAt : null }
 }
 
 /** The state's hourly air quality readings, polled every 10 minutes while `enabled`. */
@@ -376,10 +376,10 @@ export function useAirQuality(enabled: boolean) {
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
-    const id = setInterval(() => visible() && load(), 10 * 60_000)
+    const stop = poll(load, 10 * 60_000)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
   return { stations: enabled ? stations : null, error: enabled ? error : null }
@@ -401,10 +401,10 @@ export function useNews(enabled: boolean) {
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
-    const id = setInterval(() => visible() && load(), 120_000)
+    const stop = poll(load, 120_000, true)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
   return { snapshot: enabled ? snapshot : null, error: enabled ? error : null }
@@ -418,25 +418,30 @@ export function useNews(enabled: boolean) {
  */
 export function useGauges(enabled: boolean) {
   const [gauges, setGauges] = useState<Gauge[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [failed, setFailed] = useState<GaugeFailure[]>([])
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null)
   useEffect(() => {
     if (!enabled) return
     const c = new AbortController()
     const load = () =>
       Promise.allSettled([fetchGauges(c.signal), fetchQldGauges(c.signal)]).then((results) => {
         if (c.signal.aborted) return
-        const failed = results.flatMap((r) => (r.status === 'rejected' ? [String(r.reason)] : []))
-        if (failed.length < results.length) setGauges(results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])))
-        setError(failed[0] ?? null)
+        const sources = ['Brisbane City Council', 'Queensland Government']
+        const now = results.flatMap((r, i) => (r.status === 'rejected' ? [{ source: sources[i], error: r.reason instanceof Error ? r.reason.message : String(r.reason) }] : []))
+        if (now.length < results.length) {
+          setGauges(results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])))
+          setFetchedAt(Date.now())
+        }
+        setFailed(now.length === results.length ? [{ source: 'all', error: now[0].error }] : now)
       })
     load()
-    const id = setInterval(() => visible() && load(), 5 * 60_000)
+    const stop = poll(load, 5 * 60_000)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
-  return { gauges: enabled ? gauges : null, error: enabled ? error : null }
+  return { gauges: enabled ? gauges : null, notice: enabled ? gaugeNotice(gauges != null, failed, fetchedAt) : null }
 }
 
 /**
@@ -459,11 +464,11 @@ export function useSignals(enabled: boolean) {
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
-    const id = setInterval(() => visible() && load(), 2 * 60_000)
+    const stop = poll(load, 2 * 60_000)
     return () => {
       live = false
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
   return { sites: enabled ? sites : null, volumes: enabled ? volumes : null, error: enabled ? error : null }
@@ -497,10 +502,10 @@ export function useRoadOccupancies(enabled: boolean) {
     const c = new AbortController()
     const load = () => fetchRoadOccupancies(c.signal).then(setList, () => {})
     load()
-    const id = setInterval(() => visible() && load(), 30 * 60_000)
+    const stop = poll(load, 30 * 60_000)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
   return enabled ? list : null
@@ -514,10 +519,10 @@ export function useCarParkSpaces(enabled: boolean) {
     const c = new AbortController()
     const load = () => fetchCarParkSpaces(c.signal).then(setSpaces, () => {})
     load()
-    const id = setInterval(() => visible() && load(), 5 * 60_000)
+    const stop = poll(load, 5 * 60_000)
     return () => {
       c.abort()
-      clearInterval(id)
+      stop()
     }
   }, [enabled])
   return enabled ? spaces : null

@@ -49,6 +49,12 @@ describe('gaugeCard', () => {
     const gauge: Gauge = { id: 'E1', name: 'Oxley Ck', kind: 'stream', source: 'bcc', unit: 'm', position: [153, -27.5], readings: [{ time: NOW - 600_000, value: 1.234 }] }
     expect(gaugeCard(gauge, NOW).facts[0]).toBe('1.23 m AHD at 7:50 am')
   })
+
+  it("says a rain gauge that stopped reporting has no reading, never 0 mm", () => {
+    const gauge: Gauge = { id: 'R1', name: 'Enoggera', kind: 'rain', source: 'bcc', unit: 'mm', position: [153, -27.5], readings: [{ time: NOW - 2 * 3600_000, value: 6 }] }
+    expect(gaugeCard(gauge, NOW).facts[0]).toBe('No reading in the last hour · last at 6:00 am')
+    expect(gaugeCard({ ...gauge, readings: [...gauge.readings, { time: NOW - 300_000, value: 0 }] }, NOW).facts[0]).toBe('0 mm in the last hour')
+  })
 })
 
 describe('placeCard and mapCardFor', () => {

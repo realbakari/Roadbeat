@@ -1,5 +1,5 @@
-import { Button, Empty, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
-import { CheckCircleIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
+import { Banner, Button, Empty, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
+import { CheckCircleIcon, FlameIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import type { EventType, TrafficEvent } from '../api/types'
@@ -26,6 +26,8 @@ interface Props {
   onSelect: (id: number) => void
   /** Queensland Fire Department warnings and fires, shown above current events. */
   fires: FireWarning[] | null
+  /** Why the bushfire list is missing or stale, or null while the feed is fine. */
+  fireNotice?: string | null
   onOpenHref: (hash: string) => void
   /** Shown above the list, e.g. the My commute card. */
   top?: ReactNode
@@ -46,6 +48,7 @@ export function EventList({
   onLocate,
   onSelect,
   fires,
+  fireNotice,
   onOpenHref,
   top,
   occupancies,
@@ -273,6 +276,11 @@ export function EventList({
 
       <div className="min-h-0 flex-1 overflow-y-auto" onScroll={onListScroll}>
         {filters.when === 'now' && top}
+        {filters.when === 'now' && fireNotice && (
+          <div className="border-b border-kumo-line px-4 py-3">
+            <Banner variant="alert" size="sm" icon={<FlameIcon weight="fill" />} description={fireNotice} />
+          </div>
+        )}
         {filters.when === 'now' && fires && <FireList fires={fires} now={now} onOpen={onOpenHref} />}
         {filters.when === 'now' && occupancies && <CouncilWorksList occupancies={occupancies} query={filters.query} now={now} />}
         {loading ? (

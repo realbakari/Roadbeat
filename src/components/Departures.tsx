@@ -32,6 +32,7 @@ import { NextService } from './NextService'
 import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
 import { kioskPath } from '../lib/route'
 import { departuresAt, lineDirections, stopHref, type Departure, type DepartureContext } from '../lib/departures'
+import { regionRead } from '../lib/tripFeed'
 import { readableTextOn } from '../lib/routeColor'
 import { NewTabNote } from './NewTabNote'
 
@@ -247,7 +248,7 @@ export function StopPage({
   const alerts = main ? mainAlerts : own.alerts
   const stop = stops?.get(region, id) ?? null
   const ids = useMemo(() => (stop && stops ? stopIds(stops, stop) : new Set([id])), [stops, stop, id])
-  const list = useMemo(() => (ctx && realtime === 'live' ? departuresAt(ctx, region, ids) : null), [ctx, realtime, region, ids])
+  const list = useMemo(() => (ctx && realtime === 'live' && regionRead(ctx.updates, region) ? departuresAt(ctx, region, ids) : null), [ctx, realtime, region, ids])
   const nextService = list?.find((d) => d.trip.relationship !== 'cancelled') ?? null
   const overdueAll = useOverdue(region, ids, ctx, watch, vehicles)
   const overdue = realtime === 'live' ? overdueAll : []

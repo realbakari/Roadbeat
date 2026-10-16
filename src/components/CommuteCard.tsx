@@ -6,7 +6,7 @@ import { disablePush, enablePush, pushAvailable, pushSupported, updatePush } fro
 import { alertActive, routeInfo, type LiveVehicle, type TransitAlert } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
 import { useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
-import { commuteWindow, firesNear, onRoute, roadEventsFor, type Commute } from '../lib/commute'
+import { commuteWindow, firesNear, onRoute, roadsBriefing, type Commute } from '../lib/commute'
 import { saveCommute, useCommute } from '../lib/commuteStore'
 import { departuresAt } from '../lib/departures'
 import { isClosure } from '../lib/filters'
@@ -29,6 +29,9 @@ const routeNames = (code: string, region: Commute['region']) => routeInfo(code, 
 
 interface Props {
   events: TrafficEvent[]
+  /** When QLDTraffic's events were last read successfully, or null if never. */
+  eventsAt: number | null
+  eventsError: string | null
   fires: FireWarning[] | null
   vehicles: LiveVehicle[]
   alerts: TransitAlert[] | null
@@ -41,7 +44,7 @@ interface Props {
  * their service from their stop, and bushfire warnings nearby, all from the
  * official feeds. Shows a prompt to set one up when there is none.
  */
-export function CommuteCard({ events, fires, vehicles, alerts, now, onOpen }: Props) {
+export function CommuteCard({ events, eventsAt, eventsError, fires, vehicles, alerts, now, onOpen }: Props) {
   const commute = useCommute()
   const [editing, setEditing] = useState(false)
   const save = (c: Commute | null) => {
@@ -53,7 +56,7 @@ export function CommuteCard({ events, fires, vehicles, alerts, now, onOpen }: Pr
   return (
     <>
       {commute ? (
-        <Briefing commute={commute} events={events} fires={fires} vehicles={vehicles} alerts={alerts} now={now} onOpen={onOpen} onEdit={() => setEditing(true)} />
+        <Briefing commute={commute} events={events} eventsAt={eventsAt} eventsError={eventsError} fires={fires} vehicles={vehicles} alerts={alerts} now={now} onOpen={onOpen} onEdit={() => setEditing(true)} />
       ) : (
         <button type="button" onClick={() => setEditing(true)} className="flex w-full items-start gap-3 border-b border-kumo-line px-4 py-3 text-left hover:bg-kumo-tint">
           <span className="flex h-lh items-center text-kumo-subtle">
@@ -73,6 +76,8 @@ export function CommuteCard({ events, fires, vehicles, alerts, now, onOpen }: Pr
 function Briefing({
   commute: c,
   events,
+  eventsAt,
+  eventsError,
   fires,
   vehicles,
   alerts,
@@ -87,7 +92,7 @@ function Briefing({
   const { updates } = useTripUpdates(live)
   const stop = stops?.get(c.region, c.stopId) ?? null
 
-  const roadEvents = useMemo(() => roadEventsFor(c, events, now), [c, events, now])
+  const roads = useMemo(() => roadsBriefing(c, events, eventsAt, eventsError, now), [c, events, eventsAt, eventsError, now])
   const departures = useMemo(() => {
     if (!live || !updates || !stops || !stop) return null
     return departuresAt({ updates, vehicles, trips, now }, c.region, stopAndChildren(stops, stop), 200)
@@ -133,9 +138,17 @@ function Briefing({
           <Text size="xs" variant="secondary" bold>
             Your roads: {c.roads.join(', ')}
           </Text>
-          {roadEvents.length ? (
+          {roads.state === 'loading' ? (
+            <Text size="sm" variant="secondary">
+              Checking QLDTraffic…
+            </Text>
+          ) : roads.state === 'failed' ? (
+            <span className="flex items-center gap-2 text-sm text-kumo-subtle">
+              <WarningIcon size={14} className="text-kumo-warning" /> Couldn't load road events from QLDTraffic, so nothing can be said about your roads
+            </span>
+          ) : roads.events.length ? (
             <ul className="grid gap-1">
-              {roadEvents.slice(0, 3).map((e) => (
+              {roads.events.slice(0, 3).map((e) => (
                 <li key={e.properties.id}>
                   <button type="button" onClick={() => onOpen(`event/${e.properties.id}`)} className="flex w-full items-start gap-2 text-left text-sm hover:underline">
                     <span className="flex h-lh items-center">
@@ -147,7 +160,7 @@ function Briefing({
                   </button>
                 </li>
               ))}
-              {roadEvents.length > 3 && <li className="text-sm text-kumo-subtle">and {roadEvents.length - 3} more</li>}
+              {roads.events.length > 3 && <li className="text-sm text-kumo-subtle">and {roads.events.length - 3} more</li>}
             </ul>
           ) : (
             <span className="flex items-center gap-2 text-sm text-kumo-subtle">

@@ -47,6 +47,8 @@ export interface LocalitySources {
   outages: Outage[] | null
   stories: NewsStory[] | null
   gauges: Gauge[] | null
+  /** Why a source's data isn't loaded, for one whose read failed rather than one turned off. */
+  errors?: Partial<Record<LocalitySource, string>>
 }
 
 /** A source matched by position, with its distance from the locality's point. */
@@ -75,6 +77,8 @@ export interface LocalityReport {
   gauges: Near<Gauge>[]
   /** Sources whose data is not loaded, so the page cannot say what they publish here. */
   notLoaded: LocalitySource[]
+  /** Sources whose read failed, with the error, so the page cannot say what they publish here either. */
+  failed: { source: LocalitySource; error: string }[]
 }
 
 const sameName = (a: string | null | undefined, b: string) => (a ?? '').trim().toLowerCase() === b.toLowerCase()
@@ -99,9 +103,12 @@ export function atLocality(locality: Locality, s: LocalitySources, now: number):
   const named = placePattern([locality.name])
   const at = locality.position
   const notLoaded: LocalitySource[] = []
+  const failed: LocalityReport['failed'] = []
   const loaded = <T,>(key: LocalitySource, list: T[] | null): T[] => {
     if (list) return list
-    notLoaded.push(key)
+    const error = s.errors?.[key]
+    if (error) failed.push({ source: key, error })
+    else notLoaded.push(key)
     return []
   }
   return {
@@ -114,6 +121,7 @@ export function atLocality(locality: Locality, s: LocalitySources, now: number):
     stories: loaded('stories', s.stories).filter((st) => st.places.some((p) => p.via === 'gazetteer' && p.name === locality.name)),
     gauges: within(loaded('gauges', s.gauges), at, (g) => g.position, NEAR_KM),
     notLoaded,
+    failed,
   }
 }
 

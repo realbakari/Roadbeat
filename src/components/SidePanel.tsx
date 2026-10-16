@@ -49,6 +49,9 @@ interface Props {
   transitOpen: boolean
 
   events: TrafficEvent[]
+  /** When QLDTraffic's events were last read successfully, or null if never. */
+  eventsAt: number | null
+  eventsError: string | null
   visibleEvents: TrafficEvent[]
   selectedEvent: TrafficEvent | null
   districts: string[]
@@ -73,8 +76,12 @@ interface Props {
 
   selectedPlace: Place | null
   fires: FireWarning[] | null
+  /** Why the bushfire list is missing or stale, or null while the feed is fine. */
+  fireNotice: string | null
   selectedFire: FireWarning | null
   gauges: Gauge[] | null
+  /** Why gauges are missing or stale, or null while the feeds are fine. */
+  gaugeNotice: string | null
   selectedGauge: Gauge | null
   selectedSignal: SignalSite | null
   signalVolumes: SignalVolumes | null
@@ -116,6 +123,7 @@ export function SidePanel(p: Props) {
         watched={alertSettings.watchedEvents.includes(id)}
         onToggleWatch={() => notifications.toggleWatchEvent(id)}
         gauges={p.gauges}
+        gaugeNotice={p.gaugeNotice}
         onOpenHref={p.onOpenHref}
       />
     )
@@ -222,9 +230,10 @@ export function SidePanel(p: Props) {
           onLocate={p.onLocate}
           onSelect={p.onSelectEvent}
           fires={p.fires}
+          fireNotice={p.fireNotice}
           onOpenHref={p.onOpenHref}
           occupancies={p.occupancies}
-          top={<CommuteCard events={p.events} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />}
+          top={<CommuteCard events={p.events} eventsAt={p.eventsAt} eventsError={p.eventsError} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />}
         />
       ) : p.panel === 'cameras' ? (
         <CameraGrid cameras={p.cameras} selectedKey={sel.camera} onOpen={p.onOpenCamera} />

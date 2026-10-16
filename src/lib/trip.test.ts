@@ -241,3 +241,17 @@ describe('overdueMinutes', () => {
     expect(overdueMinutes(dep, watched(470, 530), new Set(), at(530))).toBeNull()
   })
 })
+
+describe('tripStops on a loop', () => {
+  const loop = trip(9, 'L1', [['a', 480], ['b', 490], ['a', 525]])
+  const last = { ...update('9-x', [['a', 526]]), stops: [{ ...update('9-x', [['a', 526]]).stops[0], sequence: 3 }] }
+
+  it('attaches the report to the visit the feed means, and finds the vehicle there', () => {
+    const rows = tripStops(loop, last, vehicle('9-x', 'a'))
+    expect(rows.map((r) => [r.stopId, !!r.rt, r.here, r.passed])).toEqual([
+      ['a', false, false, true],
+      ['b', false, false, true],
+      ['a', true, true, false],
+    ])
+  })
+})

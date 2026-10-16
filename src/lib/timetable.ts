@@ -1,5 +1,6 @@
 import type { StopIndex } from '../api/stops'
 import type { ScheduledStop, ScheduledTrip } from '../api/timetables'
+import { alignStops } from './stopAlign'
 import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/translink'
 
 /** What TransLink's real-time feed currently reports for one timetabled trip. */
@@ -7,8 +8,11 @@ export interface LiveTrip {
   update: TripUpdate
   vehicle: LiveVehicle | null
   cancelled: boolean
-  /** Reported stop times by stop id (the feed drops stops already passed). */
-  stops: Map<string, StopTime>
+  /**
+   * What the feed reports for one of the trip's published stops, or null (the
+   * feed drops stops already passed). A loop's two visits to a stop are told apart.
+   */
+  stopTime(stop: ScheduledStop): StopTime | null
 }
 
 export interface LiveLookup {
@@ -37,11 +41,12 @@ export function liveLookup(updates: TripUpdates | null, vehicles: LiveVehicle[])
       for (const update of list) {
         const t = update.stops.find((s) => s.time != null)?.time
         if (t != null && Math.abs(t - first) > SAME_RUN) continue
+        let matched: (StopTime | null)[] | null = null
         return {
           update,
           vehicle: byTrip.get(update.key) ?? null,
           cancelled: update.relationship === 'cancelled',
-          stops: new Map(update.stops.map((s) => [s.stopId, s])),
+          stopTime: (stop) => (matched ??= alignStops(trip.stops, update.stops))[trip.stops.findIndex((s) => s.stopId === stop.stopId && s.time === stop.time)] ?? null,
         }
       }
       return null

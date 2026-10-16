@@ -177,7 +177,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
   ),
 
   gauges: (d) => (
-    <Tile title="Brisbane creeks rising fastest" source="Brisbane City Council stream gauges, change over the last hour between reported readings. Heights only, not flood levels.">
+    <Tile title="Brisbane creeks rising fastest" source="Brisbane City Council stream gauges, change over the last hour between readings reported in it. A gauge with no reading in that hour is left out. Heights only, not flood levels.">
       {d.rising?.length ? (
         <ul className="grid gap-1.5">
           {d.rising.map((r) => (

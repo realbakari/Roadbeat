@@ -1,5 +1,6 @@
 import type { ScheduledStop, ScheduledTrip } from '../api/timetables'
 import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/transitTypes'
+import { alignStops } from './stopAlign'
 import type { ScheduledDeparture } from './timetable'
 
 /**
@@ -96,7 +97,8 @@ export interface TripStopRow {
 
 /**
  * A trip's stops in order with what the real-time feed reports for each.
- * Stops come from the published timetable, with any stop the feed lists that
+ * Stops come from the published timetable, each paired with the feed's report
+ * for that visit (see `alignStops`), with any stop the feed lists that
  * the timetable doesn't placed after the stop the feed lists before it, and
  * the feed's platform where it differs. A stop the feed leaves out is not
  * skipped (it often omits a trip's last stops); only the feed's SKIPPED says
@@ -123,14 +125,9 @@ export function tripStops(
   let rows: TripStopRow[]
   if (!trip) rows = reported.map((r) => row(null, r))
   else {
-    const used = new Set<StopTime>()
-    const match = (s: ScheduledStop) => {
-      const r =
-        reported.find((x) => !used.has(x) && x.stopId === s.stopId) ?? reported.find((x) => !used.has(x) && sameStop(x.stopId, s.stopId))
-      if (r) used.add(r)
-      return r ?? null
-    }
-    rows = trip.stops.map((s) => row(s, match(s)))
+    const matched = alignStops(trip.stops, reported, sameStop)
+    const used = new Set(matched.filter((r) => r != null))
+    rows = trip.stops.map((s, i) => row(s, matched[i]))
     // Feed stops the timetable lacks go after the row of the feed stop before them.
     let after = -1
     for (const r of reported) {
@@ -142,7 +139,10 @@ export function tripStops(
       after++
     }
   }
-  const at = vehicle?.stopId ? rows.findIndex((r) => sameStop(r.stopId, vehicle.stopId!)) : -1
+  // A loop passes its current stop twice: the visit is the one the feed still lists, not one it has dropped as passed.
+  const from = Math.max(0, rows.findIndex((r) => r.rt))
+  const find = (start: number) => rows.findIndex((r, i) => i >= start && sameStop(r.stopId, vehicle!.stopId!))
+  const at = vehicle?.stopId ? (find(from) >= 0 ? find(from) : find(0)) : -1
   if (at >= 0) {
     rows[at].here = true
     for (let i = 0; i < at; i++) rows[i].passed = true

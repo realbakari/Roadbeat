@@ -371,7 +371,7 @@ function CentreBody({ c }: { c: CouncilCentre }) {
 
 const when = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
-/** A station's readings for the hour, each with the department's own index and rating. */
+/** A station's values for the hour, each averaged over its own period, with the department's own index and rating. */
 function AirBody({ s, now }: { s: AirStation; now: number }) {
   const worst = worstRating(s)
   return (
@@ -379,20 +379,23 @@ function AirBody({ s, now }: { s: AirStation; now: number }) {
       <Header icon={WindIcon} color={AIR_COLOR[worst ?? 0]} title={s.name} subtitle={`Air quality station · ${s.region}`} />
       <div className="grid gap-1 rounded-lg bg-kumo-recessed p-3">
         <Text size="sm" variant="secondary">
-          Readings for {when.format(s.measuredAt)} · {timeAgo(s.measuredAt, now)}
+          Values as of {when.format(s.measuredAt)} · {timeAgo(s.measuredAt, now)}
         </Text>
         <span className={`text-lg font-semibold ${worst ? AIR_TEXT[worst] : ''}`}>
           {worst ? AIR_RATINGS[worst - 1] : 'No rated reading'}
         </span>
         <Text size="xs" variant="secondary">
-          The worst rating among this hour's readings, as the department rates each one.
+          The worst rating among this hour's values, as the department rates each one. Particles are averaged over 24 hours, carbon monoxide and ozone over 8, so they can lag behind the hour itself.
         </Text>
       </div>
-      <Section title="Readings">
+      <Section title="Values">
         <dl className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1.5 text-sm">
           {s.measurements.map((m) => (
             <Fragment key={m.name}>
-              <dt>{m.name}</dt>
+              <dt>
+                {m.name}
+                {m.averaging && <span className="block text-xs text-kumo-subtle">{m.averaging}</span>}
+              </dt>
               <dd className="text-right tabular-nums">{m.value != null ? `${m.value} ${m.units ?? ''}`.trim() : m.gap === 'offline' ? 'Offline' : 'No data'}</dd>
               <dd className={`text-right font-medium ${m.rating ? AIR_TEXT[m.rating] : ''}`}>
                 {m.ratingName ?? '–'}
