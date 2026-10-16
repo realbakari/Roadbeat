@@ -13,6 +13,7 @@ import { fetchGauges, type Gauge } from '../api/bccGauges'
 import { fetchQldGauges } from '../api/qldGauges'
 import { fetchSignalVolumes, loadSignalSites, type SignalSite, type SignalVolumes } from '../api/bccSignals'
 import { fetchBushfires, type FireWarning } from '../api/bushfires'
+import { fetchAirQuality, type AirStation } from '../api/airQuality'
 import { fetchNews } from '../api/news'
 import type { NewsSnapshot } from '../api/newsTypes'
 import { fetchClearances, type Clearance } from '../api/clearances'
@@ -333,6 +334,28 @@ export function useBushfires(enabled: boolean) {
     }
   }, [enabled])
   return { fires: enabled ? fires : null, error: enabled ? error : null }
+}
+
+/** The state's hourly air quality readings, polled every 10 minutes while `enabled`. */
+export function useAirQuality(enabled: boolean) {
+  const [stations, setStations] = useState<AirStation[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    const c = new AbortController()
+    const load = () =>
+      fetchAirQuality(c.signal).then(
+        (s) => (setStations(s), setError(null)),
+        (e: Error) => !c.signal.aborted && setError(e.message),
+      )
+    load()
+    const id = setInterval(() => visible() && load(), 10 * 60_000)
+    return () => {
+      c.abort()
+      clearInterval(id)
+    }
+  }, [enabled])
+  return { stations: enabled ? stations : null, error: enabled ? error : null }
 }
 
 /**
