@@ -1,3 +1,4 @@
+import type { CouncilBulletin } from '../api/councilDashboard.js'
 import type { BomWarning, Earthquake, RssItem } from '../api/newsFeeds.js'
 import { BOM_WARNINGS_PAGE, type NewsSource } from '../api/newsSources.js'
 import type { NewsItem } from '../api/newsTypes.js'
@@ -39,6 +40,7 @@ export function fromRss(source: NewsSource, items: RssItem[], index: PlaceIndex,
         summary: summary === it.title ? null : summary,
         places: locate(`${it.title}\n${summary ?? ''}`, index),
         roads: [],
+        area: null,
       },
     ]
   })
@@ -58,6 +60,7 @@ export function fromBomWarning(source: NewsSource, w: BomWarning, index: PlaceIn
     summary: null,
     places: locate(w.headline, index),
     roads: [],
+    area: null,
   }
 }
 
@@ -75,6 +78,42 @@ export function fromQuake(source: NewsSource, q: Earthquake, link: string): News
     summary: null,
     places: [{ name: q.place, lga: null, position: q.position, via: 'source' }],
     roads: [],
+    area: null,
+  }
+}
+
+/** A council dashboard, as src/data/council-dashboards.json lists it. */
+export interface CouncilDashboard {
+  council: string
+  /** The council's area in the gazetteer, or null. */
+  area: string | null
+  /** The dashboard's address for people. */
+  page: string
+  /** The address the server reads its feed from (http where the site's certificate chain is incomplete). */
+  feed: string
+}
+
+/**
+ * A council's bulletin as an official item: its title and whole text (up to
+ * wholeSummary's cap), since councils publish these as public safety notices
+ * to be passed on; dated by its latest time, linked to the council's
+ * dashboard, and filed under the council's area.
+ */
+export function fromBulletin(d: CouncilDashboard, b: CouncilBulletin, index: PlaceIndex): NewsItem {
+  const summary = wholeSummary(b.description)
+  return {
+    id: itemId(`${d.page}|${b.title}|${b.created}`),
+    source: 'council-dashboards',
+    publisher: d.council,
+    kind: 'official',
+    title: b.title,
+    link: d.page,
+    published: b.created,
+    updated: b.updated != null && b.updated > b.created ? b.updated : null,
+    summary: summary === b.title ? null : summary,
+    places: locate(`${b.title}\n${summary ?? ''}`, index),
+    roads: [],
+    area: d.area,
   }
 }
 

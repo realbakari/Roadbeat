@@ -18,7 +18,7 @@ let memory: { at: number; snapshot: Promise<NewsSnapshot> } | null = null
 function fromMemory(now: number): Promise<NewsSnapshot> {
   if (!memory || now - memory.at > MEMORY_TTL) {
     const previous = memory?.snapshot.catch(() => null)
-    const snapshot = (previous ?? Promise.resolve(null)).then((p) => ingest(p?.items ?? [], now))
+    const snapshot = (previous ?? Promise.resolve(null)).then((p) => ingest(p, now))
     memory = { at: now, snapshot }
     snapshot.catch(() => (memory = null))
   }
@@ -31,7 +31,7 @@ export function GET() {
     if (!storeConfigured) return json(await fromMemory(now), 200, 60)
     let snapshot = await loadSnapshot()
     if (!snapshot || now - snapshot.fetchedAt > STALE_MS) {
-      snapshot = await ingest(snapshot?.items ?? [], now)
+      snapshot = await ingest(snapshot, now)
       await saveSnapshot(snapshot)
     }
     return json(snapshot, 200, 60)

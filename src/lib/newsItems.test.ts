@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { RssItem } from '../api/newsFeeds'
 import { NEWS_SOURCES } from '../api/newsSources'
-import { fromBomWarning, fromQuake, fromRss, itemId, KEEP_MS, mergeItems } from './newsItems'
+import { fromBomWarning, fromBulletin, fromQuake, fromRss, itemId, KEEP_MS, mergeItems } from './newsItems'
 import { placeIndex } from './newsPlaces'
 import { newsItem } from '../test/fixtures'
 
@@ -40,6 +40,7 @@ describe('fromRss', () => {
           { name: 'Annerley', lga: 'Brisbane City', position: [153.03, -27.51], via: 'gazetteer' },
         ],
         roads: [],
+        area: null,
       },
     ])
   })
@@ -112,5 +113,26 @@ describe('mergeItems with updates', () => {
   it('keeps a live blog updated within 48 hours even if it started earlier', () => {
     const old = { ...base, published: NOW - KEEP_MS - 60 * 60_000, updated: NOW - 60 * 60_000 }
     expect(mergeItems([old], [], new Set(), NOW)).toHaveLength(1)
+  })
+})
+
+describe('fromBulletin', () => {
+  const somerset = { council: 'Somerset Regional Council', area: 'Somerset Regional', page: 'https://disaster.somerset.qld.gov.au', feed: 'https://disaster.somerset.qld.gov.au' }
+  const bulletin = { title: 'Flood siren testing in Lowood', description: '<p>Council will test its sirens on Thursday. The sirens sound for one minute.</p>', created: NOW - 60_000, updated: NOW }
+
+  it("files a council's update as an official item: title, whole text, its area, linked to its dashboard", () => {
+    expect(fromBulletin(somerset, bulletin, index)).toMatchObject({
+      publisher: 'Somerset Regional Council',
+      kind: 'official',
+      link: 'https://disaster.somerset.qld.gov.au',
+      published: NOW - 60_000,
+      updated: NOW,
+      summary: 'Council will test its sirens on Thursday. The sirens sound for one minute.',
+      area: 'Somerset Regional',
+    })
+  })
+
+  it('gives the same bulletin the same id on every read, whatever the platform calls it', () => {
+    expect(fromBulletin(somerset, bulletin, index).id).toBe(fromBulletin(somerset, { ...bulletin, updated: null }, index).id)
   })
 })

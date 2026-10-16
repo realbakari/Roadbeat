@@ -64,7 +64,7 @@ function newsDevApi(): Plugin {
         if (!latest || Date.now() - latest.at > 5 * 60_000) {
           const body = server
             .ssrLoadModule('/api/_lib/newsIngest.ts')
-            .then((m) => m.ingest([]))
+            .then((m) => m.ingest(null))
             .then((snapshot) => JSON.stringify(snapshot))
           latest = { at: Date.now(), body }
           body.catch(() => (latest = null))

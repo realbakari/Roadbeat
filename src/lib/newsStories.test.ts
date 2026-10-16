@@ -88,6 +88,8 @@ describe('filterStories and storyRegions', () => {
     expect(ids({ query: 'police' })).toEqual(['c'])
     expect(ids({ hours: 6 }, T0 + 6.5 * H)).toEqual(['c', 'b'])
     expect(ids({ place: 'Burpengary East' })).toEqual(['c'])
+    const council = groupStories([item('d', 'Somerset Regional Council', 'Flood siren testing', T0, { kind: 'official', area: 'Somerset Regional' })])
+    expect(filterStories(council, { ...DEFAULT_STORY_FILTER, region: 'Somerset Regional' }, T0).map((s) => s.id)).toEqual(['d'])
   })
 
   it('counts stories per council area', () => {

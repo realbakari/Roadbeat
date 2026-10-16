@@ -56,6 +56,7 @@ export function newsItem(over: Partial<NewsItem> = {}): NewsItem {
     summary: null,
     places: [],
     roads: [],
+    area: null,
     ...over,
   }
 }

@@ -184,8 +184,9 @@ export function truckLines(trucks: TruckRestriction[]): GjCollection<Geometry, P
   return { type: 'FeatureCollection', features }
 }
 
+/** A stable key per camera. Council dashboards number cameras from 1 each, so a council camera's key carries its council. */
 export function cameraKey(c: Camera): string {
-  return `${c.kind}-${c.properties.id}`
+  return c.council ? `${c.kind}-${c.council.toLowerCase().replace(/[^a-z]+/g, '-')}-${c.properties.id}` : `${c.kind}-${c.properties.id}`
 }
 
 /** Great-circle distance in km. */

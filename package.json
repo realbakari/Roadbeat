@@ -21,7 +21,8 @@
     "data:bikeways": "node scripts/build-bikeways.mjs",
     "data:qld-gauges": "node scripts/build-qld-gauges.mjs",
     "data:places": "node scripts/build-places.mjs",
-    "news:ingest": "node scripts/ingest-news.mjs"
+    "news:ingest": "node scripts/ingest-news.mjs",
+    "data:dashboards": "node scripts/build-council-dashboards.mjs"
   },
   "dependencies": {
     "@cloudflare/kumo": "^2.14.0",

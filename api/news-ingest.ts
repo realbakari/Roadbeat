@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) return json({ error: 'Unauthorised' }, 401)
   if (!storeConfigured) return json({ skipped: 'No Redis store is connected, so /api/news reads the feeds on demand.' }, 200, 0)
   const previous = await loadSnapshot()
-  const snapshot = await ingest(previous?.items ?? [])
+  const snapshot = await ingest(previous)
   await saveSnapshot(snapshot)
   return json({ items: snapshot.items.length, sources: snapshot.sources }, 200, 0)
 }

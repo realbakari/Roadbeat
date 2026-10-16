@@ -9,7 +9,7 @@ try {
   const { ingest } = await server.ssrLoadModule('/api/_lib/newsIngest.ts')
   const { groupStories, publisherList, storyLocatedLine } = await server.ssrLoadModule('/src/lib/newsStories.ts')
   const started = Date.now()
-  const snapshot = await ingest([])
+  const snapshot = await ingest(null)
   console.log(`Read ${snapshot.sources.length} feeds in ${((Date.now() - started) / 1000).toFixed(1)} s`)
   console.table(snapshot.sources.map(({ id, publisher, ok, count, error }) => ({ id, publisher, ok, items: count, error: error ?? '' })))
 

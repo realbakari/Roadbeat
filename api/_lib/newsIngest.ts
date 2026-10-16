@@ -1,12 +1,17 @@
 import { Client } from 'basic-ftp'
 import { Writable } from 'node:stream'
+import { parseBulletins, parseCameras, parseCentres, parseCouncilNotices, parseEnergexOutages } from '../../src/api/councilDashboard.js'
 import { bomWarningFiles, parseBomAmoc, parseQuakes, parseRss, quakeLink } from '../../src/api/newsFeeds.js'
 import { NEWS_SOURCES, type NewsSource } from '../../src/api/newsSources.js'
-import { NewsSnapshot, type NewsItem, type SourceStatus } from '../../src/api/newsTypes.js'
-import { fromBomWarning, fromQuake, fromRss, mergeItems } from '../../src/lib/newsItems.js'
+import { NewsSnapshot, type CouncilCamera, type CouncilCentre, type NewsItem, type Outage, type SourceStatus } from '../../src/api/newsTypes.js'
+import { toCouncilCamera } from '../../src/lib/councilCameras.js'
+import { dedupeOutages, fromCouncilNotice, fromPowerOutage } from '../../src/lib/outages.js'
+import { mergeCentres, toCentre } from '../../src/lib/councilCentres.js'
+import { fromBomWarning, fromBulletin, fromQuake, fromRss, mergeItems, type CouncilDashboard } from '../../src/lib/newsItems.js'
 import { placeIndex, type GazetteerRow } from '../../src/lib/newsPlaces.js'
 import { roadQuestion, roadsInLocalities } from '../../src/lib/newsRoads.js'
 import { parseRoadSegments, roadQueryUrl } from '../../src/api/qldRoads.js'
+import councils from '../../src/data/council-dashboards.json' with { type: 'json' }
 import gazetteer from '../../src/data/qld-places.json' with { type: 'json' }
 import { redis, storeConfigured } from './store.js'
 
@@ -17,6 +22,9 @@ import { redis, storeConfigured } from './store.js'
 const KEY = 'news:snapshot'
 const index = placeIndex(gazetteer.places as GazetteerRow[])
 const USER_AGENT = 'Roadbeat news monitor (reads headlines and links)'
+// scripts/build-council-dashboards.mjs writes each dashboard as [council, area, page, feed].
+const DASHBOARDS: CouncilDashboard[] = (councils.dashboards as [string, string | null, string, string][]).map(([council, area, page, feed]) => ({ council, area, page, feed }))
+const COUNCIL_SOURCE = { id: 'council-dashboards', publisher: 'Council disaster dashboards' }
 
 async function text(url: string): Promise<string> {
   const res = await fetch(url, { headers: { 'user-agent': USER_AGENT, accept: 'application/rss+xml, application/xml, application/json;q=0.9, */*;q=0.5' }, signal: AbortSignal.timeout(15_000) })
@@ -85,29 +93,90 @@ async function placeRoads(items: NewsItem[], previous: NewsItem[]): Promise<News
   )
 }
 
+/** The platform wraps some feeds in a JSON string, so a feed may need parsing twice. */
+function feedJson(body: string): unknown {
+  const once: unknown = JSON.parse(body)
+  return typeof once === 'string' ? JSON.parse(once) : once
+}
+
+/**
+ * One dashboard's feeds. Bulletins and centres must answer for the council to
+ * count as answered; the Energex relay is missing on councils outside Energex's
+ * area, and cameras and notices are optional, so each of those fails on its own.
+ */
+async function readDashboard(d: CouncilDashboard) {
+  const feed = (name: string) => text(`${d.feed}/dashboard/${name}`).then(feedJson)
+  const [bulletins, centres, cameras, notices, energex] = await Promise.all([
+    feed('imsBulletin'),
+    feed('imsEvac'),
+    feed('getCameras').catch(() => null),
+    feed('dashOutages').catch(() => null),
+    feed('energexOutages').catch(() => null),
+  ])
+  return {
+    items: parseBulletins(bulletins).map((b) => fromBulletin(d, b, index)),
+    centres: parseCentres(centres).map((c) => toCentre(d, c)),
+    cameras: cameras ? parseCameras(cameras).flatMap((c) => toCouncilCamera(d, c) ?? []) : [],
+    outages: [
+      ...(notices ? parseCouncilNotices(notices).map((n) => fromCouncilNotice(d, n)) : []),
+      ...(energex ? parseEnergexOutages(energex).flatMap((o) => fromPowerOutage(o, index, d.page) ?? []) : []),
+    ],
+  }
+}
+
+/** Every council dashboard's feeds. A council that fails is named in `failed`; the others still count. */
+async function readDashboards(): Promise<{ items: NewsItem[]; centres: CouncilCentre[]; cameras: CouncilCamera[]; outages: Outage[]; answered: Set<string>; failed: string[] }> {
+  const results = await Promise.allSettled(DASHBOARDS.map(readDashboard))
+  const ok = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
+  return {
+    items: ok.flatMap((r) => r.items),
+    centres: ok.flatMap((r) => r.centres),
+    cameras: ok.flatMap((r) => r.cameras),
+    outages: dedupeOutages(ok.flatMap((r) => r.outages)),
+    answered: new Set(DASHBOARDS.filter((_, i) => results[i].status === 'fulfilled').map((d) => d.council)),
+    failed: DASHBOARDS.filter((_, i) => results[i].status === 'rejected').map((d) => d.council),
+  }
+}
+
 // BoM products on its anonymous FTP server are under the BoM's default terms:
 // personal or in-house use, with publishing reserved for registered users
 // (bom.gov.au/catalogue/anon-ftp.shtml). So BoM warnings stay off until the
 // operator has that permission and sets NEWS_BOM_WARNINGS=on.
 const enabled = (s: NewsSource) => s.id !== 'bom' || process.env.NEWS_BOM_WARNINGS === 'on'
 
-/** Reads every enabled feed in parallel. A feed that fails is reported in `sources` and its earlier items are kept. */
-export async function ingest(previous: NewsItem[], now = Date.now()): Promise<NewsSnapshot> {
+/**
+ * Reads every enabled feed and every council dashboard in parallel. A feed that
+ * fails is reported in `sources` and its earlier items are kept; a council that
+ * fails keeps its earlier centres.
+ */
+export async function ingest(previous: NewsSnapshot | null, now = Date.now()): Promise<NewsSnapshot> {
   const list = NEWS_SOURCES.filter(enabled)
-  const results = await Promise.allSettled(list.map((s) => readSource(s, now)))
-  const sources: SourceStatus[] = list.map((s, i) => {
+  const [results, dashboards] = await Promise.all([Promise.allSettled(list.map((s) => readSource(s, now))), readDashboards()])
+  const feedSources: SourceStatus[] = list.map((s, i) => {
     const r = results[i]
     return r.status === 'fulfilled'
       ? { id: s.id, publisher: s.publisher, ok: true, count: r.value.length, error: null }
       : { id: s.id, publisher: s.publisher, ok: false, count: 0, error: r.reason instanceof Error ? r.reason.message : String(r.reason) }
   })
-  const fresh = await placeRoads(
-    results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])),
-    previous,
-  )
+  const councilSource: SourceStatus = {
+    ...COUNCIL_SOURCE,
+    ok: dashboards.answered.size > 0,
+    count: dashboards.items.length,
+    error: dashboards.failed.length ? `No answer from ${dashboards.failed.join(', ')}` : null,
+  }
+  const sources = [...feedSources, councilSource]
+  const before = previous?.items ?? []
+  const fresh = await placeRoads([...results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])), ...dashboards.items], before)
   const answered = new Set(sources.filter((s) => s.ok).map((s) => s.id))
-  const kept = previous.filter((it) => list.some((s) => s.id === it.source))
-  return { fetchedAt: now, sources, items: mergeItems(kept, fresh, answered, now) }
+  const kept = before.filter((it) => sources.some((s) => s.id === it.source))
+  return {
+    fetchedAt: now,
+    sources,
+    items: mergeItems(kept, fresh, answered, now),
+    centres: mergeCentres(previous?.centres ?? [], dashboards.centres, dashboards.answered),
+    cameras: dashboards.cameras,
+    outages: dashboards.outages,
+  }
 }
 
 /** The stored snapshot, or null if there is none (or it no longer parses). */

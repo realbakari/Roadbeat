@@ -21,6 +21,8 @@ export interface NewsStory {
   places: NewsPlace[]
   /** Every road placed from any of its items, one per road and locality. */
   roads: NewsRoad[]
+  /** Council areas the story belongs to: those of its places, and a council source's own area. */
+  areas: string[]
   /** Whether any report is a live blog, by its publisher's own marking (see isLiveBlog). */
   live: boolean
   first: number
@@ -113,6 +115,7 @@ export function groupStories(items: NewsItem[]): NewsStory[] {
         publishers: [...new Set(list.map((i) => i.publisher))],
         places: [...places.values()],
         roads: [...roads.values()],
+        areas: [...new Set([...places.values()].flatMap((p) => (p.lga ? [p.lga] : [])).concat(list.flatMap((it) => (it.area ? [it.area] : []))))],
         live: list.some(isLiveBlog),
         first: list[0].published,
         latest: Math.max(...list.map(lastDate)),
@@ -190,7 +193,7 @@ export function filterStories(stories: NewsStory[], f: StoryFilter, now: number)
       (!f.live || s.live) &&
       (f.kind === 'all' || s.kind === f.kind) &&
       (f.outlet === 'all' || s.publishers.includes(f.outlet)) &&
-      (f.region === 'all' || (f.region === 'unlocated' ? !s.places.length : s.places.some((p) => p.lga === f.region))),
+      (f.region === 'all' || (f.region === 'unlocated' ? !s.areas.length : s.areas.includes(f.region))),
   )
 }
 
@@ -200,7 +203,7 @@ const storyText = (s: NewsStory) =>
 /** Council areas named by any story, with how many stories name each, most first. */
 export function storyRegions(stories: NewsStory[]): { lga: string; count: number }[] {
   const counts = new Map<string, number>()
-  for (const s of stories) for (const lga of new Set(s.places.flatMap((p) => (p.lga ? [p.lga] : [])))) counts.set(lga, (counts.get(lga) ?? 0) + 1)
+  for (const s of stories) for (const lga of s.areas) counts.set(lga, (counts.get(lga) ?? 0) + 1)
   return [...counts].map(([lga, count]) => ({ lga, count })).sort((a, b) => b.count - a.count || a.lga.localeCompare(b.lga))
 }
 

@@ -105,7 +105,8 @@ export interface CameraProperties {
 
 export type CameraKind = 'webcam' | 'floodcam'
 
-export type Camera = Feature<Point, CameraProperties> & { kind: CameraKind }
+/** A camera from QLDTraffic, or one a council publishes on its disaster dashboard (`council` names it). */
+export type Camera = Feature<Point, CameraProperties> & { kind: CameraKind; council?: string }
 
 export interface RestArea {
   id: string
