@@ -34,6 +34,7 @@ import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, type EventFilters } from './lib/filters'
 import { cameraKey, type Bounds, type LngLat } from './lib/geo'
+import type { SearchSources } from './lib/search'
 
 export default function App() {
   const { mode, toggle } = useColorMode()
@@ -345,6 +346,39 @@ export default function App() {
   )
   const closeCamera = useCallback(() => go(cameraReturn.current), [go])
 
+  // The header search looks through whatever is loaded; the stop index is read by the search itself.
+  const searchSources = useMemo<Omit<SearchSources, 'stops'>>(
+    () => ({
+      events,
+      cameras,
+      restAreas: ref.restAreas,
+      dumpPoints: ref.dumpPoints,
+      truckRestrictions: ref.truckRestrictions,
+      clearances,
+      toilets: council.toilets,
+      bays: council.bays,
+      meters: council.meters,
+      bikeStops: council.bikeStops,
+      councilEvents: council.events,
+      stories,
+      centres: news.snapshot?.centres ?? null,
+      outages: news.snapshot?.outages ?? null,
+      airStations: air.stations,
+      gauges,
+      fires,
+    }),
+    [events, cameras, ref, clearances, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, news.snapshot, air.stations, gauges, fires],
+  )
+  // A search hit opens like a map tap: cameras through openKey (which turns their layer on), the rest through openHref.
+  const openSearchHit = useCallback(
+    (href: string) => {
+      if (href.startsWith('camera/')) return openKey(href)
+      if (href.startsWith('event/')) setPanel('events')
+      openHref(href)
+    },
+    [openKey, openHref],
+  )
+
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col bg-kumo-canvas">
@@ -367,6 +401,8 @@ export default function App() {
           onHome={() => go('')}
           notifications={notifications}
           onOpenHref={openHref}
+          searchSources={searchSources}
+          onOpenSearch={openSearchHit}
           onAlertSettings={() => setSettingsOpen(true)}
           error={error}
           fetchedAt={fetchedAt}

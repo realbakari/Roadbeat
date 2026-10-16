@@ -15,6 +15,8 @@ import type { TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
 import { DEFAULT_FILTERS, isClosure, isUpcoming, type EventFilters } from '../lib/filters'
 import { timeAgo } from '../lib/format'
+import type { SearchSources } from '../lib/search'
+import { GlobalSearch } from './GlobalSearch'
 import { InstallApp } from './InstallApp'
 import { NotificationCenter } from './NotificationCenter'
 import type { Panel } from './SidePanel'
@@ -36,6 +38,10 @@ interface Props {
   onHome: () => void
   notifications: ReturnType<typeof useNotifications>
   onOpenHref: (href: string) => void
+  /** Everything loaded so far, for the search box. */
+  searchSources: Omit<SearchSources, 'stops'>
+  /** Opens a search hit's hash, turning on the layer it sits on. */
+  onOpenSearch: (href: string) => void
   onAlertSettings: () => void
   error: string | null
   fetchedAt: number | null
@@ -44,7 +50,7 @@ interface Props {
   onRefresh: () => void
 }
 
-/** The top bar: logo, quick-filter counts, notifications, data freshness, refresh and colour mode. */
+/** The top bar: logo, search, quick-filter counts, notifications, data freshness, refresh and colour mode. */
 export function AppHeader({
   mode,
   onToggleMode,
@@ -60,6 +66,8 @@ export function AppHeader({
   onHome,
   notifications,
   onOpenHref,
+  searchSources,
+  onOpenSearch,
   onAlertSettings,
   error,
   fetchedAt,
@@ -130,15 +138,18 @@ export function AppHeader({
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-kumo-line bg-kumo-base px-4">
-      <a href="#" onClick={(e) => (e.preventDefault(), onHome())} className="flex min-w-0 items-center gap-2.5">
+      <a href="#" onClick={(e) => (e.preventDefault(), onHome())} aria-label="Roadbeat home" className="flex shrink-0 items-center gap-2.5">
         <img src="/favicon.svg" alt="" className="size-7" />
-        <div className="grid leading-tight">
+        {/* On a phone the search box needs the room, so only the icon stays. */}
+        <div className="hidden leading-tight sm:grid">
           <Text variant="heading" as="h1">
             Roadbeat
           </Text>
-          <span className="hidden text-xs text-kumo-subtle sm:block">Live roads and transport across Queensland</span>
+          <span className="hidden text-xs text-kumo-subtle 2xl:block">Live roads and transport across Queensland</span>
         </div>
       </a>
+
+      <GlobalSearch sources={searchSources} onOpen={onOpenSearch} />
 
       <nav aria-label="Quick filters" className="hidden min-w-0 items-center gap-1.5 md:flex">
         {chips.map(({ key, ...chip }) => (
@@ -210,28 +221,33 @@ interface StatChipProps {
  */
 function StatChip({ label, value, icon: I, tone, active, apply }: StatChipProps) {
   const alert = tone === 'danger' && value != null && value > 0
+  // Labels show only on very wide screens; below that the chip is its icon and count, so the search box keeps its room.
   return (
-    <button
-      type="button"
-      onClick={apply}
-      aria-pressed={active}
-      title={active ? `Showing ${label.toLowerCase()} — click to clear` : `Show ${label.toLowerCase()}`}
-      className={`inline-flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left ring ${
-        active ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'
-      }`}
-    >
-      <span
-        className={`flex size-6 items-center justify-center rounded-full ${alert ? 'bg-kumo-danger/10 text-kumo-danger' : 'bg-kumo-recessed text-kumo-subtle'}`}
-        aria-hidden
-      >
-        <I size={14} weight="bold" />
-      </span>
-      <span className={`text-sm font-semibold tabular-nums ${alert ? 'text-kumo-danger' : value == null ? 'text-kumo-subtle' : 'text-kumo-strong'}`}>
-        {value ?? '…'}
-      </span>
-      <span className="hidden text-sm text-kumo-subtle xl:inline">{label}</span>
-      <span className="sr-only xl:hidden">{label}</span>
-    </button>
+    <Tooltip
+      content={active ? `Showing ${label.toLowerCase()} — click to clear` : `Show ${label.toLowerCase()}`}
+      render={
+        <button
+          type="button"
+          onClick={apply}
+          aria-pressed={active}
+          className={`inline-flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left ring ${
+            active ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'
+          }`}
+        >
+          <span
+            className={`flex size-6 items-center justify-center rounded-full ${alert ? 'bg-kumo-danger/10 text-kumo-danger' : 'bg-kumo-recessed text-kumo-subtle'}`}
+            aria-hidden
+          >
+            <I size={14} weight="bold" />
+          </span>
+          <span className={`text-sm font-semibold tabular-nums ${alert ? 'text-kumo-danger' : value == null ? 'text-kumo-subtle' : 'text-kumo-strong'}`}>
+            {value ?? '…'}
+          </span>
+          <span className="hidden text-sm text-kumo-subtle min-[1700px]:inline">{label}</span>
+          <span className="sr-only min-[1700px]:hidden">{label}</span>
+        </button>
+      }
+    />
   )
 }
 
