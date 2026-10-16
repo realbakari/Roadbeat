@@ -66,6 +66,6 @@ export const PUBLISHER_ICONS: Record<string, string> = {
   'Guardian Australia': 'https://assets.guim.co.uk/static/frontend/icons/homescreen/apple-touch-icon-240.png',
   'SBS News': 'https://www.sbs.com.au/apple-touch-icon.png',
   'Queensland Police': 'https://mypolice.qld.gov.au/apple-touch-icon.png',
-  'Bureau of Meteorology': 'https://www.bom.gov.au/themes/custom/bom_theme/images/icons/favicon-48.png',
+  'Bureau of Meteorology': 'https://www.bom.gov.au/apple-touch-icon.png',
   'Geoscience Australia': 'https://www.ga.gov.au/designs/images/GA_logo_180x180.png',
 }

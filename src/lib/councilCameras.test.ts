@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { toCouncilCamera } from './councilCameras'
 
-const ipswich = { council: 'Ipswich City Council', area: 'Ipswich City', page: 'https://disaster.ipswich.qld.gov.au', feed: 'https://disaster.ipswich.qld.gov.au' }
+const ipswich = { council: 'Ipswich City Council', area: 'Ipswich City', page: 'https://disaster.ipswich.qld.gov.au', feed: 'https://disaster.ipswich.qld.gov.au', icon: null }
 const listing = { id: 174, description: 'Brisbane River - Goodna Boat Ramp, Goodna', type: 'Flood Camera', locality: 'Goodna', direction: null, image: 'https://portal.sightmaster.com.au/latest/3211', position: [152.90006, -27.60364] as [number, number] }
 
 describe('toCouncilCamera', () => {

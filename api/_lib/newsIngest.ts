@@ -22,8 +22,8 @@ import { redis, storeConfigured } from './store.js'
 const KEY = 'news:snapshot'
 const index = placeIndex(gazetteer.places as GazetteerRow[])
 const USER_AGENT = 'Roadbeat news monitor (reads headlines and links)'
-// scripts/build-council-dashboards.mjs writes each dashboard as [council, area, page, feed].
-const DASHBOARDS: CouncilDashboard[] = (councils.dashboards as [string, string | null, string, string][]).map(([council, area, page, feed]) => ({ council, area, page, feed }))
+// scripts/build-council-dashboards.mjs writes each dashboard as [council, area, page, feed, icon].
+const DASHBOARDS: CouncilDashboard[] = (councils.dashboards as [string, string | null, string, string, string | null][]).map(([council, area, page, feed, icon]) => ({ council, area, page, feed, icon }))
 const COUNCIL_SOURCE = { id: 'council-dashboards', publisher: 'Council disaster dashboards' }
 
 async function text(url: string): Promise<string> {

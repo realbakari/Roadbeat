@@ -33,7 +33,7 @@ describe('fromPowerOutage', () => {
 })
 
 describe('fromCouncilNotice and dedupeOutages', () => {
-  const burdekin = { council: 'Burdekin Shire Council', area: 'Burdekin Shire', page: 'https://disaster.burdekin.qld.gov.au', feed: 'https://disaster.burdekin.qld.gov.au' }
+  const burdekin = { council: 'Burdekin Shire Council', area: 'Burdekin Shire', page: 'https://disaster.burdekin.qld.gov.au', feed: 'https://disaster.burdekin.qld.gov.au', icon: null }
   const notice = { id: 8104, type: 'Water', title: 'Lena Rd, Mount Kelly', details: 'Planned works.', incident: 'Planned', start: 1, end: 2, updated: 3, geometry: { type: 'LineString' as const, coordinates: [[147.315, -19.668], [147.314, -19.675]] } }
 
   it("keeps a council's notice at its published shape", () => {

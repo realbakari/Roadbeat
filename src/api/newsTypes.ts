@@ -47,6 +47,8 @@ export const NewsItem = z.object({
   roads: z.array(NewsRoad).default([]),
   /** The council area a council's own source covers, for the region filter; null for every other source. */
   area: z.string().nullable().default(null),
+  /** A council publisher's own site icon; null for sources whose icon the app lists itself (PUBLISHER_ICONS). */
+  icon: z.string().nullable().default(null),
 })
 export type NewsItem = z.infer<typeof NewsItem>
 

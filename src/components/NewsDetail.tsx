@@ -76,7 +76,7 @@ export function NewsDetail({
               {story.items.map((it) => (
                 <li key={it.id} className="grid gap-1.5 rounded-lg px-3 py-2.5 ring ring-kumo-line">
                   <span className="flex items-center gap-2 text-xs text-kumo-subtle">
-                    <PublisherIcon publisher={it.publisher} kind={it.kind} size="sm" />
+                    <PublisherIcon publisher={it.publisher} kind={it.kind} icon={it.icon} size="sm" />
                     <span className="font-medium text-kumo-default">{it.publisher}</span>
                     <span className="ml-auto tabular-nums" title={`Published ${when.format(it.published)}${it.updated != null ? `, updated ${when.format(it.updated)}` : ''}`}>
                       {reportedAgo(it.updated != null, lastDate(it), now)}

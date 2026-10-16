@@ -41,6 +41,7 @@ export function fromRss(source: NewsSource, items: RssItem[], index: PlaceIndex,
         places: locate(`${it.title}\n${summary ?? ''}`, index),
         roads: [],
         area: null,
+        icon: null,
       },
     ]
   })
@@ -61,6 +62,7 @@ export function fromBomWarning(source: NewsSource, w: BomWarning, index: PlaceIn
     places: locate(w.headline, index),
     roads: [],
     area: null,
+    icon: null,
   }
 }
 
@@ -79,6 +81,7 @@ export function fromQuake(source: NewsSource, q: Earthquake, link: string): News
     places: [{ name: q.place, lga: null, position: q.position, via: 'source' }],
     roads: [],
     area: null,
+    icon: null,
   }
 }
 
@@ -91,6 +94,8 @@ export interface CouncilDashboard {
   page: string
   /** The address the server reads its feed from (http where the site's certificate chain is incomplete). */
   feed: string
+  /** The council's square site icon, or null. */
+  icon: string | null
 }
 
 /**
@@ -114,6 +119,7 @@ export function fromBulletin(d: CouncilDashboard, b: CouncilBulletin, index: Pla
     places: locate(`${b.title}\n${summary ?? ''}`, index),
     roads: [],
     area: d.area,
+    icon: d.icon,
   }
 }
 

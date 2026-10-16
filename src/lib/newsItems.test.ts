@@ -41,6 +41,7 @@ describe('fromRss', () => {
         ],
         roads: [],
         area: null,
+        icon: null,
       },
     ])
   })
@@ -117,7 +118,7 @@ describe('mergeItems with updates', () => {
 })
 
 describe('fromBulletin', () => {
-  const somerset = { council: 'Somerset Regional Council', area: 'Somerset Regional', page: 'https://disaster.somerset.qld.gov.au', feed: 'https://disaster.somerset.qld.gov.au' }
+  const somerset = { council: 'Somerset Regional Council', area: 'Somerset Regional', page: 'https://disaster.somerset.qld.gov.au', feed: 'https://disaster.somerset.qld.gov.au', icon: 'https://www.somerset.qld.gov.au/apple-touch-icon.png' }
   const bulletin = { title: 'Flood siren testing in Lowood', description: '<p>Council will test its sirens on Thursday. The sirens sound for one minute.</p>', created: NOW - 60_000, updated: NOW }
 
   it("files a council's update as an official item: title, whole text, its area, linked to its dashboard", () => {
@@ -129,6 +130,7 @@ describe('fromBulletin', () => {
       updated: NOW,
       summary: 'Council will test its sirens on Thursday. The sirens sound for one minute.',
       area: 'Somerset Regional',
+      icon: 'https://www.somerset.qld.gov.au/apple-touch-icon.png',
     })
   })
 

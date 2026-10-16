@@ -15,14 +15,15 @@ const SIZES = { sm: { box: 'size-5 rounded', px: 12 }, md: { box: 'size-8 rounde
 
 /**
  * A publisher's own site icon, framed by kind as on the map: a purple ring for
- * a news outlet, a dark ring for an official source. Falls back to a generic
+ * a news outlet, a dark ring for an official source. The app lists the main
+ * outlets' icons; a council's comes with its items. Falls back to a generic
  * mark when the publisher has no icon or it fails to load.
  */
-export function PublisherIcon({ publisher, kind, size = 'md' }: { publisher: string; kind: NewsItem['kind']; size?: keyof typeof SIZES }) {
+export function PublisherIcon({ publisher, kind, icon, size = 'md' }: { publisher: string; kind: NewsItem['kind']; icon?: string | null; size?: keyof typeof SIZES }) {
   const [failed, setFailed] = useState(false)
   const { box, px } = SIZES[size]
   const color = kind === 'official' ? LAYER_COLOR.newsOfficial : LAYER_COLOR.news
-  const src = PUBLISHER_ICONS[publisher]
+  const src = PUBLISHER_ICONS[publisher] ?? icon
   // Councils have no entry, so an official source without one gets a building.
   const Fallback = FALLBACK_ICON[publisher] ?? (kind === 'official' ? BuildingsIcon : NewspaperIcon)
   return (
@@ -47,7 +48,7 @@ export function StoryMark({ story, size = 'md' }: { story: NewsStory; size?: 'md
     <span className="flex shrink-0 items-center">
       {shown.map((p, i) => (
         <span key={p} className={i ? (size === 'lg' ? '-ml-4' : '-ml-3') : ''} style={{ zIndex: shown.length - i }}>
-          <PublisherIcon publisher={p} kind={story.kind} size={size} />
+          <PublisherIcon publisher={p} kind={story.kind} icon={story.items.find((i) => i.publisher === p)?.icon} size={size} />
         </span>
       ))}
     </span>

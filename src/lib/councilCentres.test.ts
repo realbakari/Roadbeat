@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { centreKind, mergeCentres, toCentre } from './councilCentres'
 
-const redland = { council: 'Redland City Council', area: 'Redland City', page: 'https://dashboard.redland.qld.gov.au', feed: 'http://dashboard.redland.qld.gov.au' }
+const redland = { council: 'Redland City Council', area: 'Redland City', page: 'https://dashboard.redland.qld.gov.au', feed: 'http://dashboard.redland.qld.gov.au', icon: null }
 const listing = { name: 'Dunwich Council Depot', type: 'Sandbag Station', address: '11-37 Mitchell Cres, Dunwich QLD 4183', status: 'Operational', note: null, position: [153.4, -27.5] as [number, number] }
 
 describe('toCentre', () => {
