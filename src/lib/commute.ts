@@ -69,6 +69,19 @@ export function roadEventsFor(c: Commute, events: TrafficEvent[], now: number): 
     .sort((a, b) => Number(isClosure(b)) - Number(isClosure(a)) || (PRIORITY[a.properties.event_priority] ?? 9) - (PRIORITY[b.properties.event_priority] ?? 9))
 }
 
+/** What the commute card can say about the rider's roads. */
+export type RoadsBriefing = { state: 'loading' } | { state: 'failed'; error: string } | { state: 'ok'; events: TrafficEvent[] }
+
+/**
+ * The rider's road events, only once QLDTraffic's events have been read at
+ * least once (`fetchedAt`). Before that the list is empty but unknown, so the
+ * card must never call it all clear.
+ */
+export function roadsBriefing(c: Commute, events: TrafficEvent[], fetchedAt: number | null, error: string | null, now: number): RoadsBriefing {
+  if (fetchedAt == null) return error ? { state: 'failed', error } : { state: 'loading' }
+  return { state: 'ok', events: roadEventsFor(c, events, now) }
+}
+
 /** Names a route can be called by: its code, short name and T-line ("T1", "T1 Caboolture"). */
 export type RouteNames = (code: string, region: TransitRegion) => { short?: string; line?: string } | null
 

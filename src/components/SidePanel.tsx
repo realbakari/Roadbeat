@@ -49,6 +49,9 @@ interface Props {
   transitOpen: boolean
 
   events: TrafficEvent[]
+  /** When QLDTraffic's events were last read successfully, or null if never. */
+  eventsAt: number | null
+  eventsError: string | null
   visibleEvents: TrafficEvent[]
   selectedEvent: TrafficEvent | null
   districts: string[]
@@ -224,7 +227,7 @@ export function SidePanel(p: Props) {
           fires={p.fires}
           onOpenHref={p.onOpenHref}
           occupancies={p.occupancies}
-          top={<CommuteCard events={p.events} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />}
+          top={<CommuteCard events={p.events} eventsAt={p.eventsAt} eventsError={p.eventsError} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />}
         />
       ) : p.panel === 'cameras' ? (
         <CameraGrid cameras={p.cameras} selectedKey={sel.camera} onOpen={p.onOpenCamera} />

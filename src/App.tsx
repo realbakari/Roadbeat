@@ -479,6 +479,8 @@ export default function App() {
                 onPanelChange={choosePanel}
                 transitOpen={transitOpen}
                 events={events}
+                eventsAt={fetchedAt}
+                eventsError={error}
                 visibleEvents={visible}
                 selectedEvent={selectedEvent}
                 districts={districts}
