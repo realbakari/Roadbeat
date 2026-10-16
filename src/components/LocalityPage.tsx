@@ -237,9 +237,14 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
         </Section>
       )}
 
-      {report.notLoaded.length > 0 && (
+      {(report.notLoaded.length > 0 || report.failed.length > 0) && (
         <Section title="Not included">
           <ul className="grid gap-1.5">
+            {report.failed.map(({ source, error }) => (
+              <li key={source} className="text-sm text-kumo-danger">
+                {LAYER[source].label} couldn't be loaded, so none are listed here ({error.replace(/\.$/, '')}).
+              </li>
+            ))}
             {report.notLoaded.map((k) => (
               <li key={k} className="flex items-center justify-between gap-2 text-sm">
                 <span className="text-kumo-subtle">Turn on the {LAYER[k].label} layer to include it.</span>

@@ -77,4 +77,10 @@ describe('atLocality', () => {
     expect(r.notLoaded).toEqual(['fires', 'airStations', 'gauges'])
     expect(reportCount(r)).toBe(0)
   })
+
+  it('tells a source whose read failed apart from one that is turned off', () => {
+    const r = atLocality(goodna, { ...empty, fires: null, gauges: null, errors: { fires: 'The QFD feed responded with 502' } }, NOW)
+    expect(r.failed).toEqual([{ source: 'fires', error: 'The QFD feed responded with 502' }])
+    expect(r.notLoaded).toEqual(['gauges'])
+  })
 })

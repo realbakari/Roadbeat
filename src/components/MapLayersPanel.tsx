@@ -39,6 +39,9 @@ interface Props {
   vehicleError: string | null
   clearanceError: string | null
   airError: string | null
+  /** Why bushfire warnings or gauges are missing or stale, or null while their feeds are fine. */
+  fireNotice: string | null
+  gaugeNotice: string | null
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }
@@ -134,6 +137,8 @@ export function MapLayersPanel({
   vehicleError,
   clearanceError,
   airError,
+  fireNotice,
+  gaugeNotice,
   councilErrors,
   basemap,
   onBasemapChange,
@@ -224,13 +229,20 @@ export function MapLayersPanel({
             checked={layers.fires}
             onChange={(v) => set('fires', v)}
           >
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
-              {(['Emergency Warning', 'Watch and Act', 'Advice', 'Information'] as const).map((l) => (
-                <span key={l} className="inline-flex items-center gap-1">
-                  <span className="size-2 rounded-full" style={{ background: FIRE_COLOR[l] }} />
-                  {l === 'Information' ? 'Fire reported' : l}
-                </span>
-              ))}
+            <div className="grid gap-1">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+                {(['Emergency Warning', 'Watch and Act', 'Advice', 'Information'] as const).map((l) => (
+                  <span key={l} className="inline-flex items-center gap-1">
+                    <span className="size-2 rounded-full" style={{ background: FIRE_COLOR[l] }} />
+                    {l === 'Information' ? 'Fire reported' : l}
+                  </span>
+                ))}
+              </div>
+              {fireNotice && (
+                <Text size="xs" variant="error">
+                  {fireNotice}
+                </Text>
+              )}
             </div>
           </LayerRow>
           <LayerRow
@@ -341,9 +353,9 @@ export function MapLayersPanel({
             checked={layers.gauges}
             onChange={(v) => set('gauges', v)}
           >
-            <Text size="xs" variant="secondary">
-              Brisbane City Council and Queensland Government gauges. Blue: stream height (m). Teal: rain in the last hour. Faded: no
-              reading in the last hour.
+            <Text size="xs" variant={gaugeNotice ? 'error' : 'secondary'}>
+              {gaugeNotice ??
+                'Brisbane City Council and Queensland Government gauges. Blue: stream height (m). Teal: rain in the last hour. Faded: no reading in the last hour.'}
             </Text>
           </LayerRow>
           <LayerRow

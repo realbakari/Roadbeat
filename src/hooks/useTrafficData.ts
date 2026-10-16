@@ -36,6 +36,7 @@ import {
 } from '../api/translink'
 import { watchFeed, type FeedWatch } from '../lib/trip'
 import { mergeTripParts } from '../lib/tripFeed'
+import { gaugeNotice, type GaugeFailure } from '../lib/feedNotice'
 import { liveRegions, MAIN_REGIONS } from '../lib/transitRegions'
 import { feedCounts, recordFeedCount, subscribeFeedCounts, useFeedCounts } from './useRegionFeeds'
 import type {
@@ -343,12 +344,13 @@ export function useTripIndex(enabled: boolean) {
 export function useBushfires(enabled: boolean) {
   const [fires, setFires] = useState<FireWarning[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null)
   useEffect(() => {
     if (!enabled) return
     const c = new AbortController()
     const load = () =>
       fetchBushfires(c.signal).then(
-        (f) => (setFires(f), setError(null)),
+        (f) => (setFires(f), setError(null), setFetchedAt(Date.now())),
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
@@ -358,7 +360,7 @@ export function useBushfires(enabled: boolean) {
       stop()
     }
   }, [enabled])
-  return { fires: enabled ? fires : null, error: enabled ? error : null }
+  return { fires: enabled ? fires : null, error: enabled ? error : null, fetchedAt: enabled ? fetchedAt : null }
 }
 
 /** The state's hourly air quality readings, polled every 10 minutes while `enabled`. */
@@ -416,16 +418,21 @@ export function useNews(enabled: boolean) {
  */
 export function useGauges(enabled: boolean) {
   const [gauges, setGauges] = useState<Gauge[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [failed, setFailed] = useState<GaugeFailure[]>([])
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null)
   useEffect(() => {
     if (!enabled) return
     const c = new AbortController()
     const load = () =>
       Promise.allSettled([fetchGauges(c.signal), fetchQldGauges(c.signal)]).then((results) => {
         if (c.signal.aborted) return
-        const failed = results.flatMap((r) => (r.status === 'rejected' ? [String(r.reason)] : []))
-        if (failed.length < results.length) setGauges(results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])))
-        setError(failed[0] ?? null)
+        const sources = ['Brisbane City Council', 'Queensland Government']
+        const now = results.flatMap((r, i) => (r.status === 'rejected' ? [{ source: sources[i], error: r.reason instanceof Error ? r.reason.message : String(r.reason) }] : []))
+        if (now.length < results.length) {
+          setGauges(results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])))
+          setFetchedAt(Date.now())
+        }
+        setFailed(now.length === results.length ? [{ source: 'all', error: now[0].error }] : now)
       })
     load()
     const stop = poll(load, 5 * 60_000)
@@ -434,7 +441,7 @@ export function useGauges(enabled: boolean) {
       stop()
     }
   }, [enabled])
-  return { gauges: enabled ? gauges : null, error: enabled ? error : null }
+  return { gauges: enabled ? gauges : null, notice: enabled ? gaugeNotice(gauges != null, failed, fetchedAt) : null }
 }
 
 /**

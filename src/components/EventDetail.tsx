@@ -35,12 +35,14 @@ interface Props {
   onToggleWatch: () => void
   /** Brisbane City Council and Queensland Government gauges, shown next to flooding events. */
   gauges: Gauge[] | null
+  /** Why gauges are missing or stale, or null while the feeds are fine. */
+  gaugeNotice?: string | null
   onOpenHref: (hash: string) => void
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched, onToggleWatch, gauges, onOpenHref }: Props) {
+export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched, onToggleWatch, gauges, gaugeNotice, onOpenHref }: Props) {
   const p = event.properties
   const meta = typeMeta(p.event_type)
   const pr = priorityBadge(p.event_priority)
@@ -223,9 +225,14 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
             </Section>
           )}
 
-          {anchor && p.event_type === 'Flooding' && gauges?.some((g) => distanceKm(anchor, g.position) <= 5) && (
+          {anchor && p.event_type === 'Flooding' && (gauges?.some((g) => distanceKm(anchor, g.position) <= 5) || gaugeNotice) && (
             <Section title="Stream gauges nearby">
-              <GaugesNearby at={anchor} gauges={gauges} now={now} onOpen={onOpenHref} />
+              {gaugeNotice && (
+                <Text size="sm" variant="error">
+                  {gaugeNotice}
+                </Text>
+              )}
+              {gauges?.some((g) => distanceKm(anchor, g.position) <= 5) && <GaugesNearby at={anchor} gauges={gauges} now={now} onOpen={onOpenHref} />}
             </Section>
           )}
 
