@@ -53,6 +53,7 @@ const event: CouncilEvent = {
 }
 
 const sources: PlaceSources = {
+  hotspots: null,
   restAreas: [],
   dumpPoints: [],
   truckRestrictions: [],

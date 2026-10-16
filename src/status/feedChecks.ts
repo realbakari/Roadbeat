@@ -1,4 +1,7 @@
 import { fetchAirQuality } from '../api/airQuality'
+import { brisbaneDate } from '../api/airHistory'
+import { fetchHotspots } from '../api/hotspots'
+import { latestImageryDate } from '../api/satelliteImagery'
 import { BUS_STOPS_API, parseBusStopAudit } from '../api/bccBusStops'
 import { fetchCorridors, fetchCouncilEvents, fetchPedestrianDay } from '../api/bccDashboard'
 import { fetchGauges } from '../api/bccGauges'
@@ -128,6 +131,15 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
     const stations = await fetchAirQuality(signal)
     const at = Math.max(0, ...stations.map((s) => s.measuredAt))
     return { publisherTime: at ? { at, label: 'Measured hour' } : null }
+  },
+  hotspots: async (signal) => {
+    const newest = (await fetchHotspots(signal))[0]
+    return { publisherTime: newest ? { at: newest.observedAt, label: 'Newest detection' } : null }
+  },
+  'satellite-imagery': async (signal) => {
+    const date = await latestImageryDate(brisbaneDate(Date.now()), signal)
+    if (!date) throw new Error('No image published over Brisbane in the last four days')
+    return { publisherTime: { at: Date.parse(`${date}T00:00:00+10:00`), label: 'Newest image (day)' } }
   },
   crashes: (signal) => fetchCrashSummary(BRISBANE, signal).then(none),
   'camera-time': { skip: 'Asked only for a pinned camera’s image; nothing to ask without one' },

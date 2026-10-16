@@ -10,6 +10,7 @@ import type { NewsStory } from '../../lib/newsStories'
 import type { CouncilCentre, Outage } from '../../api/newsTypes'
 import { OUTAGE_COLOR, outagePosition } from '../../lib/outages'
 import { AIR_COLOR, AIR_RATINGS, worstRating, type AirStation } from '../../api/airQuality'
+import { HOTSPOT_AGES, hotspotAge, type Hotspot } from '../../api/hotspots'
 import { CENTRE_COLOR, centreKind } from '../../lib/councilCentres'
 import { clearwayInEffect, parseClearwayTimes } from '../../lib/clearways'
 import type { TrafficEvent } from '../../api/types'
@@ -137,6 +138,24 @@ export function airFeatures(stations: AirStation[]): GeoJSON.FeatureCollection {
         type: 'Feature',
         geometry: { type: 'Point', coordinates: s.position },
         properties: { key: `place/air/${encodeURIComponent(s.id)}`, color: AIR_COLOR[worst ?? 0], label: `${s.name} · ${worst ? AIR_RATINGS[worst - 1] : 'no rated reading'}` },
+      }
+    }),
+  }
+}
+
+/**
+ * Satellite hotspots, coloured by the hours since the satellite observed them,
+ * newest drawn on top; each opens its detection page.
+ */
+export function hotspotFeatures(hotspots: Hotspot[], now: number): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: hotspots.map((h) => {
+      const age = hotspotAge(h, now)
+      return {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: h.position },
+        properties: { key: `place/hotspot/${encodeURIComponent(h.id)}`, color: HOTSPOT_AGES[age].color, rank: 2 - age, label: `Heat detected by ${h.satellite} · ${HOTSPOT_AGES[age].label.toLowerCase()} ago` },
       }
     }),
   }

@@ -2,6 +2,7 @@ import type { CouncilEvent } from '../api/bccDashboard'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../api/bccPlaces'
 import type { Clearance } from '../api/clearances'
 import type { AirStation } from '../api/airQuality'
+import type { Hotspot } from '../api/hotspots'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
 import type { MapLayers } from '../components/map/settings'
@@ -24,6 +25,7 @@ export type Place =
   | { kind: 'centre'; data: CouncilCentre }
   | { kind: 'outage'; data: Outage }
   | { kind: 'air'; data: AirStation }
+  | { kind: 'hotspot'; data: Hotspot }
 
 /** The loaded lists a place link can point into; null while a list has not loaded. */
 export interface PlaceSources {
@@ -41,6 +43,7 @@ export interface PlaceSources {
   councilCentres: CouncilCentre[] | null
   outages: Outage[] | null
   airStations: AirStation[] | null
+  hotspots: Hotspot[] | null
 }
 
 /** The map layer a shared link to a place turns on. */
@@ -59,6 +62,7 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   centre: 'councilCentres',
   outage: 'outages',
   air: 'airQuality',
+  hotspot: 'hotspots',
 }
 
 /** The place a #place/<kind>/<id> link names, or null when it is unknown or not loaded yet. */
@@ -120,6 +124,10 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.airStations?.find((a) => a.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'hotspot') {
+    const data = s.hotspots?.find((h) => h.id === id)
+    return data ? { kind, data } : null
+  }
   return null
 }
 
@@ -148,6 +156,8 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
       return { center: place.data.position, zoom: 15 }
     case 'air':
       return { center: place.data.position, zoom: 12 }
+    case 'hotspot':
+      return { center: place.data.position, zoom: 11 }
     case 'event':
       return place.data.position ? { center: place.data.position, zoom: 15 } : null
     case 'outage': {

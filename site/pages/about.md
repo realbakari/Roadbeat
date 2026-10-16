@@ -22,9 +22,11 @@ Every time, position, delay and count in Roadbeat comes from an official source.
 - **Statewide stream heights:** the latest reading at the Queensland Government's open gauging stations, from the Department of Local Government, Water and Volunteers' Water Monitoring Information Portal.
 - **Flood warning areas:** the Bureau of Meteorology's National Flood Gauge Network, used to link each Brisbane gauge to BoM's flood warning for its area.
 - **Crash history:** the Department of Transport and Main Roads' crash data on data.qld.gov.au.
+- **Satellite hotspots:** Geoscience Australia's Digital Earth Australia Hotspots, which gathers heat detected by NASA, NOAA, Japanese and other satellites. A hotspot is heat a satellite saw, not a confirmed fire.
+- **Satellite image:** NASA's Global Imagery Browse Services, from the NOAA-20 satellite's daily pass.
 - **Maps:** OpenFreeMap, OpenMapTiles and OpenStreetMap contributors.
 
-All government data is used under the Creative Commons Attribution 4.0 licence.
+Australian and Queensland Government data is used under the Creative Commons Attribution 4.0 licence. NASA's imagery has no use restrictions.
 
 ## Find a station, line or place
 

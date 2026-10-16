@@ -25,6 +25,7 @@ import {
   HouseLineIcon,
   LightningIcon,
   WindIcon,
+  FireSimpleIcon,
   PackageIcon,
   type Icon,
 } from '@phosphor-icons/react'
@@ -35,6 +36,7 @@ import { EVENTS_URL, type CouncilEvent } from '../api/bccDashboard'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import { OUTAGE_COLOR } from '../lib/outages'
 import { AirHistory } from './AirHistory'
+import { HOTSPOT_COLOR, HOTSPOTS_ATTRIBUTION, HOTSPOTS_PORTAL, type Hotspot } from '../api/hotspots'
 import { ClampedText } from './ClampedText'
 import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS, AIR_TEXT, worstRating, type AirStation } from '../api/airQuality'
 import { CENTRE_COLOR, centreKind } from '../lib/councilCentres'
@@ -204,6 +206,8 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return <OutageBody o={place.data} now={now} onOpenHref={onOpenHref} />
     case 'air':
       return <AirBody s={place.data} now={now} />
+    case 'hotspot':
+      return <HotspotBody h={place.data} now={now} />
   }
 }
 
@@ -412,6 +416,47 @@ function AirBody({ s, now }: { s: AirStation; now: number }) {
         <ExternalLink href={AIR_QUALITY_DATASET}>Air Quality Monitoring live data feed (open data)</ExternalLink>
         <Text size="xs" variant="secondary">
           Values, indexes and ratings as published by the Department of Environment, Tourism, Science and Innovation (CC BY 4.0). Units from its Air Quality Query API.
+        </Text>
+      </div>
+    </>
+  )
+}
+
+/** One satellite detection, as Geoscience Australia publishes it, with what it can and can't tell. */
+function HotspotBody({ h, now }: { h: Hotspot; now: number }) {
+  const rows: [string, ReactNode][] = [
+    ['Observed', `${when.format(h.observedAt)} · ${timeAgo(h.observedAt, now)}`],
+    ['Satellite', h.sensor ? `${h.satellite} (${h.sensor})` : h.satellite],
+    ['Detection method', h.product || 'Not published'],
+    ['Position accuracy', h.accuracy ?? 'Not published'],
+    ['Confidence', h.confidence != null ? `${h.confidence} out of 100` : 'Not published'],
+    ['Measured temperature', h.kelvin != null ? `${h.kelvin} K (${(h.kelvin - 273.15).toFixed(1)} °C)` : 'Not published'],
+    ['Position', `${h.position[1].toFixed(4)}, ${h.position[0].toFixed(4)}`],
+  ]
+  return (
+    <>
+      <Header icon={FireSimpleIcon} color={HOTSPOT_COLOR} title="Satellite hotspot" subtitle={`Heat detected by ${h.satellite}`} />
+      <div className="grid gap-1 rounded-lg bg-kumo-recessed p-3">
+        <Text size="sm">Not a confirmed fire</Text>
+        <Text size="xs" variant="secondary">
+          A satellite sensor measured unusual heat here. It can be a bushfire, a planned burn or another heat source, and the same heat is often
+          detected by several satellites and methods. For what is happening on the ground, follow the Queensland Fire Department's warnings.
+        </Text>
+      </div>
+      <Section title="Detection">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+          {rows.map(([k, v]) => (
+            <Fragment key={k}>
+              <dt className="text-kumo-subtle">{k}</dt>
+              <dd className="tabular-nums">{v}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      </Section>
+      <div className="grid gap-1">
+        <ExternalLink href={HOTSPOTS_PORTAL}>DEA Hotspots map</ExternalLink>
+        <Text size="xs" variant="secondary">
+          {HOTSPOTS_ATTRIBUTION}, from Digital Earth Australia Hotspots, CC BY 4.0. Values as published; the temperature in °C is converted from kelvin.
         </Text>
       </div>
     </>

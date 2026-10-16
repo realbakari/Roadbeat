@@ -36,6 +36,7 @@ import { useLocality } from './hooks/useLocality'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { useAirQuality } from './hooks/useTrafficData'
+import { useHotspots, useSatelliteImagery } from './hooks/useSatellite'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
@@ -226,6 +227,8 @@ export default function App() {
     councilEvents: layers.councilEvents || sel.place?.kind === 'event',
   })
   const air = useAirQuality(layers.airQuality || sel.place?.kind === 'air')
+  const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
+  const imagery = useSatelliteImagery(layers.satellite, now)
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
     () => (sel.signal ? (signalSites?.find((s) => s.tsc === sel.signal) ?? null) : null),
@@ -291,7 +294,7 @@ export default function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots },
     setLayers,
     setFocus,
   )
@@ -343,9 +346,10 @@ export default function App() {
       ...(council.events ? { councilEvents: council.events.length } : {}),
       ...(news.snapshot ? { councilCentres: news.snapshot.centres.length, outages: news.snapshot.outages.length } : {}),
       ...(air.stations ? { airQuality: air.stations.length } : {}),
+      ...(hot.hotspots ? { hotspots: hot.hotspots.length } : {}),
       ...(stories ? { news: mapStories.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations, hot.hotspots],
   )
 
   const locate = useCallback(() => {
@@ -599,6 +603,8 @@ export default function App() {
               councilCentres={news.snapshot?.centres ?? []}
               outages={news.snapshot?.outages ?? []}
               airStations={air.stations ?? []}
+              hotspots={hot.hotspots ?? []}
+              satelliteDate={imagery.date}
               newsStories={replay ? replayStories : mapStories}
               selectedStory={selectedStory}
               selectedVehicleId={sel.vehicle}
@@ -637,6 +643,8 @@ export default function App() {
               airError={air.error}
               fireNotice={fireNotice}
               gaugeNotice={gaugeNotice}
+              hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt }}
+              imagery={{ date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               councilErrors={council.errors}
             />
             {timelineOpen ? (

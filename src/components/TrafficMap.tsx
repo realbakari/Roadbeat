@@ -32,10 +32,12 @@ import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
 import { MapCard } from './map/MapCard'
 import type { MapCard as MapCardData } from '../lib/mapCard'
-import { boundsOf, clearanceFeatures, clearwayFeatures, councilEventFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, newsFeatures, newsRoadFeatures, councilCentreFeatures, outageFeatures, airFeatures, setData, signalFeatures, withLabels } from './map/features'
+import { boundsOf, clearanceFeatures, clearwayFeatures, councilEventFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, newsFeatures, newsRoadFeatures, councilCentreFeatures, outageFeatures, airFeatures, hotspotFeatures, setData, signalFeatures, withLabels } from './map/features'
 import type { NewsStory } from '../lib/newsStories'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { AirStation } from '../api/airQuality'
+import type { Hotspot } from '../api/hotspots'
+import { SatelliteImagery } from './map/SatelliteImagery'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -102,6 +104,10 @@ interface Props {
   /** Power outages and council notices from the council disaster dashboards. */
   outages: Outage[]
   airStations: AirStation[]
+  /** Geoscience Australia's satellite hotspots in the last 24 hours. */
+  hotspots: Hotspot[]
+  /** The day of NASA's satellite image to show, as yyyy-mm-dd, or null for none. */
+  satelliteDate: string | null
   /** The open news story: its places are ringed and its roads drawn wider. */
   selectedStory: NewsStory | null
   selectedVehicleId: string | null
@@ -154,9 +160,11 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   councilCentres: ['council-centres'],
   outages: ['outages', 'outages-line', 'outages-area'],
   airQuality: ['air-quality'],
+  hotspots: ['hotspots'],
+  satellite: [],
 }
 
-const CLICKABLE_PLACES = ['air-quality', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['air-quality', 'hotspots', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 
 const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
@@ -207,6 +215,8 @@ export function TrafficMap(props: Props) {
     councilCentres,
     outages,
     airStations,
+    hotspots,
+    satelliteDate,
     selectedStory,
     selectedVehicleId,
     card,
@@ -358,6 +368,12 @@ export function TrafficMap(props: Props) {
   const centreData = useMemo(() => councilCentreFeatures(councilCentres), [councilCentres])
   const outageData = useMemo(() => outageFeatures(outages), [outages])
   const airData = useMemo(() => airFeatures(airStations), [airStations])
+  // Recoloured once a minute as detections age, not on every render.
+  const minute = Math.floor(now / 60_000)
+  const hotspotData = useMemo(() => hotspotFeatures(hotspots, minute * 60_000), [hotspots, minute])
+  useEffect(() => {
+    if (ready && map) setData(map, 'hotspots', hotspotData)
+  }, [map, ready, hotspotData])
   useEffect(() => {
     if (!ready || !map) return
     setData(map, 'council-centres', centreData)
@@ -516,6 +532,7 @@ export function TrafficMap(props: Props) {
     <div className="relative h-full w-full">
       <div ref={container} className="h-full w-full" aria-label="Traffic map" role="region" />
       <RainRadar map={map} enabled={layers.radar} ready={ready} />
+      <SatelliteImagery map={map} ready={ready} date={layers.satellite ? satelliteDate : null} />
       {map && <CrashLayer map={map} ready={ready} enabled={layers.crashes} filter={crashFilter} />}
       {map && (
         <CameraThumbs

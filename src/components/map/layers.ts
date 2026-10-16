@@ -37,7 +37,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     if (map.getLayer('building-3d')) map.removeLayer('building-3d')
   }
 
-  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'council-events', 'council-centres', 'outages', 'air', 'news', 'news-roads', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
+  for (const id of ['districts', 'flood-2022', 'fires', 'event-shapes', 'event-markers', 'cameras', 'places', 'trucks', 'clearances', 'clearways', 'council-places', 'council-events', 'council-centres', 'outages', 'air', 'hotspots', 'news', 'news-roads', 'bikeways', 'tracks', 'stops', 'signals', 'gauges', 'vehicles']) {
     map.addSource(id, { type: 'geojson', data: empty })
   }
   const color = ['get', 'color'] as unknown as string
@@ -515,6 +515,20 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
       'circle-color': color,
       'circle-stroke-color': '#ffffff',
       'circle-stroke-width': 2,
+    },
+  })
+  // Satellite hotspots: small dots, newest on top, under the stations and markers above.
+  map.addLayer({
+    id: 'hotspots',
+    type: 'circle',
+    source: 'hotspots',
+    layout: { visibility: 'none', 'circle-sort-key': ['get', 'rank'] as never },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2.5, 10, 4, 14, 6] as never,
+      'circle-color': color,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 1] as never,
+      'circle-opacity': 0.9,
     },
   })
   map.addLayer({

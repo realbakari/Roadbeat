@@ -1,9 +1,9 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon } from '@phosphor-icons/react'
+import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon } from '@phosphor-icons/react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
-import { useState, type ReactNode } from 'react'
+import { useState, type ComponentProps, type ReactNode } from 'react'
 import {
   CRASH_DATA_END,
   CRASH_DATASET_URL,
@@ -24,6 +24,8 @@ import { OUTAGE_COLOR } from '../lib/outages'
 import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS } from '../api/airQuality'
 import type { Basemap, MapLayers } from './map/settings'
 import { NewTabNote } from './NewTabNote'
+import { HOTSPOT_COLOR } from '../api/hotspots'
+import { HotspotsNote, SatelliteImageNote } from './SatelliteLayerNotes'
 
 interface Props {
   basemap: Basemap
@@ -42,6 +44,10 @@ interface Props {
   /** Why bushfire warnings or gauges are missing or stale, or null while their feeds are fine. */
   fireNotice: string | null
   gaugeNotice: string | null
+  /** The hotspot feed's state, for its note. */
+  hotspotState: ComponentProps<typeof HotspotsNote>
+  /** The satellite image's day and how it was chosen. */
+  imagery: ComponentProps<typeof SatelliteImageNote>
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }
@@ -139,6 +145,8 @@ export function MapLayersPanel({
   airError,
   fireNotice,
   gaugeNotice,
+  hotspotState,
+  imagery,
   councilErrors,
   basemap,
   onBasemapChange,
@@ -244,6 +252,15 @@ export function MapLayersPanel({
                 </Text>
               )}
             </div>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={HOTSPOT_COLOR} icon={<FireSimpleIcon size={12} weight="fill" />} />}
+            label="Satellite hotspots"
+            count={counts.hotspots}
+            checked={layers.hotspots}
+            onChange={(v) => set('hotspots', v)}
+          >
+            <HotspotsNote {...hotspotState} />
           </LayerRow>
           <LayerRow
             icon={<Badge color={LAYER_COLOR.news} icon={<NewspaperIcon size={12} weight="fill" />} />}
@@ -378,6 +395,14 @@ export function MapLayersPanel({
             <Text size="xs" variant="secondary">
               Radar © Bureau of Meteorology via QLDTraffic
             </Text>
+          </LayerRow>
+          <LayerRow
+            icon={<Badge className="bg-indigo-700" icon={<GlobeHemisphereEastIcon size={12} weight="fill" />} />}
+            label="Satellite image"
+            checked={layers.satellite}
+            onChange={(v) => set('satellite', v)}
+          >
+            <SatelliteImageNote {...imagery} />
           </LayerRow>
           <LayerRow
             icon={<Badge className="bg-red-700" icon={<ClockCounterClockwiseIcon size={12} weight="bold" />} />}

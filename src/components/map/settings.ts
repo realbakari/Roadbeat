@@ -43,6 +43,10 @@ export interface MapLayers {
   outages: boolean
   /** The state's air quality monitoring stations, coloured by the department's worst rating at each. */
   airQuality: boolean
+  /** Geoscience Australia's satellite hotspots: heat a satellite detected in the last 24 hours. */
+  hotspots: boolean
+  /** NASA's daily true-colour satellite image, for one chosen day. */
+  satellite: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -71,4 +75,6 @@ export const DEFAULT_LAYERS: MapLayers = {
   councilCentres: true,
   outages: true,
   airQuality: false,
+  hotspots: false,
+  satellite: false,
 }

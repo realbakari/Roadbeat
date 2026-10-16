@@ -15,6 +15,7 @@ import { placeFocus, type Place } from './places'
 import { CENTRE_COLOR, centreKind } from './councilCentres'
 import { OUTAGE_COLOR, outageFacts } from './outages'
 import { AIR_COLOR, AIR_RATINGS, worstRating } from '../api/airQuality'
+import { HOTSPOT_COLOR } from '../api/hotspots'
 import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
 import { dsColor, siteLoad } from './signals'
 
@@ -38,6 +39,8 @@ export interface MapCard {
   directions?: boolean
 }
 
+/** A detection's time, with the day, since the layer spans the last 24 hours. */
+const observed = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
 export function eventCard(e: TrafficEvent): MapCard | null {
@@ -70,6 +73,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   centre: 'Council centre',
   outage: 'Outage',
   air: 'Air quality station',
+  hotspot: 'Heat detected by satellite',
 }
 
 function placeTitle(place: Place): string {
@@ -101,6 +105,8 @@ function placeTitle(place: Place): string {
       return place.data.title
     case 'air':
       return place.data.name
+    case 'hotspot':
+      return 'Satellite hotspot'
   }
 }
 
@@ -120,6 +126,10 @@ export function placeCard(place: Place): MapCard | null {
     const worst = worstRating(place.data)
     facts.push(worst ? `${AIR_RATINGS[worst - 1]} · worst rated value` : 'No rated value this hour', `Values as of ${clock.format(place.data.measuredAt)}`)
   }
+  if (place.kind === 'hotspot') {
+    const h = place.data
+    facts.push(`${h.satellite}${h.sensor ? ` · ${h.sensor}` : ''} · ${observed.format(h.observedAt)}`, h.accuracy ? `Position ${h.accuracy}` : 'Position accuracy not published')
+  }
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,
     dump: LAYER_COLOR.dumpPoint,
@@ -135,6 +145,7 @@ export function placeCard(place: Place): MapCard | null {
     centre: place.kind === 'centre' ? CENTRE_COLOR[centreKind(place.data.type)] : '',
     outage: place.kind === 'outage' ? OUTAGE_COLOR[place.data.source] : '',
     air: place.kind === 'air' ? AIR_COLOR[worstRating(place.data) ?? 0] : '',
+    hotspot: HOTSPOT_COLOR,
   }
   return {
     key: `place-${place.kind}-${placeId(place)}`,
