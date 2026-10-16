@@ -118,7 +118,7 @@ export function placeCard(place: Place): MapCard | null {
   if (place.kind === 'outage') facts.push(...outageFacts(place.data))
   if (place.kind === 'air') {
     const worst = worstRating(place.data)
-    facts.push(worst ? `${AIR_RATINGS[worst - 1]} · worst rated reading` : 'No rated reading this hour', `Readings for ${clock.format(place.data.measuredAt)}`)
+    facts.push(worst ? `${AIR_RATINGS[worst - 1]} · worst rated value` : 'No rated value this hour', `Values as of ${clock.format(place.data.measuredAt)}`)
   }
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,

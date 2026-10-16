@@ -275,12 +275,12 @@ export function MapLayersPanel({
                   `Air quality unavailable: ${airError}.`
                 ) : (
                   <>
-                    Each station's worst-rated reading this hour, with the ratings the{' '}
+                    Each station's worst-rated value this hour, with the ratings the{' '}
                     <a href={AIR_QUALITY_DATASET} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
                       state's live feed
                       <NewTabNote />
                     </a>{' '}
-                    gives. Readings are hourly.
+                    gives. The feed updates hourly; most values are running averages over longer periods.
                   </>
                 )}
               </Text>

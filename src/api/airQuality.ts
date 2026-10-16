@@ -1,8 +1,8 @@
 import { decodeEntities } from '../lib/newsText'
 
 // The Department of Environment, Tourism, Science and Innovation's hourly air
-// quality readings (data.qld.gov.au "Air Quality Monitoring - Live data feed",
-// CC BY 4.0). The feed is XML and sends no CORS headers, so the app reads it
+// quality values, each a running average over its own period (data.qld.gov.au
+// "Air Quality Monitoring - Live data feed", CC BY 4.0). The feed is XML and sends no CORS headers, so the app reads it
 // through /air-quality. Each station lists its measurements with the
 // department's own index, rating (1 to 5) and rating name.
 
@@ -22,6 +22,24 @@ const UNITS: Record<string, string> = {
   'Particle PM2.5': 'µg/m³',
   'Particles TSP': 'µg/m³',
   Visibility: 'Mm⁻¹',
+}
+
+/**
+ * The period each feed value is averaged over, from the same API's
+ * `standard_units` (checked 17 October 2026). The feed's value is the running
+ * average the department rates against its standard, not the hour's own
+ * reading: West Mackay's PM2.5 of 8.4 at 11 pm on 16 October was the API's
+ * 24-hour running average, while the hour itself read 7.6.
+ */
+const AVERAGING: Record<string, string> = {
+  'Carbon monoxide': '8-hour average',
+  'Nitrogen dioxide': '1-hour average',
+  Ozone: '8-hour average',
+  'Sulfur dioxide': '1-hour average',
+  'Particle PM10': '24-hour average',
+  'Particle PM2.5': '24-hour average',
+  'Particles TSP': '24-hour average',
+  Visibility: '1-hour average',
 }
 
 /** The department's five ratings, by its numeric rating. */
@@ -47,7 +65,9 @@ export const AIR_TEXT: Record<AirRating, string> = {
 export interface AirMeasurement {
   name: string
   units: string | null
-  /** The reading, or null when the feed marks the sensor offline (-1111) or without data (-9999). */
+  /** The period the value is averaged over, such as "24-hour average", or null for a measurement the API does not list. */
+  averaging: string | null
+  /** The value, or null when the feed marks the sensor offline (-1111) or without data (-9999). */
   value: number | null
   /** Why the value is null: as the feed marks it. */
   gap: 'offline' | 'no data' | null
@@ -65,7 +85,10 @@ export interface AirStation {
   /** The department's page for the station. */
   link: string
   position: [number, number]
-  /** The hour the readings are for, as the feed dates it (Queensland time). */
+  /**
+   * The hour the feed dates its values to (Queensland time). Each value is an
+   * average over the period in its `averaging`, ending at this hour.
+   */
   measuredAt: number
   measurements: AirMeasurement[]
 }
@@ -98,6 +121,7 @@ function measurement(tag: string, raw: string): AirMeasurement | null {
   return {
     name,
     units: UNITS[name] ?? null,
+    averaging: AVERAGING[name] ?? null,
     value: gap ? null : value,
     gap,
     index: ok ? number(a.index) : null,

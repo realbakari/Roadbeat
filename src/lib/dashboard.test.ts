@@ -170,7 +170,7 @@ describe('worstStations', () => {
     link: '',
     position: [0, 0],
     measuredAt: 0,
-    measurements: ratings.map((r, i) => ({ name: `m${i}`, units: null, value: r ? 1 : null, gap: r ? null : 'offline', index: null, rating: r, ratingName: null })),
+    measurements: ratings.map((r, i) => ({ name: `m${i}`, units: null, averaging: null, value: r ? 1 : null, gap: r ? null : 'offline', index: null, rating: r, ratingName: null })),
   })
 
   it('lists stations rated Fair or worse, worst first, by their worst reading', () => {

@@ -29,14 +29,22 @@ describe('parseAirQuality', () => {
     expect(stations.map((s) => s.id)).toEqual(['ayr1', 'mac'])
     const mac = stations[1]
     expect(mac).toMatchObject({ name: 'West Mackay', region: 'Whitsunday', position: [149.1549, -21.1595], measuredAt: Date.parse('2026-10-16T10:00:00+10:00') })
-    expect(mac.measurements[1]).toEqual({ name: 'Particle PM10', units: 'µg/m³', value: 19.8, gap: null, index: 39.6, rating: 2, ratingName: 'Good' })
+    expect(mac.measurements[1]).toEqual({ name: 'Particle PM10', units: 'µg/m³', averaging: '24-hour average', value: 19.8, gap: null, index: 39.6, rating: 2, ratingName: 'Good' })
     expect(mac.measurements[0].units).toBe('Mm⁻¹')
+  })
+
+  it('labels each value with the period the department averages it over', () => {
+    expect(stations[1].measurements.map((m) => [m.name, m.averaging])).toEqual([
+      ['Visibility', '1-hour average'],
+      ['Particle PM10', '24-hour average'],
+      ['Particle PM2.5', '24-hour average'],
+    ])
   })
 
   it('keeps offline and missing readings as gaps, with no rating', () => {
     expect(stations[0].measurements).toEqual([
-      { name: 'Particle PM10', units: 'µg/m³', value: null, gap: 'offline', index: null, rating: null, ratingName: null },
-      { name: 'Ozone', units: 'ppm', value: null, gap: 'no data', index: null, rating: null, ratingName: null },
+      { name: 'Particle PM10', units: 'µg/m³', averaging: '24-hour average', value: null, gap: 'offline', index: null, rating: null, ratingName: null },
+      { name: 'Ozone', units: 'ppm', averaging: '8-hour average', value: null, gap: 'no data', index: null, rating: null, ratingName: null },
     ])
   })
 
