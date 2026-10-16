@@ -464,8 +464,8 @@ function JourneyCard({
   const [open, setOpen] = useState(false)
   const lives = j.legs.map((l) => live.get(l.trip))
   const reported = j.legs.map((l, i) => ({
-    dep: lives[i]?.stops.get(l.from.stopId)?.time ?? null,
-    arr: lives[i]?.stops.get(l.to.stopId)?.time ?? null,
+    dep: lives[i]?.stopTime(l.from)?.time ?? null,
+    arr: lives[i]?.stopTime(l.to)?.time ?? null,
   }))
   const cancelled = lives.some((l) => l?.cancelled)
   const first = j.legs[0]

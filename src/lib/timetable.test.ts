@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { trip } from '../test/fixtures'
+import { at, trip } from '../test/fixtures'
 import { StopIndex } from '../api/stops'
-import { scheduledArrivals, scheduledDepartures, timetableGrid } from './timetable'
+import { liveLookup, scheduledArrivals, scheduledDepartures, timetableGrid } from './timetable'
 
 const trips = [
   trip(1, 'R1', [['a1', 480], ['b1', 490], ['c1', 500]]),
@@ -47,5 +47,18 @@ describe('timetableGrid', () => {
     )
     expect(dir.rows[dir.reference].name).toBe('Roma Street station')
     expect(dir.trips.map((t) => t.number)).toEqual([1, 2])
+  })
+})
+
+describe('liveLookup', () => {
+  it("tells a loop's departure from its own stop apart from the loop's return there", () => {
+    const loop = trip(5, 'L1', [['a', 480], ['b', 500], ['a', 525]])
+    const stop = (stopId: string, sequence: number, minute: number) => ({ stopId, sequence, time: at(minute), arrivalOnly: false, delay: null, skipped: false })
+    const live = liveLookup(
+      { at: { SEQ: at(470) }, trips: [{ key: 'SEQ-5-x', region: 'SEQ', tripId: '5-x', route: 'L1', routeId: 'L1-1', relationship: 'scheduled', stops: [stop('a', 1, 481), stop('b', 2, 501), stop('a', 3, 526)] }] },
+      [],
+    ).get(loop)
+    expect(live?.stopTime(loop.stops[0])?.time).toBe(at(481))
+    expect(live?.stopTime(loop.stops[2])?.time).toBe(at(526))
   })
 })
