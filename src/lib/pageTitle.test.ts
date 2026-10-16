@@ -23,5 +23,6 @@ describe('pageTitle', () => {
   it('names places and news', () => {
     expect(pageTitle(parseHash('#place/locality/Toowong'), {}, base)).toBe('Toowong · Roadbeat')
     expect(pageTitle(parseHash('#news'), {}, base)).toBe('Queensland news · Roadbeat')
+    expect(pageTitle(parseHash('#place/air/cbd'), {}, base)).toBe('Air quality station · Roadbeat')
   })
 })

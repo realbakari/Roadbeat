@@ -34,6 +34,7 @@ import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_U
 import { EVENTS_URL, type CouncilEvent } from '../api/bccDashboard'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import { OUTAGE_COLOR } from '../lib/outages'
+import { AirHistory } from './AirHistory'
 import { ClampedText } from './ClampedText'
 import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS, worstRating, type AirStation } from '../api/airQuality'
 import { CENTRE_COLOR, centreKind } from '../lib/councilCentres'
@@ -398,6 +399,9 @@ function AirBody({ s, now }: { s: AirStation; now: number }) {
             </Fragment>
           ))}
         </dl>
+      </Section>
+      <Section title="History">
+        <AirHistory stationId={s.id} now={now} />
       </Section>
       <div className="grid gap-1">
         <ExternalLink href={s.link}>This station on the department's site</ExternalLink>
