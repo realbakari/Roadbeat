@@ -82,8 +82,9 @@ describe('directoryPages', () => {
 
   it('describes a station with its lines, nearby localities, JSON-LD and app link, in published terms only', () => {
     const p = page('/stations/central-station/')
-    expect(p.markdown).toContain("Central station is a train station on TransLink's South East Queensland network, served by T1 Caboolture")
+    expect(p.markdown).toContain("Central station is a train station on Translink's South East Queensland network, served by T1 Caboolture")
     expect(p.markdown).toContain('[T1 Caboolture](/lines/t1-caboolture/)')
+    expect(p.markdown).not.toContain('Brisbane City - Caboolture')
     expect(p.markdown).toContain('[Spring Hill](/places/spring-hill/)')
     expect(p.markdown).toContain('in the Roadbeat app, not on this page')
     expect(p.open).toEqual({ hash: 'transit/stop/SEQ/place_censta', label: 'Open Central station in Roadbeat' })
@@ -106,7 +107,7 @@ describe('directoryPages', () => {
   it('describes a place from the gazetteer and opens the locality view', () => {
     const p = page('/places/spring-hill/')
     expect(p.markdown).toContain('Spring Hill is a locality in the Brisbane City local government area')
-    expect(p.markdown).toContain('[Central station](/stations/central-station/), Train station')
+    expect(p.markdown).toContain('[Central station](/stations/central-station/), train station')
     expect(p.open).toEqual({ hash: 'place/locality/Spring%20Hill', label: 'Open Spring Hill in Roadbeat' })
     expect(p.jsonLd?.[0]).toMatchObject({ '@type': 'Place', containedInPlace: { name: 'Brisbane City' } })
     expect(page('/places/townsville-city/').markdown).toContain('No train station, tram stop or ferry terminal')

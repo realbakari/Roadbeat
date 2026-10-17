@@ -1,7 +1,7 @@
 // The static directory's model: every train station, tram stop and ferry
-// terminal, every TransLink line and regional route, and every gazetteer
+// terminal, every Translink line and regional route, and every gazetteer
 // locality, built from the published data already in the repo. Nothing here
-// is live or estimated: names, codes and coordinates are TransLink's and the
+// is live or estimated: names, codes and coordinates are Translink's and the
 // Department of Resources' own, and a line's stops come from the compact
 // timetable index (public/timetables/index.json), not the timetable files.
 // site/directoryPages.ts turns this model into pages.
@@ -63,7 +63,7 @@ export interface Line {
   codes: string[]
   /** The app view for it: #transit/line/train/T1%20Caboolture or #transit/route/TSV/V200. */
   hash: string
-  /** TransLink's own timetable page, when published. */
+  /** Translink's own timetable page, when published. */
   url: string | null
   /** Station slugs the line calls at, by name. */
   stations: string[]
@@ -115,7 +115,7 @@ export function distanceKm(a: LngLat, b: LngLat) {
   return 2 * 6371 * Math.asin(Math.sqrt(h))
 }
 
-/** Stops in TransLink's data that trams and trains use to turn around or relieve crews, not to carry passengers. */
+/** Stops in Translink's data that trams and trains use to turn around or relieve crews, not to carry passengers. */
 const OPERATIONAL = /\b(turnback|relief point)\b/i
 
 const MODE_RANK: VehicleMode[] = ['train', 'tram', 'ferry', 'bus']

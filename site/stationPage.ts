@@ -1,22 +1,22 @@
 // A page per train station, tram stop and ferry terminal: its lines,
-// platforms and nearby localities, as TransLink and the gazetteer publish them.
+// platforms and nearby localities, as Translink and the gazetteer publish them.
 import { regionName, stationKind, type Directory, type Station } from './directory.ts'
 import { DESCRIPTION_MAX, HOME, LIVE_NOTE, STATIONS, TITLE_MAX, areaName, coords, fit, join, km, lineTitle, linePath, placePath, stationPath, type StaticPage } from './pageKit.ts'
 
 export function stationPage(s: Station, d: Directory): StaticPage {
-  const lines = s.lines.map((slug) => d.lines.find((l) => l.slug === slug)!)
+  const lines = s.lines.map((slug) => d.lines.find((l) => l.slug === slug)!).sort((a, b) => lineTitle(a).localeCompare(lineTitle(b), 'en', { numeric: true }))
   const kind = stationKind(s.mode)
   const region = regionName(s.region)
   const lineNames = join(lines.map(lineTitle))
-  const platforms = s.platforms.length ? ` It has ${s.platforms.length === 1 ? 'one platform' : `${s.platforms.length} platforms`} in TransLink's stop data (${join(s.platforms)}).` : ''
+  const platforms = s.platforms.length ? ` It has ${s.platforms.length === 1 ? 'one platform' : `${s.platforms.length} platforms`} in Translink's stop data (${join(s.platforms)}).` : ''
   const md = [
     `# ${s.name}`,
     '',
-    `${s.name} is a ${kind} on TransLink's ${region} network, served by ${lineNames} in the published timetable.${platforms} TransLink publishes its position as ${coords(s.position)} (stop id ${s.id}).`,
+    `${s.name} is a ${kind} on Translink's ${region} network, served by ${lineNames} in the published timetable.${platforms} Translink publishes its position as ${coords(s.position)} (stop id ${s.id}).`,
     '',
     '## Lines and routes',
     '',
-    ...lines.map((l) => `- [${lineTitle(l)}](${linePath(l)})${l.mode === 'train' ? `: ${l.long}` : ''}`),
+    ...lines.map((l) => `- [${lineTitle(l)}](${linePath(l)})`),
     '',
     ...(s.places.length ? ['## Nearby localities', '', ...s.places.map((p) => `- [${p.name}](${placePath(p.slug)}), ${km(p.km)} from the ${kind}'s published point`), ''] : []),
     '## In the Roadbeat app',

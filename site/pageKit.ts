@@ -59,4 +59,4 @@ export function lineTitle(l: Line) {
   return l.long ? `${prefix} ${l.long}` : prefix
 }
 
-export const LIVE_NOTE = 'Live departures, TransLink real-time times and the full published timetable for any day are in the Roadbeat app, not on this page.'
+export const LIVE_NOTE = 'Live departures, Translink real-time times and the full published timetable for any day are in the Roadbeat app, not on this page.'
