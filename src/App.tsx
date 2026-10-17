@@ -42,6 +42,7 @@ import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
 import { isGibsLive, jmaProduct, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
 import { recentFrames } from './lib/frames'
+import { layerTimes } from './lib/layerInfo'
 import { SatelliteTimeline } from './components/map/SatelliteTimeline'
 import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
 import { useStoredChoice } from './hooks/useStoredChoice'
@@ -294,6 +295,10 @@ export default function App() {
   const suggestion = useMemo(
     () => (base === 'map' ? satelliteSuggestion(cyclones.data ?? [], qw.warnings ?? [], dismissed) : null),
     [base, cyclones.data, qw.warnings, dismissed],
+  )
+  const layerTimesNow = useMemo(
+    () => layerTimes({ gauges, airStations: air.stations, cyclones: cyclones.data, newsReadAt: news.snapshot?.fetchedAt ?? null, nswReadAt: nswFires.fetchedAt }),
+    [gauges, air.stations, cyclones.data, news.snapshot, nswFires.fetchedAt],
   )
   const firesNewest = useMemo(() => (fires?.length ? Math.max(...fires.map((f) => f.published ?? 0)) || null : null), [fires])
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
@@ -727,6 +732,7 @@ export default function App() {
               hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt, newest: hot.hotspots?.[0]?.observedAt ?? null, now }}
               base={base}
               onBaseChange={setBase}
+              times={{ latest: layerTimesNow, now }}
               aside={
                 suggestion && (
                   <SatelliteSuggestion

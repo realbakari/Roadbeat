@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { aestWithAge } from '../lib/aest'
+import type { DataTime, LayerInfo } from '../lib/layerInfo'
 
 /**
  * A time-based layer's publisher, how often it updates and its latest data
@@ -15,5 +17,14 @@ export function LayerFacts({ publisher, cadence, latest, latestLabel = 'Latest' 
       <dt className="text-kumo-subtle">{latestLabel}</dt>
       <dd className="tabular-nums">{latest ?? 'Checking…'}</dd>
     </dl>
+  )
+}
+
+/** One line under a layer's switch: who publishes it, how often it is read, and its latest time in AEST with its age when the feed gives one. */
+export function LayerInfoLine({ info, latest, now }: { info: LayerInfo; latest: DataTime | undefined; now: number }) {
+  return (
+    <p className="text-xs text-kumo-subtle">
+      From {info.publisher}. {info.cadence}.{latest && <span className="tabular-nums"> {latest.label} {aestWithAge(latest.at, now)}.</span>}
+    </p>
   )
 }

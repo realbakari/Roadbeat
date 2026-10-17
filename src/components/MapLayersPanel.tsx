@@ -4,7 +4,7 @@ import { FIRE_COLOR } from '../api/bushfires'
 import { WARNING_COLOR } from '../api/qldWarnings'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
-import { useRef, useState, type ComponentProps, type ReactNode } from 'react'
+import { createContext, useContext, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import {
   CRASH_DATA_END,
   CRASH_DATASET_URL,
@@ -37,6 +37,11 @@ import { CYCLONE_COLOR, type Cyclone } from '../api/jtwc'
 import { NSW_ALERT_COLOR } from '../api/nswFires'
 import { PAST_CYCLONE_COLOR, type PastCyclone } from '../api/pastCyclones'
 import { chipClass } from './chip'
+import { LayerInfoLine } from './LayerFacts'
+import { layerInfo, type DataTime } from '../lib/layerInfo'
+
+/** Each layer's latest data time, and the clock to age it by, for the rows' info lines. */
+const LayerTimes = createContext<{ latest: Partial<Record<keyof MapLayers, DataTime>>; now: number }>({ latest: {}, now: 0 })
 import { BaseSwitch } from './map/BaseSwitch'
 import type { MapBase } from '../lib/mapBase'
 
@@ -66,6 +71,8 @@ interface Props {
   /** The map's base, and the one-tap switch between the street map and a satellite image. */
   base: MapBase
   onBaseChange: (b: MapBase) => void
+  /** Each layer's latest data time (src/lib/layerInfo.ts) and the clock to age it by, for the info lines. */
+  times: { latest: Partial<Record<keyof MapLayers, DataTime>>; now: number }
   /** Shown under the Layers and base buttons while the panel is closed, such as a prompt to show the satellite view. */
   aside?: ReactNode
   /** Which satellite image is chosen, and the state of each source. */
@@ -118,6 +125,7 @@ function LayerRow({
   count,
   checked,
   onChange,
+  layer,
   children,
 }: {
   icon: ReactNode
@@ -125,8 +133,12 @@ function LayerRow({
   count?: number
   checked: boolean
   onChange: (on: boolean) => void
+  /** The layer's key, for its publisher, cadence and latest time (src/lib/layerInfo.ts). */
+  layer?: keyof MapLayers
   children?: ReactNode
 }) {
+  const times = useContext(LayerTimes)
+  const info = layer ? layerInfo(layer) : null
   return (
     <>
       <label className="flex cursor-pointer items-center gap-2 rounded-md py-1 text-sm">
@@ -137,7 +149,12 @@ function LayerRow({
         </span>
         <Switch size="sm" aria-label={label} checked={checked} onCheckedChange={onChange} />
       </label>
-      {checked && children && <div className="grid gap-1.5 pb-1.5 pl-7">{children}</div>}
+      {checked && (children || info) && (
+        <div className="grid gap-1.5 pb-1.5 pl-7">
+          {info && <LayerInfoLine info={info} latest={layer && times.latest[layer]} now={times.now} />}
+          {children}
+        </div>
+      )}
     </>
   )
 }
@@ -176,6 +193,7 @@ export function MapLayersPanel({
   base,
   onBaseChange,
   aside,
+  times,
   hazards,
   councilErrors,
   basemap,
@@ -211,8 +229,9 @@ export function MapLayersPanel({
 
   // Above the map's popups and camera thumbnails, which carry their own z-index.
   return (
+    <LayerTimes.Provider value={times}>
     <div
-      className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line"
+      className="absolute top-3 left-3 z-20 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line"
       onKeyDown={(e) => {
         if (e.key !== 'Escape') return
         e.preventDefault()
@@ -299,6 +318,7 @@ export function MapLayersPanel({
             icon={<Badge color={FIRE_COLOR['Watch and Act']} icon={<FlameIcon size={12} weight="fill" />} />}
             label="Bushfires"
             count={counts.fires}
+            layer="fires"
             checked={layers.fires}
             onChange={(v) => set('fires', v)}
           >
@@ -309,6 +329,7 @@ export function MapLayersPanel({
             icon={<Badge color={WARNING_COLOR['Watch and Act']} icon={<WarningIcon size={12} weight="fill" />} />}
             label="Storm, flood and cyclone warnings"
             count={counts.warnings}
+            layer="warnings"
             checked={layers.warnings}
             onChange={(v) => set('warnings', v)}
           >
@@ -318,6 +339,7 @@ export function MapLayersPanel({
             icon={<Badge color={HOTSPOT_COLOR} icon={<FireSimpleIcon size={12} weight="fill" />} />}
             label="Satellite hotspots"
             count={counts.hotspots}
+            layer="hotspots"
             checked={layers.hotspots}
             onChange={(v) => set('hotspots', v)}
           >
@@ -327,6 +349,7 @@ export function MapLayersPanel({
             icon={<Badge color={NSW_ALERT_COLOR.Advice} icon={<FlameIcon size={12} weight="fill" />} />}
             label="NSW fires near the border"
             count={hazards.nswFires.data?.length}
+            layer="nswFires"
             checked={layers.nswFires}
             onChange={(v) => set('nswFires', v)}
           >
@@ -336,6 +359,7 @@ export function MapLayersPanel({
             icon={<Badge color={CYCLONE_COLOR} icon={<HurricaneIcon size={12} weight="fill" />} />}
             label="Tropical cyclones (JTWC)"
             count={hazards.cyclones.data?.length}
+            layer="cyclones"
             checked={layers.cyclones}
             onChange={(v) => set('cyclones', v)}
           >
@@ -345,6 +369,7 @@ export function MapLayersPanel({
             icon={<Badge color={PAST_CYCLONE_COLOR} icon={<PathIcon size={12} weight="bold" />} />}
             label="Past cyclone tracks"
             count={hazards.pastCyclones.data?.length}
+            layer="pastCyclones"
             checked={layers.pastCyclones}
             onChange={(v) => set('pastCyclones', v)}
           >
@@ -354,6 +379,7 @@ export function MapLayersPanel({
             icon={<Badge color={LAYER_COLOR.news} icon={<NewspaperIcon size={12} weight="fill" />} />}
             label="News and official notices"
             count={counts.news}
+            layer="news"
             checked={layers.news}
             onChange={(v) => set('news', v)}
           >
@@ -375,6 +401,7 @@ export function MapLayersPanel({
             icon={<Badge color={AIR_COLOR[2]} icon={<WindIcon size={12} weight="fill" />} />}
             label="Air quality"
             count={counts.airQuality}
+            layer="airQuality"
             checked={layers.airQuality}
             onChange={(v) => set('airQuality', v)}
           >
@@ -407,6 +434,7 @@ export function MapLayersPanel({
             icon={<Badge color={OUTAGE_COLOR.energex} icon={<LightningIcon size={12} weight="fill" />} />}
             label="Outages and council notices"
             count={counts.outages}
+            layer="outages"
             checked={layers.outages}
             onChange={(v) => set('outages', v)}
           >
@@ -434,6 +462,7 @@ export function MapLayersPanel({
             icon={<Badge color={CENTRE_COLOR.shelter} icon={<HouseLineIcon size={12} weight="fill" />} />}
             label="Council centres"
             count={counts.councilCentres}
+            layer="councilCentres"
             checked={layers.councilCentres}
             onChange={(v) => set('councilCentres', v)}
           >
@@ -461,6 +490,7 @@ export function MapLayersPanel({
             icon={<Badge className="bg-sky-700" icon={<WavesIcon size={12} weight="fill" />} />}
             label="Stream and rain gauges"
             count={counts.gauges}
+            layer="gauges"
             checked={layers.gauges}
             onChange={(v) => set('gauges', v)}
           >
@@ -472,6 +502,7 @@ export function MapLayersPanel({
           <LayerRow
             icon={<Badge color={LAYER_COLOR.flood2022} icon={<DropHalfBottomIcon size={12} weight="fill" />} />}
             label="February 2022 flood extent"
+            layer="flood2022"
             checked={layers.flood2022}
             onChange={(v) => set('flood2022', v)}
           >
@@ -483,6 +514,7 @@ export function MapLayersPanel({
           <LayerRow
             icon={<Badge className="bg-sky-600" icon={<CloudRainIcon size={12} weight="fill" />} />}
             label="Rain radar"
+            layer="radar"
             checked={layers.radar}
             onChange={(v) => set('radar', v)}
           >
@@ -493,6 +525,7 @@ export function MapLayersPanel({
           <LayerRow
             icon={<Badge className="bg-red-700" icon={<ClockCounterClockwiseIcon size={12} weight="bold" />} />}
             label="Crash history"
+            layer="crashes"
             checked={layers.crashes}
             onChange={(v) => set('crashes', v)}
           >
@@ -507,6 +540,7 @@ export function MapLayersPanel({
               icon={<img src={iconUrl(t.icon)} alt="" className="size-5" />}
               label={t.label}
               count={counts[t.key]}
+              layer={t.key}
               checked={layers[t.key]}
               onChange={(v) => set(t.key, v)}
             />
@@ -515,6 +549,7 @@ export function MapLayersPanel({
             icon={<Badge color={LAYER_COLOR.clearance} className="ring ring-black/70" icon={<ArrowsVerticalIcon size={12} weight="bold" color="#111" />} />}
             label="Low clearances"
             count={counts.clearances}
+            layer="clearances"
             checked={layers.clearances}
             onChange={(v) => set('clearances', v)}
           >
@@ -542,6 +577,7 @@ export function MapLayersPanel({
             icon={<Badge color={LAYER_COLOR.clearwayOn} icon={<ProhibitIcon size={12} weight="bold" />} />}
             label="Clearways"
             count={counts.clearways}
+            layer="clearways"
             checked={layers.clearways}
             onChange={(v) => set('clearways', v)}
           >
@@ -574,6 +610,7 @@ export function MapLayersPanel({
             icon={<img src={iconUrl(signalIcon(1))} alt="" className="size-5" />}
             label="Signal traffic"
             count={counts.signals}
+            layer="signals"
             checked={layers.signals}
             onChange={(v) => set('signals', v)}
           >
@@ -596,6 +633,7 @@ export function MapLayersPanel({
           <LayerRow
             icon={<Badge color={VEHICLE_COLOR.bus} icon={<BusIcon size={12} weight="fill" />} />}
             label="Live vehicles, lines and stops"
+            layer="vehicles"
             checked={layers.vehicles}
             onChange={(v) => set('vehicles', v)}
           >
@@ -632,6 +670,7 @@ export function MapLayersPanel({
               icon={<img src={iconUrl(t.icon)} alt="" className="size-5" />}
               label={t.label}
               count={counts[t.key]}
+              layer={t.key}
               checked={layers[t.key]}
               onChange={(v) => set(t.key, v)}
             />
@@ -640,6 +679,7 @@ export function MapLayersPanel({
             icon={<img src={iconUrl('toilet-accessible')} alt="" className="size-5" />}
             label="Public toilets"
             count={counts.toilets}
+            layer="toilets"
             checked={layers.toilets}
             onChange={(v) => set('toilets', v)}
           >
@@ -662,6 +702,7 @@ export function MapLayersPanel({
             icon={<img src={iconUrl('accessible-parking')} alt="" className="size-5" />}
             label="Accessible parking"
             count={counts.accessibleParking}
+            layer="accessibleParking"
             checked={layers.accessibleParking}
             onChange={(v) => set('accessibleParking', v)}
           >
@@ -684,6 +725,7 @@ export function MapLayersPanel({
             icon={<img src={iconUrl('parking-meter')} alt="" className="size-5" />}
             label="Parking meters"
             count={counts.parkingMeters}
+            layer="parkingMeters"
             checked={layers.parkingMeters}
             onChange={(v) => set('parkingMeters', v)}
           >
@@ -706,6 +748,7 @@ export function MapLayersPanel({
             icon={<img src={iconUrl('bike-rack')} alt="" className="size-5" />}
             label="Bikeways and bike racks"
             count={counts.cycling}
+            layer="cycling"
             checked={layers.cycling}
             onChange={(v) => set('cycling', v)}
           >
@@ -744,6 +787,7 @@ export function MapLayersPanel({
             icon={<img src={iconUrl('council-event')} alt="" className="size-5" />}
             label="Council events"
             count={counts.councilEvents}
+            layer="councilEvents"
             checked={layers.councilEvents}
             onChange={(v) => set('councilEvents', v)}
           >
@@ -765,6 +809,7 @@ export function MapLayersPanel({
         </Group>
       </div>
     </div>
+    </LayerTimes.Provider>
   )
 }
 
