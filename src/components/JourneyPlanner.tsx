@@ -27,6 +27,7 @@ import { liveLookup, type LiveLookup } from '../lib/timetable'
 import { RouteBadges } from './TransitHome'
 import { REGION_NAMES } from '../lib/transitRegions'
 import { NewTabNote } from './NewTabNote'
+import { chipClass } from './chip'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
@@ -295,7 +296,7 @@ export function JourneyPlanner({
                     return next
                   })
                 }
-                className={`rounded-md px-2.5 py-0.5 text-xs capitalize ring ${on ? 'bg-kumo-tint text-kumo-default ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
+                className={chipClass(on, 'capitalize')}
               >
                 {m}
               </button>
@@ -306,7 +307,7 @@ export function JourneyPlanner({
             type="button"
             aria-pressed={directOnly}
             onClick={() => setDirectOnly((v) => !v)}
-            className={`rounded-md px-2.5 py-0.5 text-xs ring ${directOnly ? 'bg-kumo-tint text-kumo-default ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
+            className={chipClass(directOnly)}
           >
             Direct only
           </button>

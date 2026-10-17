@@ -12,6 +12,7 @@ import { nextHidden } from '../lib/scrollReveal'
 import { distanceKm, eventAnchor, type LngLat } from '../lib/geo'
 import { EventCard } from './EventCard'
 import { useAnnouncement } from '../hooks/useAnnouncement'
+import { chipClass } from './chip'
 
 interface Props {
   allEvents: TrafficEvent[]
@@ -185,11 +186,7 @@ export function EventList({
                     type="button"
                     aria-pressed={active}
                     onClick={() => toggleType(m.type)}
-                    className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${
-                      active
-                        ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand'
-                        : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-                    }`}
+                    className={chipClass(active)}
                   >
                     <span className="size-2 rounded-full" style={{ backgroundColor: m.color }} aria-hidden />
                     {m.label}
@@ -202,9 +199,7 @@ export function EventList({
                 type="button"
                 aria-pressed={filters.closuresOnly}
                 onClick={() => set('closuresOnly', !filters.closuresOnly)}
-                className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${
-                  filters.closuresOnly ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-                }`}
+                className={chipClass(filters.closuresOnly)}
               >
                 <ProhibitIcon size={14} weight="bold" className="text-kumo-danger" aria-hidden />
                 Closures only

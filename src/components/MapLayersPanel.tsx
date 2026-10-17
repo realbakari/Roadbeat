@@ -26,6 +26,7 @@ import type { Basemap, MapLayers } from './map/settings'
 import { NewTabNote } from './NewTabNote'
 import { HOTSPOT_COLOR } from '../api/hotspots'
 import { HotspotsNote, SatelliteImageNote } from './SatelliteLayerNotes'
+import { chipClass } from './chip'
 
 interface Props {
   basemap: Basemap
@@ -549,9 +550,7 @@ export function MapLayersPanel({
                     type="button"
                     aria-pressed={on}
                     onClick={() => onVehicleModesChange(on ? vehicleModes.filter((m) => m !== mode) : [...vehicleModes, mode])}
-                    className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ring ${
-                      on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
-                    }`}
+                    className={chipClass(on)}
                   >
                     <span className="size-2 rounded-full" style={{ background: VEHICLE_COLOR[mode], opacity: on ? 1 : 0.4 }} />
                     {label}
@@ -750,9 +749,7 @@ function CrashControls({ filter, onChange }: { filter: CrashFilter; onChange: (f
               type="button"
               aria-pressed={on}
               onClick={() => toggle(s)}
-              className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ring ${
-                on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
-              }`}
+              className={chipClass(on)}
             >
               <span className="size-2 rounded-full" style={{ background: SEVERITY_COLOR[s], opacity: on ? 1 : 0.4 }} />
               {SEVERITY_LABEL[s]}
