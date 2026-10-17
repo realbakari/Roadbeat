@@ -79,22 +79,35 @@ export function parseCentres(json: unknown): CentreListing[] {
   })
 }
 
-const Cameras = z.object({
-  features: z.array(
-    z.object({
-      properties: z.object({
-        id: z.number(),
-        description: z.string().nullable(),
-        direction: z.string().nullable().optional(),
-        locality: z.string().nullable().optional(),
-        image_url: z.string().nullable(),
-        typeName: z.string().nullable().optional(),
-        additional_detail: z.string().nullable().optional(),
+/**
+ * Councils with nothing to list answer an optional feed in their own ways:
+ * `{"type":null,"features":null}` (Weipa's cameras) or a bare `[]`
+ * (Cloncurry's notices). Both mean none, so read them as an empty list.
+ */
+const noneListed = (json: unknown) => (json == null || (Array.isArray(json) && json.length === 0) ? { features: [] } : json)
+const orNone = <T>(list: T[] | null) => list ?? []
+
+const Cameras = z.preprocess(
+  noneListed,
+  z.object({
+    features: z.array(
+      z.object({
+        properties: z.object({
+          id: z.number(),
+          description: z.string().nullable(),
+          direction: z.string().nullable().optional(),
+          locality: z.string().nullable().optional(),
+          image_url: z.string().nullable(),
+          typeName: z.string().nullable().optional(),
+          additional_detail: z.string().nullable().optional(),
+        }),
+        geometry: z.object({ type: z.literal('Point'), coordinates: z.tuple([z.number(), z.number()]) }).nullable(),
       }),
-      geometry: z.object({ type: z.literal('Point'), coordinates: z.tuple([z.number(), z.number()]) }).nullable(),
-    }),
-  ),
-})
+    )
+      .nullable()
+      .transform(orNone),
+  }),
+)
 
 /** A camera as a council lists it: its description, the council's type for it, and the address of its latest image. */
 export interface CameraListing {
@@ -123,22 +136,27 @@ export function parseCameras(json: unknown): CameraListing[] {
 const Iso = z.string().transform((s) => Date.parse(s))
 const Shape = z.object({ type: z.enum(['Point', 'LineString', 'Polygon']), coordinates: z.unknown() })
 
-const CouncilOutages = z.object({
-  features: z.array(
-    z.object({
-      properties: z.object({
-        id: z.number(),
-        outage_type: z.string().nullable(),
-        road_name: z.string().nullable(),
-        start_date: Iso.nullable(),
-        end_date: Iso.nullable(),
-        updated_on: Iso.nullable(),
-        responses: z.array(z.object({ key: z.string(), value: z.string().nullable() })).default([]),
+const CouncilOutages = z.preprocess(
+  noneListed,
+  z.object({
+    features: z.array(
+      z.object({
+        properties: z.object({
+          id: z.number(),
+          outage_type: z.string().nullable(),
+          road_name: z.string().nullable(),
+          start_date: Iso.nullable(),
+          end_date: Iso.nullable(),
+          updated_on: Iso.nullable(),
+          responses: z.array(z.object({ key: z.string(), value: z.string().nullable() })).default([]),
+        }),
+        geometry: Shape.nullable(),
       }),
-      geometry: Shape.nullable(),
-    }),
-  ),
-})
+    )
+      .nullable()
+      .transform(orNone),
+  }),
+)
 
 /**
  * A notice a council entered in its dashboard's outages widget: a water main
@@ -186,19 +204,22 @@ export function parseCouncilNotices(json: unknown): CouncilNotice[] {
 /** Energex writes restore times as ISO 8601 on some dashboards and as Microsoft JSON dates on others. */
 const RestoreTime = z.union([MsDate, Iso])
 
-const EnergexOutages = z.array(
-  z.object({
-    Outage: z.object({
-      event: z.string(),
-      cause: z.string().nullable(),
-      status: z.string().nullable(),
-      council: z.string().nullable(),
-      suburb: z.string().nullable(),
-      customersAffected: z.coerce.number().nullable(),
-      restoreTime: RestoreTime.nullable(),
-      streets: z.array(z.string()).default([]),
+const EnergexOutages = z.preprocess(
+  (json) => json ?? [],
+  z.array(
+    z.object({
+      Outage: z.object({
+        event: z.string(),
+        cause: z.string().nullable(),
+        status: z.string().nullable(),
+        council: z.string().nullable(),
+        suburb: z.string().nullable(),
+        customersAffected: z.coerce.number().nullable(),
+        restoreTime: RestoreTime.nullable(),
+        streets: z.array(z.string()).default([]),
+      }),
     }),
-  }),
+  ),
 )
 
 /** An Energex power outage, as the dashboards relay it. Energex names the suburb and streets but gives no point. */
