@@ -37,7 +37,8 @@ import { useLocality } from './hooks/useLocality'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { useAirQuality } from './hooks/useTrafficData'
-import { useHotspots, useSatelliteImagery } from './hooks/useSatellite'
+import { useHotspots } from './hooks/useSatellite'
+import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
 import { satelliteTiles } from './lib/satelliteImage'
 import { asCameras } from './lib/cameras'
@@ -232,7 +233,7 @@ export default function App() {
   const air = useAirQuality(layers.airQuality || sel.place?.kind === 'air')
   const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
   const imagery = useSatelliteImagery(layers.satellite, now)
-  const satelliteImage = useMemo(() => satelliteTiles(imagery.source, imagery.live.time, imagery.date), [imagery.source, imagery.live.time, imagery.date])
+  const satelliteImage = useMemo(() => satelliteTiles(imagery.source, { gibsTime: imagery.live.time, jmaFrame: imagery.jma.latest, date: imagery.date }), [imagery.source, imagery.live.time, imagery.jma.latest, imagery.date])
   const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
   const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
   const firesNewest = useMemo(() => (fires?.length ? Math.max(...fires.map((f) => f.published ?? 0)) || null : null), [fires])
@@ -661,7 +662,7 @@ export default function App() {
               warningState={{ count: qw.warnings?.length ?? null, notice: warningNotice, fetchedAt: qw.fetchedAt, now }}
               gaugeNotice={gaugeNotice}
               hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt, newest: hot.hotspots?.[0]?.observedAt ?? null, now }}
-              imagery={{ source: imagery.source, onSource: imagery.setSource, now, live: imagery.live, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
+              imagery={{ source: imagery.source, onSource: imagery.setSource, now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               councilErrors={council.errors}
             />
             {timelineOpen ? (

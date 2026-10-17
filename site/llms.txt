@@ -77,7 +77,8 @@ All are published under Creative Commons Attribution 4.0 unless noted.
 - Bureau of Meteorology: National Flood Gauge Network catchments (data.gov.au).
 - Department of Environment, Tourism, Science and Innovation: hourly air quality and each station's history (Air Quality API).
 - Geoscience Australia: Digital Earth Australia satellite hotspots and recent earthquakes.
-- NASA Global Imagery Browse Services: the daily NOAA-20 satellite image (no use restrictions), and the Japan Meteorological Agency's Himawari-9 image every 10 minutes (JMA Public Data License).
+- NASA Global Imagery Browse Services: the daily NOAA-20 satellite image (no use restrictions), the daily Terra morning image, and the Japan Meteorological Agency's Himawari-9 image every 10 minutes (JMA Public Data License).
+- Japan Meteorological Agency: Himawari-9 infrared and true-colour images from its weather map (Source: Japan Meteorological Agency website).
 - Queensland Police Service: media releases.
 - 58 Queensland councils' disaster dashboards: bulletins, evacuation centres, council cameras and notices, and the Energex power outages they relay (no licence published; shown as written, linked to each dashboard).
 - News outlets (ABC News, 7NEWS, Brisbane Times, Guardian Australia, SBS News): headline, link and first sentence only, under each publisher's terms.

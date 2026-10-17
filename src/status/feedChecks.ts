@@ -3,6 +3,7 @@ import { brisbaneDate } from '../api/airHistory'
 import { fetchHotspots } from '../api/hotspots'
 import { latestImageryDate } from '../api/satelliteImagery'
 import { latestHimawariTime } from '../api/himawari'
+import { fetchJmaFrames } from '../api/jmaHimawari'
 import { fetchQldWarnings } from '../api/qldWarnings'
 import { BUS_STOPS_API, parseBusStopAudit } from '../api/bccBusStops'
 import { fetchCorridors, fetchCouncilEvents, fetchPedestrianDay } from '../api/bccDashboard'
@@ -149,6 +150,11 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
     const time = await latestHimawariTime('infrared', Date.now(), signal)
     if (!time) throw new Error('No Himawari-9 infrared image listed in the last day')
     return { publisherTime: { at: Date.parse(time), label: 'Newest infrared image' } }
+  },
+  'jma-himawari': async (signal) => {
+    const newest = (await fetchJmaFrames(signal)).at(-1)
+    if (!newest) throw new Error('No Himawari-9 image listed')
+    return { publisherTime: { at: Date.parse(newest.time), label: 'Newest image' } }
   },
   crashes: (signal) => fetchCrashSummary(BRISBANE, signal).then(none),
   'camera-time': { skip: 'Asked only for a pinned camera’s image; nothing to ask without one' },

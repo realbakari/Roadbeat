@@ -19,22 +19,24 @@ function remove(map: maplibregl.Map) {
  * daily image), drawn over the base map and under its labels and Roadbeat's
  * layers. Null `image` removes it. It is re-added after every style load
  * (`ready`), since a new base map drops it. Above `maxzoom` MapLibre stretches
- * the source's last tiles rather than asking for ones it doesn't serve.
+ * the source's last tiles rather than asking for ones it doesn't serve, and
+ * below `minzoom` it draws none.
  */
 export function SatelliteImagery({ map, ready, image }: { map: maplibregl.Map | null; ready: number; image: SatelliteTiles | null }) {
   const tiles = image?.tiles
+  const minzoom = image?.minzoom
   const maxzoom = image?.maxzoom
   const attribution = image?.attribution
   useEffect(() => {
     if (!map || !ready) return
     remove(map)
     if (!tiles) return
-    map.addSource(SOURCE, { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom, attribution })
+    map.addSource(SOURCE, { type: 'raster', tiles: [tiles], tileSize: 256, minzoom, maxzoom, attribution })
     map.addLayer({ id: SOURCE, type: 'raster', source: SOURCE, paint: { 'raster-opacity': 0.9 } }, firstLabelLayer(map))
     return () => {
       // The style may already be gone when the map itself is being removed.
       if (map.getStyle()) remove(map)
     }
-  }, [map, ready, tiles, maxzoom, attribution])
+  }, [map, ready, tiles, minzoom, maxzoom, attribution])
   return null
 }

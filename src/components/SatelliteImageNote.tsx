@@ -1,32 +1,22 @@
 import { Radio, Text } from '@cloudflare/kumo'
 import { GIBS_ACKNOWLEDGEMENT, himawariLabel, JMA_COPYRIGHT } from '../api/himawari'
-import { GIBS_ABOUT } from '../api/satelliteImagery'
-import type { SatelliteSource } from '../hooks/useSatellite'
+import { JMA_CREDIT, type JmaFrame } from '../api/jmaHimawari'
+import { aestWithAge } from '../lib/aest'
+import { dailyPass, jmaProduct, SATELLITE_SOURCES, type SatelliteSource } from '../lib/satelliteImage'
+import { DailyImageNote, type DailyState } from './DailyImageNote'
 import { LayerFacts } from './LayerFacts'
 import { NewTabNote } from './NewTabNote'
 
-const day = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 const link = 'text-kumo-link underline decoration-1 underline-offset-2'
 
-const SOURCES: { value: SatelliteSource; label: string }[] = [
-  { value: 'infrared', label: 'Live infrared (Himawari-9)' },
-  { value: 'visible', label: 'Live visible, daytime only (Himawari-9)' },
-  { value: 'daily', label: 'Daily true colour (NOAA-20)' },
-]
-
-interface Props {
+interface Props extends DailyState {
   source: SatelliteSource
   onSource: (s: SatelliteSource) => void
   now: number
-  /** The newest Himawari-9 image time GIBS lists, while a live image is chosen. */
+  /** The newest Himawari-9 image time GIBS lists, while a GIBS live image is chosen. */
   live: { time: string | null; error: string | null; checking: boolean }
-  /** NASA's daily image: the day shown, the newest published, and the day picker. */
-  date: string | null
-  latest: string | null
-  checking: boolean
-  error: string | null
-  today: string
-  onPick: (date: string) => void
+  /** JMA's newest listed image, while a JMA image is chosen. */
+  jma: { latest: JmaFrame | null; error: string | null; checking: boolean }
 }
 
 /** The satellite image layer's one choice of image (only one is drawn at a time), with its publisher, cadence and latest time. */
@@ -34,13 +24,21 @@ export function SatelliteImageNote(p: Props) {
   return (
     <div className="grid gap-1.5">
       <Radio legend="Satellite image to show" value={p.source} onValueChange={(v: SatelliteSource) => p.onSource(v)}>
-        {SOURCES.map((s) => (
+        {SATELLITE_SOURCES.map((s) => (
           <Radio.Item key={s.value} value={s.value} label={s.label} />
         ))}
       </Radio>
-      {p.source === 'daily' ? <DailyNote {...p} /> : <LiveNote {...p} band={p.source} />}
+      <SourceNote {...p} />
     </div>
   )
+}
+
+function SourceNote(p: Props) {
+  const pass = dailyPass(p.source)
+  if (pass) return <DailyImageNote {...p} pass={pass} />
+  const product = jmaProduct(p.source)
+  if (product) return <JmaNote {...p} truecolour={product === 'truecolour'} />
+  return <LiveNote {...p} band={p.source === 'visible' ? 'visible' : 'infrared'} />
 }
 
 function LiveNote({ band, live, now }: Props & { band: 'infrared' | 'visible' }) {
@@ -80,39 +78,33 @@ function LiveNote({ band, live, now }: Props & { band: 'infrared' | 'visible' })
   )
 }
 
-function DailyNote({ date, latest, checking, error, today, onPick }: Props) {
-  const status = error
-    ? `NASA's imagery is unavailable: ${error}.`
-    : checking
-      ? "Checking which day's image NASA has published…"
-      : date
-        ? `Image for ${day.format(Date.parse(`${date}T00:00:00Z`))}${date === latest ? ', the newest NASA has published' : ''}.`
-        : "NASA hasn't published an image over Brisbane for the last four days."
+function JmaNote({ jma, now, truecolour }: Props & { truecolour: boolean }) {
+  const status = jma.error
+    ? `JMA's Himawari-9 imagery is unavailable${jma.latest ? ' to refresh' : ''}: ${jma.error}.`
+    : !jma.checking && !jma.latest
+      ? "JMA isn't listing any Himawari-9 images right now."
+      : null
   return (
     <>
       <LayerFacts
-        publisher="NASA GIBS, from the NOAA-20 satellite"
-        cadence="Once a day, from the early afternoon pass"
-        latest={latest ? day.format(Date.parse(`${latest}T00:00:00Z`)) : checking ? null : 'None in the last four days'}
-        latestLabel="Newest day"
+        publisher="Japan Meteorological Agency (Himawari-9)"
+        cadence="A new image every 10 minutes, listed a few minutes after it's taken"
+        latest={jma.latest ? `Himawari-9 ${truecolour ? 'true colour' : 'infrared'}, ${aestWithAge(Date.parse(jma.latest.time), now)}` : jma.checking ? null : 'None listed'}
+        latestLabel="Image"
       />
-      <Text size="xs" variant={error ? 'error' : 'secondary'}>
-        {status}
-      </Text>
-      <input
-        type="date"
-        aria-label="Day of the satellite image"
-        value={date ?? ''}
-        min="2018-01-01"
-        max={latest ?? today}
-        onChange={(e) => e.target.value && onPick(e.target.value)}
-        className="h-8 w-fit rounded-md bg-kumo-base px-2 text-sm text-kumo-default ring ring-kumo-line"
-      />
+      {status && (
+        <Text size="xs" variant={jma.error ? 'error' : 'secondary'}>
+          {status}
+        </Text>
+      )}
       <Text size="xs" variant="secondary">
-        One day's true-colour picture from the NOAA-20 satellite's early afternoon pass, not a live view. Cloud hides the ground, and strips the
-        satellite didn't cover that day are blank. Sharpest at regional zoom. From{' '}
-        <a href={GIBS_ABOUT} target="_blank" rel="noopener" className={link}>
-          NASA's Global Imagery Browse Services
+        {truecolour
+          ? "JMA's true-colour picture of reflected sunlight, so it is dark at night in Queensland. Switch to infrared after sunset."
+          : 'Infrared sees cloud day and night. Its shades show the temperature of cloud tops, not rain: for rain, use the rain radar.'}{' '}
+        The whole Earth disc, so it only goes to state-wide zoom and blurs closer in. The time shown is the image's own, as JMA lists it. These are
+        the images behind JMA's own weather map, which JMA can change without notice; NASA's live image is the fallback. {JMA_CREDIT}, under its{' '}
+        <a href={JMA_COPYRIGHT} target="_blank" rel="noopener" className={link}>
+          Public Data License
           <NewTabNote />
         </a>
         .

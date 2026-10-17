@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { dayBefore, gibsTiles, latestImageryDate } from './satelliteImagery'
+import { dailyLabel, dayBefore, gibsTiles, latestImageryDate } from './satelliteImagery'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -8,6 +8,21 @@ describe('gibsTiles', () => {
     expect(gibsTiles('2026-10-16')).toBe(
       'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_NOAA20_CorrectedReflectance_TrueColor/default/2026-10-16/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg',
     )
+  })
+})
+
+describe('Terra', () => {
+  it("builds Terra MODIS's address and labels it by date only", () => {
+    expect(gibsTiles('2026-10-17', 'terra')).toBe(
+      'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/2026-10-17/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg',
+    )
+    expect(dailyLabel('terra', '2026-10-17')).toBe('Terra MODIS true colour, morning pass, 17 Oct')
+  })
+
+  it("probes Terra's own layer for the newest day", async () => {
+    const f = vi.fn(async (url: string) => new Response(null, { status: url.includes('MODIS_Terra') && url.includes('/2026-10-17/') ? 200 : 404 }))
+    vi.stubGlobal('fetch', f)
+    expect(await latestImageryDate('2026-10-18', undefined, 'terra')).toBe('2026-10-17')
   })
 })
 
