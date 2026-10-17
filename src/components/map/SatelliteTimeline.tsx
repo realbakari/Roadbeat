@@ -50,7 +50,7 @@ export function SatelliteTimeline({ frames, current, onChange, now, source }: Pr
         className="max-md:size-11"
       />
       <Button size="sm" variant="ghost" shape="square" aria-label="Next frame" icon={<CaretRightIcon />} onClick={() => step(1)} className="max-md:size-11" />
-      <div className="grid min-w-0 px-1 whitespace-nowrap" aria-live="off">
+      <div className="grid min-w-0 px-1 md:whitespace-nowrap" aria-live="off">
         <Text size="xs" bold>
           <span className="tabular-nums">{aestWithAge(Date.parse(shown), now)}</span>
         </Text>

@@ -747,7 +747,7 @@ export default function App() {
               councilErrors={council.errors}
             />
             {base === 'satellite' && !timelineOpen && (
-              <div className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2 max-md:bottom-32">
+              <div className="pointer-events-none absolute inset-x-3 bottom-20 z-10 flex justify-center max-md:bottom-32 [&>*]:pointer-events-auto">
                 <SatelliteTimeline
                   frames={liveFrames}
                   current={shownFrame}
