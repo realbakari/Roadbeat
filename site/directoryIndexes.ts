@@ -1,6 +1,9 @@
 // The three directory index pages: /stations/, /lines/ and /places/.
-import { regionName, stationKind, type Directory } from './directory.ts'
+import { regionName, slugify, stationKind, type Directory } from './directory.ts'
 import { HOME, LINES, PLACES, STATIONS, capital, count, lineTitle, linePath, placePath, stationPath, type StaticPage } from './pageKit.ts'
+
+/** One line of in-page links to each group's heading, for long indexes. */
+const jumpList = (label: string, titles: string[]) => `${label}: ${titles.map((t) => `[${t}](#${slugify(t)})`).join(', ')}.`
 
 function grouped<T>(items: T[], key: (t: T) => string, order?: string[]): [string, T[]][] {
   const groups = new Map<string, T[]>()
@@ -27,13 +30,17 @@ export function stationsIndex(d: Directory): StaticPage {
 }
 
 export function linesIndex(d: Directory): StaticPage {
-  const regions = [...new Set(d.lines.map((l) => l.region))]
+  // South East Queensland first, then the regional networks by name.
+  const regions = [...new Set(d.lines.map((l) => l.region))].sort((a, b) => Number(b === 'SEQ') - Number(a === 'SEQ') || regionName(a).localeCompare(regionName(b)))
+  const groups = grouped(d.lines, (l) => regionName(l.region), regions.map(regionName))
   const md = [
     '# Translink lines and routes',
     '',
     `Every line and route in Translink's published timetables: ${d.lines.length.toLocaleString('en-AU')} across ${regions.length} networks, from South East Queensland's train lines to each regional town's bus routes.`,
     '',
-    ...grouped(d.lines, (l) => regionName(l.region), regions.map(regionName)).flatMap(([title, list]) => [`## ${title}`, '', ...list.map((l) => `- [${lineTitle(l)}](${linePath(l)})`), '']),
+    jumpList('Jump to a network', groups.map(([title]) => title)),
+    '',
+    ...groups.flatMap(([title, list]) => [`## ${title}`, '', ...list.map((l) => `- [${lineTitle(l)}](${linePath(l)})`), '']),
   ].join('\n')
   return {
     path: LINES.path,
@@ -49,12 +56,15 @@ const NO_COUNCIL = 'No council area'
 
 export function placesIndex(d: Directory): StaticPage {
   const councils = [...new Set(d.places.map((p) => p.council).filter(Boolean))].sort()
+  const groups = grouped(d.places, (p) => p.council || NO_COUNCIL, [...councils, NO_COUNCIL])
   const md = [
     '# Queensland places',
     '',
     `Every town, suburb and locality in the Queensland place names gazetteer, ${d.places.length.toLocaleString('en-AU')} in all, by local government area. Each page names the stations nearby and opens the live view of what official sources publish there.`,
     '',
-    ...grouped(d.places, (p) => p.council || NO_COUNCIL, [...councils, NO_COUNCIL]).flatMap(([title, list]) => [`## ${title}`, '', ...list.map((p) => `- [${p.name}](${placePath(p)})`), '']),
+    jumpList('Jump to a council area', groups.map(([title]) => title)),
+    '',
+    ...groups.flatMap(([title, list]) => [`## ${title}`, '', ...list.map((p) => `- [${p.name}](${placePath(p)})`), '']),
   ].join('\n')
   return {
     path: PLACES.path,

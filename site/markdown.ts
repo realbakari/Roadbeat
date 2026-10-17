@@ -1,5 +1,7 @@
 // The small Markdown subset the static pages are written in, and where each
 // page's Markdown twin lives.
+import { slugify } from './directory.ts'
+
 export const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 function inline(text: string) {
@@ -9,7 +11,11 @@ function inline(text: string) {
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
 }
 
-/** Converts the small Markdown subset the pages use: headings, paragraphs, bullet lists, links, bold and code. */
+/**
+ * Converts the small Markdown subset the pages use: headings, paragraphs,
+ * bullet lists, links, bold and code. Second- and third-level headings get
+ * an id from their text, so "## Brisbane City" can be linked as #brisbane-city.
+ */
 export function markdownToHtml(md: string) {
   const out: string[] = []
   let list = false
@@ -26,7 +32,10 @@ export function markdownToHtml(md: string) {
       out.push('</ul>')
       list = false
     }
-    if (heading) out.push(`<h${heading[1].length}>${inline(heading[2])}</h${heading[1].length}>`)
+    if (heading) {
+      const level = heading[1].length
+      out.push(`<h${level}${level > 1 ? ` id="${slugify(heading[2])}"` : ''}>${inline(heading[2])}</h${level}>`)
+    }
     else if (item) {
       if (!list) out.push('<ul>')
       list = true

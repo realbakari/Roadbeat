@@ -23,6 +23,12 @@ describe('markdownToHtml', () => {
   })
 })
 
+describe('markdownToHtml headings', () => {
+  it('gives second- and third-level headings an id to link to', () => {
+    expect(markdownToHtml('# Places\n\n## Brisbane City\n\n### No council area')).toBe('<h1>Places</h1>\n<h2 id="brisbane-city">Brisbane City</h2>\n<h3 id="no-council-area">No council area</h3>')
+  })
+})
+
 describe('markdownPathFor', () => {
   it('maps page paths to their Markdown files', () => {
     expect(markdownPathFor('/')).toBe('/index.md')
@@ -97,6 +103,10 @@ describe('directory pages', () => {
     expect(files['/stations/central-station/index.html'].body).toContain('<a href="/lines/t1-caboolture/">T1 Caboolture</a>')
     expect(files['/lines/t1-caboolture/index.html'].body).toContain('/stations/central-station/')
     expect(files['/places/goodna/index.html'].body).toContain('/stations/goodna-station/')
+    const central = files['/stations/central-station/index.html'].body
+    expect(central.indexOf('class="open"')).toBeLessThan(central.indexOf('<h2 id="lines-and-routes">'))
+    expect(central.lastIndexOf('class="open"')).toBeGreaterThan(central.indexOf('<h2 id="in-the-roadbeat-app">'))
+    expect(central).toContain("localStorage.getItem('qldt-mode')")
     expect(Object.keys(files).filter((k) => k.startsWith('/places/')).length).toBeGreaterThan(3000)
     expect(files['/places/birdsville/index.html'].body).toContain('<meta name="robots" content="noindex" />')
     expect(files['/sitemap.xml'].body).not.toContain('/places/birdsville/')

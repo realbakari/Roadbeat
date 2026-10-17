@@ -122,6 +122,8 @@ describe('directoryPages', () => {
     expect(p.jsonLd?.[0]).toMatchObject({ containedInPlace: { '@type': 'State' } })
     const index = page('/places/').markdown
     expect(index).not.toMatch(/^## $/m)
+    expect(index).toContain('Jump to a council area: [Brisbane City](#brisbane-city), [Townsville City](#townsville-city), [No council area](#no-council-area).')
+    expect(page('/lines/').markdown).toContain('Jump to a network: [South East Queensland](#south-east-queensland), [Townsville](#townsville).')
     expect(index.indexOf('## No council area')).toBeGreaterThan(index.indexOf('## Townsville City'))
   })
 
