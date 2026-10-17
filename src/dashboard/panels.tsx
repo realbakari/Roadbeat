@@ -56,7 +56,7 @@ const sourceLink = (href: string, children: ReactNode) => (
 
 /** The panels that come from the road, transit, fire and Brisbane City Council feeds. Others are in panelsMonitor.tsx. */
 export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNode>> = {
-  events: (d) => <Stat label="Road events in effect" value={d.loading ? '…' : d.current.length} href="/" />,
+  events: (d) => <Stat label="Road events happening now" value={d.loading ? '…' : d.current.length} href="/" />,
   closures: (d) => <Stat label="Road closures" value={d.loading ? '…' : d.current.filter(isClosure).length} tone={CLOSURE_TEXT} href="/" />,
   crashes: (d) => <Stat label="Crashes" value={d.loading ? '…' : d.current.filter((e) => e.properties.event_type === 'Crash').length} tone={CRASH_TEXT} href="/" />,
   'fire-count': (d) => {

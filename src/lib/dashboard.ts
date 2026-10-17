@@ -4,12 +4,12 @@ import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import { FIRE_LEVELS, type FireLevel, type FireWarning } from '../api/bushfires'
 import type { LiveVehicle, TripUpdate, TripUpdates, VehicleMode } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
-import { hasEnded, isClosure, isUpcoming } from './filters'
+import { isClosure, isCurrent } from './filters'
 import { siteLoad } from './signals'
 
 /** Events in effect now: published, not future roadworks or events, and not past their end date. */
 export function currentEvents(events: TrafficEvent[], now: number) {
-  return events.filter((e) => !isUpcoming(e, now) && !hasEnded(e, now))
+  return events.filter((e) => isCurrent(e, now))
 }
 
 export interface DistrictCount {

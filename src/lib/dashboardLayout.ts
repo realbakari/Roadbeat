@@ -13,7 +13,7 @@ export interface PanelMeta {
 }
 
 export const PANELS = [
-  { id: 'events', title: 'Road events in effect', kind: 'stat', source: 'QLDTraffic' },
+  { id: 'events', title: 'Road events happening now', kind: 'stat', source: 'QLDTraffic' },
   { id: 'closures', title: 'Road closures', kind: 'stat', source: 'QLDTraffic' },
   { id: 'crashes', title: 'Crashes', kind: 'stat', source: 'QLDTraffic' },
   { id: 'fire-count', title: 'Bushfire Emergency or Watch and Act', kind: 'stat', source: 'Queensland Fire Department' },

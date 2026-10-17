@@ -25,7 +25,7 @@ import { SUPPORT_URL } from '../lib/support'
 import { NewTabNote } from './NewTabNote'
 import type { TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
-import { DEFAULT_FILTERS, isClosure, isUpcoming, type EventFilters } from '../lib/filters'
+import { DEFAULT_FILTERS, isClosure, isCurrent, type EventFilters } from '../lib/filters'
 import { feedAnnouncement } from '../lib/feedAge'
 import { timeAgo } from '../lib/format'
 import { InstallApp } from './InstallApp'
@@ -91,7 +91,7 @@ export function AppHeader({
   visitors,
 }: Props) {
   const stats = useMemo(() => {
-    const current = events.filter((e) => !isUpcoming(e, now))
+    const current = events.filter((e) => isCurrent(e, now))
     return {
       current: current.length,
       closures: current.filter(isClosure).length,
@@ -103,7 +103,7 @@ export function AppHeader({
   const chips: (StatChipProps & { key: string })[] = [
     {
       key: 'all',
-      label: 'Current events',
+      label: 'Happening now',
       value: firstLoad ? null : stats.current,
       icon: TrafficConeIcon,
       active: panel === 'events' && !transitOpen && filters.when === 'now' && !filtersActive(filters),

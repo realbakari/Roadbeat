@@ -1,9 +1,9 @@
 import type { EventType, TrafficEvent } from '../api/types'
 import { eventAnchor, distanceKm, type LngLat } from './geo'
 import { priorityRank } from './eventMeta'
-import { hasEnded, isClosure, isUpcoming } from './eventStatus'
+import { hasEnded, isClosure, isCurrent } from './eventStatus'
 
-export { hasEnded, isClosure, isUpcoming } from './eventStatus'
+export { hasEnded, isClosure, isCurrent, isUpcoming } from './eventStatus'
 
 export type SortKey = 'priority' | 'recent' | 'nearest'
 export type When = 'now' | 'upcoming'
@@ -67,7 +67,7 @@ function haystack(e: TrafficEvent): string {
 /** Everything except the type filter, so type chips can show counts for the current view. */
 export function matchesBase(e: TrafficEvent, f: EventFilters, now = Date.now()): boolean {
   const p = e.properties
-  if (isUpcoming(e, now) !== (f.when === 'upcoming')) return false
+  if (isCurrent(e, now) !== (f.when === 'now')) return false
   if (f.district !== 'all' && !p.road_summary?.district?.split(' / ').includes(f.district)) return false
   if (f.priority !== 'all' && p.event_priority !== f.priority) return false
   if (f.closuresOnly && !isClosure(e)) return false
