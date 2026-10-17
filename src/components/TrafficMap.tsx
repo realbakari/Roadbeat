@@ -26,7 +26,7 @@ import {
   type LngLat,
 } from '../lib/geo'
 import { ensureClearanceIcons, ensureIcons } from '../lib/mapIcons'
-import { pickTap, pickTop } from '../lib/mapPick'
+import { pickTap, pickTop, tapBox, tapTolerance } from '../lib/mapPick'
 import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
 import { MapCard } from './map/MapCard'
@@ -283,12 +283,14 @@ export function TrafficMap(props: Props) {
     const read = (f: MapGeoJSONFeature | undefined) => f?.properties as Record<string, unknown> | undefined
 
     // One handler for the whole map, so a tap opens one feature rather than one per layer under it.
-    const under = (point: maplibregl.PointLike, extra: string[] = []) => {
+    const under = (point: maplibregl.PointLike | [maplibregl.PointLike, maplibregl.PointLike], extra: string[] = []) => {
       const layers = [...EVENT_LAYERS, ...CLICKABLE_PLACES, ...extra].filter((l) => m.getLayer(l))
       return layers.length ? m.queryRenderedFeatures(point, { layers }) : []
     }
+    // A tap that lands just off a small dot still opens it: the exact point first, then a box around it.
+    const coarse = window.matchMedia('(pointer: coarse)')
     m.on('click', (e) => {
-      const t = pickTap(under(e.point), EVENT_LAYERS)
+      const t = pickTap(under(e.point), EVENT_LAYERS) ?? pickTap(under(tapBox(e.point.x, e.point.y, tapTolerance(coarse.matches))), EVENT_LAYERS)
       if (!t) return
       popup.remove()
       if (t.kind === 'event') handlers.current.onSelectEvent(t.id)

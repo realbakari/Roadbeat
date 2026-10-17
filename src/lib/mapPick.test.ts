@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pickTap, pickTop, type TapFeature } from './mapPick'
+import { pickTap, pickTop, tapBox, tapTolerance, type TapFeature } from './mapPick'
 
 const EVENTS = ['event-markers', 'event-lines', 'event-areas']
 const f = (id: string, type: string, properties: Record<string, unknown>): TapFeature => ({ layer: { id, type }, properties })
@@ -28,5 +28,18 @@ describe('pickTop', () => {
   it('shows the hover label of the same feature a tap would open', () => {
     const under = [f('fire-areas', 'fill', { label: 'Watch and Act' }), f('gauges', 'circle', { label: 'Oxley Ck' })]
     expect(pickTop(under)?.properties?.label).toBe('Oxley Ck')
+  })
+})
+
+describe('tapBox', () => {
+  it('centres the query box on the tap', () => {
+    expect(tapBox(100, 50, 16)).toEqual([
+      [84, 34],
+      [116, 66],
+    ])
+  })
+
+  it('gives fingers a wider box than a mouse', () => {
+    expect(tapTolerance(true)).toBeGreaterThan(tapTolerance(false))
   })
 })
