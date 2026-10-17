@@ -43,6 +43,7 @@ import { useQldWarnings } from './hooks/useQldWarnings'
 import { satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
 import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
 import { useStoredChoice } from './hooks/useStoredChoice'
+import { searchWithView, viewFromSearch } from './lib/viewUrl'
 import { parseDismissed, satelliteSuggestion } from './lib/satelliteSuggestion'
 import { SatelliteSuggestion } from './components/map/SatelliteSuggestion'
 import { useCyclones, useFireBans, useNswFires, usePastCyclones } from './hooks/useHazardFeeds'
@@ -75,7 +76,9 @@ export default function App() {
   const [mapView, setMapView] = useState<{ center: LngLat; zoom: number } | null>(null)
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS)
   // A link to the News tab or a story (#news/…) opens with the news pins on.
-  const [layers, setLayers] = useState<MapLayers>(() => (location.hash.startsWith('#news') ? { ...DEFAULT_LAYERS, news: true } : DEFAULT_LAYERS))
+  // A shared link's base, image and layers (?base=satellite&layers=…) open that view; see src/lib/viewUrl.ts.
+  const [linked] = useState(() => viewFromSearch(location.search))
+  const [layers, setLayers] = useState<MapLayers>(() => linked.layers ?? (location.hash.startsWith('#news') ? { ...DEFAULT_LAYERS, news: true } : DEFAULT_LAYERS))
   // Base map style and 3D buildings are remembered in this browser.
   const [basemap, setBasemapState] = useState<Basemap>(() => {
     try {
@@ -94,8 +97,12 @@ export default function App() {
     }
   }
   // The base (street map or satellite) and the satellite image chosen are remembered too.
-  const [base, setBase] = useStoredChoice<MapBase>('qldt-base', parseBase, 'map')
-  const [satelliteSource, setSatelliteSource] = useStoredChoice<SatelliteSource>('qldt-satellite', parseSatelliteSource, 'infrared')
+  const [base, setBase] = useStoredChoice<MapBase>('qldt-base', parseBase, 'map', linked.base)
+  const [satelliteSource, setSatelliteSource] = useStoredChoice<SatelliteSource>('qldt-satellite', parseSatelliteSource, 'infrared', linked.image)
+  useEffect(() => {
+    const search = searchWithView(location.search, { base, image: satelliteSource, layers })
+    if (search !== location.search) history.replaceState(history.state, '', location.pathname + search + location.hash)
+  }, [base, satelliteSource, layers])
   const [crashFilter, setCrashFilter] = useState<CrashFilter>(DEFAULT_CRASH_FILTER)
   const [userLocation, setUserLocation] = useState<LngLat | null>(null)
   const [locating, setLocating] = useState(false)

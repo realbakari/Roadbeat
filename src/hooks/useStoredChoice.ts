@@ -2,11 +2,13 @@ import { useCallback, useState } from 'react'
 
 /**
  * A choice remembered in this browser under `key`, read once on load through
- * `parse` (anything it rejects gives `fallback`). Storage that is blocked or
- * full only means the choice lasts for this visit.
+ * `parse` (anything it rejects gives `fallback`). A `linked` value, such as
+ * one a shared link names, is used for this visit without being remembered.
+ * Storage that is blocked or full only means the choice lasts for this visit.
  */
-export function useStoredChoice<T extends string>(key: string, parse: (v: string | null) => T | null, fallback: T) {
+export function useStoredChoice<T extends string>(key: string, parse: (v: string | null) => T | null, fallback: T, linked?: T) {
   const [value, setValue] = useState<T>(() => {
+    if (linked) return linked
     try {
       return parse(localStorage.getItem(key)) ?? fallback
     } catch {
