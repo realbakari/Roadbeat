@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { AIR_COLOR, AIR_RATINGS, AIR_TEXT, type AirStation } from '../api/airQuality'
+import { AIR_RATINGS, AIR_TEXT, type AirStation } from '../api/airQuality'
 import { worstStations } from '../lib/dashboard'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { PanelId } from '../lib/dashboardLayout'
@@ -19,7 +19,7 @@ export interface MonitorData {
 export const MONITOR_VIEWS: Partial<Record<PanelId, (d: MonitorData) => ReactNode>> = {
   'air-count': (d) => {
     const n = d.airStations ? worstStations(d.airStations).length : null
-    return <Stat label="Air quality stations Fair or worse" value={n ?? '…'} tone={n ? AIR_COLOR[3] : undefined} />
+    return <Stat label="Air quality stations Fair or worse" value={n ?? '…'} tone={n ? AIR_TEXT[3] : undefined} />
   },
 
   outages: (d) => (

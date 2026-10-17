@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
-import { FIRE_COLOR, type FireLevel, type FireWarning } from '../api/bushfires'
+import { FIRE_TEXT, type FireLevel, type FireWarning } from '../api/bushfires'
 import { CORRIDORS_URL, EVENTS_URL, PEDESTRIANS_URL, type CouncilEvent } from '../api/bccDashboard'
 import type { CarParkSpaces } from '../api/bccParking'
 import type { TransitAlert } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
+import { CLOSURE_BAR, CLOSURE_TEXT, CRASH_BAR, CRASH_TEXT } from '../lib/dashboardTones'
 import { isClosure } from '../lib/filters'
 import { dsColor } from '../lib/signals'
 import type { BusySignal, DistrictCount, FootTraffic, Punctuality, RisingGauge, corridorReport } from '../lib/dashboard'
@@ -36,8 +37,6 @@ export interface DashboardData {
 
 const timeOnly = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const MODE_LABEL = { train: 'Trains', bus: 'Buses', tram: 'Trams', ferry: 'Ferries' } as const
-const CRASH = '#dc2626'
-const CLOSURE = '#7a1f3d'
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0)
 
@@ -58,15 +57,15 @@ const sourceLink = (href: string, children: ReactNode) => (
 /** The panels that come from the road, transit, fire and Brisbane City Council feeds. Others are in panelsMonitor.tsx. */
 export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNode>> = {
   events: (d) => <Stat label="Road events in effect" value={d.loading ? '…' : d.current.length} href="/" />,
-  closures: (d) => <Stat label="Road closures" value={d.loading ? '…' : d.current.filter(isClosure).length} tone={CLOSURE} href="/" />,
-  crashes: (d) => <Stat label="Crashes" value={d.loading ? '…' : d.current.filter((e) => e.properties.event_type === 'Crash').length} tone={CRASH} href="/" />,
+  closures: (d) => <Stat label="Road closures" value={d.loading ? '…' : d.current.filter(isClosure).length} tone={CLOSURE_TEXT} href="/" />,
+  crashes: (d) => <Stat label="Crashes" value={d.loading ? '…' : d.current.filter((e) => e.properties.event_type === 'Crash').length} tone={CRASH_TEXT} href="/" />,
   'fire-count': (d) => {
     const urgent = d.fires?.filter((f) => f.level === 'Emergency Warning' || f.level === 'Watch and Act').length
-    return <Stat label="Bushfire Emergency or Watch and Act" value={urgent ?? '…'} tone={urgent ? FIRE_COLOR['Watch and Act'] : undefined} />
+    return <Stat label="Bushfire Emergency or Watch and Act" value={urgent ?? '…'} tone={urgent ? FIRE_TEXT['Watch and Act'] : undefined} />
   },
   trains: (d) => {
     const trains = d.transit?.find((t) => t.mode === 'train')
-    return <Stat label="Tracked trains on time" value={trains?.tracked ? `${pct(trains.onTime, trains.tracked)}%` : '…'} tone="var(--color-kumo-success)" href="/#transit" />
+    return <Stat label="Tracked trains on time" value={trains?.tracked ? `${pct(trains.onTime, trains.tracked)}%` : '…'} tone="text-kumo-success" href="/#transit" />
   },
   parking: ({ parking }) => (
     <Stat
@@ -87,12 +86,12 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
                 label={x.district}
                 value={
                   <span className="flex gap-3">
-                    <span style={{ color: CLOSURE }}>{x.closures} closed</span>
-                    <span style={{ color: CRASH }}>{x.crashes} crash{x.crashes === 1 ? '' : 'es'}</span>
+                    <span className={CLOSURE_TEXT}>{x.closures} closed</span>
+                    <span className={CRASH_TEXT}>{x.crashes} crash{x.crashes === 1 ? '' : 'es'}</span>
                   </span>
                 }
                 bar={(x.closures + x.crashes) / max}
-                color={x.crashes > x.closures ? CRASH : CLOSURE}
+                barClass={x.crashes > x.closures ? CRASH_BAR : CLOSURE_BAR}
               />
             ))}
           </ul>
@@ -157,7 +156,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
           <div className="grid grid-cols-2 gap-2">
             {d.fireLevels.map(({ level, count }) => (
               <div key={level} className="grid gap-0.5 rounded-lg px-3 py-2 ring ring-kumo-line">
-                <span className="text-2xl font-semibold tabular-nums" style={{ color: count ? FIRE_COLOR[level] : undefined }}>
+                <span className={`text-2xl font-semibold tabular-nums ${count ? FIRE_TEXT[level] : ''}`}>
                   {count}
                 </span>
                 <span className="truncate text-xs text-kumo-subtle">{level}</span>

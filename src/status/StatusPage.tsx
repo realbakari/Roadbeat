@@ -54,8 +54,8 @@ export function StatusPage() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Feeds in the registry" value={FEEDS.length} />
-        <Stat label="Answered and parsed" value={counts.ok} tone={counts.ok ? 'var(--color-kumo-success)' : undefined} />
-        <Stat label="Failed" value={counts.failed} tone={counts.failed ? 'var(--color-kumo-danger)' : undefined} />
+        <Stat label="Answered and parsed" value={counts.ok} tone={counts.ok ? 'text-kumo-success' : undefined} />
+        <Stat label="Failed" value={counts.failed} tone={counts.failed ? 'text-kumo-danger' : undefined} />
         <Stat label="Not checked" value={counts.unchecked} />
       </div>
 
