@@ -2,7 +2,7 @@
 // every directory page.
 import { SUPPORT_URL } from '../src/lib/support.ts'
 import type { Crumb, StaticPage } from './directoryPages.ts'
-import { headTags, pageJsonLd } from './head.ts'
+import { fullTitle, headTags, pageJsonLd } from './head.ts'
 import { escape, markdownToHtml } from './markdown.ts'
 import { SITE, type SiteSettings } from './settings.ts'
 
@@ -38,7 +38,7 @@ export function pageHtml(page: Page, s: SiteSettings) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${escape(page.title)} · ${SITE.name}</title>
+    <title>${escape(fullTitle(page))}</title>
     ${headTags(page, s)}
     <script type="application/ld+json">${JSON.stringify(pageJsonLd(page, s))}</script>
     <style>${STYLE}</style>

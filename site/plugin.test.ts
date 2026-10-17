@@ -104,6 +104,28 @@ describe('directory pages', () => {
   })
 })
 
+describe('social and app tags', () => {
+  it('brands the shared title, describes the card image and gives the 404 page no address of its own', () => {
+    const files = siteFiles(withUrl, tiny)
+    const html = files['/stations/central-station/index.html'].body
+    expect(html).toContain('<title>Central station · Roadbeat</title>')
+    expect(html).toContain('<meta property="og:title" content="Central station · Roadbeat" />')
+    expect(html).toContain('<meta name="twitter:title" content="Central station · Roadbeat" />')
+    expect(html).toContain('<meta name="twitter:image:alt" content="The Roadbeat logo')
+    expect(html).toContain('<link rel="icon" href="/favicon.ico"')
+    expect(html).toContain('media="(prefers-color-scheme: dark)"')
+    expect(files['/404.html'].body).not.toContain('og:url')
+    expect(files['/404.html'].body).toContain('<meta property="og:title" content="Page not found · Roadbeat" />')
+  })
+
+  it('writes a manifest with the home description, a dark splash and install screenshots', () => {
+    const m = JSON.parse(siteFiles(withUrl, [])['/manifest.webmanifest'].body)
+    expect(m.description).toBe(loadPage('index', withUrl).description)
+    expect(m.background_color).toBe('#0f0f0f')
+    expect(m.screenshots.map((s: { form_factor: string }) => s.form_factor)).toEqual(['narrow', 'wide'])
+  })
+})
+
 describe('sitemapFiles', () => {
   it('writes one sitemap up to the limit and a sitemap index of parts above it', () => {
     const paths = ['/', '/a/', '/b/', '/c/']

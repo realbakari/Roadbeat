@@ -21,7 +21,7 @@ import { headTags, jsonLd } from './head.ts'
 import { manifest } from './manifest.ts'
 import { escape, markdownPathFor, markdownToHtml } from './markdown.ts'
 import { pageHtml } from './pageHtml.ts'
-import { SITE, type SiteSettings } from './settings.ts'
+import { NOT_FOUND_PATH, SITE, type SiteSettings } from './settings.ts'
 import { robots, sitemapFiles } from './sitemap.ts'
 
 const PAGES = ['index', 'about', 'privacy', 'contact', '404'] as const
@@ -38,7 +38,7 @@ const CRUMBS: Record<PageName, Crumb[]> = {
 }
 
 const read = (file: string) => readFileSync(new URL(file, import.meta.url), 'utf8')
-const pagePath = (name: PageName) => (name === 'index' ? '/' : name === '404' ? '/404.html' : `/${name}/`)
+const pagePath = (name: PageName) => (name === 'index' ? '/' : name === '404' ? NOT_FOUND_PATH : `/${name}/`)
 
 /** Resolves `<!--if:VAR-->…<!--endif-->` and `<!--ifnot:VAR-->…<!--endif-->` blocks, then `%VAR%` placeholders. */
 export function fillTemplate(text: string, vars: Record<string, string>) {
@@ -71,7 +71,7 @@ export function siteFiles(s: SiteSettings, directory: StaticPage[] = directoryPa
   const files: SiteFiles = {
     '/robots.txt': { body: robots(s), type: 'text/plain; charset=utf-8' },
     '/llms.txt': { body: fillTemplate(read('./llms.txt'), vars(s)), type: 'text/plain; charset=utf-8' },
-    '/manifest.webmanifest': { body: manifest(), type: 'application/manifest+json' },
+    '/manifest.webmanifest': { body: manifest(loadPage('index', s).description), type: 'application/manifest+json' },
     '/openapi.json': { body: JSON.stringify(openApi(s.siteUrl), null, 2), type: 'application/json' },
     '/.well-known/mcp.json': { body: JSON.stringify(mcpCard(s.siteUrl), null, 2), type: 'application/json' },
   }
