@@ -137,6 +137,8 @@ TransLink's T-code mapping files each Queensland Rail route under the line it en
 
 A road event gets a marker at every point QLDTraffic publishes for it (`eventMarkerPoints()` in `src/lib/eventAnchor.ts`), so a closure published at two flooded crossings shows both, and each opens the same event. Its lines and areas are drawn from the same geometry. An event with no points gets one marker at the middle of its first line.
 
+Opening an item moves the map to it once. Every poll brings a fresh copy of the open event or place, so the map fits or flies only when a different id opens (`useFitEvent()` in `src/components/map/useFitEvent.ts`, `useSelectedPlace()` in `src/hooks/useSelection.ts`), as it already did for fires, gauges, signals and vehicles. A pan or zoom the user makes while an item is open stays put.
+
 Track lines come from TransLink's GTFS shapes. Those shapes follow the middle of a rail corridor, about 2 m from each rail of a double track. Storing them more precisely does not bring them closer to the rails. When zoomed in, the map draws them as a translucent band wide enough to cover the corridor, so the base map's individual rails show through.
 
 Map animation follows the same rule as the data. The **Signal traffic** layer does not animate red, amber and green lights, because the council's feed has no phase timing. It rings intersections whose measured saturation changed in the newest batch, and it pulses a halo on intersections at 100% or more. `useSignalAnimation` in `src/components/map/` runs both, and turns them off when the viewer's system asks for reduced motion.

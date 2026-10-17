@@ -18,7 +18,6 @@ import type { Districts } from '../hooks/useTrafficData'
 import {
   cameraKey,
   cameraMarkers,
-  eventBounds,
   eventMarkers,
   eventShapes,
   placeMarkers,
@@ -42,6 +41,7 @@ import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
 import { useAnimatedVehicles } from './map/useAnimatedVehicles'
+import { useFitEvent } from './map/useFitEvent'
 import { prefersReducedMotion, useSignalAnimation } from './map/useSignalAnimation'
 
 // Vite pre-bundles maplibre-gl away from its sibling worker file, so point at it explicitly.
@@ -494,11 +494,7 @@ export function TrafficMap(props: Props) {
     }
   }, [map, ready, district, districts])
 
-  useEffect(() => {
-    if (!map || !selectedEvent) return
-    const b = eventBounds(selectedEvent)
-    if (b) map.fitBounds(b, { padding: 80, maxZoom: 14, duration: 800 })
-  }, [map, selectedEvent])
+  useFitEvent(map, selectedEvent)
 
   useEffect(() => {
     if (!map || !focus) return
