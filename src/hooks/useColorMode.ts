@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { applyThemeColor } from '../lib/themeColor'
 
 export type ColorMode = 'light' | 'dark'
 
@@ -6,6 +7,9 @@ export function useColorMode() {
   const [mode, setMode] = useState<ColorMode>(
     () => (document.documentElement.dataset.mode as ColorMode) ?? 'light',
   )
+
+  // The browser toolbar follows the app's chosen mode, not only the system's.
+  useEffect(() => applyThemeColor(mode), [mode])
 
   const toggle = useCallback(() => {
     setMode((m) => {
