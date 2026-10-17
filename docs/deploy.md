@@ -17,7 +17,7 @@ Three build settings feed the pages that search engines and AI agents read. Set 
 
 | Variable | Example | What it sets |
 | --- | --- | --- |
-| `SITE_URL` | `https://roadbeat.com.au` | Canonical links, Open Graph URLs, `sitemap.xml` and the absolute links in `llms.txt`. Without it, those are left out. |
+| `SITE_URL` | `https://www.roadbeat.app` | Canonical links, Open Graph URLs, `sitemap.xml` and the absolute links in `llms.txt`. Without it, those are left out. |
 | `CONTACT_EMAIL` | `hello@roadbeat.com.au` | The address on the Contact page and the contact point in the JSON-LD. Without it, the Contact page says an address is coming soon. |
 | `GA_MEASUREMENT_ID` | `G-XXXXXXXXXX` | Adds the Google Analytics tag to every page and the Analytics section to the Privacy page. Used only by `npm run build`, so local development isn't counted. Without it, there are no analytics and the Privacy page says so. |
 
@@ -59,7 +59,7 @@ Push alerts need four environment variables, a database and a scheduler. Until a
 1. Generate VAPID keys with `npx web-push generate-vapid-keys`. In Vercel, set `VAPID_PUBLIC_KEY` and `VITE_VAPID_PUBLIC_KEY` to the public key, and `VAPID_PRIVATE_KEY` to the private key as a sensitive variable. Optionally set `VAPID_SUBJECT` to a `mailto:` address; it defaults to the site address.
 2. Set `CRON_SECRET` to a long random string, as a sensitive variable.
 3. In Vercel, open **Storage**, create an **Upstash for Redis** database and connect it to the project. This sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
-4. In GitHub, add a repository secret named `CRON_SECRET` with the same value. `.github/workflows/push-check.yml` then calls `/api/push-check` every 5 minutes. If the site isn't at `https://roadbeat.vercel.app`, add a repository variable `SITE_URL`.
+4. In GitHub, add a repository secret named `CRON_SECRET` with the same value. `.github/workflows/push-check.yml` then calls `/api/push-check` every 5 minutes. The workflow reads the site's address from the repository variable `SITE_URL` (set to `https://www.roadbeat.app`).
 5. Redeploy, so the build picks up `VITE_VAPID_PUBLIC_KEY`.
 
 GitHub runs scheduled workflows on a best-effort basis, often a few minutes late, and pauses them in repositories with no activity for 60 days. Vercel's Hobby plan runs its own cron jobs only once a day, which is why GitHub does the scheduling.

@@ -9,7 +9,7 @@ import { hasEnded, isClosure, isUpcoming } from '../../src/lib/eventStatus.js'
 // the official data and returns plain JSON, so the REST endpoints and the MCP
 // tools give identical answers and can be tested with fixtures.
 
-export const SITE = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'https://roadbeat.vercel.app')
+export const SITE = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'https://www.roadbeat.app')
 
 /** A time as an ISO 8601 string in Brisbane time (UTC+10, no daylight saving). */
 export function brisbaneIso(ms: number | null | undefined): string | null {

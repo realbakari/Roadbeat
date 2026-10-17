@@ -16,7 +16,7 @@ jobs:
       - name: Check commutes and send alerts
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          SITE_URL: ${{ vars.SITE_URL || 'https://roadbeat.vercel.app' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://www.roadbeat.app' }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "CRON_SECRET is not set, so push alerts are off. Skipping."
