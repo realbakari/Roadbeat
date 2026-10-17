@@ -3,7 +3,7 @@ import type { Camera, DumpPoint, RestArea, TrafficEvent, TruckRestriction, WazeR
 import { CAMERA_COLOR, priorityRank, typeMeta } from './eventMeta'
 import { isClosure, isUpcoming } from './filters'
 import { eventIconId } from './mapIcons'
-import { eventAnchor, flatten, type LngLat } from './eventAnchor'
+import { eventMarkerPoints, flatten, type LngLat } from './eventAnchor'
 
 export { eventAnchor, eventBounds, type Bounds, type LngLat } from './eventAnchor'
 
@@ -37,23 +37,17 @@ export function eventShapes(events: TrafficEvent[]): GjCollection<Geometry, Even
 export function eventMarkers(events: TrafficEvent[]): GjCollection<Geometry, EventFeatureProps> {
   const features: GjFeature<Geometry, EventFeatureProps>[] = []
   for (const e of events) {
-    const anchor = eventAnchor(e)
-    if (!anchor) continue
     const p = e.properties
     const future = isUpcoming(e)
-    features.push({
-      type: 'Feature',
+    const properties = {
       id: p.id,
-      geometry: { type: 'Point', coordinates: anchor },
-      properties: {
-        id: p.id,
-        color: typeMeta(p.event_type).color,
-        rank: priorityRank(p.event_priority),
-        area: false,
-        future,
-        icon: eventIconId(p.event_type, isClosure(e) ? (p.impact?.impact_subtype ?? 'closed') : null, future),
-      },
-    })
+      color: typeMeta(p.event_type).color,
+      rank: priorityRank(p.event_priority),
+      area: false,
+      future,
+      icon: eventIconId(p.event_type, isClosure(e) ? (p.impact?.impact_subtype ?? 'closed') : null, future),
+    }
+    for (const at of eventMarkerPoints(e)) features.push({ type: 'Feature', id: p.id, geometry: { type: 'Point', coordinates: at }, properties })
   }
   // Draw higher-priority markers last so they sit on top.
   features.sort((a, b) => b.properties.rank - a.properties.rank)
