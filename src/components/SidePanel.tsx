@@ -1,4 +1,5 @@
 import { Loader, Tabs } from '@cloudflare/kumo'
+import { MyPlaces } from './MyPlaces'
 import type { Gauge } from '../api/bccGauges'
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
@@ -236,7 +237,12 @@ export function SidePanel(p: Props) {
           fireNotice={p.fireNotice}
           onOpenHref={p.onOpenHref}
           occupancies={p.occupancies}
-          top={<CommuteCard events={p.events} eventsAt={p.eventsAt} eventsError={p.eventsError} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />}
+          top={
+            <>
+              <CommuteCard events={p.events} eventsAt={p.eventsAt} eventsError={p.eventsError} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />
+              <MyPlaces events={p.events} now={now} onOpen={p.onOpenHref} />
+            </>
+          }
         />
       ) : p.panel === 'cameras' ? (
         <CameraGrid cameras={p.cameras} selectedKey={sel.camera} onOpen={p.onOpenCamera} />

@@ -1,5 +1,6 @@
 import { Banner, Button, Loader, Text } from '@cloudflare/kumo'
 import { ModelForecast } from './ModelForecast'
+import { SavePlace } from './MyPlaces'
 import { ArrowLeftIcon, CaretRightIcon, FlameIcon, HouseLineIcon, InfoIcon, LightningIcon, MapPinIcon, MapTrifoldIcon, PackageIcon, WindIcon, type Icon } from '@phosphor-icons/react'
 import { useMemo, type ReactNode } from 'react'
 import { AIR_COLOR, worstRating, AIR_RATINGS } from '../api/airQuality'
@@ -111,10 +112,11 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
           {locality.council} · Queensland place names gazetteer
         </Text>
         <Text size="sm">{countLine.length ? countLine.join(' · ') : 'Nothing published here right now in the loaded sources.'}</Text>
-        <div className="pt-1">
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           <Button size="sm" icon={<MapTrifoldIcon />} onClick={() => onShowOnMap(locality.position, layers)}>
             On the map
           </Button>
+          <SavePlace locality={locality} />
         </div>
       </header>
 
