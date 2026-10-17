@@ -1,7 +1,8 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, ArrowSquareOutIcon, FlameIcon } from '@phosphor-icons/react'
-import { FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
+import { FIRE_BADGE, FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
 import { timeAgo } from '../lib/format'
+import { readableTextOn } from '../lib/routeColor'
 import { parseWarningText } from '../lib/warningText'
 import { NewTabNote } from './NewTabNote'
 
@@ -31,7 +32,7 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid gap-5 px-4 pt-4 pb-8">
           <header className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg text-white" style={{ backgroundColor: color }} aria-hidden>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: color, color: readableTextOn(color) }} aria-hidden>
               <FlameIcon size={22} weight="fill" />
             </span>
             <div className="grid min-w-0 gap-1">
@@ -39,9 +40,9 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
                 {fire.area ?? fire.title}
               </Text>
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="rounded px-1.5 py-0.5 text-xs font-semibold text-white" style={{ backgroundColor: color }}>
+                <Badge variant="secondary" className={FIRE_BADGE[fire.level]}>
                   {warning ? fire.levelText : fireKindLabel(fire)}
-                </span>
+                </Badge>
                 {fire.status && <Badge variant="outline">{fire.status}</Badge>}
                 {warning && <Badge variant="outline">{fireKindLabel(fire)}</Badge>}
               </div>

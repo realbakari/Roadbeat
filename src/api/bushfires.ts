@@ -17,6 +17,26 @@ export const FIRE_COLOR: Record<FireLevel, string> = {
   Information: '#6b7280',
 }
 
+/**
+ * Text classes for a level's name, in the same hues as FIRE_COLOR but shaded
+ * to keep at least 4.5:1 on light and dark surfaces. The warning colours are
+ * for markers: orange and yellow are too light for text on white.
+ */
+export const FIRE_TEXT: Record<FireLevel, string> = {
+  'Emergency Warning': 'text-[#b91c1c] dark:text-[#f87171]',
+  'Watch and Act': 'text-[#b54300] dark:text-[#ff9a3d]',
+  Advice: 'text-[#854d0e] dark:text-[#facc15]',
+  Information: 'text-[#4b5563] dark:text-[#9ca3af]',
+}
+
+/** Badge classes for a level: the warning colour itself, with whichever of white or near-black text reads on it. */
+export const FIRE_BADGE: Record<FireLevel, string> = {
+  'Emergency Warning': 'bg-[#d6001c] text-[#ffffff]',
+  'Watch and Act': 'bg-[#ff7900] text-[#1d1d1d]',
+  Advice: 'bg-[#e8b400] text-[#1d1d1d]',
+  Information: 'bg-[#6b7280] text-[#ffffff]',
+}
+
 export async function fetchBushfires(signal?: AbortSignal): Promise<FireWarning[]> {
   const res = await fetch(URL_, { signal, cache: 'no-cache' })
   if (!res.ok) throw new Error(`Queensland Fire Department feed responded with ${res.status}`)
