@@ -7,10 +7,12 @@ import { FireList } from './FireList'
 import { CouncilWorksList } from './CouncilWorksList'
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import { EVENT_TYPES, PRIORITIES } from '../lib/eventMeta'
-import { matchesBase, type EventFilters, type SortKey, type When } from '../lib/filters'
+import { filtersKey, matchesBase, type EventFilters, type SortKey, type When } from '../lib/filters'
 import { nextHidden } from '../lib/scrollReveal'
 import { distanceKm, eventAnchor, type LngLat } from '../lib/geo'
 import { EventCard } from './EventCard'
+import { useAnnouncement } from '../hooks/useAnnouncement'
+import { chipClass } from './chip'
 
 interface Props {
   allEvents: TrafficEvent[]
@@ -118,6 +120,7 @@ export function EventList({
     onFiltersChange({ ...filters, query: '', types: new Set(), district: 'all', priority: 'all', closuresOnly: false })
 
   const moreActive = (filters.district !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0)
+  const announcement = useAnnouncement(filtersKey(filters), events.length ? `${events.length} ${events.length === 1 ? 'event' : 'events'}` : 'No matching events')
 
   const sortItems: Record<SortKey, string> = { priority: 'Priority', recent: 'Recently updated', nearest: 'Nearest to me' }
 
@@ -163,7 +166,7 @@ export function EventList({
               </InputGroup>
               <Button
                 variant="secondary"
-                className="shrink-0 md:hidden"
+                className="shrink-0"
                 icon={<FunnelSimpleIcon />}
                 aria-expanded={moreOpen}
                 aria-controls="event-more-filters"
@@ -183,11 +186,7 @@ export function EventList({
                     type="button"
                     aria-pressed={active}
                     onClick={() => toggleType(m.type)}
-                    className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${
-                      active
-                        ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand'
-                        : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-                    }`}
+                    className={chipClass(active)}
                   >
                     <span className="size-2 rounded-full" style={{ backgroundColor: m.color }} aria-hidden />
                     {m.label}
@@ -200,16 +199,14 @@ export function EventList({
                 type="button"
                 aria-pressed={filters.closuresOnly}
                 onClick={() => set('closuresOnly', !filters.closuresOnly)}
-                className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${
-                  filters.closuresOnly ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-                }`}
+                className={chipClass(filters.closuresOnly)}
               >
                 <ProhibitIcon size={14} weight="bold" className="text-kumo-danger" aria-hidden />
                 Closures only
               </button>
             </div>
 
-            <div id="event-more-filters" className={`${moreOpen ? 'grid' : 'hidden'} grid-cols-2 gap-2 md:grid`}>
+            <div id="event-more-filters" className={`${moreOpen ? 'grid' : 'hidden'} grid-cols-2 gap-2`}>
               <Select
                 aria-label="District"
                 size="sm"
@@ -236,6 +233,9 @@ export function EventList({
           <Text variant="secondary" size="sm">
             <span className="whitespace-nowrap">
               <span className="tabular-nums">{events.length}</span> {events.length === 1 ? 'event' : 'events'}
+            </span>
+            <span role="status" className="sr-only">
+              {announcement}
             </span>
           </Text>
           {hideControls && activeLabels.length > 0 && (

@@ -26,7 +26,7 @@ export function CameraThumb({
       type="button"
       onClick={() => onOpen(cameraKey(camera))}
       aria-pressed={selected}
-      className={`group grid gap-1.5 rounded-lg p-1 text-left hover:bg-kumo-tint focus-visible:bg-kumo-tint focus-visible:outline-none ${
+      className={`group grid gap-1.5 rounded-lg p-1 text-left hover:bg-kumo-tint focus-visible:bg-kumo-tint focus-visible:ring-2 focus-visible:ring-kumo-brand focus-visible:ring-offset-2 focus-visible:ring-offset-kumo-base focus-visible:outline-none ${
         selected ? 'bg-kumo-tint ring-2 ring-kumo-brand' : ''
       }`}
     >

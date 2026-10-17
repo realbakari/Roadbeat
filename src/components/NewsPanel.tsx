@@ -5,6 +5,7 @@ import type { NewsSnapshot } from '../api/newsTypes'
 import { timeAgo } from '../lib/format'
 import { filterStories, storyRegions, DEFAULT_STORY_FILTER, type NewsStory, type StoryFilter } from '../lib/newsStories'
 import { StoryRow } from './NewsStoryRow'
+import { chipClass } from './chip'
 
 interface Props {
   snapshot: NewsSnapshot | null
@@ -53,9 +54,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
               type="button"
               aria-pressed={filter.kind === k.value}
               onClick={() => set('kind', k.value)}
-              className={`inline-flex h-7 items-center rounded-md px-2.5 text-sm ring ${
-                filter.kind === k.value ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-              }`}
+              className={chipClass(filter.kind === k.value)}
             >
               {k.label}
             </button>
@@ -64,9 +63,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
             type="button"
             aria-pressed={filter.live}
             onClick={() => set('live', !filter.live)}
-            className={`inline-flex h-7 items-center rounded-md px-2.5 text-sm ring ${
-              filter.live ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-            }`}
+            className={chipClass(filter.live)}
           >
             Live blogs
           </button>

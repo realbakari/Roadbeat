@@ -39,7 +39,7 @@ export function StatusPage() {
         </a>
         <h1 className="text-lg text-kumo-subtle">Feed status and provenance</h1>
         <span className="ml-auto flex flex-wrap items-center gap-3 text-sm text-kumo-subtle">
-          <span aria-live="polite" className="whitespace-nowrap">{checking ? 'Checking…' : lastRound ? `Checked ${timeAgo(lastRound, now)}` : 'Starting…'}</span>
+          <span className="whitespace-nowrap">{checking ? 'Checking…' : lastRound ? `Checked ${timeAgo(lastRound, now)}` : 'Starting…'}</span>
           <span className="whitespace-nowrap text-base font-medium text-kumo-strong tabular-nums">{clock.format(now)}</span>
           <Button variant="secondary" size="sm" icon={<ArrowsClockwiseIcon />} loading={checking} onClick={() => void check()}>
             Check now
@@ -54,8 +54,8 @@ export function StatusPage() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Feeds in the registry" value={FEEDS.length} />
-        <Stat label="Answered and parsed" value={counts.ok} tone={counts.ok ? 'var(--color-kumo-success)' : undefined} />
-        <Stat label="Failed" value={counts.failed} tone={counts.failed ? 'var(--color-kumo-danger)' : undefined} />
+        <Stat label="Answered and parsed" value={counts.ok} tone={counts.ok ? 'text-kumo-success' : undefined} />
+        <Stat label="Failed" value={counts.failed} tone={counts.failed ? 'text-kumo-danger' : undefined} />
         <Stat label="Not checked" value={counts.unchecked} />
       </div>
 

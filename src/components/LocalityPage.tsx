@@ -16,7 +16,7 @@ import { StoryRow } from './NewsStoryRow'
 
 /** The map layer that shows each source a locality page lists, as the Layers panel names it. */
 const LAYER: Record<LocalitySource, { key: keyof MapLayers; label: string }> = {
-  fires: { key: 'fires', label: 'Bushfire warnings' },
+  fires: { key: 'fires', label: 'Bushfires' },
   airStations: { key: 'airQuality', label: 'Air quality' },
   centres: { key: 'councilCentres', label: 'Council centres' },
   outages: { key: 'outages', label: 'Outages and council notices' },

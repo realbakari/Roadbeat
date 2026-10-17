@@ -30,3 +30,16 @@ export function pickTop<T extends TapFeature>(features: T[]): T | null {
   }
   return best?.f ?? null
 }
+
+/** How far from a tap, in pixels, a small marker still counts as tapped: a fingertip is far less precise than a mouse. */
+export function tapTolerance(coarsePointer: boolean): number {
+  return coarsePointer ? 16 : 6
+}
+
+/** The square of `radius` pixels around a tap point, as MapLibre's [[x0, y0], [x1, y1]] query box. */
+export function tapBox(x: number, y: number, radius: number): [[number, number], [number, number]] {
+  return [
+    [x - radius, y - radius],
+    [x + radius, y + radius],
+  ]
+}

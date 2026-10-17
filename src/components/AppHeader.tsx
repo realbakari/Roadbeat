@@ -25,7 +25,8 @@ import { SUPPORT_URL } from '../lib/support'
 import { NewTabNote } from './NewTabNote'
 import type { TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
-import { DEFAULT_FILTERS, isClosure, isUpcoming, type EventFilters } from '../lib/filters'
+import { DEFAULT_FILTERS, isClosure, isCurrent, type EventFilters } from '../lib/filters'
+import { feedAnnouncement } from '../lib/feedAge'
 import { timeAgo } from '../lib/format'
 import { InstallApp } from './InstallApp'
 import { NotificationCenter } from './NotificationCenter'
@@ -90,7 +91,7 @@ export function AppHeader({
   visitors,
 }: Props) {
   const stats = useMemo(() => {
-    const current = events.filter((e) => !isUpcoming(e, now))
+    const current = events.filter((e) => isCurrent(e, now))
     return {
       current: current.length,
       closures: current.filter(isClosure).length,
@@ -102,7 +103,7 @@ export function AppHeader({
   const chips: (StatChipProps & { key: string })[] = [
     {
       key: 'all',
-      label: 'Current events',
+      label: 'Happening now',
       value: firstLoad ? null : stats.current,
       icon: TrafficConeIcon,
       active: panel === 'events' && !transitOpen && filters.when === 'now' && !filtersActive(filters),
@@ -188,7 +189,6 @@ export function AppHeader({
         />
         <span
           className="mx-1 flex items-center gap-1.5 text-sm whitespace-nowrap text-kumo-subtle"
-          aria-live="polite"
           title={fetchedAt ? `Road events updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
         >
           {/* A feed error swaps the dot for a warning shape, so it never rests on colour alone. */}
@@ -197,8 +197,12 @@ export function AppHeader({
           ) : (
             <span className="size-2 shrink-0 rounded-full bg-kumo-success" aria-hidden />
           )}
-          {/* Screen readers hear the status at every width; sighted users see it from lg up. */}
+          {/* Screen readers can read the status at every width; sighted users see it from lg up. */}
           <span className="sr-only lg:not-sr-only">{feedStatus(error, fetchedAt, now)}</span>
+        </span>
+        {/* Announced only when the feed goes down or comes back, not as the minutes tick by. */}
+        <span role="status" className="sr-only">
+          {feedAnnouncement(error, fetchedAt)}
         </span>
         <Tooltip
           content="Refresh now"
@@ -272,7 +276,7 @@ export function AppHeader({
   )
 }
 
-/** The header's feed status, in words, so a delay is announced and not only coloured. */
+/** The header's feed status, in words, so a delay is shown and not only coloured. */
 function feedStatus(error: string | null, fetchedAt: number | null, now: number) {
   if (!fetchedAt) return error ? 'Road events delayed' : 'Connecting…'
   return `${error ? 'Delayed, updated' : 'Updated'} ${timeAgo(fetchedAt, now)}`

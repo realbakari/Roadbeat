@@ -6,6 +6,7 @@ import { useColorMode } from '../hooks/useColorMode'
 import { useAirQuality, useBushfires, useCarParkSpaces, useGauges, useLiveVehicles, useNews, useNow, useSignals, useTrafficData, useTransitAlerts, useTripUpdates } from '../hooks/useTrafficData'
 import { busiestSignals, closuresAndCrashesByDistrict, currentEvents, fastestRising, firesByLevel, corridorReport, footTraffic, latestEvents, punctuality, upcomingEvents } from '../lib/dashboard'
 import { initialLayout, LAYOUT_KEY, layoutQuery, panelsOf, type PanelId } from '../lib/dashboardLayout'
+import { feedAnnouncement } from '../lib/feedAge'
 import { timeAgo } from '../lib/format'
 import { groupStories, headlineStories } from '../lib/newsStories'
 import { CustomiseDialog } from './CustomiseDialog'
@@ -99,7 +100,7 @@ export function Dashboard() {
   }, [layout])
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:overflow-hidden xl:p-6">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:p-6 tv:overflow-hidden">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <a href="/" className="flex items-center gap-2" title="Open the full app">
           <img src="/favicon.svg" alt="" className="size-8" />
@@ -107,7 +108,10 @@ export function Dashboard() {
         </a>
         <h1 className="text-lg text-kumo-subtle">Queensland network dashboard</h1>
         <span className="ml-auto flex items-center gap-3 text-sm text-kumo-subtle">
-          <span className="flex items-center gap-1.5" aria-live="polite">
+          <span role="status" className="sr-only">
+            {feedAnnouncement(error, fetchedAt)}
+          </span>
+          <span className="flex items-center gap-1.5">
             <span className={`size-2 rounded-full ${error ? 'bg-kumo-danger' : 'bg-kumo-success'}`} aria-hidden />
             {error ? 'Road events delayed' : fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
           </span>
@@ -141,8 +145,8 @@ export function Dashboard() {
       {showNews && <WhatsHappening stories={headlines} now={now} />}
 
       {tiles.length > 0 && (
-        // On a TV-sized screen the panels share the space left on the page; below that they take their natural height and the page scrolls.
-        <div className={`grid gap-4 md:grid-cols-2 xl:min-h-0 xl:flex-1 xl:grid-cols-4 ${tiles.length > 4 ? 'xl:grid-rows-2' : 'xl:grid-rows-1'}`}>
+        // On a screen wide and tall enough (tv:), the panels share the space left on the page; below that they take their natural height and the page scrolls.
+        <div className={`grid gap-4 md:grid-cols-2 xl:grid-cols-4 tv:min-h-0 tv:flex-1 ${tiles.length > 4 ? 'tv:grid-rows-2' : 'tv:grid-rows-1'}`}>
           {tiles.map((id) => (
             <PanelSlot key={id}>{render(id)}</PanelSlot>
           ))}

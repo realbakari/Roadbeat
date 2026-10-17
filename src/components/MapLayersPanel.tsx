@@ -1,9 +1,9 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
 import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon } from '@phosphor-icons/react'
-import { FIRE_COLOR } from '../api/bushfires'
+import { FIRE_COLOR, FIRE_LEVEL_LABEL } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
-import { useState, type ComponentProps, type ReactNode } from 'react'
+import { useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import {
   CRASH_DATA_END,
   CRASH_DATASET_URL,
@@ -26,6 +26,7 @@ import type { Basemap, MapLayers } from './map/settings'
 import { NewTabNote } from './NewTabNote'
 import { HOTSPOT_COLOR } from '../api/hotspots'
 import { HotspotsNote, SatelliteImageNote } from './SatelliteLayerNotes'
+import { chipClass } from './chip'
 
 interface Props {
   basemap: Basemap
@@ -154,13 +155,24 @@ export function MapLayersPanel({
   basemap,
   onBasemapChange,
 }: Props) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpenState] = useState(false)
+  // The button and the panel are separate trees, so focus moves to whichever one replaces the other.
+  const toggled = useRef(false)
+  const setOpen = (v: boolean) => {
+    toggled.current = true
+    setOpenState(v)
+  }
+  const takeFocus = (el: HTMLButtonElement | null) => {
+    if (!el || !toggled.current) return
+    toggled.current = false
+    el.focus()
+  }
   const set = (key: keyof MapLayers, v: boolean) => onChange({ ...layers, [key]: v })
 
   if (!open) {
     return (
       <div className="absolute top-3 left-3 z-10">
-        <Button size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
+        <Button ref={takeFocus} size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
           Layers
         </Button>
       </div>
@@ -169,12 +181,19 @@ export function MapLayersPanel({
 
   // Above the map's popups and camera thumbnails, which carry their own z-index.
   return (
-    <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line">
+    <div
+      className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line"
+      onKeyDown={(e) => {
+        if (e.key !== 'Escape') return
+        e.preventDefault()
+        setOpen(false)
+      }}
+    >
       <div className="flex items-center justify-between border-b border-kumo-line py-1.5 pr-1.5 pl-3">
         <Text bold size="sm">
           Map layers
         </Text>
-        <Button size="xs" variant="ghost" shape="square" aria-label="Hide layers" icon={<XIcon />} onClick={() => setOpen(false)} />
+        <Button ref={takeFocus} size="sm" variant="ghost" shape="square" aria-label="Hide layers" icon={<XIcon />} onClick={() => setOpen(false)} className="max-md:size-11" />
       </div>
       <div className="grid gap-3 overflow-y-auto px-3 py-3">
         <div className="grid gap-1.5">
@@ -235,7 +254,7 @@ export function MapLayersPanel({
         <Group title="Hazards and weather">
           <LayerRow
             icon={<Badge color={FIRE_COLOR['Watch and Act']} icon={<FlameIcon size={12} weight="fill" />} />}
-            label="Bushfire warnings"
+            label="Bushfires"
             count={counts.fires}
             checked={layers.fires}
             onChange={(v) => set('fires', v)}
@@ -245,7 +264,7 @@ export function MapLayersPanel({
                 {(['Emergency Warning', 'Watch and Act', 'Advice', 'Information'] as const).map((l) => (
                   <span key={l} className="inline-flex items-center gap-1">
                     <span className="size-2 rounded-full" style={{ background: FIRE_COLOR[l] }} />
-                    {l === 'Information' ? 'Fire reported' : l}
+                    {FIRE_LEVEL_LABEL[l]}
                   </span>
                 ))}
               </div>
@@ -531,9 +550,7 @@ export function MapLayersPanel({
                     type="button"
                     aria-pressed={on}
                     onClick={() => onVehicleModesChange(on ? vehicleModes.filter((m) => m !== mode) : [...vehicleModes, mode])}
-                    className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ring ${
-                      on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
-                    }`}
+                    className={chipClass(on)}
                   >
                     <span className="size-2 rounded-full" style={{ background: VEHICLE_COLOR[mode], opacity: on ? 1 : 0.4 }} />
                     {label}
@@ -732,9 +749,7 @@ function CrashControls({ filter, onChange }: { filter: CrashFilter; onChange: (f
               type="button"
               aria-pressed={on}
               onClick={() => toggle(s)}
-              className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ring ${
-                on ? 'bg-kumo-base text-kumo-default ring-kumo-line' : 'text-kumo-subtle ring-transparent line-through'
-              }`}
+              className={chipClass(on)}
             >
               <span className="size-2 rounded-full" style={{ background: SEVERITY_COLOR[s], opacity: on ? 1 : 0.4 }} />
               {SEVERITY_LABEL[s]}

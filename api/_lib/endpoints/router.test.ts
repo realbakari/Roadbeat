@@ -16,6 +16,11 @@ describe('api/[endpoint].ts router', () => {
     expect(res.status).toBe(400)
   })
 
+  it('validates the share page query before reading any feed', async () => {
+    expect((await GET(req('/api/share'))).status).toBe(400)
+    expect((await GET(req('/api/share?event=abc'))).status).toBe(400)
+  })
+
   it('answers 404 for an unknown endpoint', async () => {
     const res = await GET(req('/api/nope'))
     expect(res.status).toBe(404)

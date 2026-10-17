@@ -34,6 +34,14 @@ export function hasEnded(e: TrafficEvent, now = Date.now()): boolean {
   return !!end && brisbaneDay.format(new Date(end)) < brisbaneDay.format(now)
 }
 
+/**
+ * In effect now, as the official site counts it: neither upcoming nor past its
+ * end. The app's list, header, dashboard and API all count with this.
+ */
+export function isCurrent(e: TrafficEvent, now = Date.now()): boolean {
+  return !isUpcoming(e, now) && !hasEnded(e, now)
+}
+
 /** "Starts" for a start time still to come, else "Started": upcoming roadworks haven't begun. */
 export function startLabel(start: string | null | undefined, now = Date.now()): 'Starts' | 'Started' {
   const t = start ? Date.parse(start) : NaN

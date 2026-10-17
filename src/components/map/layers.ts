@@ -524,10 +524,10 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     source: 'hotspots',
     layout: { visibility: 'none', 'circle-sort-key': ['get', 'rank'] as never },
     paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2.5, 10, 4, 14, 6] as never,
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 4, 10, 5, 14, 7] as never,
       'circle-color': color,
       'circle-stroke-color': '#ffffff',
-      'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 1] as never,
+      'circle-stroke-width': 1,
       'circle-opacity': 0.9,
     },
   })

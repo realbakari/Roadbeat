@@ -15,17 +15,17 @@ export function Tile({
   return (
     <section className={`flex min-h-0 min-w-0 flex-col gap-3 rounded-xl bg-kumo-base px-5 py-4 ring ring-kumo-line ${className}`}>
       <h2 className="text-base font-semibold text-kumo-strong">{title}</h2>
-      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       {source && <p className="text-xs text-kumo-subtle">{source}</p>}
     </section>
   )
 }
 
 /** A headline number with its label. */
-export function Stat({ label, value, tone, href }: { label: string; value: ReactNode; tone?: string; href?: string }) {
+export function Stat({ label, value, tone = '', href }: { label: string; value: ReactNode; /** Text colour classes for the number. */ tone?: string; href?: string }) {
   const body = (
     <>
-      <span className="text-3xl font-semibold tabular-nums xl:text-4xl" style={tone ? { color: tone } : undefined}>
+      <span className={`text-3xl font-semibold tabular-nums xl:text-4xl ${tone}`}>
         {value}
       </span>
       <span className="text-sm text-kumo-subtle">{label}</span>
@@ -48,6 +48,7 @@ export function Row({
   value,
   bar,
   color,
+  barClass = '',
   href,
 }: {
   label: ReactNode
@@ -56,6 +57,8 @@ export function Row({
   /** 0–1 share of the row's width to fill. */
   bar?: number
   color?: string
+  /** Colour classes for the bar, in place of color. */
+  barClass?: string
   href?: string
 }) {
   const body = (
@@ -69,7 +72,7 @@ export function Row({
       </span>
       {bar != null && (
         <span className="h-1.5 overflow-hidden rounded-full bg-kumo-tint">
-          <span className="block h-full rounded-full" style={{ width: `${Math.min(1, bar) * 100}%`, backgroundColor: color ?? 'var(--color-kumo-brand)' }} />
+          <span className={`block h-full rounded-full ${barClass}`} style={{ width: `${Math.min(1, bar) * 100}%`, backgroundColor: barClass ? undefined : (color ?? 'var(--color-kumo-brand)') }} />
         </span>
       )}
     </>

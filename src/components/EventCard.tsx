@@ -59,13 +59,14 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
   // stretches over the card, so the whole card stays one click target while
   // screen readers can jump from event to event by heading.
   return (
-    <div className="relative flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-kumo-tint has-[:focus-visible]:bg-kumo-tint">
+    <div className="relative flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-kumo-tint has-[:focus-visible]:bg-kumo-tint has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-kumo-brand has-[:focus-visible]:ring-inset">
       <TypeIcon type={p.event_type} />
       <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5">
         <div className="grid min-w-0 gap-0.5">
           <div className="flex min-w-0 items-start justify-between gap-2">
-            <Text as={headingAs} bold truncate>
-              <button type="button" onClick={() => onSelect(p.id)} className="block w-full truncate text-left after:absolute after:inset-0 focus-visible:outline-none">
+            {/* Two lines, not one: multi-road titles put the cross street last. */}
+            <Text as={headingAs} bold>
+              <button type="button" onClick={() => onSelect(p.id)} className="line-clamp-2 w-full text-left break-words after:absolute after:inset-0 focus-visible:outline-none">
                 {eventTitle(event)}
               </button>
             </Text>

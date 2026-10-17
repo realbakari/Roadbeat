@@ -556,7 +556,11 @@ function StopStats({
           <span
             className={`flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap tabular-nums ${t.tone ? TONE[t.tone] : 'text-kumo-strong'}`}
           >
-            {t.live && <span className="size-2 shrink-0 animate-pulse rounded-full bg-kumo-success" aria-label="Real-time" />}
+            {t.live && (
+              <span className="size-2 shrink-0 rounded-full bg-kumo-success motion-safe:animate-pulse">
+                <span className="sr-only">Real-time</span>
+              </span>
+            )}
             {t.value}
           </span>
           <span className="text-xs whitespace-nowrap text-kumo-subtle group-hover:text-kumo-default group-hover:underline">{t.label}</span>

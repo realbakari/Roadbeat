@@ -1,8 +1,9 @@
 import { Text } from '@cloudflare/kumo'
 import { CaretDownIcon, CaretUpIcon, FlameIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
+import { FIRE_COLOR, FIRE_TEXT, fireKindLabel, type FireWarning } from '../api/bushfires'
 import { timeAgo } from '../lib/format'
+import { readableTextOn } from '../lib/routeColor'
 
 /**
  * Queensland Fire Department warnings and fires, collapsed to one line above the
@@ -32,7 +33,7 @@ export function FireList({ fires, now, onOpen }: { fires: FireWarning[]; now: nu
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-start gap-2 bg-kumo-recessed px-3 py-2 text-left hover:bg-kumo-tint"
       >
-        <span className="flex h-lh items-center" style={{ color: FIRE_COLOR[top.level] }}>
+        <span className={`flex h-lh items-center ${FIRE_TEXT[top.level]}`}>
           <FlameIcon size={16} weight="fill" />
         </span>
         <span className="grid min-w-0 flex-1 gap-0.5">
@@ -51,24 +52,24 @@ export function FireList({ fires, now, onOpen }: { fires: FireWarning[]; now: nu
             // As in EventCard: the name is a heading holding the button, stretched over the row.
             <li key={f.id} className="relative flex w-full items-start gap-2.5 px-3 py-2 text-left hover:bg-kumo-tint has-[:focus-visible]:bg-kumo-tint has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-kumo-brand has-[:focus-visible]:ring-inset">
                 <span
-                  className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-white"
-                  style={{ backgroundColor: FIRE_COLOR[f.level] }}
+                  className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: FIRE_COLOR[f.level], color: readableTextOn(FIRE_COLOR[f.level]) }}
                   aria-hidden
                 >
                   <FlameIcon size={11} weight="fill" />
                 </span>
                 <div className="grid min-w-0 flex-1 gap-0.5">
-                  <Text as="h3" size="sm" truncate>
+                  <Text as="h3" size="sm">
                     <button
                       type="button"
                       onClick={() => onOpen(`fire/${encodeURIComponent(f.id)}`)}
-                      className="block w-full truncate text-left after:absolute after:inset-0 focus-visible:outline-none"
+                      className="line-clamp-2 w-full text-left break-words after:absolute after:inset-0 focus-visible:outline-none"
                     >
                       {f.area ?? f.title}
                     </button>
                   </Text>
                   <span className="flex flex-wrap gap-x-2 text-xs text-kumo-subtle">
-                    <span className="font-medium" style={{ color: f.level === 'Information' ? undefined : FIRE_COLOR[f.level] }}>
+                    <span className={f.level === 'Information' ? 'font-medium' : `font-medium ${FIRE_TEXT[f.level]}`}>
                       {f.level === 'Information' ? fireKindLabel(f) : f.levelText}
                     </span>
                     {f.location && <span className="truncate">{f.location}</span>}

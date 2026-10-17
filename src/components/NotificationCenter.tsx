@@ -121,7 +121,11 @@ export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, 
                           <Text size="sm" bold={!n.read}>
                             {n.title}
                           </Text>
-                          {!n.read && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-kumo-brand" aria-label="Unread" />}
+                          {!n.read && (
+                            <span className="mt-1.5 size-2 shrink-0 rounded-full bg-kumo-brand">
+                              <span className="sr-only">Unread</span>
+                            </span>
+                          )}
                         </span>
                         {n.body && (
                           <span className="line-clamp-2 text-xs text-kumo-subtle">{n.body}</span>

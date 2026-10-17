@@ -114,7 +114,7 @@ export default defineConfig(({ mode, command }) => {
   // Analytics only in built sites, so local development doesn't count as visits.
   const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/[endpoint].ts'), devApi('/api/history', '/api/[endpoint].ts'), devApi('/api/visits', '/api/[endpoint].ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
+    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/[endpoint].ts'), devApi('/api/history', '/api/[endpoint].ts'), devApi('/api/share', '/api/[endpoint].ts'), devApi('/api/visits', '/api/[endpoint].ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }

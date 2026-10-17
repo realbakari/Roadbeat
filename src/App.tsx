@@ -31,7 +31,7 @@ import { eventTitle } from './lib/eventText'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { mapCardFor } from './lib/mapCard'
 import { isUnplaced } from './lib/outages'
-import { usePanelLayout } from './hooks/usePanelLayout'
+import { usePanelLayout, VIEW_IDS } from './hooks/usePanelLayout'
 import { useEventHistory, useTimeline } from './hooks/useTimeline'
 import { useLocality } from './hooks/useLocality'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
@@ -412,7 +412,7 @@ export default function App() {
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col bg-kumo-canvas">
-        <SkipLinks />
+        <SkipLinks revealList={revealList} revealMap={revealMap} />
         <AppHeader
           mode={mode}
           onToggleMode={toggle}
@@ -461,7 +461,10 @@ export default function App() {
 
         <div className="flex min-h-0 flex-1">
           <aside
-            className={`${mobileView === 'list' ? 'flex' : 'hidden'} w-full shrink-0 flex-col border-r border-kumo-line bg-kumo-base ${
+            id={VIEW_IDS.list}
+            tabIndex={-1}
+            aria-label="List"
+            className={`${mobileView === 'list' ? 'flex' : 'hidden'} w-full outline-none shrink-0 flex-col border-r border-kumo-line bg-kumo-base ${
               panelMode === 'closed' ? 'md:hidden' : panelMode === 'expanded' ? 'md:flex md:flex-1' : 'md:flex md:w-[420px]'
             }`}
           >
@@ -552,7 +555,10 @@ export default function App() {
           </aside>
 
           <main
-            className={`${mobileView === 'map' ? 'block' : 'hidden'} relative min-w-0 flex-1 ${panelMode === 'expanded' ? 'md:hidden' : 'md:block'}`}
+            id={VIEW_IDS.map}
+            tabIndex={-1}
+            aria-label="Map"
+            className={`${mobileView === 'map' ? 'block' : 'hidden'} relative outline-none min-w-0 flex-1 ${panelMode === 'expanded' ? 'md:hidden' : 'md:block'}`}
           >
             {/* Edge tab, as in Google Maps: hide the panel for a full map, or bring it back. */}
             <button
@@ -671,8 +677,11 @@ export default function App() {
               </Button>
             )}
             {vehicleFilter && layers.vehicles && (
-              <div className={`absolute ${timelineOpen ? 'bottom-36' : 'bottom-10'} left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line`}>
-                <span className="whitespace-nowrap">
+              // On phones it sits a row above the Replay button, which shares its line at bottom-10.
+              <div
+                className={`absolute ${timelineOpen ? 'bottom-36' : 'bottom-10 max-md:bottom-20'} left-1/2 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line`}
+              >
+                <span className="min-w-0 truncate">
                   Showing <span className="font-medium">{vehicleFilter.title}</span> · {mapVehicles.length} live
                 </span>
                 <Button size="xs" variant="ghost" onClick={() => setVehicleFilter(null)}>

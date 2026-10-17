@@ -1,18 +1,22 @@
+import { flushSync } from 'react-dom'
+
 /**
  * Keyboard shortcuts past the header and the long list, shown only while
  * focused (the first Tab press reveals the first one). They move focus rather
  * than changing the URL hash, because the hash is the app's own router.
  */
-export function SkipLinks() {
-  const focusFirstIn = (selector: string) => {
+export function SkipLinks({ revealList, revealMap }: { revealList: () => void; revealMap: () => void }) {
+  // On phones the target may be in the hidden view, so render that view first, then focus.
+  const skip = (reveal: () => void, selector: string) => {
+    flushSync(reveal)
     const host = document.querySelector<HTMLElement>(selector)
     const target = host?.matches(FOCUSABLE) ? host : host?.querySelector<HTMLElement>(FOCUSABLE)
     target?.focus()
   }
   return (
     <div className="contents">
-      <SkipLink onClick={() => focusFirstIn('aside')}>Skip to the list</SkipLink>
-      <SkipLink onClick={() => focusFirstIn('.maplibregl-canvas')}>Skip to the map</SkipLink>
+      <SkipLink onClick={() => skip(revealList, 'aside')}>Skip to the list</SkipLink>
+      <SkipLink onClick={() => skip(revealMap, '.maplibregl-canvas')}>Skip to the map</SkipLink>
     </div>
   )
 }

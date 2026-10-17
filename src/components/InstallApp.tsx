@@ -22,7 +22,8 @@ export function InstallApp() {
           title="Install Roadbeat as an app"
           onClick={() => (mode === 'prompt' ? void install() : setStepsOpen(true))}
         >
-          Install
+          {/* Below 360px the header has no room for the word, so the button keeps its name for screen readers only. */}
+          <span className="max-[359px]:sr-only">Install</span>
         </Button>
       )}
       <Dialog.Root open={stepsOpen} onOpenChange={setStepsOpen}>
