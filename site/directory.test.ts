@@ -114,8 +114,30 @@ describe('directoryPages', () => {
 
   it('keeps places with no station nearby out of search, and says nearby stations only when there are some', () => {
     expect(page('/places/spring-hill/').noindex).toBe(false)
-    expect(page('/places/spring-hill/').description).toContain('nearby stations')
+    expect(page('/places/spring-hill/').description).toContain('3 stations within 5 km')
     expect(page('/places/townsville-city/').noindex).toBe(true)
     expect(page('/places/townsville-city/').description).not.toContain('station')
+  })
+})
+
+describe('page titles and descriptions', () => {
+  const pages = directoryPages(dir)
+  const page = (path: string) => pages.find((p) => p.path === path)!
+
+  it('names the mode and area people search for, within the lengths search results show', () => {
+    expect(page('/stations/central-station/').title).toBe('Central station, Brisbane: train departures and timetable')
+    expect(page('/lines/t1-caboolture/').title).toBe('T1 Caboolture: train timetable and stops')
+    expect(page('/lines/tsv-200/').title).toBe('Route 200, Townsville: bus timetable and stops')
+    expect(page('/places/spring-hill/').title).toBe('Spring Hill, Brisbane: traffic, transport and warnings')
+    for (const p of pages) {
+      expect(p.title.length).toBeLessThanOrEqual(60)
+      expect(p.description.length).toBeLessThanOrEqual(155)
+    }
+  })
+
+  it('leads the description with what the page offers, and says live only where the app has live times', () => {
+    expect(page('/stations/central-station/').description).toMatch(/^Live departures, platforms and the published timetable for Central station/)
+    expect(page('/lines/t1-caboolture/').description).toContain('live departures')
+    expect(page('/lines/tsv-200/').description).not.toContain('live')
   })
 })

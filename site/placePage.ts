@@ -2,10 +2,15 @@
 // stations within NEAR_KM of that point. Localities with no station that
 // close are noindex, so they stay out of search and the sitemap.
 import { NEAR_KM, stationKind, type Directory, type Place } from './directory.ts'
-import { HOME, PLACES, capital, coords, km, placePath, stationPath, type StaticPage } from './pageKit.ts'
+import { DESCRIPTION_MAX, HOME, PLACES, TITLE_MAX, areaName, capital, coords, count, fit, km, placePath, stationPath, type StaticPage } from './pageKit.ts'
 
 export function placePage(p: Place, d: Directory): StaticPage {
   const stations = p.stations.map((n) => ({ ...n, mode: d.stations.find((s) => s.slug === n.slug)!.mode }))
+  const area = areaName(p.council)
+  const titles = [`${p.name}, ${area}: traffic, transport and warnings`, `${p.name}: traffic, transport and warnings`, `${p.name}, ${area}`, p.name]
+  // "Injinoo (Northern Peninsula Area Regional)" already names its council.
+  const named = p.council && !p.name.includes(p.council) ? `${p.name}, ${p.council}` : p.name
+  const lead = `Road events, warnings and transport at ${named}, live from official sources in Roadbeat`
   const md = [
     `# ${p.name}`,
     '',
@@ -20,8 +25,8 @@ export function placePage(p: Place, d: Directory): StaticPage {
   ].join('\n')
   return {
     path: placePath(p),
-    title: p.name,
-    description: `${p.name}, ${p.council}, Queensland: ${stations.length ? 'nearby stations and ' : ''}a link to the live road, transport, fire and gauge information official sources publish there, in Roadbeat.`,
+    title: fit(TITLE_MAX, titles),
+    description: fit(DESCRIPTION_MAX, [stations.length ? `${lead}, and the ${count(stations.length, 'station')} within ${NEAR_KM} km.` : `${lead}.`, `${lead}.`]),
     markdown: md,
     crumbs: [HOME, PLACES, { name: p.name, path: placePath(p) }],
     // With no station nearby the page is the gazetteer point and the app link, the

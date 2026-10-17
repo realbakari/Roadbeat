@@ -19,8 +19,8 @@ export function stationsIndex(d: Directory): StaticPage {
   ].join('\n')
   return {
     path: STATIONS.path,
-    title: STATIONS.name,
-    description: `Every train station, tram stop and ferry terminal on TransLink's South East Queensland network, with its lines, platforms and a link to live departures in Roadbeat.`,
+    title: 'Train stations, tram stops and ferry terminals in SEQ',
+    description: "Live departures and timetables for every train station, tram stop and ferry terminal on Translink's South East Queensland network.",
     markdown: md,
     crumbs: [HOME, STATIONS],
   }
@@ -37,8 +37,8 @@ export function linesIndex(d: Directory): StaticPage {
   ].join('\n')
   return {
     path: LINES.path,
-    title: LINES.name,
-    description: `Every TransLink train line, tram, ferry and bus route in Queensland's published timetables, by network, with the stops each serves and live departures in Roadbeat.`,
+    title: 'Translink lines and routes: timetables and stops',
+    description: "Timetables and stops for every Translink train line and tram, ferry and bus route in Queensland, by network, with departures in the Roadbeat app.",
     markdown: md,
     crumbs: [HOME, LINES],
   }
@@ -54,8 +54,8 @@ export function placesIndex(d: Directory): StaticPage {
   ].join('\n')
   return {
     path: PLACES.path,
-    title: PLACES.name,
-    description: 'Every town, suburb and locality in Queensland, by council area, each with nearby stations and a link to the live road, transport, fire and gauge information official sources publish there.',
+    title: 'Queensland places: traffic, transport and warnings',
+    description: 'Road events, warnings and transport at every Queensland town, suburb and locality, by council area, live from official sources in the Roadbeat app.',
     markdown: md,
     crumbs: [HOME, PLACES],
   }

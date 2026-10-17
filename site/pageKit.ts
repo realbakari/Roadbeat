@@ -36,6 +36,22 @@ export const coords = (p: [number, number]) => `${p[1]}, ${p[0]}`
 export const join = (items: string[]) => (items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`)
 export const capital = (s: string) => s[0].toUpperCase() + s.slice(1)
 
+/** Search results show about 60 characters of a title, so the " · Roadbeat" after it may be cut. */
+export const TITLE_MAX = 60
+/** Search results and link previews cut descriptions at about 155 characters. */
+export const DESCRIPTION_MAX = 155
+
+/** The first candidate that fits in `max` characters, else the shortest. */
+export function fit(max: number, candidates: string[]) {
+  return candidates.find((c) => c.length <= max) ?? candidates.reduce((a, b) => (b.length < a.length ? b : a))
+}
+
+/** A council area as people name it: "Brisbane City" → "Brisbane", "Sunshine Coast Regional" → "Sunshine Coast". */
+export const areaName = (council: string) => council.replace(/ (City|Regional)$/, '')
+
+/** "1 station", "4 stations". */
+export const count = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString('en-AU')} ${n === 1 ? one : many}`
+
 /** A line's rider-facing title: "T1 Caboolture", "F1 Northshore Hamilton / UQ St Lucia", "Route 200 Ferry Terminal - City". */
 export function lineTitle(l: Line) {
   if (l.mode === 'train') return l.name
