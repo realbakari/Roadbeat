@@ -39,6 +39,7 @@ import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { AirStation } from '../api/airQuality'
 import type { Hotspot } from '../api/hotspots'
 import { SatelliteImagery } from './map/SatelliteImagery'
+import { MapTools } from './map/MapTools'
 import { cycloneFeatures, nswFireFeatures, pastCycloneFeatures } from './map/hazardLayers'
 import type { NswFire } from '../api/nswFires'
 import type { Cyclone } from '../api/jtwc'
@@ -116,6 +117,8 @@ interface Props {
   hotspots: Hotspot[]
   /** The one satellite image to draw while the base is Satellite, or null for the street map alone. */
   satelliteImage: SatelliteTiles | null
+  /** One line per shown source with its data time, for a saved image's footer. */
+  imageSources: string[]
   /** NSW RFS incidents near the Queensland border. */
   nswFires: NswFire[]
   /** JTWC's current cyclones near Australia. */
@@ -183,6 +186,8 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
 
 const CLICKABLE_PLACES = ['air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
+/** What the crosshair reads under the centre: everything a tap can open. */
+const READABLE = [...EVENT_LAYERS, ...CLICKABLE_PLACES]
 
 const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
 /** A GeoJSON file built into public/ (scripts/build-flood-2022.mjs, build-bikeways.mjs), fetched once per visit. */
@@ -235,6 +240,7 @@ export function TrafficMap(props: Props) {
     airStations,
     hotspots,
     satelliteImage,
+    imageSources,
     nswFires,
     cyclones,
     pastCyclones,
@@ -564,6 +570,7 @@ export function TrafficMap(props: Props) {
     <div className="relative h-full w-full">
       <div ref={container} className="h-full w-full" aria-label="Traffic map" role="region" />
       <RainRadar map={map} enabled={layers.radar} ready={ready} />
+      <MapTools map={map} layers={layers} sources={imageSources} readable={READABLE} />
       <SatelliteImagery map={map} ready={ready} image={satelliteImage} />
       {map && <CrashLayer map={map} ready={ready} enabled={layers.crashes} filter={crashFilter} />}
       {map && (

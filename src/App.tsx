@@ -41,7 +41,10 @@ import { useHotspots } from './hooks/useSatellite'
 import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
 import { isGibsLive, jmaProduct, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
-import { recentFrames } from './lib/frames'
+import { frameAt, recentFrames } from './lib/frames'
+import { brisbaneDate } from './api/airHistory'
+import { aestTime } from './lib/aest'
+import { SATELLITE_SOURCES } from './lib/satelliteImage'
 import { layerTimes } from './lib/layerInfo'
 import { SatelliteTimeline } from './components/map/SatelliteTimeline'
 import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
@@ -262,18 +265,36 @@ export default function App() {
     () => recentFrames(isGibsLive(satelliteSource) ? imagery.live.frames : jmaProduct(satelliteSource) ? imagery.jma.frames.map((f) => f.time) : [], 3),
     [satelliteSource, imagery.live.frames, imagery.jma.frames],
   )
-  const shownFrame = frame && liveFrames.includes(frame) ? frame : null
+  const pickedFrame = frame && liveFrames.includes(frame) ? frame : null
+  // One timeline: while Replay runs, the live image follows the replayed moment, using the
+  // published frame at or just before it, or none at all, never today's clouds under past events.
+  const allLiveFrames = isGibsLive(satelliteSource) ? imagery.live.frames : jmaProduct(satelliteSource) ? imagery.jma.frames.map((f) => f.time) : []
+  const replayFrame = replayTime != null && allLiveFrames.length ? frameAt(allLiveFrames, replayTime) : undefined
+  const shownFrame = replayFrame !== undefined ? replayFrame : pickedFrame
+  const replayDate = replayTime != null ? brisbaneDate(replayTime) : null
   const satelliteImage = useMemo(
     () =>
-      base === 'satellite'
+      base === 'satellite' && replayFrame !== null
         ? satelliteTiles(satelliteSource, {
             gibsTime: shownFrame ?? imagery.live.time,
             jmaFrame: (shownFrame && imagery.jma.frames.find((f) => f.time === shownFrame)) || imagery.jma.latest,
-            date: imagery.date,
+            date: replayDate ?? imagery.date,
           })
         : null,
-    [base, satelliteSource, shownFrame, imagery.live.time, imagery.jma.frames, imagery.jma.latest, imagery.date],
+    [base, satelliteSource, replayFrame, shownFrame, replayDate, imagery.live.time, imagery.jma.frames, imagery.jma.latest, imagery.date],
   )
+  /** What the saved image's footer says about each shown source and its data time. */
+  const imageSources = [
+    replayTime != null ? `Road events: QLDTraffic, replay of ${aestTime(replayTime, now)}` : fetchedAt != null ? `Road events: QLDTraffic, read ${aestTime(fetchedAt, now)}` : 'Road events: QLDTraffic',
+    ...(layers.fires && firesAt != null ? [`Bushfires: Queensland Fire Department, read ${aestTime(firesAt, now)}`] : []),
+    ...(satelliteImage ? [`Satellite: ${SATELLITE_SOURCES.find((s) => s.value === satelliteSource)?.label ?? satelliteSource}, image ${satelliteImageTime()}`] : []),
+  ]
+  /** The shown satellite image's own time (live frames) or date (daily images), as published. */
+  function satelliteImageTime(): string {
+    const t = shownFrame ?? (isGibsLive(satelliteSource) ? imagery.live.time : imagery.jma.latest?.time) ?? null
+    if (allLiveFrames.length && t && Number.isFinite(Date.parse(t))) return aestTime(Date.parse(t), now)
+    return replayDate ?? imagery.date ?? 'date not known'
+  }
   const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
   const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
   const [dismissed, setDismissed] = useState<string[]>(() => {
@@ -686,6 +707,7 @@ export default function App() {
               airStations={air.stations ?? []}
               hotspots={hot.hotspots ?? []}
               satelliteImage={satelliteImage}
+              imageSources={imageSources}
               nswFires={nswFires.data ?? []}
               cyclones={cyclones.data ?? []}
               pastCyclones={pastCyclones.data ?? []}
@@ -760,6 +782,11 @@ export default function App() {
             {timelineOpen ? (
               <>
                 {replay && <ReplayBanner at={replay.at} run={replay.run} className="absolute inset-x-3 top-14 z-10 text-center xl:inset-x-auto xl:top-3 xl:left-1/2 xl:-translate-x-1/2 xl:whitespace-nowrap" />}
+                {replay && base === 'satellite' && replayFrame === null && (
+                  <p role="status" className="absolute inset-x-3 top-28 z-10 mx-auto w-fit max-w-md rounded-md bg-kumo-base px-3 py-1.5 text-center text-sm shadow-md ring ring-kumo-line xl:top-14">
+                    No satellite image was published within 20 minutes of this time, so none is shown.
+                  </p>
+                )}
                 <Timeline
                   now={now}
                   state={timeline}

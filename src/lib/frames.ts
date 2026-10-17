@@ -53,3 +53,18 @@ export function stepFrame(frames: readonly string[], current: string | null, del
   const at = i < 0 ? frames.length - 1 : i
   return frames[(((at + delta) % frames.length) + frames.length) % frames.length]
 }
+
+/**
+ * The published frame for a replayed moment: the newest at or before `at`,
+ * if it's within `toleranceMs` of it (two of Himawari's 10-minute steps by
+ * default). Null when there's none that close, so a replay never shows
+ * clouds from a different time.
+ */
+export function frameAt(frames: readonly string[], at: number, toleranceMs = 20 * 60_000): string | null {
+  let best: string | null = null
+  for (const f of frames) {
+    const t = Date.parse(f)
+    if (t <= at && t >= at - toleranceMs) best = f
+  }
+  return best
+}

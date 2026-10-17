@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { domainFrames, mergeFrames, recentFrames, stepFrame } from './frames'
+import { domainFrames, mergeFrames, recentFrames, stepFrame, frameAt } from './frames'
 
 // GIBS DescribeDomains for Himawari_AHI_Band13_Clean_Infrared, 17 October 2026, word for word.
 const DOMAINS =
@@ -41,5 +41,17 @@ describe('stepFrame', () => {
     expect(stepFrame(f, 'a', -1)).toBe('c')
     expect(stepFrame(f, 'gone', 0)).toBe('c')
     expect(stepFrame([], null, 1)).toBeNull()
+  })
+})
+
+describe('frameAt', () => {
+  const frames = ['2026-10-17T12:00:00Z', '2026-10-17T12:10:00Z', '2026-10-17T12:20:00Z']
+  it('takes the newest frame at or before the replayed moment', () => {
+    expect(frameAt(frames, Date.parse('2026-10-17T12:15:00Z'))).toBe('2026-10-17T12:10:00Z')
+    expect(frameAt(frames, Date.parse('2026-10-17T12:20:00Z'))).toBe('2026-10-17T12:20:00Z')
+  })
+  it('gives none when the nearest earlier frame is too old or every frame is later', () => {
+    expect(frameAt(frames, Date.parse('2026-10-17T13:00:00Z'))).toBeNull()
+    expect(frameAt(frames, Date.parse('2026-10-17T11:50:00Z'))).toBeNull()
   })
 })
