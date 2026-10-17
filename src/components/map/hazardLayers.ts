@@ -1,5 +1,6 @@
 import type * as maplibregl from 'maplibre-gl'
 import { NSW_ALERT_COLOR, type NswFire } from '../../api/nswFires'
+import { nswFireIcon } from '../../lib/mapIcons'
 import { CYCLONE_COLOR, type Cyclone } from '../../api/jtwc'
 import { PAST_CYCLONE_COLOR, pastCycloneTitle, type PastCyclone } from '../../api/pastCyclones'
 
@@ -17,7 +18,7 @@ export function nswFireFeatures(fires: NswFire[]): GeoJSON.FeatureCollection {
     features: fires.map((f) => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: f.position },
-      properties: { key: `place/nswfire/${encodeURIComponent(f.id)}`, color: NSW_ALERT_COLOR[f.alertLevel] ?? NSW_ALERT_COLOR['Not Applicable'], label: `NSW RFS · ${f.alertLevel} · ${f.title}` },
+      properties: { key: `place/nswfire/${encodeURIComponent(f.id)}`, color: NSW_ALERT_COLOR[f.alertLevel] ?? NSW_ALERT_COLOR['Not Applicable'], icon: nswFireIcon(NSW_ALERT_COLOR[f.alertLevel] ? f.alertLevel : 'Not Applicable'), label: `NSW RFS · ${f.alertLevel} · ${f.title}` },
     })),
   }
 }
@@ -85,9 +86,8 @@ export function addHazardLayers(map: maplibregl.Map) {
   })
   map.addLayer({
     id: 'nsw-fires',
-    type: 'circle',
+    type: 'symbol',
     source: 'nsw-fires',
-    layout: { visibility: 'none' },
-    paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 6, 12, 10] as never, 'circle-color': ['get', 'color'] as never, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 },
+    layout: { visibility: 'none', 'icon-image': ['get', 'icon'] as never, 'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.65, 12, 0.95] as never, 'icon-allow-overlap': true, 'icon-ignore-placement': true },
   })
 }

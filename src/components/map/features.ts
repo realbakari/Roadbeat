@@ -105,6 +105,7 @@ export function councilCentreFeatures(centres: CouncilCentre[]): GeoJSON.Feature
       properties: {
         key: `place/centre/${encodeURIComponent(c.id)}`,
         color: CENTRE_COLOR[centreKind(c.type)],
+        icon: `centre-${centreKind(c.type)}`,
         label: `${c.type}${c.status ? ` (${c.status})` : ''} · ${c.name}`,
       },
     })),
@@ -121,7 +122,7 @@ export function outageFeatures(outages: Outage[]): GeoJSON.FeatureCollection {
     features: outages.flatMap((o) => {
       const position = outagePosition(o)
       if (!position) return []
-      const properties = { key: `place/outage/${encodeURIComponent(o.id)}`, color: OUTAGE_COLOR[o.source], label: `${o.type}: ${o.title}${o.status ? ` (${o.status})` : ''}` }
+      const properties = { key: `place/outage/${encodeURIComponent(o.id)}`, color: OUTAGE_COLOR[o.source], icon: `outage-${o.source}`, label: `${o.type}: ${o.title}${o.status ? ` (${o.status})` : ''}` }
       const shape = o.geometry && o.geometry.type !== 'Point' ? [{ type: 'Feature' as const, geometry: o.geometry as GeoJSON.LineString | GeoJSON.Polygon, properties }] : []
       return [...shape, { type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: position }, properties }]
     }),
@@ -137,7 +138,7 @@ export function airFeatures(stations: AirStation[]): GeoJSON.FeatureCollection {
       return {
         type: 'Feature',
         geometry: { type: 'Point', coordinates: s.position },
-        properties: { key: `place/air/${encodeURIComponent(s.id)}`, color: AIR_COLOR[worst ?? 0], label: `${s.name} · ${worst ? AIR_RATINGS[worst - 1] : 'no rated reading'}` },
+        properties: { key: `place/air/${encodeURIComponent(s.id)}`, color: AIR_COLOR[worst ?? 0], icon: `air-${worst ?? 0}`, label: `${s.name} · ${worst ? AIR_RATINGS[worst - 1] : 'no rated reading'}` },
       }
     }),
   }
@@ -307,6 +308,7 @@ export function gaugeFeatures(gauges: Gauge[], now: number): GeoJSON.FeatureColl
       properties: {
         key: `gauge/${encodeURIComponent(g.id)}`,
         kind: g.kind,
+        icon: `gauge-${g.kind}`,
         value,
         stale: !latest || now - latest.time >= STALE_MS,
         label: `${g.kind === 'stream' ? 'Stream gauge' : 'Rain gauge'} · ${g.name}${value ? ` · ${value}` : ''}`,

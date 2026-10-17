@@ -24,7 +24,7 @@ export function TypeIcon({ type, size = 'md' }: { type: string; size?: 'md' | 'l
       style={{ backgroundColor: meta.color }}
       aria-hidden
     >
-      <Icon size={size === 'lg' ? 22 : 18} weight="fill" />
+      <Icon size={size === 'lg' ? 22 : 18} weight={type === 'Flooding' ? 'bold' : 'fill'} />
     </span>
   )
 }

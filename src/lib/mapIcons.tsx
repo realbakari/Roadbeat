@@ -4,8 +4,8 @@ import {
   TrainIcon,
   TramIcon,
   CameraIcon,
-  CarProfileIcon,
-  CoffeeIcon,
+  PicnicTableIcon,
+  ChatTeardropDotsIcon,
   TruckIcon,
   VanIcon,
   VideoCameraIcon,
@@ -19,13 +19,26 @@ import {
   WrenchIcon,
   CalendarStarIcon,
   WarningIcon,
+  HouseLineIcon,
+  PackageIcon,
+  MapPinIcon,
+  LightningIcon,
+  MegaphoneSimpleIcon,
+  WindIcon,
+  DropHalfBottomIcon,
+  CloudRainIcon,
   type Icon,
+  type IconWeight,
 } from '@phosphor-icons/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 import { CAMERA_COLOR, EVENT_TYPES } from './eventMeta'
 import { FIRE_COLOR, FIRE_LEVELS } from '../api/bushfires'
 import { DS_BANDS } from './signals'
+import { CENTRE_COLOR } from './councilCentres'
+import { OUTAGE_COLOR } from './outages'
+import { AIR_COLOR } from '../api/airQuality'
+import { NSW_ALERT_COLOR } from '../api/nswFires'
 
 // Map icons are drawn as SVG badges (Phosphor glyph on a coloured disc or
 // rounded square), rasterised once, and registered with MapLibre as images.
@@ -64,8 +77,11 @@ export const VEHICLE_COLOR = {
   ferry: '#0284c7',
 } as const
 
-function glyph(I: Icon, color: string, size = 16) {
-  const svg = renderToStaticMarkup(<I size={size} weight="fill" color={color} />)
+/** The glyph's size inside a 30-unit badge: large enough to read at the 16 to 20 px the map draws low-priority markers. */
+const GLYPH = 19
+
+function glyph(I: Icon, color: string, size = GLYPH, weight: IconWeight = 'fill') {
+  const svg = renderToStaticMarkup(<I size={size} weight={weight} color={color} />)
   const off = (SIZE - size) / 2
   return svg.replace('<svg ', `<svg x="${off}" y="${off}" `)
 }
@@ -76,18 +92,26 @@ function wrap(body: string) {
 
 const shadow = `<circle cx="15" cy="15.8" r="13" fill="rgba(0,0,0,.25)"/>`
 
-function disc(fill: string, I: Icon) {
-  return wrap(`${shadow}<circle cx="15" cy="15" r="13" fill="${fill}" stroke="#fff" stroke-width="2"/>${glyph(I, '#fff')}`)
+function disc(fill: string, I: Icon, weight: IconWeight = 'fill') {
+  return wrap(`${shadow}<circle cx="15" cy="15" r="13" fill="${fill}" stroke="#fff" stroke-width="2"/>${glyph(I, '#fff', GLYPH, weight)}`)
 }
 
 /** Outline style for upcoming roadworks/special events, like the official "future" pins. */
-function ring(color: string, I: Icon) {
-  return wrap(`${shadow}<circle cx="15" cy="15" r="12.5" fill="#fff" stroke="${color}" stroke-width="3"/>${glyph(I, color)}`)
+function ring(color: string, I: Icon, weight: IconWeight = 'fill') {
+  return wrap(`${shadow}<circle cx="15" cy="15" r="12.5" fill="#fff" stroke="${color}" stroke-width="3"/>${glyph(I, color, 17, weight)}`)
 }
 
 function square(fill: string, I: Icon) {
   return wrap(
     `<rect x="2" y="2.8" width="26" height="26" rx="7" fill="rgba(0,0,0,.25)"/><rect x="2" y="2" width="26" height="26" rx="7" fill="${fill}" stroke="#fff" stroke-width="2"/>${glyph(I, '#fff')}`,
+  )
+}
+
+/** A prohibition sign: the glyph in a white disc under a red ring and slash, like the "no trucks" sign. */
+function prohibition(I: Icon) {
+  return wrap(
+    `${shadow}<circle cx="15" cy="15" r="13" fill="#fff" stroke="#fff" stroke-width="2"/>${glyph(I, '#1f2937', 14)}` +
+      `<circle cx="15" cy="15" r="11.5" fill="none" stroke="${CLOSURE_RED}" stroke-width="3"/><line x1="7" y1="7" x2="23" y2="23" stroke="${CLOSURE_RED}" stroke-width="3" stroke-linecap="round"/>`,
   )
 }
 
@@ -108,19 +132,21 @@ export function typeSlug(type: string) {
 function buildIcons(): Record<string, string> {
   const icons: Record<string, string> = {}
   for (const m of EVENT_TYPES) {
-    icons[`event-${typeSlug(m.type)}`] = disc(m.color, m.icon)
-    icons[`event-${typeSlug(m.type)}-future`] = ring(m.color, m.icon)
+    // Phosphor's filled waves render as a solid tile at map size, so flooding uses the bold outline.
+    const weight: IconWeight = m.type === 'Flooding' ? 'bold' : 'fill'
+    icons[`event-${typeSlug(m.type)}`] = disc(m.color, m.icon, weight)
+    icons[`event-${typeSlug(m.type)}-future`] = ring(m.color, m.icon, weight)
   }
   icons['closure-all'] = closure('ALL')
   icons['closure-thru'] = closure('THRU')
   icons['camera-webcam'] = disc(CAMERA_COLOR.webcam, VideoCameraIcon)
   icons['camera-floodcam'] = disc(CAMERA_COLOR.floodcam, CameraIcon)
-  icons['rest-area'] = square(LAYER_COLOR.restArea, CoffeeIcon)
+  icons['rest-area'] = square(LAYER_COLOR.restArea, PicnicTableIcon)
   icons['rest-area-hv'] = square(LAYER_COLOR.hvRestArea, TruckIcon)
   icons['dump-point'] = square(LAYER_COLOR.dumpPoint, VanIcon)
-  icons['waze'] = disc(LAYER_COLOR.waze, CarProfileIcon)
+  icons['waze'] = disc(LAYER_COLOR.waze, ChatTeardropDotsIcon)
   icons['waze-hazard'] = disc(LAYER_COLOR.waze, WarningIcon)
-  icons['truck-restriction'] = disc(LAYER_COLOR.truck, TruckIcon)
+  icons['truck-restriction'] = prohibition(TruckIcon)
   icons['toilet'] = square(LAYER_COLOR.toilet, ToiletIcon)
   icons['toilet-accessible'] = square(LAYER_COLOR.toiletAccessible, ToiletIcon)
   icons['accessible-parking'] = square(LAYER_COLOR.accessibleParking, WheelchairIcon)
@@ -137,10 +163,25 @@ function buildIcons(): Record<string, string> {
     icons[fireIcon(level, 'FIRE PERMITTED BURN')] = disc(FIRE_COLOR[level], CampfireIcon)
   }
   DS_BANDS.forEach(([, color], band) => (icons[signalIcon(band)] = disc(color, TrafficSignalIcon)))
+  // Layers that used to be plain dots, each now with a glyph that says what it is.
+  icons['centre-shelter'] = square(CENTRE_COLOR.shelter, HouseLineIcon)
+  icons['centre-sandbag'] = square(CENTRE_COLOR.sandbag, PackageIcon)
+  icons['centre-other'] = square(CENTRE_COLOR.other, MapPinIcon)
+  icons['outage-energex'] = disc(OUTAGE_COLOR.energex, LightningIcon)
+  icons['outage-council'] = disc(OUTAGE_COLOR.council, MegaphoneSimpleIcon)
+  for (const [rating, color] of Object.entries(AIR_COLOR)) icons[`air-${rating}`] = disc(color, WindIcon)
+  icons['gauge-stream'] = disc('#0369a1', DropHalfBottomIcon)
+  icons['gauge-rain'] = disc('#0d9488', CloudRainIcon)
+  for (const [level, color] of Object.entries(NSW_ALERT_COLOR)) icons[nswFireIcon(level)] = disc(color, FlameIcon)
   return icons
 }
 
 /** Map image id for a saturation band (an index into DS_BANDS). */
+/** Map image id for an NSW RFS incident at its published alert level. */
+export function nswFireIcon(level: string) {
+  return `nswfire-${level.toLowerCase().replace(/[^a-z]+/g, '-')}`
+}
+
 export function signalIcon(band: number) {
   return `signal-${band}`
 }

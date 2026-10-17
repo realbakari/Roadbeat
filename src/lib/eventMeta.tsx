@@ -1,12 +1,5 @@
-import {
-  CarProfileIcon,
-  ConfettiIcon,
-  TrafficConeIcon,
-  TrafficSignalIcon,
-  WarningIcon,
-  WavesIcon,
-  type Icon,
-} from '@phosphor-icons/react'
+import { CalendarDotsIcon, WarningIcon, WavesIcon, type Icon } from '@phosphor-icons/react'
+import { CrashIcon, QueueIcon, WorkerIcon } from './roadGlyphs'
 import type { EventPriority, EventType } from '../api/types'
 
 type BadgeVariant = 'red' | 'orange' | 'warning' | 'blue' | 'purple' | 'teal'
@@ -21,12 +14,12 @@ export interface EventTypeMeta {
 }
 
 export const EVENT_TYPES: EventTypeMeta[] = [
-  { type: 'Crash', label: 'Crashes', color: '#dc2626', badge: 'red', icon: CarProfileIcon },
+  { type: 'Crash', label: 'Crashes', color: '#dc2626', badge: 'red', icon: CrashIcon },
   { type: 'Hazard', label: 'Hazards', color: '#ea580c', badge: 'orange', icon: WarningIcon },
   { type: 'Flooding', label: 'Flooding', color: '#2563eb', badge: 'blue', icon: WavesIcon },
-  { type: 'Congestion', label: 'Congestion', color: '#9333ea', badge: 'purple', icon: TrafficSignalIcon },
-  { type: 'Roadworks', label: 'Roadworks', color: '#ca8a04', badge: 'warning', icon: TrafficConeIcon },
-  { type: 'Special event', label: 'Special events', color: '#0d9488', badge: 'teal', icon: ConfettiIcon },
+  { type: 'Congestion', label: 'Congestion', color: '#9333ea', badge: 'purple', icon: QueueIcon },
+  { type: 'Roadworks', label: 'Roadworks', color: '#ca8a04', badge: 'warning', icon: WorkerIcon },
+  { type: 'Special event', label: 'Special events', color: '#0d9488', badge: 'teal', icon: CalendarDotsIcon },
 ]
 
 const BY_TYPE = new Map(EVENT_TYPES.map((m) => [m.type, m]))

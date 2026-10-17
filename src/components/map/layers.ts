@@ -331,20 +331,14 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     },
     paint: { 'text-color': '#0f172a', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
   })
+  // Gauges: a water-level or rain glyph; a gauge with no recent reading is faded.
   map.addLayer({
     id: 'gauges',
-    type: 'circle',
+    type: 'symbol',
     source: 'gauges',
     minzoom: 8,
-    layout: { visibility: 'none' },
-    paint: {
-      'circle-color': ['match', ['get', 'kind'], 'stream', '#0369a1', '#0d9488'] as never,
-      'circle-opacity': ['case', ['get', 'stale'], 0.45, 1] as never,
-      'circle-stroke-opacity': ['case', ['get', 'stale'], 0.45, 1] as never,
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, ['match', ['get', 'kind'], 'stream', 4, 3], 14, ['match', ['get', 'kind'], 'stream', 8, 6]] as never,
-      'circle-stroke-color': '#ffffff',
-      'circle-stroke-width': 2,
-    },
+    layout: { visibility: 'none', 'icon-image': ['get', 'icon'] as never, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 14, 0.85] as never, 'icon-allow-overlap': true, 'icon-ignore-placement': true },
+    paint: { 'icon-opacity': ['case', ['get', 'stale'], 0.45, 1] as never },
   })
   map.addLayer({
     id: 'gauges-label',
@@ -479,9 +473,9 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
         ['linear'],
         ['zoom'],
         4,
-        ['match', ['get', 'rank'], 0, 0.75, 1, 0.65, 0.55],
+        ['match', ['get', 'rank'], 0, 0.85, 1, 0.75, 0.65],
         11,
-        ['match', ['get', 'rank'], 0, 1.05, 1, 0.95, 0.85],
+        ['match', ['get', 'rank'], 0, 1.15, 1, 1.05, 0.95],
       ],
       'icon-allow-overlap': true,
       'icon-ignore-placement': true,
@@ -508,18 +502,13 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': color, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 16, 5] as never, 'line-dasharray': [2, 1.5] },
   })
+  // Outages: lightning for Energex, a megaphone for a council notice.
   map.addLayer({
     id: 'outages',
-    type: 'circle',
+    type: 'symbol',
     source: 'outages',
     filter: ['==', ['geometry-type'], 'Point'],
-    layout: { visibility: 'none' },
-    paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 5, 13, 9] as never,
-      'circle-color': color,
-      'circle-stroke-color': '#ffffff',
-      'circle-stroke-width': 2,
-    },
+    layout: { visibility: 'none', 'icon-image': ['get', 'icon'] as never, 'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.6, 13, 0.9] as never, 'icon-allow-overlap': true, 'icon-ignore-placement': true },
   })
   // NSW border fires, JTWC cyclones and past cyclone tracks, under hotspots and markers.
   addHazardLayers(map)
@@ -539,28 +528,16 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   })
   map.addLayer({
     id: 'air-quality',
-    type: 'circle',
+    type: 'symbol',
     source: 'air',
-    layout: { visibility: 'none' },
-    paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 6, 13, 10] as never,
-      'circle-color': color,
-      'circle-stroke-color': '#ffffff',
-      'circle-stroke-width': 2,
-    },
+    layout: { visibility: 'none', 'icon-image': ['get', 'icon'] as never, 'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.6, 13, 0.9] as never, 'icon-allow-overlap': true, 'icon-ignore-placement': true },
   })
-  // Council centres: a ring in the kind's colour, so they read apart from event icons.
+  // Council centres: a rounded square (places, not events) with a house, sandbag or pin glyph.
   map.addLayer({
     id: 'council-centres',
-    type: 'circle',
+    type: 'symbol',
     source: 'council-centres',
-    layout: { visibility: 'none' },
-    paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 4, 13, 8] as never,
-      'circle-color': ['get', 'color'] as never,
-      'circle-stroke-color': '#ffffff',
-      'circle-stroke-width': 2,
-    },
+    layout: { visibility: 'none', 'icon-image': ['get', 'icon'] as never, 'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.55, 13, 0.85] as never, 'icon-allow-overlap': true, 'icon-ignore-placement': true },
   })
   map.addLayer({
     id: 'news-roads',

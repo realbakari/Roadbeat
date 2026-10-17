@@ -43,6 +43,7 @@ import { layerInfo, type DataTime } from '../lib/layerInfo'
 /** Each layer's latest data time, and the clock to age it by, for the rows' info lines. */
 const LayerTimes = createContext<{ latest: Partial<Record<keyof MapLayers, DataTime>>; now: number }>({ latest: {}, now: 0 })
 import { BaseSwitch } from './map/BaseSwitch'
+import { MapKey } from './map/MapKey'
 import type { MapBase } from '../lib/mapBase'
 
 interface Props {
@@ -221,6 +222,7 @@ export function MapLayersPanel({
             Layers
           </Button>
           <BaseSwitch base={base} onChange={onBaseChange} />
+          <MapKey layers={layers} />
         </div>
         {aside}
       </div>
