@@ -4,6 +4,8 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 @custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+/* A wall or TV screen with room for the dashboard to fit without scrolling. */
+@custom-variant tv (@media (width >= 80rem) and (height >= 62.5rem));
 
 html,
 body,

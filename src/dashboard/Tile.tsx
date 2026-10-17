@@ -15,7 +15,7 @@ export function Tile({
   return (
     <section className={`flex min-h-0 min-w-0 flex-col gap-3 rounded-xl bg-kumo-base px-5 py-4 ring ring-kumo-line ${className}`}>
       <h2 className="text-base font-semibold text-kumo-strong">{title}</h2>
-      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       {source && <p className="text-xs text-kumo-subtle">{source}</p>}
     </section>
   )

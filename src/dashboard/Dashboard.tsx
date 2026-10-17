@@ -99,7 +99,7 @@ export function Dashboard() {
   }, [layout])
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:overflow-hidden xl:p-6">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:p-6 tv:overflow-hidden">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <a href="/" className="flex items-center gap-2" title="Open the full app">
           <img src="/favicon.svg" alt="" className="size-8" />
@@ -141,8 +141,8 @@ export function Dashboard() {
       {showNews && <WhatsHappening stories={headlines} now={now} />}
 
       {tiles.length > 0 && (
-        // On a TV-sized screen the panels share the space left on the page; below that they take their natural height and the page scrolls.
-        <div className={`grid gap-4 md:grid-cols-2 xl:min-h-0 xl:flex-1 xl:grid-cols-4 ${tiles.length > 4 ? 'xl:grid-rows-2' : 'xl:grid-rows-1'}`}>
+        // On a screen wide and tall enough (tv:), the panels share the space left on the page; below that they take their natural height and the page scrolls.
+        <div className={`grid gap-4 md:grid-cols-2 xl:grid-cols-4 tv:min-h-0 tv:flex-1 ${tiles.length > 4 ? 'tv:grid-rows-2' : 'tv:grid-rows-1'}`}>
           {tiles.map((id) => (
             <PanelSlot key={id}>{render(id)}</PanelSlot>
           ))}
