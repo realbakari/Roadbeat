@@ -38,6 +38,6 @@ export function stationPage(s: Station, d: Directory): StaticPage {
     markdown: md,
     crumbs: [HOME, STATIONS, { name: s.name, path: stationPath(s) }],
     open: { hash: `transit/stop/${s.region}/${encodeURIComponent(s.id)}`, label: `Open ${s.name} in Roadbeat` },
-    jsonLd: [{ '@type': type, name: s.name, geo: { '@type': 'GeoCoordinates', latitude: s.position[1], longitude: s.position[0] }, publicAccess: true }],
+    jsonLd: [{ '@type': type, name: s.name, geo: { '@type': 'GeoCoordinates', latitude: s.position[1], longitude: s.position[0] }, address: { '@type': 'PostalAddress', addressRegion: 'QLD', addressCountry: 'AU' }, publicAccess: true }],
   }
 }

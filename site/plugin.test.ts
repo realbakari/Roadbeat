@@ -149,11 +149,16 @@ describe('jsonLd', () => {
     expect(JSON.stringify(jsonLd(page, bare))).not.toContain('contactPoint')
   })
 
-  it('names the site, with a search action that opens a locality page, and a breadcrumb trail', () => {
+  it('names the site and writes the organisation once, referring to it by id, with no one-crumb trail or search action', () => {
     const graph = jsonLd(loadPage('index', withUrl), withUrl)['@graph']
-    expect(graph[0]).toMatchObject({ '@type': 'WebSite', url: 'https://roadbeat.example/' })
-    expect(JSON.stringify(graph[0])).toContain('https://roadbeat.example/#place/locality/{search_term_string}')
-    expect(graph[1]).toMatchObject({ '@type': 'BreadcrumbList', itemListElement: [{ position: 1, name: 'Roadbeat', item: 'https://roadbeat.example/' }] })
-    expect(JSON.stringify(jsonLd(loadPage('index', bare), bare))).not.toContain('search_term_string')
+    expect(graph[0]).toMatchObject({ '@type': 'WebSite', url: 'https://roadbeat.example/', publisher: { '@id': 'https://roadbeat.example/#org' } })
+    expect(graph.filter((g) => g['@type'] === 'Organization')).toHaveLength(1)
+    expect(graph.some((g) => g['@type'] === 'BreadcrumbList')).toBe(false)
+    expect(JSON.stringify(graph)).not.toContain('SearchAction')
+  })
+
+  it("ties a directory page's entity to the page address", () => {
+    const html = siteFiles(withUrl, tiny)['/stations/central-station/index.html'].body
+    expect(html).toContain('"@id":"https://roadbeat.example/stations/central-station/#place","url":"https://roadbeat.example/stations/central-station/","@type":"TrainStation"')
   })
 })

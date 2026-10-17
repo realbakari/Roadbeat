@@ -66,14 +66,25 @@ export function breadcrumbList(crumbs: Crumb[], s: SiteSettings) {
   }
 }
 
-/** JSON-LD for a directory or trust page: its breadcrumbs and whatever the page describes (a station, a place). */
+/** A trail of one crumb is just the home page, which is no trail at all. */
+const trail = (crumbs: Crumb[], s: SiteSettings) => (crumbs.length > 1 ? [breadcrumbList(crumbs, s)] : [])
+
+/**
+ * JSON-LD for a directory or trust page: its breadcrumbs and whatever the page
+ * describes (a station, a place), tied to the page's address when it is known.
+ */
 export function pageJsonLd(page: Page, s: SiteSettings) {
-  return { '@context': 'https://schema.org', '@graph': [breadcrumbList(page.crumbs, s), ...(page.jsonLd ?? [])] }
+  const url = `${s.siteUrl}${page.path}`
+  const things = (page.jsonLd ?? []).map((thing) => (s.siteUrl ? { '@id': `${url}#place`, url, ...thing } : thing))
+  return { '@context': 'https://schema.org', '@graph': [...trail(page.crumbs, s), ...things] }
 }
 
 /** JSON-LD for the home page: the site, the app itself and the project behind it. */
 export function jsonLd(page: Page, s: SiteSettings) {
+  // Written once, and referred to by its @id everywhere else.
+  const orgRef = { '@id': `${s.siteUrl}/#org` }
   const org = {
+    ...orgRef,
     '@type': 'Organization',
     name: SITE.name,
     ...(s.siteUrl ? { url: s.siteUrl, logo: `${s.siteUrl}/icon-512.png` } : {}),
@@ -87,19 +98,9 @@ export function jsonLd(page: Page, s: SiteSettings) {
         name: SITE.name,
         ...(s.siteUrl ? { url: `${s.siteUrl}/` } : {}),
         inLanguage: 'en-AU',
-        publisher: org,
-        // The app opens any Queensland locality's page by name (#place/locality/<name>).
-        ...(s.siteUrl
-          ? {
-              potentialAction: {
-                '@type': 'SearchAction',
-                target: { '@type': 'EntryPoint', urlTemplate: `${s.siteUrl}/#place/locality/{search_term_string}` },
-                'query-input': 'required name=search_term_string',
-              },
-            }
-          : {}),
+        publisher: orgRef,
       },
-      breadcrumbList(page.crumbs, s),
+      ...trail(page.crumbs, s),
       {
         '@type': 'WebApplication',
         name: SITE.name,
@@ -115,13 +116,15 @@ export function jsonLd(page: Page, s: SiteSettings) {
         featureList: [
           'Live Queensland road events and closures',
           'Traffic and flood cameras',
-          'Live TransLink vehicles, departures and published timetables',
+          'Live Translink vehicles, departures and published timetables',
           'Journey planner from the published timetable',
-          'Queensland Fire Department bushfire warnings',
-          'Brisbane City Council stream gauges and traffic signal volumes',
+          'Queensland Fire Department bushfire warnings and satellite hotspots',
+          'Brisbane City Council and Queensland Government stream gauges',
+          'Air quality, Energex power outages and council notices',
+          'Commute push alerts',
         ],
         image: s.siteUrl ? `${s.siteUrl}/og-image.jpg` : '/og-image.jpg',
-        publisher: org,
+        publisher: orgRef,
       },
       org,
     ],
