@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isStale, STALE_AFTER_MS } from './feedAge'
+import { feedAnnouncement, isStale, STALE_AFTER_MS } from './feedAge'
 
 describe('isStale', () => {
   const at = Date.UTC(2026, 9, 17, 0, 0)
@@ -15,5 +15,17 @@ describe('isStale', () => {
   it('is true once the feed has been quiet for too long', () => {
     expect(isStale(at, false, at + STALE_AFTER_MS)).toBe(false)
     expect(isStale(at, false, at + STALE_AFTER_MS + 1)).toBe(true)
+  })
+})
+
+describe('feedAnnouncement', () => {
+  it('stays the same across refreshes, so nothing is re-announced', () => {
+    expect(feedAnnouncement(null, 1_000)).toBe(feedAnnouncement(null, 61_000))
+  })
+
+  it('changes when the feed fails and when it recovers', () => {
+    expect(feedAnnouncement(null, null)).toBe('')
+    expect(feedAnnouncement('Timed out', 1_000)).toBe('Road events delayed')
+    expect(feedAnnouncement(null, 2_000)).toBe('Road events live')
   })
 })

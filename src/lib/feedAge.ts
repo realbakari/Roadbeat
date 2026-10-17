@@ -10,3 +10,12 @@ export function isStale(fetchedAt: number | null, failing: boolean, now: number)
   if (fetchedAt == null) return false
   return failing || now - fetchedAt > STALE_AFTER_MS
 }
+
+/**
+ * What a live region says about the road events feed. It changes only when the
+ * feed fails or recovers, never as "updated n minutes ago" ticks over, so screen
+ * readers aren't interrupted every minute.
+ */
+export function feedAnnouncement(error: string | null, fetchedAt: number | null): string {
+  return error ? 'Road events delayed' : fetchedAt != null ? 'Road events live' : ''
+}

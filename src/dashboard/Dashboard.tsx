@@ -6,6 +6,7 @@ import { useColorMode } from '../hooks/useColorMode'
 import { useAirQuality, useBushfires, useCarParkSpaces, useGauges, useLiveVehicles, useNews, useNow, useSignals, useTrafficData, useTransitAlerts, useTripUpdates } from '../hooks/useTrafficData'
 import { busiestSignals, closuresAndCrashesByDistrict, currentEvents, fastestRising, firesByLevel, corridorReport, footTraffic, latestEvents, punctuality, upcomingEvents } from '../lib/dashboard'
 import { initialLayout, LAYOUT_KEY, layoutQuery, panelsOf, type PanelId } from '../lib/dashboardLayout'
+import { feedAnnouncement } from '../lib/feedAge'
 import { timeAgo } from '../lib/format'
 import { groupStories, headlineStories } from '../lib/newsStories'
 import { CustomiseDialog } from './CustomiseDialog'
@@ -107,7 +108,10 @@ export function Dashboard() {
         </a>
         <h1 className="text-lg text-kumo-subtle">Queensland network dashboard</h1>
         <span className="ml-auto flex items-center gap-3 text-sm text-kumo-subtle">
-          <span className="flex items-center gap-1.5" aria-live="polite">
+          <span role="status" className="sr-only">
+            {feedAnnouncement(error, fetchedAt)}
+          </span>
+          <span className="flex items-center gap-1.5">
             <span className={`size-2 rounded-full ${error ? 'bg-kumo-danger' : 'bg-kumo-success'}`} aria-hidden />
             {error ? 'Road events delayed' : fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
           </span>
