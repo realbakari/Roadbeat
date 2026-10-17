@@ -36,6 +36,8 @@ import type { NswFire } from '../api/nswFires'
 import { CYCLONE_COLOR, type Cyclone } from '../api/jtwc'
 import { NSW_ALERT_COLOR } from '../api/nswFires'
 import { PAST_CYCLONE_COLOR, type PastCyclone } from '../api/pastCyclones'
+import type { SpeedCamera } from '../api/speedCameras'
+import { SpeedCamerasNote } from './SpeedCameraParts'
 import { chipClass } from './chip'
 import { LayerInfoLine } from './LayerFacts'
 import { layerInfo, type DataTime } from '../lib/layerInfo'
@@ -79,7 +81,7 @@ interface Props {
   /** Which satellite image is chosen, and the state of each source. */
   imagery: ComponentProps<typeof SatelliteImageNote>
   /** Fire bans, NSW border fires, JTWC cyclones and past cyclone tracks, for their notes. */
-  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]> }
+  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]>; speedCameras: Feed<SpeedCamera[]> }
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }
@@ -547,6 +549,16 @@ export function MapLayersPanel({
               onChange={(v) => set(t.key, v)}
             />
           ))}
+          <LayerRow
+            icon={<img src={iconUrl('speedcam-fixed')} alt="" className="size-5" />}
+            label="Speed and red light cameras"
+            count={hazards.speedCameras.data?.length}
+            layer="speedCameras"
+            checked={layers.speedCameras}
+            onChange={(v) => set('speedCameras', v)}
+          >
+            <SpeedCamerasNote feed={hazards.speedCameras} />
+          </LayerRow>
           <LayerRow
             icon={<Badge color={LAYER_COLOR.clearance} className="ring ring-black/70" icon={<ArrowsVerticalIcon size={12} weight="bold" color="#111" />} />}
             label="Low clearances"

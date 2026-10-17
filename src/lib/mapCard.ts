@@ -18,6 +18,7 @@ import { AIR_COLOR, AIR_RATINGS, worstRating } from '../api/airQuality'
 import { HOTSPOT_COLOR } from '../api/hotspots'
 import { WARNING_COLOR } from '../api/qldWarnings'
 import { NSW_ALERT_COLOR } from '../api/nswFires'
+import { SPEED_CAMERA_LABEL } from '../api/speedCameras'
 import { PAST_CYCLONE_COLOR, pastCycloneTitle } from '../api/pastCyclones'
 import { CYCLONE_COLOR } from '../api/jtwc'
 import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
@@ -84,6 +85,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   nswfire: 'NSW Rural Fire Service incident',
   cyclone: 'JTWC warning, not the official Australian warning',
   pastcyclone: 'Past cyclone track, IBTrACS',
+  speedcamera: 'Camera site, Queensland Government',
 }
 
 function placeTitle(place: Place): string {
@@ -125,6 +127,8 @@ function placeTitle(place: Place): string {
       return place.data.name ? `Tropical cyclone ${place.data.name} (${place.data.id})` : `Tropical cyclone ${place.data.id}`
     case 'pastcyclone':
       return pastCycloneTitle(place.data)
+    case 'speedcamera':
+      return place.data.site || SPEED_CAMERA_LABEL[place.data.type]
   }
 }
 
@@ -158,6 +162,7 @@ export function placeCard(place: Place): MapCard | null {
     facts.push(`Warning ${c.warning ?? '?'} · ${observed.format(c.issuedAt)} AEST`, c.points[0].windKt ? `${c.points[0].windKt} kt at the warning position` : 'Wind not published')
   }
   if (place.kind === 'pastcyclone') facts.push(place.data.peakKt ? `Peak ${place.data.peakKt} kt (${place.data.agency ?? 'WMO agency'})` : 'Peak wind not recorded', 'History, not a current warning')
+  if (place.kind === 'speedcamera') facts.push(SPEED_CAMERA_LABEL[place.data.type])
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,
     dump: LAYER_COLOR.dumpPoint,
@@ -178,6 +183,7 @@ export function placeCard(place: Place): MapCard | null {
     nswfire: place.kind === 'nswfire' ? (NSW_ALERT_COLOR[place.data.alertLevel] ?? NSW_ALERT_COLOR['Not Applicable']) : '',
     cyclone: CYCLONE_COLOR,
     pastcyclone: PAST_CYCLONE_COLOR,
+    speedcamera: place.kind === 'speedcamera' ? (place.data.type === 'fixed' ? LAYER_COLOR.speedCamera : place.data.type === 'p2p' ? LAYER_COLOR.p2pCamera : LAYER_COLOR.redLightCamera) : '',
   }
   return {
     key: `place-${place.kind}-${placeId(place)}`,

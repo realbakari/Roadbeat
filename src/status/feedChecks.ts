@@ -9,6 +9,7 @@ import { fetchFireBans } from '../api/fireBans'
 import { fetchNswFires } from '../api/nswFires'
 import { fetchCyclones } from '../api/jtwc'
 import { fetchPastCyclones } from '../api/pastCyclones'
+import { fetchSpeedCameras } from '../api/speedCameras'
 import { fetchModelForecast } from '../api/modelForecast'
 import { BUS_STOPS_API, parseBusStopAudit } from '../api/bccBusStops'
 import { fetchCorridors, fetchCouncilEvents, fetchPedestrianDay } from '../api/bccDashboard'
@@ -168,6 +169,7 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
   'nsw-fires': (signal) => fetchNswFires(signal).then(none),
   jtwc: (signal) => fetchCyclones(signal).then(none),
   'past-cyclones': (signal) => fetchPastCyclones(signal).then(none),
+  'speed-cameras': (signal) => fetchSpeedCameras(signal).then(none),
   'model-forecast': async (signal) => {
     const f = await fetchModelForecast(BRISBANE, signal)
     if (!f) throw new Error('Open-Meteo answered with no forecast')

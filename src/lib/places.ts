@@ -7,6 +7,7 @@ import type { QldWarning } from '../api/qldWarnings'
 import type { NswFire } from '../api/nswFires'
 import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
+import type { SpeedCamera } from '../api/speedCameras'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
 import type { MapLayers } from '../components/map/settings'
@@ -35,6 +36,7 @@ export type Place =
   | { kind: 'nswfire'; data: NswFire }
   | { kind: 'cyclone'; data: Cyclone }
   | { kind: 'pastcyclone'; data: PastCyclone }
+  | { kind: 'speedcamera'; data: SpeedCamera }
 
 /** The loaded lists a place link can point into; null while a list has not loaded. */
 export interface PlaceSources {
@@ -57,6 +59,7 @@ export interface PlaceSources {
   nswFires: NswFire[] | null
   cyclones: Cyclone[] | null
   pastCyclones: PastCyclone[] | null
+  speedCameras: SpeedCamera[] | null
 }
 
 /** The map layer a shared link to a place turns on. */
@@ -80,6 +83,7 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   nswfire: 'nswFires',
   cyclone: 'cyclones',
   pastcyclone: 'pastCyclones',
+  speedcamera: 'speedCameras',
 }
 
 /** The place a #place/<kind>/<id> link names, or null when it is unknown or not loaded yet. */
@@ -161,6 +165,10 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.pastCyclones?.find((c) => c.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'speedcamera') {
+    const data = s.speedCameras?.find((c) => c.id === id)
+    return data ? { kind, data } : null
+  }
   return null
 }
 
@@ -202,6 +210,8 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
       const p = place.data.points[Math.floor(place.data.points.length / 2)]
       return { center: p.position, zoom: 5 }
     }
+    case 'speedcamera':
+      return { center: place.data.position, zoom: 16 }
     case 'event':
       return place.data.position ? { center: place.data.position, zoom: 15 } : null
     case 'outage': {

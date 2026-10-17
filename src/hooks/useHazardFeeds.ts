@@ -4,6 +4,7 @@ import { fetchCyclones, type Cyclone } from '../api/jtwc'
 import { fetchModelForecast, type ModelForecast } from '../api/modelForecast'
 import { fetchNswFires, type NswFire } from '../api/nswFires'
 import { fetchPastCyclones, type PastCyclone } from '../api/pastCyclones'
+import { fetchSpeedCameras, type SpeedCamera } from '../api/speedCameras'
 import type { LngLat } from '../lib/geo'
 import { poll } from './poll'
 
@@ -50,6 +51,9 @@ export const useCyclones = (enabled: boolean): Feed<Cyclone[]> => usePolled(enab
 
 /** Past cyclone tracks near Queensland, read once when their layer is first turned on. */
 export const usePastCyclones = (enabled: boolean): Feed<PastCyclone[]> => usePolled(enabled, fetchPastCyclones, null)
+
+/** The state's fixed, red light and point-to-point camera sites, read once when their layer is first turned on. */
+export const useSpeedCameras = (enabled: boolean): Feed<SpeedCamera[]> => usePolled(enabled, fetchSpeedCameras, null)
 
 /** The DWD ICON model forecast for one point, read when `at` is set, and again if it changes. */
 export function useModelForecast(at: LngLat | null): Feed<ModelForecast> {

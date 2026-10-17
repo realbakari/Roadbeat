@@ -27,6 +27,7 @@ import {
   WindIcon,
   DropHalfBottomIcon,
   CloudRainIcon,
+  GaugeIcon,
   type Icon,
   type IconWeight,
 } from '@phosphor-icons/react'
@@ -68,6 +69,9 @@ export const LAYER_COLOR = {
   councilEvent: '#be185d',
   news: '#7c3aed',
   newsOfficial: '#0f172a',
+  speedCamera: '#0f172a',
+  redLightCamera: '#b91c1c',
+  p2pCamera: '#c2410c',
 } as const
 
 export const VEHICLE_COLOR = {
@@ -173,6 +177,11 @@ function buildIcons(): Record<string, string> {
   icons['gauge-stream'] = disc('#0369a1', DropHalfBottomIcon)
   icons['gauge-rain'] = disc('#0d9488', CloudRainIcon)
   for (const [level, color] of Object.entries(NSW_ALERT_COLOR)) icons[nswFireIcon(level)] = disc(color, FlameIcon)
+  // Camera sites are squares, like the signs that warn of them: a camera for speed, a signal for red light, a speedometer for point-to-point.
+  icons['speedcam-fixed'] = square(LAYER_COLOR.speedCamera, CameraIcon)
+  icons['speedcam-combined'] = square(LAYER_COLOR.redLightCamera, CameraIcon)
+  icons['speedcam-redlight'] = square(LAYER_COLOR.redLightCamera, TrafficSignalIcon)
+  icons['speedcam-p2p'] = square(LAYER_COLOR.p2pCamera, GaugeIcon)
   return icons
 }
 

@@ -34,6 +34,7 @@ Every time, position, delay and count in Roadbeat comes from an official source.
 - **Fire bans:** the Queensland Fire Department's fire ban feed, shown in its own words.
 - **Fires near the border:** the NSW Rural Fire Service's major incidents just south of the Queensland border.
 - **Tropical cyclones:** the US Joint Typhoon Warning Center's warnings and forecast tracks. These are not Australia's official cyclone warnings, which come from the Bureau of Meteorology, and Roadbeat says so wherever they appear.
+- **Speed and red light cameras:** the Queensland Government's map of fixed speed, red light and point-to-point camera sites. Mobile camera sites are linked, because the state publishes them by road and suburb only.
 - **Past cyclone tracks:** NOAA's International Best Track Archive (IBTrACS), the positions agencies reported for cyclones near Queensland since 1980. History for context only.
 - **Model weather forecast:** on each place page, raw output from Germany's DWD ICON weather model via Open-Meteo. It is a computer forecast, not an official one, and is labelled with the time the model ran.
 - **Maps:** OpenFreeMap, OpenMapTiles and OpenStreetMap contributors.

@@ -59,6 +59,7 @@ const sources: PlaceSources = {
   nswFires: null,
   cyclones: null,
   pastCyclones: null,
+  speedCameras: null,
   restAreas: [],
   dumpPoints: [],
   truckRestrictions: [],

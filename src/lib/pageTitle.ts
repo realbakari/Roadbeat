@@ -10,6 +10,7 @@ const PLACE_TITLE: Record<string, string> = {
   nswfire: 'NSW fire',
   cyclone: 'Tropical cyclone (JTWC)',
   pastcyclone: 'Past cyclone',
+  speedcamera: 'Speed camera site',
 }
 
 /** The site's own title, as the built page sets it, kept for the home view. */

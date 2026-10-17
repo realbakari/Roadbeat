@@ -49,6 +49,7 @@ import { NewTabNote } from './NewTabNote'
 import { WarningBody } from './WarningDetail'
 import { ExternalLink, Header, Section } from './PlaceParts'
 import { CycloneBody, NswFireBody, PastCycloneBody } from './HazardPlaces'
+import { SpeedCameraBody } from './SpeedCameraParts'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
 const REST_TYPES: Record<string, string> = {
@@ -220,6 +221,8 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return <CycloneBody c={place.data} now={now} />
     case 'pastcyclone':
       return <PastCycloneBody c={place.data} />
+    case 'speedcamera':
+      return <SpeedCameraBody c={place.data} />
   }
 }
 

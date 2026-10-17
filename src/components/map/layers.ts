@@ -4,6 +4,7 @@ import { LAYER_COLOR } from '../../lib/mapIcons'
 import { addCrashLayers } from './crashLayers'
 import { addWarningAreas, addWarningMarkers } from './warningLayers'
 import { addHazardLayers } from './hazardLayers'
+import { addSpeedCameraLayers } from './speedCameraLayers'
 
 export const isLine = ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]] as never
 
@@ -18,7 +19,6 @@ const CORRIDOR_WIDTH = (atZoom7: number, atZoom14: number) =>
   ['interpolate', ['linear'], ['zoom'], 7, atZoom7, 14, atZoom14, 16, 8, 17, 15, 18, 30, 19, 60, 20, 120] as never
 const empty: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
 
-export function addLayers(map: maplibregl.Map, mode: ColorMode) {
 /**
  * An event line's width at zooms 5, 10, 15 and 19. Past 15 it widens the way
  * the base map's roads do, so it covers the road it's on. QLDTraffic's
@@ -30,6 +30,7 @@ function lineWidth(z5: number, z10: number, z15: number, z19: number) {
   return ['interpolate', ['exponential', 1.5], ['zoom'], 5, z5, 10, z10, 15, z15, 19, z19] as never
 }
 
+export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   // OpenStreetMap building heights from the base map's own tiles, drawn under our layers.
   if (map.getSource('openmaptiles')) {
     map.addLayer({
@@ -523,6 +524,7 @@ function lineWidth(z5: number, z10: number, z15: number, z19: number) {
   })
   // NSW border fires, JTWC cyclones and past cyclone tracks, under hotspots and markers.
   addHazardLayers(map)
+  addSpeedCameraLayers(map)
   // Satellite hotspots: small dots, newest on top, under the stations and markers above.
   map.addLayer({
     id: 'hotspots',

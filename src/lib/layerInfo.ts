@@ -38,6 +38,7 @@ const SOURCES: Partial<Record<keyof MapLayers, Source>> = {
   nswFires: { feeds: ['nsw-fires'] },
   cyclones: { feeds: ['jtwc'] },
   pastCyclones: { feeds: ['past-cyclones'] },
+  speedCameras: { feeds: ['speed-cameras'] },
 }
 
 export interface LayerInfo {

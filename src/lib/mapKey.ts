@@ -42,6 +42,12 @@ export function mapKeySections(layers: MapLayers): KeySection[] {
   add(layers.nswFires, 'NSW fires near the border (NSW RFS)', Object.keys(NSW_ALERT_COLOR).map((label) => ({ label, icon: nswFireIcon(label) })))
   add(layers.cyclones, 'Tropical cyclones (JTWC, not the official warning)', [{ label: 'Warning position, and JTWC forecast points', color: CYCLONE_COLOR }])
   add(layers.pastCyclones, 'Past cyclone tracks (IBTrACS)', [{ label: 'Reported track, history only', color: PAST_CYCLONE_COLOR }])
+  add(layers.speedCameras, 'Speed and red light cameras (Qld Government)', [
+    { label: 'Fixed speed camera', icon: 'speedcam-fixed' },
+    { label: 'Combined red light and speed camera', icon: 'speedcam-combined' },
+    { label: 'Red light camera', icon: 'speedcam-redlight' },
+    { label: 'Point-to-point section, start or end', icon: 'speedcam-p2p' },
+  ])
   add(layers.councilCentres, 'Council centres (disaster dashboards)', [
     { label: 'Evacuation centre or place of refuge', icon: 'centre-shelter' },
     { label: 'Sandbag point', icon: 'centre-sandbag' },

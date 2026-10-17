@@ -44,6 +44,8 @@ import { cycloneFeatures, nswFireFeatures, pastCycloneFeatures } from './map/haz
 import type { NswFire } from '../api/nswFires'
 import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
+import type { SpeedCamera } from '../api/speedCameras'
+import { speedCameraFeatures } from './map/speedCameraLayers'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -72,8 +74,6 @@ const QLD_BOUNDS: [LngLat, LngLat] = [
   [137.9, -29.2],
   [153.6, -10.6],
 ]
-
-
 /**
  * How far the map can be panned or zoomed out: Australia, New Guinea and the
  * Coral Sea, where the cyclone tracks run. Without it, panning south or
@@ -83,6 +83,8 @@ const MAX_BOUNDS: [LngLat, LngLat] = [
   [100, -50],
   [185, 5],
 ]
+
+
 
 interface Props {
   mode: ColorMode
@@ -134,6 +136,7 @@ interface Props {
   cyclones: Cyclone[]
   /** Past cyclone tracks near Queensland. */
   pastCyclones: PastCyclone[]
+  speedCameras: SpeedCamera[]
   /** The open news story: its places are ringed and its roads drawn wider. */
   selectedStory: NewsStory | null
   selectedVehicleId: string | null
@@ -191,9 +194,10 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   nswFires: ['nsw-fires'],
   cyclones: ['cyclone-track', 'cyclone-points'],
   pastCyclones: ['past-cyclones'],
+  speedCameras: ['speed-cameras'],
 }
 
-const CLICKABLE_PLACES = ['air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['speed-cameras', 'air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 /** What the crosshair reads under the centre: everything a tap can open. */
 const READABLE = [...EVENT_LAYERS, ...CLICKABLE_PLACES]
@@ -253,6 +257,7 @@ export function TrafficMap(props: Props) {
     nswFires,
     cyclones,
     pastCyclones,
+    speedCameras,
     selectedStory,
     selectedVehicleId,
     card,
@@ -289,16 +294,16 @@ export function TrafficMap(props: Props) {
       container: container.current,
       style: appliedStyle.current,
       bounds: QLD_BOUNDS,
+      maxBounds: MAX_BOUNDS,
       fitBoundsOptions: { padding: 24 },
+      // Past 19 the base map's roads are stretched from zoom 14 tiles, and the few metres
+      // between QLDTraffic's surveyed lines and OpenStreetMap's fill the screen.
+      maxZoom: 19,
       attributionControl: { compact: true },
       // A north-up, flat map keeps the rain radar overlay aligned.
       dragRotate: false,
       pitchWithRotate: false,
-      maxBounds: MAX_BOUNDS,
       touchPitch: false,
-      // Past 19 the base map's roads are stretched from zoom 14 tiles, and the few metres
-      // between QLDTraffic's surveyed lines and OpenStreetMap's fill the screen.
-      maxZoom: 19,
     })
     m.touchZoomRotate.disableRotation()
     if (import.meta.env.DEV) (window as unknown as { __map: maplibregl.Map }).__map = m
@@ -425,6 +430,10 @@ export function TrafficMap(props: Props) {
     setData(map, 'cyclones', cycloneData)
     setData(map, 'past-cyclones', pastCycloneData)
   }, [map, ready, nswFireData, cycloneData, pastCycloneData])
+  const speedCameraData = useMemo(() => speedCameraFeatures(speedCameras), [speedCameras])
+  useEffect(() => {
+    if (ready && map) setData(map, 'speed-cameras', speedCameraData)
+  }, [map, ready, speedCameraData])
   useEffect(() => {
     if (!ready || !map) return
     setData(map, 'council-centres', centreData)

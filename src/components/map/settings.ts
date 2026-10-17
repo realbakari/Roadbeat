@@ -53,6 +53,8 @@ export interface MapLayers {
   cyclones: boolean
   /** Past tropical cyclone tracks near Queensland since 1980, from IBTrACS. */
   pastCyclones: boolean
+  /** Fixed speed, red light and point-to-point camera sites, from the Queensland Government's camera map. */
+  speedCameras: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -86,4 +88,5 @@ export const DEFAULT_LAYERS: MapLayers = {
   nswFires: false,
   cyclones: false,
   pastCyclones: false,
+  speedCameras: false,
 }
