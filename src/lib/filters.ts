@@ -114,3 +114,8 @@ export function districtsOf(events: TrafficEvent[]): string[] {
   }
   return [...set].sort((a, b) => a.localeCompare(b))
 }
+
+/** A string that changes when any filter that narrows the list changes; sort order is left out. */
+export function filtersKey(f: EventFilters): string {
+  return JSON.stringify([f.when, f.query.trim(), [...f.types].sort(), f.district, f.priority, f.closuresOnly])
+}

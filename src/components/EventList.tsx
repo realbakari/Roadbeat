@@ -7,10 +7,11 @@ import { FireList } from './FireList'
 import { CouncilWorksList } from './CouncilWorksList'
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import { EVENT_TYPES, PRIORITIES } from '../lib/eventMeta'
-import { matchesBase, type EventFilters, type SortKey, type When } from '../lib/filters'
+import { filtersKey, matchesBase, type EventFilters, type SortKey, type When } from '../lib/filters'
 import { nextHidden } from '../lib/scrollReveal'
 import { distanceKm, eventAnchor, type LngLat } from '../lib/geo'
 import { EventCard } from './EventCard'
+import { useAnnouncement } from '../hooks/useAnnouncement'
 
 interface Props {
   allEvents: TrafficEvent[]
@@ -118,6 +119,7 @@ export function EventList({
     onFiltersChange({ ...filters, query: '', types: new Set(), district: 'all', priority: 'all', closuresOnly: false })
 
   const moreActive = (filters.district !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0)
+  const announcement = useAnnouncement(filtersKey(filters), events.length ? `${events.length} ${events.length === 1 ? 'event' : 'events'}` : 'No matching events')
 
   const sortItems: Record<SortKey, string> = { priority: 'Priority', recent: 'Recently updated', nearest: 'Nearest to me' }
 
@@ -236,6 +238,9 @@ export function EventList({
           <Text variant="secondary" size="sm">
             <span className="whitespace-nowrap">
               <span className="tabular-nums">{events.length}</span> {events.length === 1 ? 'event' : 'events'}
+            </span>
+            <span role="status" className="sr-only">
+              {announcement}
             </span>
           </Text>
           {hideControls && activeLabels.length > 0 && (
