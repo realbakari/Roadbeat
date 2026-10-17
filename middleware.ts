@@ -8,7 +8,7 @@ export const config = { matcher: ['/((?!api/|mcp|translink-rt|qfd-bushfires|qld-
 
 const MARKDOWN = { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept', 'cache-control': 'public, max-age=300' }
 
-/** "/" → "/index.md", "/about/" → "/about.md". Mirrors markdownPathFor in site/plugin.ts. */
+/** "/" → "/index.md", "/about/" → "/about.md". Mirrors markdownPathFor in site/markdown.ts. */
 function markdownPathFor(path: string) {
   const clean = path.replace(/\/+$/, '') || '/'
   return clean === '/' ? '/index.md' : `${clean}.md`

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { fillTemplate, jsonLd, loadPage, markdownPathFor, markdownToHtml, siteFiles, sitemapFiles } from './plugin.ts'
+import { jsonLd } from './head.ts'
+import { markdownPathFor, markdownToHtml } from './markdown.ts'
+import { fillTemplate, loadPage, siteFiles } from './plugin.ts'
+import { sitemapFiles } from './sitemap.ts'
 
 const withUrl = { siteUrl: 'https://roadbeat.example', contactEmail: 'hello@roadbeat.example', gaMeasurementId: 'G-TEST123' }
 const bare = { siteUrl: '', contactEmail: '', gaMeasurementId: '' }
