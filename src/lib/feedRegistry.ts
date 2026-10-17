@@ -562,7 +562,7 @@ export const FEEDS = [
     licence: 'US Government work; no terms published on the site',
     read: 'direct',
     refreshSeconds: 1800,
-    refreshNote: 'While the layer or a storm page is open; JTWC warns every 6 hours',
+    refreshNote: 'While the layer or a storm page is open, or the street map is the base (for the satellite suggestion); JTWC warns every 6 hours',
     feeds: ['Tropical cyclones layer', 'Storm pages'],
     module: 'src/api/jtwc.ts',
     datasetUrl: 'https://www.metoc.navy.mil/jtwc/jtwc.html',

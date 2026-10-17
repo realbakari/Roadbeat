@@ -66,6 +66,8 @@ interface Props {
   /** The map's base, and the one-tap switch between the street map and a satellite image. */
   base: MapBase
   onBaseChange: (b: MapBase) => void
+  /** Shown under the Layers and base buttons while the panel is closed, such as a prompt to show the satellite view. */
+  aside?: ReactNode
   /** Which satellite image is chosen, and the state of each source. */
   imagery: ComponentProps<typeof SatelliteImageNote>
   /** Fire bans, NSW border fires, JTWC cyclones and past cyclone tracks, for their notes. */
@@ -173,6 +175,7 @@ export function MapLayersPanel({
   imagery,
   base,
   onBaseChange,
+  aside,
   hazards,
   councilErrors,
   basemap,
@@ -194,11 +197,14 @@ export function MapLayersPanel({
 
   if (!open) {
     return (
-      <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-2">
-        <Button ref={takeFocus} size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
-          Layers
-        </Button>
-        <BaseSwitch base={base} onChange={onBaseChange} />
+      <div className="absolute top-3 left-3 z-10 grid gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button ref={takeFocus} size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
+            Layers
+          </Button>
+          <BaseSwitch base={base} onChange={onBaseChange} />
+        </div>
+        {aside}
       </div>
     )
   }

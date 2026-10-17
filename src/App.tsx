@@ -43,6 +43,8 @@ import { useQldWarnings } from './hooks/useQldWarnings'
 import { satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
 import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
 import { useStoredChoice } from './hooks/useStoredChoice'
+import { parseDismissed, satelliteSuggestion } from './lib/satelliteSuggestion'
+import { SatelliteSuggestion } from './components/map/SatelliteSuggestion'
 import { useCyclones, useFireBans, useNswFires, usePastCyclones } from './hooks/useHazardFeeds'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
@@ -240,7 +242,8 @@ export default function App() {
   const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
   const fireBans = useFireBans(layers.fires)
   const nswFires = useNswFires(layers.nswFires || sel.place?.kind === 'nswfire')
-  const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone')
+  // Also read while the street map is the base, so a storm near Australia can suggest the satellite view.
+  const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone' || base === 'map')
   const pastCyclones = usePastCyclones(layers.pastCyclones || sel.place?.kind === 'pastcyclone')
   const imagery = useSatelliteImagery(base === 'satellite', satelliteSource, now)
   const satelliteImage = useMemo(
@@ -249,6 +252,26 @@ export default function App() {
   )
   const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
   const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
+  const [dismissed, setDismissed] = useState<string[]>(() => {
+    try {
+      return parseDismissed(localStorage.getItem('qldt-satellite-dismissed'))
+    } catch {
+      return []
+    }
+  })
+  const dismissSuggestion = (key: string) => {
+    const next = [...dismissed, key]
+    setDismissed(next)
+    try {
+      localStorage.setItem('qldt-satellite-dismissed', JSON.stringify(next.slice(-50)))
+    } catch {
+      // Storage blocked: the dismissal lasts for this visit.
+    }
+  }
+  const suggestion = useMemo(
+    () => (base === 'map' ? satelliteSuggestion(cyclones.data ?? [], qw.warnings ?? [], dismissed) : null),
+    [base, cyclones.data, qw.warnings, dismissed],
+  )
   const firesNewest = useMemo(() => (fires?.length ? Math.max(...fires.map((f) => f.published ?? 0)) || null : null), [fires])
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
@@ -681,6 +704,15 @@ export default function App() {
               hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt, newest: hot.hotspots?.[0]?.observedAt ?? null, now }}
               base={base}
               onBaseChange={setBase}
+              aside={
+                suggestion && (
+                  <SatelliteSuggestion
+                    suggestion={suggestion}
+                    onShow={() => setBase('satellite')}
+                    onDismiss={() => dismissSuggestion(suggestion.key)}
+                  />
+                )
+              }
               imagery={{ source: satelliteSource, onSource: setSatelliteSource, now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               hazards={{ fireBans, nswFires, cyclones, pastCyclones }}
               councilErrors={council.errors}
