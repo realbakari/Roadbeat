@@ -41,6 +41,8 @@ export function useAnimatedVehicles(map: maplibregl.Map | null, ready: number, v
     let raf = 0
     let last = 0
     let done = false
+    // MapLibre's jumpTo fires 'moveend' synchronously; without this the follow jump re-enters draw() forever.
+    let jumping = false
 
     const draw = (k: number) => {
       const b = map.getBounds()
@@ -55,7 +57,14 @@ export function useAnimatedVehicles(map: maplibregl.Map | null, ready: number, v
         const z = to.get(id)!
         const p: LngLat = [a[0] + (z[0] - a[0]) * k, a[1] + (z[1] - a[1]) * k]
         next.set(id, p)
-        if (id === followRef.current) map.jumpTo({ center: p })
+        if (id === followRef.current) {
+          jumping = true
+          try {
+            map.jumpTo({ center: p })
+          } finally {
+            jumping = false
+          }
+        }
         if (
           show &&
           p[0] > b.getWest() - padX &&
@@ -88,7 +97,7 @@ export function useAnimatedVehicles(map: maplibregl.Map | null, ready: number, v
 
     // After the glide ends, panning still needs vehicles that were off-screen.
     const onMoveEnd = () => {
-      if (done) draw(1)
+      if (done && !jumping) draw(1)
     }
     map.on('moveend', onMoveEnd)
     return () => {

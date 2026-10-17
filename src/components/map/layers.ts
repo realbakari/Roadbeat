@@ -215,7 +215,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   })
   iconLayer('cameras-web', 'cameras', ['==', ['get', 'icon'], 'camera-webcam'], 7)
   iconLayer('cameras-flood', 'cameras', ['==', ['get', 'icon'], 'camera-floodcam'], 6)
-  iconLayer('places-waze', 'places', ['==', ['get', 'icon'], 'waze'], 0, [5, 0.6, 12, 0.85])
+  iconLayer('places-waze', 'places', ['in', ['get', 'icon'], ['literal', ['waze', 'waze-hazard']]], 0, [5, 0.6, 12, 0.85])
   // Fires: warnings drawn above incidents, from the whole-state view.
   map.addLayer({
     id: 'fire-markers',

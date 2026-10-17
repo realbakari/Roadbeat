@@ -61,3 +61,19 @@ export function eventAnchor(e: TrafficEvent): LngLat | null {
   const any = geoms.flatMap(positions)[0]
   return any ? (any as LngLat) : null
 }
+
+/**
+ * Every point to pin the event's marker on. An event published at several
+ * points (a MultiPoint, or a GeometryCollection holding more than one Point)
+ * gets a marker at each, because each is a site QLDTraffic names: two flooded
+ * crossings 28 km apart, say. Otherwise, the single anchor.
+ */
+export function eventMarkerPoints(e: TrafficEvent): LngLat[] {
+  const points = flatten(e.geometry)
+    .filter((g) => g.type === 'Point' || g.type === 'MultiPoint')
+    .flatMap(positions)
+    .map((p) => [p[0], p[1]] as LngLat)
+  if (points.length) return points
+  const anchor = eventAnchor(e)
+  return anchor ? [anchor] : []
+}

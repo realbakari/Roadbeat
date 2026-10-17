@@ -10,6 +10,10 @@
 // - It is an everyday English word, a common first name or surname, or a better
 //   known place in another state or country (COMMON below), so a capitalised
 //   headline word would place a report somewhere the report doesn't mean.
+// Such a name is kept instead under its council area, as "Carina (Brisbane City)",
+// the form the gazetteer itself uses for some names, wherever that council has
+// one point for it. Energex names a suburb with its council, so its outages
+// can still be placed; a headline never writes the name that way.
 import { writeFileSync } from 'node:fs'
 import { parseCsv } from './lib/gtfs.mjs'
 
@@ -46,22 +50,33 @@ for (const r of rows) {
   byName.set(name, list)
 }
 
+/** The one best point in a list, or null when its best kind has two or more points. */
+function single(list) {
+  const best = Math.min(...list.map((p) => p.rank))
+  const top = list.filter((p) => p.rank === best)
+  return new Set(top.map((p) => `${p.lng},${p.lat}`)).size > 1 ? null : top[0]
+}
+const row = (name, p) => [name, +p.lng.toFixed(5), +p.lat.toFixed(5), p.lga]
+
 const places = []
 let ambiguous = 0
 let common = 0
+let qualified = 0
 for (const [name, list] of byName) {
-  if (COMMON.has(name)) {
-    common++
+  const p = COMMON.has(name) ? null : single(list)
+  if (p) {
+    places.push(row(name, p))
     continue
   }
-  const best = Math.min(...list.map((p) => p.rank))
-  const top = list.filter((p) => p.rank === best)
-  if (new Set(top.map((p) => `${p.lng},${p.lat}`)).size > 1) {
-    ambiguous++
-    continue
+  if (COMMON.has(name)) common++
+  else ambiguous++
+  for (const lga of new Set(list.map((q) => q.lga))) {
+    const inLga = lga && !byName.has(`${name} (${lga})`) ? single(list.filter((q) => q.lga === lga)) : null
+    if (inLga) {
+      places.push(row(`${name} (${lga})`, inLga))
+      qualified++
+    }
   }
-  const p = top[0]
-  places.push([name, +p.lng.toFixed(5), +p.lat.toFixed(5), p.lga])
 }
 places.sort((a, b) => a[0].localeCompare(b[0]))
 if (places.length < 3000) throw new Error(`Only ${places.length} places; expected about 4,000`)
@@ -72,4 +87,4 @@ const out = {
   places,
 }
 writeFileSync(new URL('../src/data/qld-places.json', import.meta.url), JSON.stringify(out))
-console.log(`${places.length} places kept; ${ambiguous} names with more than one point and ${common} common words left out`)
+console.log(`${places.length} places kept; ${ambiguous} names with more than one point and ${common} common words kept only under their council (${qualified} entries)`)

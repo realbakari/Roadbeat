@@ -8,6 +8,7 @@ import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/t
 import type { MapLayers } from '../components/map/settings'
 import type { LngLat } from './geo'
 import { outagePosition } from './outages'
+import { findTruck, truckIconPoint } from './trucks'
 
 /** A map item that has its own detail page, reached by #place/<kind>/<id>. */
 export type Place =
@@ -77,7 +78,7 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     return data ? { kind, data } : null
   }
   if (kind === 'truck') {
-    const data = s.truckRestrictions.find((t) => String(t.properties.id) === id)
+    const data = findTruck(s.truckRestrictions, id)
     return data ? { kind, data } : null
   }
   if (kind === 'waze') {
@@ -142,8 +143,8 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
     case 'waze':
       return { center: [place.data.location.x, place.data.location.y], zoom: 13 }
     case 'truck': {
-      const p = place.data.geometry.coordinates[0]?.[0]
-      return p ? { center: [p[0], p[1]], zoom: 12 } : null
+      const p = truckIconPoint(place.data)
+      return p ? { center: p, zoom: 12 } : null
     }
     case 'clearance':
     case 'bay':

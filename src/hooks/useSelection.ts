@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import type { MapLayers } from '../components/map/settings'
 import type { LngLat } from '../lib/geo'
 import { findPlace, PLACE_LAYER, placeFocus, type Place, type PlaceSources } from '../lib/places'
@@ -24,7 +24,9 @@ export function useHashSelection() {
 
 /**
  * The place a #place link selects. Opening one turns its map layer on and
- * flies the map to it; closing it clears the map focus unless a vehicle is open.
+ * flies the map to it, once: feed refreshes bring new copies of the place, and
+ * flying again would undo the user's pan and zoom. Closing it clears the map
+ * focus unless a vehicle is open.
  */
 export function useSelectedPlace(
   sel: Selection,
@@ -48,14 +50,20 @@ export function useSelectedPlace(
   }, [kind, setLayers])
 
   const vehicleOpen = !!sel.vehicle
+  const placeKey = sel.place ? `${sel.place.kind}/${sel.place.id}` : null
+  const focused = useRef<string | null>(null)
   useEffect(() => {
     if (!place) {
+      focused.current = null
       if (!vehicleOpen) setFocus(null)
       return
     }
+    if (focused.current === placeKey) return
     const focus = placeFocus(place)
-    if (focus) setFocus(focus)
-  }, [place, vehicleOpen, setFocus])
+    if (!focus) return
+    focused.current = placeKey
+    setFocus(focus)
+  }, [place, placeKey, vehicleOpen, setFocus])
 
   return place
 }

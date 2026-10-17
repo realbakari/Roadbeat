@@ -30,6 +30,7 @@ import { pageTitle } from './lib/pageTitle'
 import { eventTitle } from './lib/eventText'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { mapCardFor } from './lib/mapCard'
+import { isUnplaced } from './lib/outages'
 import { usePanelLayout } from './hooks/usePanelLayout'
 import { useEventHistory, useTimeline } from './hooks/useTimeline'
 import { useLocality } from './hooks/useLocality'
@@ -344,7 +345,7 @@ export default function App() {
       ...(council.meters ? { parkingMeters: council.meters.length } : {}),
       ...(council.bikeStops ? { cycling: council.bikeStops.length } : {}),
       ...(council.events ? { councilEvents: council.events.length } : {}),
-      ...(news.snapshot ? { councilCentres: news.snapshot.centres.length, outages: news.snapshot.outages.length } : {}),
+      ...(news.snapshot ? { councilCentres: news.snapshot.centres.length, outages: news.snapshot.outages.filter((o) => !isUnplaced(o)).length } : {}),
       ...(air.stations ? { airQuality: air.stations.length } : {}),
       ...(hot.hotspots ? { hotspots: hot.hotspots.length } : {}),
       ...(stories ? { news: mapStories.length } : {}),
@@ -640,6 +641,7 @@ export default function App() {
               vehicleCounts={vehicleCounts}
               vehicleError={vehicleError}
               clearanceError={clearanceError}
+              unplacedOutages={news.snapshot?.outages.filter(isUnplaced).length ?? 0}
               airError={air.error}
               fireNotice={fireNotice}
               gaugeNotice={gaugeNotice}

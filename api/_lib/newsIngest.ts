@@ -105,6 +105,14 @@ function feedJson(body: string): unknown {
  * area, and cameras and notices are optional, so each of those fails on its own.
  */
 async function readDashboard(d: CouncilDashboard) {
+  // An optional feed in a shape we don't read counts as listing nothing, like one that didn't answer.
+  const optional = <T>(json: unknown, parse: (json: unknown) => T[]): T[] => {
+    try {
+      return json == null ? [] : parse(json)
+    } catch {
+      return []
+    }
+  }
   const feed = (name: string) => text(`${d.feed}/dashboard/${name}`).then(feedJson)
   const [bulletins, centres, cameras, notices, energex] = await Promise.all([
     feed('imsBulletin'),
@@ -116,10 +124,10 @@ async function readDashboard(d: CouncilDashboard) {
   return {
     items: parseBulletins(bulletins).map((b) => fromBulletin(d, b, index)),
     centres: parseCentres(centres).map((c) => toCentre(d, c)),
-    cameras: cameras ? parseCameras(cameras).flatMap((c) => toCouncilCamera(d, c) ?? []) : [],
+    cameras: optional(cameras, parseCameras).flatMap((c) => toCouncilCamera(d, c) ?? []),
     outages: [
-      ...(notices ? parseCouncilNotices(notices).map((n) => fromCouncilNotice(d, n)) : []),
-      ...(energex ? parseEnergexOutages(energex).flatMap((o) => fromPowerOutage(o, index, d.page) ?? []) : []),
+      ...optional(notices, parseCouncilNotices).map((n) => fromCouncilNotice(d, n)),
+      ...optional(energex, parseEnergexOutages).map((o) => fromPowerOutage(o, index, d.page)),
     ],
   }
 }

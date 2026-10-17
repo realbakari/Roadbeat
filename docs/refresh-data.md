@@ -102,7 +102,7 @@ The script asks BoM's National Flood Gauge Network which catchment contains each
 npm run data:places
 ```
 
-This downloads the Department of Resources' *Place names gazetteer - Queensland* from data.qld.gov.au and writes `src/data/qld-places.json`: towns, suburbs, localities and neighbourhoods, one point each. It leaves out names the gazetteer places in more than one spot, and the everyday words and common names listed in `COMMON` in `scripts/build-places.mjs`. Add a name to `COMMON` if it places news stories where they don't belong. The gazetteer changes rarely; rebuild after it is republished.
+This downloads the Department of Resources' *Place names gazetteer - Queensland* from data.qld.gov.au and writes `src/data/qld-places.json`: towns, suburbs, localities and neighbourhoods, one point each. It leaves out names the gazetteer places in more than one spot, and the everyday words and common names listed in `COMMON` in `scripts/build-places.mjs`, keeping each of those only under its council area, as "Carina (Brisbane City)", wherever that council has one point for it. A headline never names a place that way, so news is unaffected, but Energex outages, which name the council, can still be placed. Add a name to `COMMON` if it places news stories where they don't belong. The gazetteer changes rarely; rebuild after it is republished.
 
 ## Rebuild the list of council disaster dashboards
 

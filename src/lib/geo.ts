@@ -3,7 +3,9 @@ import type { Camera, DumpPoint, RestArea, TrafficEvent, TruckRestriction, WazeR
 import { CAMERA_COLOR, priorityRank, typeMeta } from './eventMeta'
 import { isClosure, isUpcoming } from './filters'
 import { eventIconId } from './mapIcons'
-import { eventAnchor, flatten, type LngLat } from './eventAnchor'
+import { eventMarkerPoints, flatten, type LngLat } from './eventAnchor'
+import { truckIconPoint, truckKey } from './trucks'
+import { wazeIcon, wazeLabel } from './waze'
 
 export { eventAnchor, eventBounds, type Bounds, type LngLat } from './eventAnchor'
 
@@ -37,23 +39,17 @@ export function eventShapes(events: TrafficEvent[]): GjCollection<Geometry, Even
 export function eventMarkers(events: TrafficEvent[]): GjCollection<Geometry, EventFeatureProps> {
   const features: GjFeature<Geometry, EventFeatureProps>[] = []
   for (const e of events) {
-    const anchor = eventAnchor(e)
-    if (!anchor) continue
     const p = e.properties
     const future = isUpcoming(e)
-    features.push({
-      type: 'Feature',
+    const properties = {
       id: p.id,
-      geometry: { type: 'Point', coordinates: anchor },
-      properties: {
-        id: p.id,
-        color: typeMeta(p.event_type).color,
-        rank: priorityRank(p.event_priority),
-        area: false,
-        future,
-        icon: eventIconId(p.event_type, isClosure(e) ? (p.impact?.impact_subtype ?? 'closed') : null, future),
-      },
-    })
+      color: typeMeta(p.event_type).color,
+      rank: priorityRank(p.event_priority),
+      area: false,
+      future,
+      icon: eventIconId(p.event_type, isClosure(e) ? (p.impact?.impact_subtype ?? 'closed') : null, future),
+    }
+    for (const at of eventMarkerPoints(e)) features.push({ type: 'Feature', id: p.id, geometry: { type: 'Point', coordinates: at }, properties })
   }
   // Draw higher-priority markers last so they sit on top.
   features.sort((a, b) => b.properties.rank - a.properties.rank)
@@ -108,9 +104,9 @@ export function placeMarkers(
       ...waze.map((w) =>
         point([w.location.x, w.location.y], {
           key: `place/waze/${w.uuid}`,
-          icon: 'waze',
+          icon: wazeIcon(w),
           color: '',
-          label: `Waze report · ${w.street ?? w.city ?? 'Crash'}`,
+          label: [`Waze: ${wazeLabel(w)}`, w.street ?? w.city].filter(Boolean).join(' · '),
         }),
       ),
     ],
@@ -120,11 +116,10 @@ export function placeMarkers(
 export function truckLines(trucks: TruckRestriction[]): GjCollection<Geometry, PlaceProps> {
   const features: GjFeature<Geometry, PlaceProps>[] = []
   for (const t of trucks) {
-    const props = { key: `place/truck/${t.properties.id}`, icon: 'truck-restriction', color: '', label: t.properties.name }
+    const props = { key: `place/truck/${truckKey(t)}`, icon: 'truck-restriction', color: '', label: t.properties.name }
     features.push({ type: 'Feature', geometry: t.geometry, properties: props })
-    const lines = t.geometry.coordinates
-    const longest = lines.reduce((a, b) => (b.length > a.length ? b : a), lines[0] ?? [])
-    if (longest.length) features.push(point(longest[Math.floor(longest.length / 2)], props))
+    const icon = truckIconPoint(t)
+    if (icon) features.push(point(icon, props))
   }
   return { type: 'FeatureCollection', features }
 }

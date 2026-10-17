@@ -1,7 +1,7 @@
 import type { CouncilNotice, PowerOutage } from '../api/councilDashboard.js'
 import type { Outage } from '../api/newsTypes.js'
 import { itemId, type CouncilDashboard } from './newsItems.js'
-import type { PlaceIndex } from './newsPlaces.js'
+import type { GazetteerRow, PlaceIndex } from './newsPlaces.js'
 
 type LngLat = NonNullable<Outage['place']>['position']
 
@@ -9,20 +9,35 @@ type LngLat = NonNullable<Outage['place']>['position']
 const titleCase = (s: string) => s.toLowerCase().replace(/(^|[\s-])([a-z])/g, (_m, sep: string, ch: string) => sep + ch.toUpperCase())
 
 /**
- * An Energex outage placed by its suburb's gazetteer point, if the suburb is
- * in the gazetteer, under the council area Energex names. Energex's council
- * names ("Ipswich City") are the gazetteer's. Null when the suburb isn't found,
- * rather than a guess: Roadbeat has nowhere to put it.
+ * The gazetteer row for a suburb in the council area Energex names, ignoring
+ * case. The gazetteer names a suburb whose name recurs elsewhere with its
+ * council, "Red Hill (Brisbane City)", so that form is tried first.
  */
-export function fromPowerOutage(o: PowerOutage, index: PlaceIndex, dashboard: string): Outage | null {
-  const suburb = titleCase(o.suburb)
-  const row = index.byName.get(suburb)
-  if (!row || (o.council && row[3] !== o.council)) return null
+function findSuburb(index: PlaceIndex, suburb: string, council: string | null): GazetteerRow | null {
+  const name = suburb.toLowerCase()
+  const qualified = council ? index.byLowerName.get(`${name} (${council.toLowerCase()})`) : undefined
+  if (qualified) return qualified
+  const row = index.byLowerName.get(name)
+  return row && (!council || row[3] === council) ? row : null
+}
+
+/** "Red Hill (Brisbane City)" → "Red Hill". */
+const plainName = (name: string) => name.replace(/ \([^)]*\)$/, '')
+
+/**
+ * An Energex outage placed by its suburb's gazetteer point, under the council
+ * area Energex names. Energex's council names ("Ipswich City") are the
+ * gazetteer's. When the suburb isn't found the outage is still kept, with no
+ * place, rather than placed by a guess: it is listed as not on the map.
+ */
+export function fromPowerOutage(o: PowerOutage, index: PlaceIndex, dashboard: string): Outage {
+  const row = findSuburb(index, o.suburb, o.council)
+  const suburb = row ? plainName(row[0]) : titleCase(o.suburb)
   return {
     id: itemId(`energex|${o.event}`),
     source: 'energex',
-    council: o.council ?? row[3],
-    area: row[3],
+    council: o.council ?? row?.[3] ?? 'Energex',
+    area: row?.[3] ?? o.council,
     type: 'Power',
     title: `${o.cause ?? 'Power outage'}, ${suburb}`,
     details: null,
@@ -33,10 +48,13 @@ export function fromPowerOutage(o: PowerOutage, index: PlaceIndex, dashboard: st
     end: o.restore,
     updated: null,
     geometry: null,
-    place: { name: suburb, lga: row[3], position: [row[1], row[2]], via: 'gazetteer' },
+    place: row ? { name: row[0], lga: row[3], position: [row[1], row[2]], via: 'gazetteer' } : null,
     dashboard,
   }
 }
+
+/** An Energex outage whose suburb the gazetteer doesn't list: it is kept, but has no point on the map. */
+export const isUnplaced = (o: Outage) => o.place == null && o.geometry == null
 
 /** A council's notice, drawn at the shape the council published. */
 export function fromCouncilNotice(d: CouncilDashboard, n: CouncilNotice): Outage {
@@ -82,7 +100,7 @@ export const OUTAGE_COLOR: Record<Outage['source'], string> = { energex: '#b91c1
 
 /** Two short published facts for a card: status and customers, or planned dates. */
 export function outageFacts(o: Outage): string[] {
-  const facts: string[] = []
+  const facts: string[] = isUnplaced(o) ? ['Not on the map: suburb not found'] : []
   if (o.status) facts.push(o.customers != null ? `${o.status} · ${o.customers.toLocaleString('en-AU')} customers` : o.status)
   if (o.end) facts.push(`${o.source === 'energex' ? 'Estimated restore' : 'Until'} ${clock.format(o.end)}`)
   else if (o.place) facts.push(`Located from: ${o.place.name}`)

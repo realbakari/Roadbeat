@@ -41,6 +41,8 @@ interface Props {
   vehicleError: string | null
   clearanceError: string | null
   airError: string | null
+  /** Energex outages kept off the map because their suburb isn't in the gazetteer. */
+  unplacedOutages: number
   /** Why bushfire warnings or gauges are missing or stale, or null while their feeds are fine. */
   fireNotice: string | null
   gaugeNotice: string | null
@@ -69,7 +71,7 @@ const BASEMAPS: { value: Basemap; label: string; hint: string }[] = [
 const TOGGLES: { key: keyof MapLayers; label: string; icon: string; group: 'traffic' | 'places' }[] = [
   { key: 'webcams', label: 'Traffic cameras', icon: 'camera-webcam', group: 'traffic' },
   { key: 'floodcams', label: 'Flood cameras', icon: 'camera-floodcam', group: 'traffic' },
-  { key: 'waze', label: 'Waze crash reports', icon: 'waze', group: 'traffic' },
+  { key: 'waze', label: 'Waze reports', icon: 'waze', group: 'traffic' },
   { key: 'trucks', label: 'Truck restrictions', icon: 'truck-restriction', group: 'traffic' },
   { key: 'restAreas', label: 'Rest areas', icon: 'rest-area', group: 'places' },
   { key: 'dumpPoints', label: 'RV dump points', icon: 'dump-point', group: 'places' },
@@ -143,6 +145,7 @@ export function MapLayersPanel({
   vehicleError,
   clearanceError,
   airError,
+  unplacedOutages,
   fireNotice,
   gaugeNotice,
   hotspotState,
@@ -334,6 +337,12 @@ export function MapLayersPanel({
               <Text size="xs" variant="secondary">
                 As relayed by council disaster dashboards. Energex names a suburb and streets, not a point; Ergon's area has no feed.
               </Text>
+              {unplacedOutages > 0 && (
+                <Text size="xs" variant="secondary">
+                  {unplacedOutages === 1 ? '1 Energex outage is' : `${unplacedOutages} Energex outages are`} not on the map: the place names gazetteer has no suburb by that name in
+                  the council area Energex gives. The dashboard's outages list includes them.
+                </Text>
+              )}
             </div>
           </LayerRow>
           <LayerRow

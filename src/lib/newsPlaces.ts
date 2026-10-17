@@ -32,10 +32,12 @@ const MAX_WORDS = 6
 
 export interface PlaceIndex {
   byName: Map<string, GazetteerRow>
+  /** The same rows by lower-cased name, for sources that write names in capitals ("MCDOWALL"). */
+  byLowerName: Map<string, GazetteerRow>
 }
 
 export function placeIndex(rows: GazetteerRow[]): PlaceIndex {
-  return { byName: new Map(rows.map((r) => [r[0], r])) }
+  return { byName: new Map(rows.map((r) => [r[0], r])), byLowerName: new Map(rows.map((r) => [r[0].toLowerCase(), r])) }
 }
 
 /**

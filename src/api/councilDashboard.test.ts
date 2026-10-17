@@ -149,3 +149,20 @@ describe('parseEnergexOutages', () => {
     expect(() => parseEnergexOutages('<!DOCTYPE html>')).toThrow()
   })
 })
+
+// How councils with nothing to list answered on 17 October 2026: Weipa Town's
+// getCameras and Cloncurry's dashOutages. Each means "none", not a fault.
+describe('optional feeds that list nothing', () => {
+  it('reads a null feature list as no cameras', () => {
+    expect(parseCameras({ type: null, features: null, rights })).toEqual([])
+  })
+
+  it('reads a bare empty array as no notices', () => {
+    expect(parseCouncilNotices([])).toEqual([])
+  })
+
+  it('reads an empty Energex relay as no outages', () => {
+    expect(parseEnergexOutages([])).toEqual([])
+    expect(parseEnergexOutages(null)).toEqual([])
+  })
+})
