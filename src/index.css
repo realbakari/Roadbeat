@@ -28,6 +28,19 @@ body,
   --text-color-kumo-subtle: oklch(52% 0 0);
 }
 
+/*
+ * iOS Safari zooms the page into any text field under 16px when it's tapped,
+ * pushing the header and List/Map switch off screen. Phone-width fields get
+ * 16px; this sits outside the layers so it beats Kumo's text-sm.
+ */
+@media (width < 48rem) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="color"], [type="file"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 /* Contain in-page z-indexes (e.g. Kumo inputs use z-index: 1) so portaled dialogs stay on top. */
 #root {
   isolation: isolate;
