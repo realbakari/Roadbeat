@@ -74,6 +74,15 @@ const QLD_BOUNDS: [LngLat, LngLat] = [
 ]
 
 
+/**
+ * How far the map can be panned or zoomed out: Australia, New Guinea and the
+ * Coral Sea, where the cyclone tracks run. Without it, panning south or
+ * zooming out ended on a screen of Antarctic ice or empty ocean.
+ */
+const MAX_BOUNDS: [LngLat, LngLat] = [
+  [100, -50],
+  [185, 5],
+]
 
 interface Props {
   mode: ColorMode
@@ -285,7 +294,11 @@ export function TrafficMap(props: Props) {
       // A north-up, flat map keeps the rain radar overlay aligned.
       dragRotate: false,
       pitchWithRotate: false,
+      maxBounds: MAX_BOUNDS,
       touchPitch: false,
+      // Past 19 the base map's roads are stretched from zoom 14 tiles, and the few metres
+      // between QLDTraffic's surveyed lines and OpenStreetMap's fill the screen.
+      maxZoom: 19,
     })
     m.touchZoomRotate.disableRotation()
     if (import.meta.env.DEV) (window as unknown as { __map: maplibregl.Map }).__map = m

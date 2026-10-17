@@ -19,6 +19,17 @@ const CORRIDOR_WIDTH = (atZoom7: number, atZoom14: number) =>
 const empty: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
 
 export function addLayers(map: maplibregl.Map, mode: ColorMode) {
+/**
+ * An event line's width at zooms 5, 10, 15 and 19. Past 15 it widens the way
+ * the base map's roads do, so it covers the road it's on. QLDTraffic's
+ * published lines are a median 2 m from OpenStreetMap's centrelines (Oct 2026,
+ * every event); a line that stayed 8 px wide showed that gap as a thin line
+ * beside a wide road.
+ */
+function lineWidth(z5: number, z10: number, z15: number, z19: number) {
+  return ['interpolate', ['exponential', 1.5], ['zoom'], 5, z5, 10, z10, 15, z15, 19, z19] as never
+}
+
   // OpenStreetMap building heights from the base map's own tiles, drawn under our layers.
   if (map.getSource('openmaptiles')) {
     map.addLayer({
@@ -150,7 +161,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     paint: {
       'line-color': '#ffffff',
       'line-opacity': 0.9,
-      'line-width': ['interpolate', ['linear'], ['zoom'], 5, 3, 10, 6, 15, 12],
+      'line-width': lineWidth(3, 6, 12, 34),
     },
   })
   map.addLayer({
@@ -162,7 +173,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     paint: {
       'line-color': color,
       'line-opacity': 0.35,
-      'line-width': ['interpolate', ['linear'], ['zoom'], 5, 10, 10, 16, 15, 24],
+      'line-width': lineWidth(10, 16, 24, 48),
     },
   })
   map.addLayer({
@@ -174,7 +185,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     paint: {
       'line-color': color,
       'line-opacity': ['case', ['==', ['get', 'future'], true], 0.5, 1],
-      'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.5, 10, 3.5, 15, 8],
+      'line-width': lineWidth(1.5, 3.5, 8, 26),
     },
   })
 

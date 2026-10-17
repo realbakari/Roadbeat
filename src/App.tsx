@@ -781,7 +781,7 @@ export default function App() {
             )}
             {timelineOpen ? (
               <>
-                {replay && <ReplayBanner at={replay.at} run={replay.run} className="absolute inset-x-3 top-14 z-10 text-center xl:inset-x-auto xl:top-3 xl:left-1/2 xl:-translate-x-1/2 xl:whitespace-nowrap" />}
+                {replay && <ReplayBanner at={replay.at} run={replay.run} className="absolute top-14 right-14 left-3 z-10 text-center xl:inset-x-auto xl:top-3 xl:left-1/2 xl:-translate-x-1/2 xl:whitespace-nowrap" />}
                 {replay && base === 'satellite' && replayFrame === null && (
                   <p role="status" className="absolute inset-x-3 top-28 z-10 mx-auto w-fit max-w-md rounded-md bg-kumo-base px-3 py-1.5 text-center text-sm shadow-md ring ring-kumo-line xl:top-14">
                     No satellite image was published within 20 minutes of this time, so none is shown.
