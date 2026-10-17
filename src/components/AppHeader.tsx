@@ -173,7 +173,8 @@ export function AppHeader({
       </nav>
 
       <div className="flex shrink-0 items-center gap-1">
-        <VisitorCount visitors={visitors} className="mr-2 hidden xl:flex" />
+        {/* From 2xl only: below that the quick-filter chips need the room, so the More menu lists it instead. */}
+        <VisitorCount visitors={visitors} className="mr-2 hidden 2xl:flex" />
         <InstallApp />
         <NotificationCenter
           items={notifications.items}
@@ -237,7 +238,7 @@ export function AppHeader({
           <DropdownMenu.Content align="end">
             {/* A plain element, not DropdownMenu.Label: Base UI's Label must sit in a Group and throws otherwise, which blanked the whole app once a count existed. */}
             {visitors && (
-              <div className="xl:hidden">
+              <div className="2xl:hidden">
                 <VisitorCount visitors={visitors} className="flex px-2 py-1.5" />
                 <DropdownMenu.Separator />
               </div>
