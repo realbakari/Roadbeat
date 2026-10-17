@@ -234,6 +234,9 @@ const tripFeed = {
   /** Which trips the feed has listed while polled without a break, for overdue departures. */
   watch: null as FeedWatch | null,
   error: null as string | null,
+  /** When each region last answered, and which regions' latest read failed. */
+  fetchedAt: {} as Partial<Record<TransitRegion, number>>,
+  failing: new Set<TransitRegion>(),
   listeners: new Set<() => void>(),
   stop: null as (() => void) | null,
 }
@@ -257,10 +260,17 @@ function subscribeTripUpdates(listener: () => void) {
             tripFeed.watch = watchFeed(tripFeed.watch, r, u)
             publish()
             tripFeed.error = null
+            tripFeed.fetchedAt = { ...tripFeed.fetchedAt, [r]: Date.now() }
+            tripFeed.failing = new Set([...tripFeed.failing].filter((x) => x !== r))
             notify()
             if (!MAIN_REGIONS.includes(r)) recordFeedCount(r, u.trips.length)
           },
-          (e: Error) => !c.signal.aborted && !parts.size && ((tripFeed.error = e.message), notify()),
+          (e: Error) => {
+            if (c.signal.aborted) return
+            tripFeed.failing = new Set([...tripFeed.failing, r])
+            if (!parts.size) tripFeed.error = e.message
+            notify()
+          },
         )
         .finally(() => reading.delete(r))
     }
@@ -290,11 +300,21 @@ function subscribeTripUpdates(listener: () => void) {
   }
 }
 
-/** TransLink GTFS-RT trip updates (real-time departures), polled every 30 s while `enabled`. */
+/**
+ * TransLink GTFS-RT trip updates (real-time departures), polled every 30 s while `enabled`.
+ * `error` is set only while nothing has loaded; after that a failed read keeps the last
+ * updates and shows in `failing` and `fetchedAt` for that region.
+ */
 export function useTripUpdates(enabled: boolean) {
   const [, setTick] = useState(0)
   useEffect(() => (enabled ? subscribeTripUpdates(() => setTick((n) => n + 1)) : undefined), [enabled])
-  return { updates: enabled ? tripFeed.updates : null, watch: enabled ? tripFeed.watch : null, error: enabled ? tripFeed.error : null }
+  return {
+    updates: enabled ? tripFeed.updates : null,
+    watch: enabled ? tripFeed.watch : null,
+    error: enabled ? tripFeed.error : null,
+    fetchedAt: tripFeed.fetchedAt,
+    failing: tripFeed.failing,
+  }
 }
 
 /** Published timetable index (which routes serve each stop, and the dates covered). */

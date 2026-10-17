@@ -1,8 +1,9 @@
-import { BroadcastIcon, CalendarBlankIcon } from '@phosphor-icons/react'
+import { BroadcastIcon, CalendarBlankIcon, WarningIcon } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import { routeInfo, routeLabel, type TransitRegion } from '../api/translink'
 import { useLiveVehicles, useNow, useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
 import { departuresAt, type Departure } from '../lib/departures'
+import { isStale } from '../lib/feedAge'
 import { readableTextOn } from '../lib/routeColor'
 
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
@@ -40,7 +41,9 @@ export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: strin
   const now = useNow(10_000)
   const stops = useStopIndex(true, true)
   const trips = useTripIndex(true)
-  const { updates, error } = useTripUpdates(true)
+  const { updates, error, fetchedAt, failing } = useTripUpdates(true)
+  const lastRead = fetchedAt[region] ?? null
+  const stale = isStale(lastRead, failing.has(region), now)
   const { vehicles } = useLiveVehicles(true)
   const stop = stops?.get(region, stopId) ?? null
 
@@ -70,6 +73,13 @@ export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: strin
         </div>
         <span className="text-3xl font-semibold text-kumo-strong tabular-nums lg:text-5xl">{clock.format(clockNow)}</span>
       </header>
+
+      {stale && lastRead != null && (
+        <p role="status" className="flex items-center gap-2 bg-kumo-warning-tint px-6 py-3 text-lg text-kumo-default lg:px-10">
+          <WarningIcon className="shrink-0 text-kumo-warning" weight="fill" aria-hidden />
+          TransLink real-time is not answering. Times shown are from {clock.format(lastRead)}.
+        </p>
+      )}
 
       <main className="min-h-0 flex-1 overflow-hidden px-6 lg:px-10">
         {stops && !stop ? (
@@ -121,7 +131,9 @@ export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: strin
           <BroadcastIcon className="inline align-text-bottom text-kumo-success" aria-hidden /> Live: a vehicle on that trip is reporting its position.
           Scheduled: not tracked yet.
         </span>
-        <span>Roadbeat · Data from Translink, CC BY 4.0</span>
+        <span>
+          {lastRead != null && <>Updated {clock.format(lastRead)} · </>}Roadbeat · Data from TransLink, CC BY 4.0
+        </span>
       </footer>
     </div>
   )
