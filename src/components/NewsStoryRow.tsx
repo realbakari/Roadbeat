@@ -69,7 +69,7 @@ export function StoryRow({ story, now, onOpen }: { story: NewsStory; now: number
     <button
       type="button"
       onClick={() => onOpen(story.id)}
-      className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-kumo-tint focus-visible:bg-kumo-tint focus-visible:outline-none"
+      className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-kumo-tint focus-visible:bg-kumo-tint focus-visible:ring-2 focus-visible:ring-kumo-brand focus-visible:outline-none focus-visible:ring-inset"
     >
       <span className="pt-0.5">
         <StoryMark story={story} />
