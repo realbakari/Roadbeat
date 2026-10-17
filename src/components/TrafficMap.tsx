@@ -114,7 +114,7 @@ interface Props {
   airStations: AirStation[]
   /** Geoscience Australia's satellite hotspots in the last 24 hours. */
   hotspots: Hotspot[]
-  /** The one satellite image to draw (Himawari-9 or NASA's daily image), or null for none. */
+  /** The one satellite image to draw while the base is Satellite, or null for the street map alone. */
   satelliteImage: SatelliteTiles | null
   /** NSW RFS incidents near the Queensland border. */
   nswFires: NswFire[]
@@ -176,7 +176,6 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   outages: ['outages', 'outages-line', 'outages-area'],
   airQuality: ['air-quality'],
   hotspots: ['hotspots'],
-  satellite: [],
   nswFires: ['nsw-fires'],
   cyclones: ['cyclone-track', 'cyclone-points'],
   pastCyclones: ['past-cyclones'],
@@ -565,7 +564,7 @@ export function TrafficMap(props: Props) {
     <div className="relative h-full w-full">
       <div ref={container} className="h-full w-full" aria-label="Traffic map" role="region" />
       <RainRadar map={map} enabled={layers.radar} ready={ready} />
-      <SatelliteImagery map={map} ready={ready} image={layers.satellite ? satelliteImage : null} />
+      <SatelliteImagery map={map} ready={ready} image={satelliteImage} />
       {map && <CrashLayer map={map} ready={ready} enabled={layers.crashes} filter={crashFilter} />}
       {map && (
         <CameraThumbs

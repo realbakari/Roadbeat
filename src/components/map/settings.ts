@@ -47,8 +47,6 @@ export interface MapLayers {
   airQuality: boolean
   /** Geoscience Australia's satellite hotspots: heat a satellite detected in the last 24 hours. */
   hotspots: boolean
-  /** One satellite image: Himawari-9's live image, or NASA's daily true-colour image for one chosen day. */
-  satellite: boolean
   /** NSW Rural Fire Service incidents just south of the Queensland border. */
   nswFires: boolean
   /** The US Joint Typhoon Warning Center's current cyclones near Australia, with its forecast track. */
@@ -85,7 +83,6 @@ export const DEFAULT_LAYERS: MapLayers = {
   outages: true,
   airQuality: false,
   hotspots: false,
-  satellite: false,
   nswFires: false,
   cyclones: false,
   pastCyclones: false,

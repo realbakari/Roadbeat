@@ -40,7 +40,9 @@ import { useAirQuality } from './hooks/useTrafficData'
 import { useHotspots } from './hooks/useSatellite'
 import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
-import { satelliteTiles } from './lib/satelliteImage'
+import { satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
+import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
+import { useStoredChoice } from './hooks/useStoredChoice'
 import { useCyclones, useFireBans, useNswFires, usePastCyclones } from './hooks/useHazardFeeds'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
@@ -89,6 +91,9 @@ export default function App() {
       // Storage blocked: the choice lasts for this visit.
     }
   }
+  // The base (street map or satellite) and the satellite image chosen are remembered too.
+  const [base, setBase] = useStoredChoice<MapBase>('qldt-base', parseBase, 'map')
+  const [satelliteSource, setSatelliteSource] = useStoredChoice<SatelliteSource>('qldt-satellite', parseSatelliteSource, 'infrared')
   const [crashFilter, setCrashFilter] = useState<CrashFilter>(DEFAULT_CRASH_FILTER)
   const [userLocation, setUserLocation] = useState<LngLat | null>(null)
   const [locating, setLocating] = useState(false)
@@ -237,8 +242,11 @@ export default function App() {
   const nswFires = useNswFires(layers.nswFires || sel.place?.kind === 'nswfire')
   const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone')
   const pastCyclones = usePastCyclones(layers.pastCyclones || sel.place?.kind === 'pastcyclone')
-  const imagery = useSatelliteImagery(layers.satellite, now)
-  const satelliteImage = useMemo(() => satelliteTiles(imagery.source, { gibsTime: imagery.live.time, jmaFrame: imagery.jma.latest, date: imagery.date }), [imagery.source, imagery.live.time, imagery.jma.latest, imagery.date])
+  const imagery = useSatelliteImagery(base === 'satellite', satelliteSource, now)
+  const satelliteImage = useMemo(
+    () => (base === 'satellite' ? satelliteTiles(satelliteSource, { gibsTime: imagery.live.time, jmaFrame: imagery.jma.latest, date: imagery.date }) : null),
+    [base, satelliteSource, imagery.live.time, imagery.jma.latest, imagery.date],
+  )
   const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
   const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
   const firesNewest = useMemo(() => (fires?.length ? Math.max(...fires.map((f) => f.published ?? 0)) || null : null), [fires])
@@ -671,7 +679,9 @@ export default function App() {
               warningState={{ count: qw.warnings?.length ?? null, notice: warningNotice, fetchedAt: qw.fetchedAt, now }}
               gaugeNotice={gaugeNotice}
               hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt, newest: hot.hotspots?.[0]?.observedAt ?? null, now }}
-              imagery={{ source: imagery.source, onSource: imagery.setSource, now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
+              base={base}
+              onBaseChange={setBase}
+              imagery={{ source: satelliteSource, onSource: setSatelliteSource, now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               hazards={{ fireBans, nswFires, cyclones, pastCyclones }}
               councilErrors={council.errors}
             />

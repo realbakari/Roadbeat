@@ -76,8 +76,7 @@ function useDailyLatest(pass: DailyPass | null, today: string) {
  * day from NOAA-20 or Terra, the day the rider picked or by default the newest
  * one published over Brisbane.
  */
-export function useSatelliteImagery(enabled: boolean, now: number) {
-  const [source, setSource] = useState<SatelliteSource>('infrared')
+export function useSatelliteImagery(enabled: boolean, source: SatelliteSource, now: number) {
   const [picked, setPicked] = useState<{ pass: DailyPass; date: string } | null>(null)
   const today = brisbaneDate(now)
   const pass = enabled ? dailyPass(source) : null
@@ -85,8 +84,6 @@ export function useSatelliteImagery(enabled: boolean, now: number) {
   const live = useHimawari(enabled && isGibsLive(source) ? source : null)
   const jma = useJmaFrames(enabled && jmaProduct(source) != null)
   return {
-    source,
-    setSource,
     live,
     jma,
     date: (pass && picked?.pass === pass ? picked.date : null) ?? daily.date,

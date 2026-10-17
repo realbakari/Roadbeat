@@ -1,5 +1,5 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon, WarningIcon, HurricaneIcon, PathIcon } from '@phosphor-icons/react'
+import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, WarningIcon, HurricaneIcon, PathIcon } from '@phosphor-icons/react'
 import { FIRE_COLOR } from '../api/bushfires'
 import { WARNING_COLOR } from '../api/qldWarnings'
 import { DS_BANDS } from '../lib/signals'
@@ -37,6 +37,8 @@ import { CYCLONE_COLOR, type Cyclone } from '../api/jtwc'
 import { NSW_ALERT_COLOR } from '../api/nswFires'
 import { PAST_CYCLONE_COLOR, type PastCyclone } from '../api/pastCyclones'
 import { chipClass } from './chip'
+import { BaseSwitch } from './map/BaseSwitch'
+import type { MapBase } from '../lib/mapBase'
 
 interface Props {
   basemap: Basemap
@@ -61,6 +63,9 @@ interface Props {
   gaugeNotice: string | null
   /** The hotspot feed's state, for its note. */
   hotspotState: ComponentProps<typeof HotspotsNote>
+  /** The map's base, and the one-tap switch between the street map and a satellite image. */
+  base: MapBase
+  onBaseChange: (b: MapBase) => void
   /** Which satellite image is chosen, and the state of each source. */
   imagery: ComponentProps<typeof SatelliteImageNote>
   /** Fire bans, NSW border fires, JTWC cyclones and past cyclone tracks, for their notes. */
@@ -166,6 +171,8 @@ export function MapLayersPanel({
   gaugeNotice,
   hotspotState,
   imagery,
+  base,
+  onBaseChange,
   hazards,
   councilErrors,
   basemap,
@@ -187,10 +194,11 @@ export function MapLayersPanel({
 
   if (!open) {
     return (
-      <div className="absolute top-3 left-3 z-10">
+      <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-2">
         <Button ref={takeFocus} size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
           Layers
         </Button>
+        <BaseSwitch base={base} onChange={onBaseChange} />
       </div>
     )
   }
@@ -243,6 +251,19 @@ export function MapLayersPanel({
               {layers.radar
                 ? 'The map stays flat while rain radar is on, so the radar lines up.'
                 : 'Building heights from OpenStreetMap. Zoom in to street level to see them.'}
+            </Text>
+          )}
+        </div>
+        <div className="grid gap-1.5 border-t border-kumo-line pt-3">
+          <Text size="xs" variant="secondary">
+            Base
+          </Text>
+          <BaseSwitch base={base} onChange={onBaseChange} />
+          {base === 'satellite' ? (
+            <SatelliteImageNote {...imagery} />
+          ) : (
+            <Text size="xs" variant="secondary">
+              Satellite shows one image under the labels and layers: Himawari-9 live by default, or a daily pass.
             </Text>
           )}
         </div>
@@ -462,14 +483,6 @@ export function MapLayersPanel({
             <Text size="xs" variant="secondary">
               Radar © Bureau of Meteorology via QLDTraffic
             </Text>
-          </LayerRow>
-          <LayerRow
-            icon={<Badge className="bg-indigo-700" icon={<GlobeHemisphereEastIcon size={12} weight="fill" />} />}
-            label="Satellite image"
-            checked={layers.satellite}
-            onChange={(v) => set('satellite', v)}
-          >
-            <SatelliteImageNote {...imagery} />
           </LayerRow>
           <LayerRow
             icon={<Badge className="bg-red-700" icon={<ClockCounterClockwiseIcon size={12} weight="bold" />} />}
