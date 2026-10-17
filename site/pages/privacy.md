@@ -1,10 +1,10 @@
 ---
 title: Privacy
 <!--if:GA_MEASUREMENT_ID-->
-description: Roadbeat has no accounts or advertising. It counts visits without identifying you, and uses Google Analytics. Your settings and location stay in your browser unless you turn on commute push alerts.
+description: No accounts or ads. Google Analytics measures use. Your location stays in your browser, and so do your settings unless you turn on push alerts.
 <!--endif-->
 <!--ifnot:GA_MEASUREMENT_ID-->
-description: Roadbeat has no accounts, no advertising and no cookies. It counts visits without identifying you. Your settings and location stay in your browser unless you turn on commute push alerts.
+description: No accounts, ads or cookies. Visits are counted without identifying you. Your location, and your settings unless you turn on push alerts, stay in your browser.
 <!--endif-->
 ---
 
@@ -24,7 +24,7 @@ Roadbeat asks for your location only when you choose a feature that needs it, su
 
 ## Data sources you connect to
 
-To show live information, your browser requests data from official sources: the Department of Transport and Main Roads (QLDTraffic), Translink, the Queensland Fire Department, Brisbane City Council and, if you turn those layers on, Geoscience Australia's satellite hotspots and NASA's satellite imagery, and map tiles from OpenFreeMap. Some requests pass through Roadbeat's own small proxy, because those sources do not allow browsers to read them directly. Like any website, these services and Roadbeat's host can see your IP address and the request when your browser connects. Roadbeat does not combine this with any other information.
+To show live information, your browser requests data from official sources: the Department of Transport and Main Roads (QLDTraffic), Translink, the Queensland Fire Department, Brisbane City Council, the Department of Environment, Tourism, Science and Innovation's air quality service when you open a station's history, data.qld.gov.au for crash history, the Department of Local Government, Water and Volunteers' stream gauges and, if you turn those layers on, Geoscience Australia's satellite hotspots and NASA's satellite imagery, and map tiles from OpenFreeMap. Brisbane City Council's event images load from its events calendar host, Trumba. Some requests pass through Roadbeat's own small proxy, because those sources do not allow browsers to read them directly. Like any website, these services and Roadbeat's host can see your IP address and the request when your browser connects. Roadbeat does not combine this with any other information.
 
 The **News** tab and the dashboard read headlines from Roadbeat's own server, which collects them from news publishers' and government feeds. To show who published each report, your browser loads each publisher's small site icon from that publisher's own website, which can see your IP address, as with any website. Council flood camera images load the same way, from each council's camera provider. Opening a report takes you to the publisher's site under its privacy terms.
 

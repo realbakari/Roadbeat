@@ -22,7 +22,7 @@ footer nav{display:flex;flex-wrap:wrap;gap:4px 16px}footer a{color:var(--sub)}
 nav.crumbs{margin:14px 0 -10px;color:var(--sub)}nav.crumbs ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px}nav.crumbs li+li::before{content:"›";margin-right:4px}
 a.open{display:inline-block;margin:12px 0 4px;padding:10px 16px;border-radius:8px;background:var(--brand);color:#fff;font-weight:600;text-decoration:none}a.open:hover{filter:brightness(1.1)}`
 
-const FOOTER = `<footer><nav><a href="/">Open the app</a><a href="/stations/">Stations</a><a href="/lines/">Lines</a><a href="/places/">Places</a><a href="/about/">About</a><a href="/privacy/">Privacy</a><a href="/contact/">Contact</a><a href="/llms.txt">For AI agents</a><a href="${SUPPORT_URL}" rel="noopener">Buy me a coffee</a></nav><p>Roadbeat is independent and not affiliated with the Queensland Government. Data © State of Queensland and Brisbane City Council, CC BY 4.0.</p></footer>`
+const FOOTER = `<footer><nav><a href="/">Open the app</a><a href="/stations/">Stations</a><a href="/lines/">Lines</a><a href="/places/">Places</a><a href="/about/">About</a><a href="/privacy/">Privacy</a><a href="/contact/">Contact</a><a href="/llms.txt">For AI agents</a><a href="${SUPPORT_URL}" rel="noopener">Buy me a coffee</a></nav><p>Roadbeat is independent and not affiliated with the Queensland Government. Data from official publishers, most under CC BY 4.0: see <a href="/about/">About</a> for every source and its terms. Map data © OpenStreetMap contributors.</p></footer>`
 
 function crumbsNav(crumbs: Crumb[]) {
   if (crumbs.length < 2) return ''
