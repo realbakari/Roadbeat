@@ -52,6 +52,8 @@ Never rely on colour alone:
 
 The About, Privacy, Contact and 404 pages, and the home page's description, are Markdown files in `site/pages/`. `site/llms.txt` tells AI agents what Roadbeat is for. Edit those files, not generated output. Keep the Privacy page true to the code: if a change stores, sends or asks for new information, update `site/pages/privacy.md` in the same change.
 
+The social card (`public/og-image.jpg`), `favicon.ico`, the Apple touch icon and the maskable icon are drawn from `public/favicon.svg`'s mark by `python3 scripts/build-icons.py` (it needs Pillow and macOS's system font). Keep the logo and name inside the card's centred 630 by 630 square, because chat apps crop to it, and update `SITE.imageAlt` in `site/settings.ts` when the card changes. The script's notes say how to retake the install screenshots in `public/screenshots/`.
+
 ## Test the change
 
 1. Add or update unit tests for logic in `src/lib/` and parsing in `src/api/`. Tests sit next to the file they test, as `*.test.ts`. Shared fixtures are in `src/test/fixtures.ts`. Test behaviour through the public function, not its internals.

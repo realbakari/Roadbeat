@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { fillTemplate, jsonLd, loadPage, markdownPathFor, markdownToHtml, siteFiles, sitemapFiles } from './plugin.ts'
+import { jsonLd } from './head.ts'
+import { markdownPathFor, markdownToHtml } from './markdown.ts'
+import { fillTemplate, loadPage, siteFiles } from './plugin.ts'
+import { sitemapFiles } from './sitemap.ts'
 
 const withUrl = { siteUrl: 'https://roadbeat.example', contactEmail: 'hello@roadbeat.example', gaMeasurementId: 'G-TEST123' }
 const bare = { siteUrl: '', contactEmail: '', gaMeasurementId: '' }
@@ -17,6 +20,12 @@ describe('markdownToHtml', () => {
     expect(markdownToHtml('# Title\n\nSome **bold** <b>text</b>.\n\n- [About](/about/)\n- Two')).toBe(
       '<h1>Title</h1>\n<p>Some <strong>bold</strong> &lt;b&gt;text&lt;/b&gt;.</p>\n<ul>\n<li><a href="/about/">About</a></li>\n<li>Two</li>\n</ul>',
     )
+  })
+})
+
+describe('markdownToHtml headings', () => {
+  it('gives second- and third-level headings an id to link to', () => {
+    expect(markdownToHtml('# Places\n\n## Brisbane City\n\n### No council area')).toBe('<h1>Places</h1>\n<h2 id="brisbane-city">Brisbane City</h2>\n<h3 id="no-council-area">No council area</h3>')
   })
 })
 
@@ -48,6 +57,11 @@ describe('siteFiles', () => {
 
   it('gives every trust page at least 500 characters of content', () => {
     for (const name of ['about', 'privacy', 'contact'] as const) expect(loadPage(name, bare).markdown.length).toBeGreaterThan(500)
+  })
+
+  it('links the station, line and place directories from the home and 404 pages', () => {
+    for (const name of ['index', '404'] as const) for (const hub of ['/stations/', '/lines/', '/places/']) expect(loadPage(name, bare).markdown).toContain(`](${hub})`)
+    expect(loadPage('index', bare).title).toContain('traffic')
   })
 
   it('marks the 404 page noindex and leaves it out of the sitemap', () => {
@@ -89,7 +103,36 @@ describe('directory pages', () => {
     expect(files['/stations/central-station/index.html'].body).toContain('<a href="/lines/t1-caboolture/">T1 Caboolture</a>')
     expect(files['/lines/t1-caboolture/index.html'].body).toContain('/stations/central-station/')
     expect(files['/places/goodna/index.html'].body).toContain('/stations/goodna-station/')
+    const central = files['/stations/central-station/index.html'].body
+    expect(central.indexOf('class="open"')).toBeLessThan(central.indexOf('<h2 id="lines-and-routes">'))
+    expect(central.lastIndexOf('class="open"')).toBeGreaterThan(central.indexOf('<h2 id="in-the-roadbeat-app">'))
+    expect(central).toContain("localStorage.getItem('qldt-mode')")
     expect(Object.keys(files).filter((k) => k.startsWith('/places/')).length).toBeGreaterThan(3000)
+    expect(files['/places/birdsville/index.html'].body).toContain('<meta name="robots" content="noindex" />')
+    expect(files['/sitemap.xml'].body).not.toContain('/places/birdsville/')
+    expect(files['/sitemap.xml'].body).toContain('/places/goodna/')
+  })
+})
+
+describe('social and app tags', () => {
+  it('brands the shared title, describes the card image and gives the 404 page no address of its own', () => {
+    const files = siteFiles(withUrl, tiny)
+    const html = files['/stations/central-station/index.html'].body
+    expect(html).toContain('<title>Central station · Roadbeat</title>')
+    expect(html).toContain('<meta property="og:title" content="Central station · Roadbeat" />')
+    expect(html).toContain('<meta name="twitter:title" content="Central station · Roadbeat" />')
+    expect(html).toContain('<meta name="twitter:image:alt" content="The Roadbeat logo')
+    expect(html).toContain('<link rel="icon" href="/favicon.ico"')
+    expect(html).toContain('media="(prefers-color-scheme: dark)"')
+    expect(files['/404.html'].body).not.toContain('og:url')
+    expect(files['/404.html'].body).toContain('<meta property="og:title" content="Page not found · Roadbeat" />')
+  })
+
+  it('writes a manifest with the home description, a dark splash and install screenshots', () => {
+    const m = JSON.parse(siteFiles(withUrl, [])['/manifest.webmanifest'].body)
+    expect(m.description).toBe(loadPage('index', withUrl).description)
+    expect(m.background_color).toBe('#0f0f0f')
+    expect(m.screenshots.map((s: { form_factor: string }) => s.form_factor)).toEqual(['narrow', 'wide'])
   })
 })
 
@@ -116,11 +159,16 @@ describe('jsonLd', () => {
     expect(JSON.stringify(jsonLd(page, bare))).not.toContain('contactPoint')
   })
 
-  it('names the site, with a search action that opens a locality page, and a breadcrumb trail', () => {
+  it('names the site and writes the organisation once, referring to it by id, with no one-crumb trail or search action', () => {
     const graph = jsonLd(loadPage('index', withUrl), withUrl)['@graph']
-    expect(graph[0]).toMatchObject({ '@type': 'WebSite', url: 'https://roadbeat.example/' })
-    expect(JSON.stringify(graph[0])).toContain('https://roadbeat.example/#place/locality/{search_term_string}')
-    expect(graph[1]).toMatchObject({ '@type': 'BreadcrumbList', itemListElement: [{ position: 1, name: 'Roadbeat', item: 'https://roadbeat.example/' }] })
-    expect(JSON.stringify(jsonLd(loadPage('index', bare), bare))).not.toContain('search_term_string')
+    expect(graph[0]).toMatchObject({ '@type': 'WebSite', url: 'https://roadbeat.example/', publisher: { '@id': 'https://roadbeat.example/#org' } })
+    expect(graph.filter((g) => g['@type'] === 'Organization')).toHaveLength(1)
+    expect(graph.some((g) => g['@type'] === 'BreadcrumbList')).toBe(false)
+    expect(JSON.stringify(graph)).not.toContain('SearchAction')
+  })
+
+  it("ties a directory page's entity to the page address", () => {
+    const html = siteFiles(withUrl, tiny)['/stations/central-station/index.html'].body
+    expect(html).toContain('"@id":"https://roadbeat.example/stations/central-station/#place","url":"https://roadbeat.example/stations/central-station/","@type":"TrainStation"')
   })
 })

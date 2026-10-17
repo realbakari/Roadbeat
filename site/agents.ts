@@ -18,7 +18,7 @@ export function openApi(base: string) {
       title: 'Roadbeat API',
       version: '1.0.0',
       description:
-        'Live Queensland road events, TransLink departures and bushfire warnings, as the official sources publish them. Free, no key, read-only. Data © State of Queensland, CC BY 4.0: credit the source named in each response.',
+        'Live Queensland road events, Translink departures and bushfire warnings, as the official sources publish them. Free, no key, read-only. Data © State of Queensland, CC BY 4.0: credit the source named in each response.',
     },
     servers: [{ url: base || '/' }],
     paths: {
@@ -40,7 +40,7 @@ export function openApi(base: string) {
       '/api/stops': {
         get: {
           operationId: 'findStops',
-          summary: 'TransLink stops and stations by name',
+          summary: 'Translink stops and stations by name',
           parameters: [{ name: 'q', in: 'query', required: true, schema: { type: 'string' } }, region, limit],
           responses: { '200': ok('Matching stops, stations first.'), '400': errors['400'] },
         },
@@ -48,7 +48,7 @@ export function openApi(base: string) {
       '/api/departures': {
         get: {
           operationId: 'nextDepartures',
-          summary: 'Next departures from a stop or station, from TransLink real-time',
+          summary: 'Next departures from a stop or station, from Translink real-time',
           parameters: [
             { name: 'stop', in: 'query', required: true, description: 'Stop id from /api/stops, or a stop or station name.', schema: { type: 'string' } },
             region,
@@ -80,13 +80,13 @@ export function mcpCard(base: string) {
     name: 'roadbeat',
     title: 'Roadbeat',
     version: '1.0.0',
-    description: 'Live Queensland road events, TransLink departures and bushfire warnings from official sources. Read-only, no key.',
+    description: 'Live Queensland road events, Translink departures and bushfire warnings from official sources. Read-only, no key.',
     websiteUrl: base || undefined,
     transport: { type: 'streamable-http', url: `${base}/mcp` },
     authentication: { required: false },
     tools: [
       { name: 'road_events', description: 'Road events in effect on Queensland roads, searchable by road and place.' },
-      { name: 'find_stops', description: 'TransLink stops and stations by name.' },
+      { name: 'find_stops', description: 'Translink stops and stations by name.' },
       { name: 'next_departures', description: 'Next departures from a stop or station, with real-time delays.' },
       { name: 'bushfire_warnings', description: 'Current Queensland Fire Department warnings and incidents.' },
     ],

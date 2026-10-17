@@ -17,6 +17,28 @@
       "maxDuration": 60
     }
   },
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/:path(.+)/index.html",
+      "destination": "/:path/",
+      "permanent": true
+    },
+    {
+      "source": "/:page(about|privacy|contact|stations|lines|places)",
+      "destination": "/:page/",
+      "permanent": true
+    },
+    {
+      "source": "/:dir(stations|lines|places)/:slug([a-z0-9-]+)",
+      "destination": "/:dir/:slug/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/mcp",
@@ -57,6 +79,15 @@
   ],
   "headers": [
     {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
       "source": "/(.*)\\.md",
       "headers": [
         {
@@ -66,6 +97,10 @@
         {
           "key": "Vary",
           "value": "Accept"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
         }
       ]
     },

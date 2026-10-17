@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildDirectory, distanceKm, slugify, type DirectoryInput } from './directory.ts'
 import { directoryPages, lineTitle } from './directoryPages.ts'
+import { isTwin } from './placePage.ts'
 
 // A toy network: Central (platforms 1 and 2) and Bowen Hills on T1, a ferry
 // terminal on F1, a turnback no route calls at, a bus stop on route 100 and a
@@ -34,7 +35,7 @@ const input: DirectoryInput = {
       TSV: { routes: ['V200'], stops: { '890001': '0' } },
     },
   },
-  places: { places: [['Spring Hill', 153.023, -27.461, 'Brisbane City'], ['Townsville City', 146.817, -19.258, 'Townsville City'], ['Spring Hill', 150, -25, 'Elsewhere Shire']] },
+  places: { places: [['Spring Hill', 153.023, -27.461, 'Brisbane City'], ['Townsville City', 146.817, -19.258, 'Townsville City'], ['Spring Hill', 150, -25, 'Elsewhere Shire'], ['Dundubara', 153.4, -25.2, '']] },
 }
 const dir = buildDirectory(input)
 
@@ -55,11 +56,12 @@ describe('buildDirectory', () => {
 
   it('keeps one locality per name, the first in the gazetteer, and links it to stations within 5 km, nearest first', () => {
     expect(dir.places.map((p) => [p.slug, p.council])).toEqual([
+      ['dundubara', ''],
       ['spring-hill', 'Brisbane City'],
       ['townsville-city', 'Townsville City'],
     ])
-    expect(dir.places[0].stations.map((s) => s.slug)).toEqual(['central-station', 'riverside-ferry-terminal', 'bowen-hills-station'])
-    expect(dir.places[1].stations).toEqual([])
+    expect(dir.places[1].stations.map((s) => s.slug)).toEqual(['central-station', 'riverside-ferry-terminal', 'bowen-hills-station'])
+    expect(dir.places[2].stations).toEqual([])
     expect(dir.stations[1].places.map((p) => p.name)).toEqual(['Spring Hill'])
   })
 })
@@ -77,13 +79,14 @@ describe('directoryPages', () => {
 
   it('writes an index page per kind, then a page per station, line and place', () => {
     expect(pages.slice(0, 3).map((p) => p.path)).toEqual(['/stations/', '/lines/', '/places/'])
-    expect(pages.length).toBe(3 + 3 + 4 + 2)
+    expect(pages.length).toBe(3 + 3 + 4 + 3)
   })
 
   it('describes a station with its lines, nearby localities, JSON-LD and app link, in published terms only', () => {
     const p = page('/stations/central-station/')
-    expect(p.markdown).toContain("Central station is a train station on TransLink's South East Queensland network, served by T1 Caboolture")
+    expect(p.markdown).toContain("Central station is a train station on Translink's South East Queensland network, served by T1 Caboolture")
     expect(p.markdown).toContain('[T1 Caboolture](/lines/t1-caboolture/)')
+    expect(p.markdown).not.toContain('Brisbane City - Caboolture')
     expect(p.markdown).toContain('[Spring Hill](/places/spring-hill/)')
     expect(p.markdown).toContain('in the Roadbeat app, not on this page')
     expect(p.open).toEqual({ hash: 'transit/stop/SEQ/place_censta', label: 'Open Central station in Roadbeat' })
@@ -106,9 +109,60 @@ describe('directoryPages', () => {
   it('describes a place from the gazetteer and opens the locality view', () => {
     const p = page('/places/spring-hill/')
     expect(p.markdown).toContain('Spring Hill is a locality in the Brisbane City local government area')
-    expect(p.markdown).toContain('[Central station](/stations/central-station/), Train station')
+    expect(p.markdown).toContain('[Central station](/stations/central-station/), train station')
     expect(p.open).toEqual({ hash: 'place/locality/Spring%20Hill', label: 'Open Spring Hill in Roadbeat' })
     expect(p.jsonLd?.[0]).toMatchObject({ '@type': 'Place', containedInPlace: { name: 'Brisbane City' } })
     expect(page('/places/townsville-city/').markdown).toContain('No train station, tram stop or ferry terminal')
+  })
+
+  it('writes a place with no council without an empty council name, and groups it last on the index', () => {
+    const p = page('/places/dundubara/')
+    expect(p.markdown).toContain('Dundubara is a locality in Queensland.')
+    expect(p.title).toBe('Dundubara: traffic, transport and warnings')
+    expect(p.description).toContain('at Dundubara, live')
+    expect(p.jsonLd?.[0]).toMatchObject({ containedInPlace: { '@type': 'State' } })
+    const index = page('/places/').markdown
+    expect(index).not.toMatch(/^## $/m)
+    expect(index).toContain('Jump to a council area: [Brisbane City](#brisbane-city), [Townsville City](#townsville-city), [No council area](#no-council-area).')
+    expect(page('/lines/').markdown).toContain('Jump to a network: [South East Queensland](#south-east-queensland), [Townsville](#townsville).')
+    expect(index.indexOf('## No council area')).toBeGreaterThan(index.indexOf('## Townsville City'))
+  })
+
+  it('keeps places with no station nearby out of search, and says nearby stations only when there are some', () => {
+    expect(page('/places/spring-hill/').noindex).toBe(false)
+    expect(page('/places/spring-hill/').description).toContain('3 stations within 5 km')
+    expect(page('/places/townsville-city/').noindex).toBe(true)
+    expect(page('/places/townsville-city/').description).not.toContain('station')
+  })
+})
+
+describe('page titles and descriptions', () => {
+  const pages = directoryPages(dir)
+  const page = (path: string) => pages.find((p) => p.path === path)!
+
+  it('names the mode and area people search for, within the lengths search results show', () => {
+    expect(page('/stations/central-station/').title).toBe('Central station, Brisbane: train departures and timetable')
+    expect(page('/lines/t1-caboolture/').title).toBe('T1 Caboolture: train timetable and stops')
+    expect(page('/lines/tsv-200/').title).toBe('Route 200, Townsville: bus timetable and stops')
+    expect(page('/places/spring-hill/').title).toBe('Spring Hill, Brisbane: traffic, transport and warnings')
+    for (const p of pages) {
+      expect(p.title.length).toBeLessThanOrEqual(60)
+      expect(p.description.length).toBeLessThanOrEqual(155)
+    }
+  })
+
+  it('leads the description with what the page offers, and says live only where the app has live times', () => {
+    expect(page('/stations/central-station/').description).toMatch(/^Live departures, platforms and the published timetable for Central station/)
+    expect(page('/lines/t1-caboolture/').description).toContain('live departures')
+    expect(page('/lines/tsv-200/').description).not.toContain('live')
+  })
+})
+
+describe('isTwin', () => {
+  it('finds a parenthetical place whose plain name is in the same council area', () => {
+    const twins = buildDirectory({ ...input, places: { places: [['Mungindi', 148.98, -28.98, 'Balonne Shire'], ['Mungindi (Balonne Shire)', 148.99, -28.97, 'Balonne Shire'], ['Hope Vale (Hope Vale Shire)', 145.1, -15.3, 'Hope Vale Aboriginal Shire']] } })
+    const [hope, mungindi, twin] = twins.places
+    expect([hope.name, mungindi.name, twin.name]).toEqual(['Hope Vale (Hope Vale Shire)', 'Mungindi', 'Mungindi (Balonne Shire)'])
+    expect([isTwin(hope, twins), isTwin(mungindi, twins), isTwin(twin, twins)]).toEqual([false, false, true])
   })
 })

@@ -33,7 +33,7 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 ## Deploy to Vercel
 
-`vercel.json` sets the build command and output folder, rewrites the proxy paths, and gives `api/qld-gauges.ts` 60 seconds, because the water monitoring portal takes about 20 seconds to answer. `middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, the same as `functions/_middleware.ts` on Cloudflare. Add `SITE_URL`, `CONTACT_EMAIL` and `GA_MEASUREMENT_ID` as environment variables. Until `SITE_URL` is set, the build uses the project's production address (`VERCEL_PROJECT_PRODUCTION_URL`).
+`vercel.json` sets the build command and output folder, rewrites the proxy paths, redirects `/about`, `/stations/<slug>` and the like, and `/index.html`, to the address with the trailing slash that the canonical links use, caches the content-hashed files in `/assets/` for a year as immutable, marks the `.md` twins `X-Robots-Tag: noindex` so search engines index only the HTML pages, and gives `api/qld-gauges.ts` 60 seconds, because the water monitoring portal takes about 20 seconds to answer. `middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, the same as `functions/_middleware.ts` on Cloudflare. Add `SITE_URL`, `CONTACT_EMAIL` and `GA_MEASUREMENT_ID` as environment variables. Until `SITE_URL` is set, the build uses the project's production address (`VERCEL_PROJECT_PRODUCTION_URL`).
 
 ### The API and MCP server run only on Vercel
 
