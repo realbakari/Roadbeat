@@ -1,5 +1,5 @@
 import type * as maplibregl from 'maplibre-gl'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { SatelliteTiles } from '../../lib/satelliteImage'
 
 const SOURCE = 'satellite-imagery'
@@ -15,28 +15,38 @@ function remove(map: maplibregl.Map) {
 }
 
 /**
- * The one satellite image chosen in the layers panel (Himawari-9 or NASA's
- * daily image), drawn over the base map and under its labels and Roadbeat's
- * layers. Null `image` removes it. It is re-added after every style load
- * (`ready`), since a new base map drops it. Above `maxzoom` MapLibre stretches
- * the source's last tiles rather than asking for ones it doesn't serve, and
- * below `minzoom` it draws none.
+ * The one satellite image chosen as the map's base, drawn over the base map
+ * and under its labels and Roadbeat's layers. Null `image` removes it. It is
+ * re-added after every style load (`ready`), since a new base map drops it,
+ * and when its source or zooms change. Stepping through one source's frames
+ * swaps the tile address in place, so the image doesn't blink out between
+ * frames. Above `maxzoom` MapLibre stretches the source's last tiles rather
+ * than asking for ones it doesn't serve, and below `minzoom` it draws none.
  */
 export function SatelliteImagery({ map, ready, image }: { map: maplibregl.Map | null; ready: number; image: SatelliteTiles | null }) {
-  const tiles = image?.tiles
+  const tiles = image?.tiles ?? null
   const minzoom = image?.minzoom
   const maxzoom = image?.maxzoom
   const attribution = image?.attribution
+  const latestTiles = useRef(tiles)
+  useEffect(() => {
+    latestTiles.current = tiles
+  })
+  const shown = tiles != null
   useEffect(() => {
     if (!map || !ready) return
     remove(map)
-    if (!tiles) return
-    map.addSource(SOURCE, { type: 'raster', tiles: [tiles], tileSize: 256, minzoom, maxzoom, attribution })
+    if (!shown || !latestTiles.current) return
+    map.addSource(SOURCE, { type: 'raster', tiles: [latestTiles.current], tileSize: 256, minzoom, maxzoom, attribution })
     map.addLayer({ id: SOURCE, type: 'raster', source: SOURCE, paint: { 'raster-opacity': 0.9 } }, firstLabelLayer(map))
     return () => {
       // The style may already be gone when the map itself is being removed.
       if (map.getStyle()) remove(map)
     }
-  }, [map, ready, tiles, minzoom, maxzoom, attribution])
+  }, [map, ready, shown, minzoom, maxzoom, attribution])
+  useEffect(() => {
+    if (!map || !ready || !tiles) return
+    ;(map.getSource(SOURCE) as maplibregl.RasterTileSource | undefined)?.setTiles([tiles])
+  }, [map, ready, tiles])
   return null
 }

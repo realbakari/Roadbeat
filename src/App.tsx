@@ -40,7 +40,9 @@ import { useAirQuality } from './hooks/useTrafficData'
 import { useHotspots } from './hooks/useSatellite'
 import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
-import { satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
+import { isGibsLive, jmaProduct, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
+import { recentFrames } from './lib/frames'
+import { SatelliteTimeline } from './components/map/SatelliteTimeline'
 import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
 import { useStoredChoice } from './hooks/useStoredChoice'
 import { searchWithView, viewFromSearch } from './lib/viewUrl'
@@ -253,9 +255,23 @@ export default function App() {
   const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone' || base === 'map')
   const pastCyclones = usePastCyclones(layers.pastCyclones || sel.place?.kind === 'pastcyclone')
   const imagery = useSatelliteImagery(base === 'satellite', satelliteSource, now)
+  // The live image's frames from the last 3 hours, for the satellite timeline; `frame` is the one picked there, or null to follow the newest.
+  const [frame, setFrame] = useState<string | null>(null)
+  const liveFrames = useMemo(
+    () => recentFrames(isGibsLive(satelliteSource) ? imagery.live.frames : jmaProduct(satelliteSource) ? imagery.jma.frames.map((f) => f.time) : [], 3),
+    [satelliteSource, imagery.live.frames, imagery.jma.frames],
+  )
+  const shownFrame = frame && liveFrames.includes(frame) ? frame : null
   const satelliteImage = useMemo(
-    () => (base === 'satellite' ? satelliteTiles(satelliteSource, { gibsTime: imagery.live.time, jmaFrame: imagery.jma.latest, date: imagery.date }) : null),
-    [base, satelliteSource, imagery.live.time, imagery.jma.latest, imagery.date],
+    () =>
+      base === 'satellite'
+        ? satelliteTiles(satelliteSource, {
+            gibsTime: shownFrame ?? imagery.live.time,
+            jmaFrame: (shownFrame && imagery.jma.frames.find((f) => f.time === shownFrame)) || imagery.jma.latest,
+            date: imagery.date,
+          })
+        : null,
+    [base, satelliteSource, shownFrame, imagery.live.time, imagery.jma.frames, imagery.jma.latest, imagery.date],
   )
   const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
   const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
@@ -720,10 +736,21 @@ export default function App() {
                   />
                 )
               }
-              imagery={{ source: satelliteSource, onSource: setSatelliteSource, now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
+              imagery={{ source: satelliteSource, onSource: (s) => (setSatelliteSource(s), setFrame(null)), now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               hazards={{ fireBans, nswFires, cyclones, pastCyclones }}
               councilErrors={council.errors}
             />
+            {base === 'satellite' && !timelineOpen && (
+              <div className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2 max-md:bottom-32">
+                <SatelliteTimeline
+                  frames={liveFrames}
+                  current={shownFrame}
+                  onChange={setFrame}
+                  now={now}
+                  source={isGibsLive(satelliteSource) ? 'NASA GIBS' : 'JMA'}
+                />
+              </div>
+            )}
             {timelineOpen ? (
               <>
                 {replay && <ReplayBanner at={replay.at} run={replay.run} className="absolute inset-x-3 top-14 z-10 text-center xl:inset-x-auto xl:top-3 xl:left-1/2 xl:-translate-x-1/2 xl:whitespace-nowrap" />}

@@ -11,7 +11,7 @@ describe('satelliteTiles', () => {
       tiles: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Himawari_AHI_Band13_Clean_Infrared/default/2026-10-17T13:10:00Z/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png',
       minzoom: 0,
       maxzoom: 6,
-      attribution: 'Himawari-9 imagery: Japan Meteorological Agency, served by NASA GIBS (ESDIS), image 17 Oct, 11:10 pm AEST',
+      attribution: 'Himawari-9 imagery: Japan Meteorological Agency, served by NASA GIBS (ESDIS)',
     })
     expect(satelliteTiles('visible', FRAMES)?.maxzoom).toBe(7)
   })
@@ -21,7 +21,7 @@ describe('satelliteTiles', () => {
       tiles: 'https://www.jma.go.jp/bosai/himawari/data/satimg/20261017135000/fd/20261017135000/REP/ETC/{z}/{x}/{y}.jpg',
       minzoom: 3,
       maxzoom: 5,
-      attribution: 'Himawari-9: Source: Japan Meteorological Agency website (https://www.jma.go.jp/), image 17 Oct, 11:50 pm AEST',
+      attribution: 'Himawari-9: Source: Japan Meteorological Agency website (https://www.jma.go.jp/)',
     })
   })
 

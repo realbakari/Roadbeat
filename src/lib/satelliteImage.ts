@@ -1,7 +1,6 @@
 import { HIMAWARI_BANDS, HIMAWARI_CREDIT, himawariTiles, type HimawariBand } from '../api/himawari'
 import { JMA_CREDIT, JMA_MAX_ZOOM, JMA_MIN_ZOOM, jmaTiles, type JmaFrame, type JmaProduct } from '../api/jmaHimawari'
 import { DAILY_PASSES, GIBS_MAX_ZOOM, gibsTiles, type DailyPass } from '../api/satelliteImagery'
-import { aestStamp } from './aest'
 
 /**
  * The satellite images the map can show, one at a time: Himawari-9 from NASA
@@ -37,7 +36,12 @@ export interface SatelliteTiles {
   attribution: string
 }
 
-/** What each source has published: GIBS's newest listed time, JMA's listed image, and the chosen day. */
+/**
+ * The frame or day to draw from what each source has published: a time GIBS
+ * listed, an image JMA listed, and the chosen day. The credit carries no time,
+ * so stepping through frames only swaps tiles; the image's time is shown in the
+ * layer note and the timeline.
+ */
 export interface SatelliteFrames {
   gibsTime: string | null
   jmaFrame: JmaFrame | null
@@ -55,13 +59,13 @@ export function satelliteTiles(source: SatelliteSource, f: SatelliteFrames): Sat
   const product = jmaProduct(source)
   if (product) {
     if (!f.jmaFrame) return null
-    return { tiles: jmaTiles(product, f.jmaFrame), minzoom: JMA_MIN_ZOOM, maxzoom: JMA_MAX_ZOOM, attribution: `Himawari-9: ${JMA_CREDIT}, image ${aestStamp(Date.parse(f.jmaFrame.time))}` }
+    return { tiles: jmaTiles(product, f.jmaFrame), minzoom: JMA_MIN_ZOOM, maxzoom: JMA_MAX_ZOOM, attribution: `Himawari-9: ${JMA_CREDIT}` }
   }
   if (!isGibsLive(source) || !f.gibsTime) return null
   return {
     tiles: himawariTiles(source, f.gibsTime),
     minzoom: 0,
     maxzoom: HIMAWARI_BANDS[source].level,
-    attribution: `${HIMAWARI_CREDIT}, image ${aestStamp(Date.parse(f.gibsTime))}`,
+    attribution: HIMAWARI_CREDIT,
   }
 }

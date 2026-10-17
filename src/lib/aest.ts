@@ -4,7 +4,6 @@
 const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayClock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
 const brisbaneDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
-const stamp = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
 /** A time in Queensland's zone, AEST (Queensland has no daylight saving), with the weekday when it isn't today. */
 export function aestTime(at: number, now: number): string {
@@ -20,11 +19,6 @@ export function ageText(at: number, now: number): string {
   const h = Math.floor(mins / 60)
   const m = mins % 60
   return m ? `${h} h ${m} min ago` : `${h} h ago`
-}
-
-/** A time with its date, for a label that doesn't change as the minutes pass: "17 Oct, 11:20 pm AEST". */
-export function aestStamp(at: number): string {
-  return `${stamp.format(at)} AEST`
 }
 
 /** A data time with its age: "11:20 pm AEST, 14 min ago". */

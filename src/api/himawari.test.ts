@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { domainsUrl, himawariLabel, newerTime, himawariTiles, latestDomainTime, latestHimawariTime } from './himawari'
+import { domainsUrl, himawariFrames, himawariLabel, himawariTiles, latestDomainTime, latestHimawariTime } from './himawari'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -45,12 +45,10 @@ describe('latestDomainTime', () => {
   })
 })
 
-describe('newerTime', () => {
-  it('keeps the newest listed time when a server answers with an older one', () => {
-    expect(newerTime('2026-10-17T13:30:00Z', '2026-10-17T13:10:00Z')).toBe('2026-10-17T13:30:00Z')
-    expect(newerTime('2026-10-17T13:30:00Z', '2026-10-17T13:40:00Z')).toBe('2026-10-17T13:40:00Z')
-    expect(newerTime(null, '2026-10-17T13:10:00Z')).toBe('2026-10-17T13:10:00Z')
-    expect(newerTime('2026-10-17T13:10:00Z', null)).toBe('2026-10-17T13:10:00Z')
+describe('himawariFrames', () => {
+  it('lists every published time from DescribeDomains', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(TWO_DAYS)))
+    expect((await himawariFrames('infrared', NOW)).slice(-2)).toEqual(['2026-10-17T13:00:00Z', '2026-10-17T13:10:00Z'])
   })
 })
 

@@ -1,25 +1,28 @@
 import { useEffect, useState } from 'react'
 import { brisbaneDate } from '../api/airHistory'
-import { latestHimawariTime, newerTime, type HimawariBand } from '../api/himawari'
+import { himawariFrames, type HimawariBand } from '../api/himawari'
+import { mergeFrames } from '../lib/frames'
 import { fetchJmaFrames, type JmaFrame } from '../api/jmaHimawari'
 import { latestImageryDate, type DailyPass } from '../api/satelliteImagery'
 import { dailyPass, isGibsLive, jmaProduct, type SatelliteSource } from '../lib/satelliteImage'
 import { poll } from './poll'
 
 /**
- * The newest Himawari-9 image time GIBS lists for `band`, read when the band
- * is chosen and every 5 minutes after (a new image comes every 10), keeping
- * the newest time any read gave (`newerTime`). Null `band` stops reading.
+ * The Himawari-9 image times GIBS lists for `band`, read when the band is
+ * chosen and every 5 minutes after (a new image comes every 10). GIBS's
+ * servers don't all list the newest image at once, so every read's times are
+ * kept (`mergeFrames`) and the map never steps back to an older image. Null
+ * `band` stops reading.
  */
 export function useHimawari(band: HimawariBand | null) {
-  const [state, setState] = useState<{ band: HimawariBand; time: string | null; error: string | null } | null>(null)
+  const [state, setState] = useState<{ band: HimawariBand; frames: string[]; error: string | null } | null>(null)
   useEffect(() => {
     if (!band) return
     const c = new AbortController()
     const load = () =>
-      latestHimawariTime(band, Date.now(), c.signal).then(
-        (time) => setState((s) => ({ band, time: newerTime(s?.band === band ? s.time : null, time), error: null })),
-        (e: Error) => !c.signal.aborted && setState((s) => ({ band, time: s?.band === band ? s.time : null, error: e.message })),
+      himawariFrames(band, Date.now(), c.signal).then(
+        (frames) => setState((s) => ({ band, frames: mergeFrames(s?.band === band ? s.frames : [], frames).slice(-300), error: null })),
+        (e: Error) => !c.signal.aborted && setState((s) => ({ band, frames: s?.band === band ? s.frames : [], error: e.message })),
       )
     load()
     const stop = poll(load, 5 * 60_000)
@@ -29,7 +32,8 @@ export function useHimawari(band: HimawariBand | null) {
     }
   }, [band])
   const current = band && state?.band === band ? state : null
-  return { time: current?.time ?? null, error: current?.error ?? null, checking: !!band && !current }
+  const frames = current?.frames ?? []
+  return { frames, time: frames.at(-1) ?? null, error: current?.error ?? null, checking: !!band && !current }
 }
 
 /** Every Himawari-9 image JMA lists, oldest first, read while `enabled` and every 2 minutes after (JMA lists each a few minutes after it's taken). */

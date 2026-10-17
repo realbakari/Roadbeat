@@ -6,6 +6,7 @@
 // one GIBS has listed, never the clock's.
 
 import { aestWithAge } from '../lib/aest'
+import { domainFrames } from '../lib/frames'
 
 export type HimawariBand = 'infrared' | 'visible'
 
@@ -66,16 +67,11 @@ export function latestDomainTime(xml: string): string | null {
   return end.includes('T') ? end : `${end}T00:00:00Z`
 }
 
-/**
- * The newer of two image times GIBS has listed. GIBS's servers don't all
- * list the same newest image at once (on 17 October 2026 some answered 13:10
- * while others answered 13:30), so a later read can name an older image; the
- * map keeps the newest one it has been told about rather than stepping back.
- */
-export function newerTime(seen: string | null, read: string | null): string | null {
-  if (!seen) return read
-  if (!read) return seen
-  return Date.parse(read) > Date.parse(seen) ? read : seen
+/** Every image time GIBS lists for `band` in the UTC days either side of `now`, oldest first. */
+export async function himawariFrames(band: HimawariBand, now: number, signal?: AbortSignal): Promise<string[]> {
+  const res = await fetch(domainsUrl(band, now), { signal, cache: 'no-cache' })
+  if (!res.ok) throw new Error(`NASA GIBS responded with ${res.status}`)
+  return domainFrames(await res.text())
 }
 
 /** The newest image GIBS has published for `band`, or null when it lists none in the last day. */
