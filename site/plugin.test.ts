@@ -53,6 +53,11 @@ describe('siteFiles', () => {
     for (const name of ['about', 'privacy', 'contact'] as const) expect(loadPage(name, bare).markdown.length).toBeGreaterThan(500)
   })
 
+  it('links the station, line and place directories from the home and 404 pages', () => {
+    for (const name of ['index', '404'] as const) for (const hub of ['/stations/', '/lines/', '/places/']) expect(loadPage(name, bare).markdown).toContain(`](${hub})`)
+    expect(loadPage('index', bare).title).toContain('traffic')
+  })
+
   it('marks the 404 page noindex and leaves it out of the sitemap', () => {
     expect(siteFiles(withUrl)['/404.html'].body).toContain('noindex')
     expect(siteFiles(withUrl)['/sitemap.xml'].body).not.toContain('/404')

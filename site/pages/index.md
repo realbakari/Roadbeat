@@ -1,6 +1,6 @@
 ---
-title: Roadbeat — live Queensland roads and transport
-description: Live Queensland road conditions, traffic cameras, TransLink departures and timetables, a journey planner, bushfire warnings and Brisbane flood gauges, from official sources only.
+title: Roadbeat: live Queensland traffic, road closures and Translink
+description: Live Queensland traffic, road closures, cameras, Translink departures and timetables, bushfire warnings and flood gauges, from official sources only.
 ---
 
 # Roadbeat: live Queensland roads and transport
@@ -25,6 +25,9 @@ Roadbeat is an independent project. It is not affiliated with, or endorsed by, t
 
 ## More about Roadbeat
 
+- [Train stations, tram stops and ferry terminals](/stations/)
+- [Translink lines and routes](/lines/)
+- [Queensland places](/places/)
 - [About Roadbeat](/about/)
 - [Privacy](/privacy/)
 - [Contact](/contact/)

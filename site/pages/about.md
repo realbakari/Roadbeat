@@ -1,5 +1,5 @@
 ---
-title: About Roadbeat
+title: About
 description: What Roadbeat is, where its data comes from, and why it shows only official, published information.
 ---
 
