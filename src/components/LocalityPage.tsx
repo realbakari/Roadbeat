@@ -1,4 +1,5 @@
 import { Banner, Button, Loader, Text } from '@cloudflare/kumo'
+import { ModelForecast } from './ModelForecast'
 import { ArrowLeftIcon, CaretRightIcon, FlameIcon, HouseLineIcon, InfoIcon, LightningIcon, MapPinIcon, MapTrifoldIcon, PackageIcon, WindIcon, type Icon } from '@phosphor-icons/react'
 import { useMemo, type ReactNode } from 'react'
 import { AIR_COLOR, worstRating, AIR_RATINGS } from '../api/airQuality'
@@ -155,6 +156,10 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
           </div>
         </Section>
       )}
+
+      <Section title="Model weather forecast" note="The next 24 hours, every third hour.">
+        <ModelForecast at={locality.position} now={now} />
+      </Section>
 
       {report.airStations.length > 0 && (
         <Section title="Air quality" note={`The department's monitoring stations within ${NEAR_KM} km.`}>

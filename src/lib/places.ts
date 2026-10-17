@@ -3,6 +3,9 @@ import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '..
 import type { Clearance } from '../api/clearances'
 import type { AirStation } from '../api/airQuality'
 import type { Hotspot } from '../api/hotspots'
+import type { NswFire } from '../api/nswFires'
+import type { Cyclone } from '../api/jtwc'
+import type { PastCyclone } from '../api/pastCyclones'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { DumpPoint, RestArea, TruckRestriction, WazeReport } from '../api/types'
 import type { MapLayers } from '../components/map/settings'
@@ -27,6 +30,9 @@ export type Place =
   | { kind: 'outage'; data: Outage }
   | { kind: 'air'; data: AirStation }
   | { kind: 'hotspot'; data: Hotspot }
+  | { kind: 'nswfire'; data: NswFire }
+  | { kind: 'cyclone'; data: Cyclone }
+  | { kind: 'pastcyclone'; data: PastCyclone }
 
 /** The loaded lists a place link can point into; null while a list has not loaded. */
 export interface PlaceSources {
@@ -45,6 +51,9 @@ export interface PlaceSources {
   outages: Outage[] | null
   airStations: AirStation[] | null
   hotspots: Hotspot[] | null
+  nswFires: NswFire[] | null
+  cyclones: Cyclone[] | null
+  pastCyclones: PastCyclone[] | null
 }
 
 /** The map layer a shared link to a place turns on. */
@@ -64,6 +73,9 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   outage: 'outages',
   air: 'airQuality',
   hotspot: 'hotspots',
+  nswfire: 'nswFires',
+  cyclone: 'cyclones',
+  pastcyclone: 'pastCyclones',
 }
 
 /** The place a #place/<kind>/<id> link names, or null when it is unknown or not loaded yet. */
@@ -129,6 +141,18 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.hotspots?.find((h) => h.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'nswfire') {
+    const data = s.nswFires?.find((f) => f.id === id)
+    return data ? { kind, data } : null
+  }
+  if (kind === 'cyclone') {
+    const data = s.cyclones?.find((c) => c.id === id)
+    return data ? { kind, data } : null
+  }
+  if (kind === 'pastcyclone') {
+    const data = s.pastCyclones?.find((c) => c.id === id)
+    return data ? { kind, data } : null
+  }
   return null
 }
 
@@ -159,6 +183,15 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
       return { center: place.data.position, zoom: 12 }
     case 'hotspot':
       return { center: place.data.position, zoom: 11 }
+    case 'nswfire':
+      return { center: place.data.position, zoom: 11 }
+    case 'cyclone':
+      return { center: place.data.points[0].position, zoom: 5 }
+    case 'pastcyclone': {
+      // The track's middle reported position, so the view centres on the storm's path.
+      const p = place.data.points[Math.floor(place.data.points.length / 2)]
+      return { center: p.position, zoom: 5 }
+    }
     case 'event':
       return place.data.position ? { center: place.data.position, zoom: 15 } : null
     case 'outage': {

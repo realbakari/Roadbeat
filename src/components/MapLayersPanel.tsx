@@ -1,5 +1,5 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon } from '@phosphor-icons/react'
+import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon, HurricaneIcon, PathIcon } from '@phosphor-icons/react'
 import { FIRE_COLOR, FIRE_LEVEL_LABEL } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
@@ -26,6 +26,13 @@ import type { Basemap, MapLayers } from './map/settings'
 import { NewTabNote } from './NewTabNote'
 import { HOTSPOT_COLOR } from '../api/hotspots'
 import { HotspotsNote, SatelliteImageNote } from './SatelliteLayerNotes'
+import { CyclonesNote, FireBansLine, NswFiresNote, PastCyclonesNote } from './HazardLayerNotes'
+import type { Feed } from '../hooks/useHazardFeeds'
+import type { FireBans } from '../api/fireBans'
+import type { NswFire } from '../api/nswFires'
+import { CYCLONE_COLOR, type Cyclone } from '../api/jtwc'
+import { NSW_ALERT_COLOR } from '../api/nswFires'
+import { PAST_CYCLONE_COLOR, type PastCyclone } from '../api/pastCyclones'
 import { chipClass } from './chip'
 
 interface Props {
@@ -51,6 +58,8 @@ interface Props {
   hotspotState: ComponentProps<typeof HotspotsNote>
   /** The satellite image's day and how it was chosen. */
   imagery: ComponentProps<typeof SatelliteImageNote>
+  /** Fire bans, NSW border fires, JTWC cyclones and past cyclone tracks, for their notes. */
+  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]> }
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }
@@ -151,6 +160,7 @@ export function MapLayersPanel({
   gaugeNotice,
   hotspotState,
   imagery,
+  hazards,
   councilErrors,
   basemap,
   onBasemapChange,
@@ -273,6 +283,7 @@ export function MapLayersPanel({
                   {fireNotice}
                 </Text>
               )}
+              <FireBansLine feed={hazards.fireBans} />
             </div>
           </LayerRow>
           <LayerRow
@@ -283,6 +294,33 @@ export function MapLayersPanel({
             onChange={(v) => set('hotspots', v)}
           >
             <HotspotsNote {...hotspotState} />
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={NSW_ALERT_COLOR.Advice} icon={<FlameIcon size={12} weight="fill" />} />}
+            label="NSW fires near the border"
+            count={hazards.nswFires.data?.length}
+            checked={layers.nswFires}
+            onChange={(v) => set('nswFires', v)}
+          >
+            <NswFiresNote feed={hazards.nswFires} />
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={CYCLONE_COLOR} icon={<HurricaneIcon size={12} weight="fill" />} />}
+            label="Tropical cyclones (JTWC)"
+            count={hazards.cyclones.data?.length}
+            checked={layers.cyclones}
+            onChange={(v) => set('cyclones', v)}
+          >
+            <CyclonesNote feed={hazards.cyclones} />
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={PAST_CYCLONE_COLOR} icon={<PathIcon size={12} weight="bold" />} />}
+            label="Past cyclone tracks"
+            count={hazards.pastCyclones.data?.length}
+            checked={layers.pastCyclones}
+            onChange={(v) => set('pastCyclones', v)}
+          >
+            <PastCyclonesNote feed={hazards.pastCyclones} />
           </LayerRow>
           <LayerRow
             icon={<Badge color={LAYER_COLOR.news} icon={<NewspaperIcon size={12} weight="fill" />} />}

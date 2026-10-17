@@ -2,6 +2,11 @@ import { fetchAirQuality } from '../api/airQuality'
 import { brisbaneDate } from '../api/airHistory'
 import { fetchHotspots } from '../api/hotspots'
 import { latestImageryDate } from '../api/satelliteImagery'
+import { fetchFireBans } from '../api/fireBans'
+import { fetchNswFires } from '../api/nswFires'
+import { fetchCyclones } from '../api/jtwc'
+import { fetchPastCyclones } from '../api/pastCyclones'
+import { fetchModelForecast } from '../api/modelForecast'
 import { BUS_STOPS_API, parseBusStopAudit } from '../api/bccBusStops'
 import { fetchCorridors, fetchCouncilEvents, fetchPedestrianDay } from '../api/bccDashboard'
 import { fetchGauges } from '../api/bccGauges'
@@ -140,6 +145,18 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
     const date = await latestImageryDate(brisbaneDate(Date.now()), signal)
     if (!date) throw new Error('No image published over Brisbane in the last four days')
     return { publisherTime: { at: Date.parse(`${date}T00:00:00+10:00`), label: 'Newest image (day)' } }
+  },
+  'fire-bans': async (signal) => {
+    const f = await fetchFireBans(signal)
+    return { publisherTime: f.feedUpdatedAt ? { at: f.feedUpdatedAt, label: 'Feed generated' } : null }
+  },
+  'nsw-fires': (signal) => fetchNswFires(signal).then(none),
+  jtwc: (signal) => fetchCyclones(signal).then(none),
+  'past-cyclones': (signal) => fetchPastCyclones(signal).then(none),
+  'model-forecast': async (signal) => {
+    const f = await fetchModelForecast(BRISBANE, signal)
+    if (!f) throw new Error('Open-Meteo answered with no forecast')
+    return { publisherTime: f.runAt ? { at: f.runAt, label: 'Model run' } : null }
   },
   crashes: (signal) => fetchCrashSummary(BRISBANE, signal).then(none),
   'camera-time': { skip: 'Asked only for a pinned camera’s image; nothing to ask without one' },

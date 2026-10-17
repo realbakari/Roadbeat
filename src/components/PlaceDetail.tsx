@@ -1,7 +1,6 @@
 import { Badge, Banner, Button, Text } from '@cloudflare/kumo'
 import {
   ArrowLeftIcon,
-  ArrowSquareOutIcon,
   ArrowsVerticalIcon,
   CoffeeIcon,
   DropIcon,
@@ -47,6 +46,8 @@ import type { Place } from '../lib/places'
 import { truckSubtitle } from '../lib/trucks'
 import { wazeLabel } from '../lib/waze'
 import { NewTabNote } from './NewTabNote'
+import { ExternalLink, Header, Section } from './PlaceParts'
+import { CycloneBody, NswFireBody, PastCycloneBody } from './HazardPlaces'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
 const REST_TYPES: Record<string, string> = {
@@ -210,6 +211,12 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return <AirBody s={place.data} now={now} />
     case 'hotspot':
       return <HotspotBody h={place.data} now={now} />
+    case 'nswfire':
+      return <NswFireBody f={place.data} />
+    case 'cyclone':
+      return <CycloneBody c={place.data} now={now} />
+    case 'pastcyclone':
+      return <PastCycloneBody c={place.data} />
   }
 }
 
@@ -699,37 +706,6 @@ function Contact({ name, phone }: { name: string | null; phone: string | null })
   )
 }
 
-function Header({ icon: I, color, ink = '#fff', title, subtitle }: { icon: Icon; color: string; ink?: string; title: string; subtitle: string }) {
-  return (
-    <header className="flex items-start gap-3">
-      <span
-        className="flex size-10 shrink-0 items-center justify-center rounded-lg"
-        style={{ backgroundColor: color, color: ink }}
-        aria-hidden
-      >
-        <I size={22} weight="fill" />
-      </span>
-      <div className="grid min-w-0 gap-0.5">
-        <Text as="h2" variant="heading" size="lg">
-          {title}
-        </Text>
-        <Text variant="secondary">{subtitle}</Text>
-      </div>
-    </header>
-  )
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-2">
-      <Text as="h3" variant="heading">
-        {title}
-      </Text>
-      <div>{children}</div>
-    </section>
-  )
-}
-
 function Amenity({ on, icon: I, children }: { on: boolean; icon: Icon; children: ReactNode }) {
   return (
     <Badge variant={on ? 'green' : 'outline'} icon={on ? <I weight="fill" /> : undefined}>
@@ -759,12 +735,3 @@ function Directions({ at }: { at: [number, number] }) {
   )
 }
 
-function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-      {children}
-      <ArrowSquareOutIcon size={14} />
-      <NewTabNote />
-    </a>
-  )
-}

@@ -16,6 +16,9 @@ import { CENTRE_COLOR, centreKind } from './councilCentres'
 import { OUTAGE_COLOR, outageFacts } from './outages'
 import { AIR_COLOR, AIR_RATINGS, worstRating } from '../api/airQuality'
 import { HOTSPOT_COLOR } from '../api/hotspots'
+import { NSW_ALERT_COLOR } from '../api/nswFires'
+import { PAST_CYCLONE_COLOR, pastCycloneTitle } from '../api/pastCyclones'
+import { CYCLONE_COLOR } from '../api/jtwc'
 import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
 import { dsColor, siteLoad } from './signals'
 import { truckKey } from './trucks'
@@ -76,6 +79,9 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   outage: 'Outage',
   air: 'Air quality station',
   hotspot: 'Heat detected by satellite',
+  nswfire: 'NSW Rural Fire Service incident',
+  cyclone: 'JTWC warning, not the official Australian warning',
+  pastcyclone: 'Past cyclone track, IBTrACS',
 }
 
 function placeTitle(place: Place): string {
@@ -109,6 +115,12 @@ function placeTitle(place: Place): string {
       return place.data.name
     case 'hotspot':
       return 'Satellite hotspot'
+    case 'nswfire':
+      return place.data.title
+    case 'cyclone':
+      return place.data.name ? `Tropical cyclone ${place.data.name} (${place.data.id})` : `Tropical cyclone ${place.data.id}`
+    case 'pastcyclone':
+      return pastCycloneTitle(place.data)
   }
 }
 
@@ -132,6 +144,12 @@ export function placeCard(place: Place): MapCard | null {
     const h = place.data
     facts.push(`${h.satellite}${h.sensor ? ` · ${h.sensor}` : ''} · ${observed.format(h.observedAt)}`, h.accuracy ? `Position ${h.accuracy}` : 'Position accuracy not published')
   }
+  if (place.kind === 'nswfire') facts.push(...[place.data.alertLevel, place.data.fields.find(([k]) => k === 'Status')?.[1]].filter((f): f is string => !!f))
+  if (place.kind === 'cyclone') {
+    const c = place.data
+    facts.push(`Warning ${c.warning ?? '?'} · ${observed.format(c.issuedAt)} AEST`, c.points[0].windKt ? `${c.points[0].windKt} kt at the warning position` : 'Wind not published')
+  }
+  if (place.kind === 'pastcyclone') facts.push(place.data.peakKt ? `Peak ${place.data.peakKt} kt (${place.data.agency ?? 'WMO agency'})` : 'Peak wind not recorded', 'History, not a current warning')
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,
     dump: LAYER_COLOR.dumpPoint,
@@ -148,6 +166,9 @@ export function placeCard(place: Place): MapCard | null {
     outage: place.kind === 'outage' ? OUTAGE_COLOR[place.data.source] : '',
     air: place.kind === 'air' ? AIR_COLOR[worstRating(place.data) ?? 0] : '',
     hotspot: HOTSPOT_COLOR,
+    nswfire: place.kind === 'nswfire' ? (NSW_ALERT_COLOR[place.data.alertLevel] ?? NSW_ALERT_COLOR['Not Applicable']) : '',
+    cyclone: CYCLONE_COLOR,
+    pastcyclone: PAST_CYCLONE_COLOR,
   }
   return {
     key: `place-${place.kind}-${placeId(place)}`,

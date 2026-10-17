@@ -1,5 +1,17 @@
 import type { Selection } from './route'
 
+/** The tab title for each kind of #place/<kind>/<id> page; any other kind is 'Place'. */
+const PLACE_TITLE: Record<string, string> = {
+  rest: 'Rest area',
+  truck: 'Truck restriction',
+  dump: 'RV dump point',
+  air: 'Air quality station',
+  hotspot: 'Satellite hotspot',
+  nswfire: 'NSW fire',
+  cyclone: 'Tropical cyclone (JTWC)',
+  pastcyclone: 'Past cyclone',
+}
+
 /** The site's own title, as the built page sets it, kept for the home view. */
 export const SITE_TITLE = 'Roadbeat'
 
@@ -21,7 +33,7 @@ export function pageTitle(
   if (sel.gauge) return of('Stream gauge')
   if (sel.signal) return of('Traffic signal')
   if (sel.vehicle) return of('Live vehicle')
-  if (sel.place) return of(sel.place.kind === 'rest' ? 'Rest area' : sel.place.kind === 'truck' ? 'Truck restriction' : sel.place.kind === 'dump' ? 'RV dump point' : sel.place.kind === 'air' ? 'Air quality station' : sel.place.kind === 'hotspot' ? 'Satellite hotspot' : 'Place')
+  if (sel.place) return of(PLACE_TITLE[sel.place.kind] ?? 'Place')
   if (sel.news != null) return of(sel.news ? 'News report' : 'Queensland news')
   const t = sel.transit
   if (t) {

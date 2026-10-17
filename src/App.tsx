@@ -38,6 +38,7 @@ import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSe
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { useAirQuality } from './hooks/useTrafficData'
 import { useHotspots, useSatelliteImagery } from './hooks/useSatellite'
+import { useCyclones, useFireBans, useNswFires, usePastCyclones } from './hooks/useHazardFeeds'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
@@ -229,6 +230,10 @@ export default function App() {
   })
   const air = useAirQuality(layers.airQuality || sel.place?.kind === 'air')
   const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
+  const fireBans = useFireBans(layers.fires)
+  const nswFires = useNswFires(layers.nswFires || sel.place?.kind === 'nswfire')
+  const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone')
+  const pastCyclones = usePastCyclones(layers.pastCyclones || sel.place?.kind === 'pastcyclone')
   const imagery = useSatelliteImagery(layers.satellite, now)
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
@@ -295,7 +300,7 @@ export default function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, nswFires: nswFires.data, cyclones: cyclones.data, pastCyclones: pastCyclones.data },
     setLayers,
     setFocus,
   )
@@ -517,6 +522,7 @@ export default function App() {
                 mapView={mapView}
                 selectedPlace={selectedPlace}
                 fires={fires}
+                fireBans={fireBans.data}
                 fireNotice={fireNotice}
                 selectedFire={selectedFire}
                 gauges={gauges}
@@ -611,6 +617,9 @@ export default function App() {
               outages={news.snapshot?.outages ?? []}
               airStations={air.stations ?? []}
               hotspots={hot.hotspots ?? []}
+              nswFires={nswFires.data ?? []}
+              cyclones={cyclones.data ?? []}
+              pastCyclones={pastCyclones.data ?? []}
               satelliteDate={imagery.date}
               newsStories={replay ? replayStories : mapStories}
               selectedStory={selectedStory}
@@ -652,6 +661,7 @@ export default function App() {
               fireNotice={fireNotice}
               gaugeNotice={gaugeNotice}
               hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt }}
+              hazards={{ fireBans, nswFires, cyclones, pastCyclones }}
               imagery={{ date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               councilErrors={council.errors}
             />
