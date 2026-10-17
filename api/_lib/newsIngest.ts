@@ -127,7 +127,7 @@ async function readDashboard(d: CouncilDashboard) {
     cameras: optional(cameras, parseCameras).flatMap((c) => toCouncilCamera(d, c) ?? []),
     outages: [
       ...optional(notices, parseCouncilNotices).map((n) => fromCouncilNotice(d, n)),
-      ...optional(energex, parseEnergexOutages).flatMap((o) => fromPowerOutage(o, index, d.page) ?? []),
+      ...optional(energex, parseEnergexOutages).map((o) => fromPowerOutage(o, index, d.page)),
     ],
   }
 }

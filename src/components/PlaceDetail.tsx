@@ -34,7 +34,7 @@ import { BCC_CLEARANCES_URL, clearanceLabel, QR_BRIDGES_URL, QR_CLEARANCES_URL, 
 import { ACCESSIBLE_PARKING_URL, BIKE_RACKS_URL, CLEARWAYS_URL, PARKING_METERS_URL, type AccessibleBay, type BikeStop, type Clearway, type ParkingMeter, type Toilet } from '../api/bccPlaces'
 import { EVENTS_URL, type CouncilEvent } from '../api/bccDashboard'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
-import { OUTAGE_COLOR } from '../lib/outages'
+import { isUnplaced, OUTAGE_COLOR } from '../lib/outages'
 import { AirHistory } from './AirHistory'
 import { HOTSPOT_COLOR, HOTSPOTS_ATTRIBUTION, HOTSPOTS_PORTAL, type Hotspot } from '../api/hotspots'
 import { ClampedText } from './ClampedText'
@@ -496,7 +496,9 @@ function OutageBody({ o, now, onOpenHref }: { o: Outage; now: number; onOpenHref
         <Text size="sm" variant="secondary">
           {o.place
             ? `Located from: ${o.place.name}. Energex names the suburb and streets, not a point, so the marker is at the suburb's gazetteer point.`
-            : `At the shape ${o.council} published.`}
+            : isUnplaced(o)
+              ? `Not on the map. Energex names the suburb and streets, not a point, and the place names gazetteer has no suburb by this name in ${o.council}, so Roadbeat has nowhere to put it.`
+              : `At the shape ${o.council} published.`}
         </Text>
         {suburb && onOpenHref && (
           <Button size="xs" variant="ghost" className="w-fit" icon={<MapPinIcon />} onClick={() => onOpenHref(`place/locality/${encodeURIComponent(suburb)}`)}>
