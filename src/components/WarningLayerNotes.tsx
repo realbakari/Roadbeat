@@ -2,6 +2,7 @@ import { Text } from '@cloudflare/kumo'
 import { FIRE_COLOR, FIRE_LEVEL_LABEL, FIRE_LEVELS } from '../api/bushfires'
 import { QLD_WARNINGS_PAGE, WARNING_COLOR, WARNING_LEVELS } from '../api/qldWarnings'
 import { aestTime, aestWithAge } from '../lib/aest'
+import { fireIcon, iconUrl } from '../lib/mapIcons'
 import { LayerFacts } from './LayerFacts'
 import { NewTabNote } from './NewTabNote'
 
@@ -68,6 +69,14 @@ export function FiresNote({ newest, notice, fetchedAt, now }: FeedState & { newe
   return (
     <div className="grid gap-1">
       <Key items={FIRE_LEVELS.map((l) => ({ label: FIRE_LEVEL_LABEL[l], color: FIRE_COLOR[l] }))} />
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+        <span className="inline-flex items-center gap-1">
+          <img src={iconUrl(fireIcon('Advice'))} alt="" className="size-4" /> Fire
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <img src={iconUrl(fireIcon('Advice', 'FIRE PERMITTED BURN'))} alt="" className="size-4" /> Planned (permitted) burn, as QFD lists it
+        </span>
+      </div>
       <LayerFacts
         publisher="Queensland Fire Department"
         cadence="Read every 2 minutes"

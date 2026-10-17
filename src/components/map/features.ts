@@ -27,7 +27,7 @@ export function fireFeatures(fires: FireWarning[]): GeoJSON.FeatureCollection {
       key: `fire/${encodeURIComponent(f.id)}`,
       label: `${f.level === 'Information' ? fireKindLabel(f) : f.level} · ${f.area ?? f.title}`,
       color: FIRE_COLOR[f.level],
-      icon: fireIcon(f.level),
+      icon: fireIcon(f.level, f.kind),
       rank: fireRank(f),
     }
     if (f.areaShape) out.push({ type: 'Feature', geometry: f.areaShape, properties: props })
