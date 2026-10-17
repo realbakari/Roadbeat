@@ -44,13 +44,17 @@ export function linesIndex(d: Directory): StaticPage {
   }
 }
 
+/** The group for the few gazetteer places that name no council. */
+const NO_COUNCIL = 'No council area'
+
 export function placesIndex(d: Directory): StaticPage {
+  const councils = [...new Set(d.places.map((p) => p.council).filter(Boolean))].sort()
   const md = [
     '# Queensland places',
     '',
     `Every town, suburb and locality in the Queensland place names gazetteer, ${d.places.length.toLocaleString('en-AU')} in all, by local government area. Each page names the stations nearby and opens the live view of what official sources publish there.`,
     '',
-    ...grouped(d.places, (p) => p.council).flatMap(([title, list]) => [`## ${title}`, '', ...list.map((p) => `- [${p.name}](${placePath(p)})`), '']),
+    ...grouped(d.places, (p) => p.council || NO_COUNCIL, [...councils, NO_COUNCIL]).flatMap(([title, list]) => [`## ${title}`, '', ...list.map((p) => `- [${p.name}](${placePath(p)})`), '']),
   ].join('\n')
   return {
     path: PLACES.path,

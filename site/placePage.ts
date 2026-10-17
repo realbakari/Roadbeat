@@ -7,21 +7,23 @@ import { DESCRIPTION_MAX, HOME, PLACES, TITLE_MAX, areaName, coords, count, fit,
 export function placePage(p: Place, d: Directory): StaticPage {
   const stations = p.stations.map((n) => ({ ...n, mode: d.stations.find((s) => s.slug === n.slug)!.mode }))
   const area = areaName(p.council)
-  const titles = [`${p.name}, ${area}: traffic, transport and warnings`, `${p.name}: traffic, transport and warnings`, `${p.name}, ${area}`, p.name]
+  // A few gazetteer entries (offshore islands, Moreton Bay's waters) name no council.
+  const where = area ? `, ${area}` : ''
+  const titles = [`${p.name}${where}: traffic, transport and warnings`, `${p.name}: traffic, transport and warnings`, `${p.name}${where}`, p.name]
   // "Injinoo (Northern Peninsula Area Regional)" already names its council.
   const named = p.council && !p.name.includes(p.council) ? `${p.name}, ${p.council}` : p.name
   const lead = `Road events, warnings and transport at ${named}, live from official sources in Roadbeat`
   const md = [
     `# ${p.name}`,
     '',
-    `${p.name} is a locality in the ${p.council} local government area, Queensland. The Queensland place names gazetteer puts it at ${coords(p.position)}.`,
+    `${p.name} is a locality in ${p.council ? `the ${p.council} local government area, ` : ''}Queensland. The Queensland place names gazetteer puts it at ${coords(p.position)}.`,
     '',
     ...(stations.length
       ? [`## Stations within ${NEAR_KM} km`, '', ...stations.map((s) => `- [${s.name}](${stationPath(s.slug)}), ${stationKind(s.mode)}, ${km(s.km)} from the gazetteer point`), '']
       : ['No train station, tram stop or ferry terminal in Translink\'s stop data lies within ' + NEAR_KM + ' km of the gazetteer point.', '']),
     '## In the Roadbeat app',
     '',
-    `The Roadbeat app gathers what official sources publish at ${p.name} right now: road events, bushfire warnings, traffic cameras, air quality, council centres, power outages, news stories and stream gauges, each from its publisher's own feed. None of that is on this page, because it changes by the minute.`,
+    `The Roadbeat app gathers what official sources publish at ${p.name} right now: road events, bushfire warnings, traffic cameras, air quality, council centres, power outages, news stories and stream gauges, each from its publisher's own feed. It changes by the minute, so this page links to it rather than copying it.`,
   ].join('\n')
   return {
     path: placePath(p),
@@ -38,7 +40,9 @@ export function placePage(p: Place, d: Directory): StaticPage {
         '@type': 'Place',
         name: p.name,
         geo: { '@type': 'GeoCoordinates', latitude: p.position[1], longitude: p.position[0] },
-        containedInPlace: { '@type': 'AdministrativeArea', name: p.council, containedInPlace: { '@type': 'State', name: 'Queensland' } },
+        containedInPlace: p.council
+          ? { '@type': 'AdministrativeArea', name: p.council, containedInPlace: { '@type': 'State', name: 'Queensland' } }
+          : { '@type': 'State', name: 'Queensland' },
       },
     ],
   }

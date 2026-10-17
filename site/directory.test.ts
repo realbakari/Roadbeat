@@ -34,7 +34,7 @@ const input: DirectoryInput = {
       TSV: { routes: ['V200'], stops: { '890001': '0' } },
     },
   },
-  places: { places: [['Spring Hill', 153.023, -27.461, 'Brisbane City'], ['Townsville City', 146.817, -19.258, 'Townsville City'], ['Spring Hill', 150, -25, 'Elsewhere Shire']] },
+  places: { places: [['Spring Hill', 153.023, -27.461, 'Brisbane City'], ['Townsville City', 146.817, -19.258, 'Townsville City'], ['Spring Hill', 150, -25, 'Elsewhere Shire'], ['Dundubara', 153.4, -25.2, '']] },
 }
 const dir = buildDirectory(input)
 
@@ -55,11 +55,12 @@ describe('buildDirectory', () => {
 
   it('keeps one locality per name, the first in the gazetteer, and links it to stations within 5 km, nearest first', () => {
     expect(dir.places.map((p) => [p.slug, p.council])).toEqual([
+      ['dundubara', ''],
       ['spring-hill', 'Brisbane City'],
       ['townsville-city', 'Townsville City'],
     ])
-    expect(dir.places[0].stations.map((s) => s.slug)).toEqual(['central-station', 'riverside-ferry-terminal', 'bowen-hills-station'])
-    expect(dir.places[1].stations).toEqual([])
+    expect(dir.places[1].stations.map((s) => s.slug)).toEqual(['central-station', 'riverside-ferry-terminal', 'bowen-hills-station'])
+    expect(dir.places[2].stations).toEqual([])
     expect(dir.stations[1].places.map((p) => p.name)).toEqual(['Spring Hill'])
   })
 })
@@ -77,7 +78,7 @@ describe('directoryPages', () => {
 
   it('writes an index page per kind, then a page per station, line and place', () => {
     expect(pages.slice(0, 3).map((p) => p.path)).toEqual(['/stations/', '/lines/', '/places/'])
-    expect(pages.length).toBe(3 + 3 + 4 + 2)
+    expect(pages.length).toBe(3 + 3 + 4 + 3)
   })
 
   it('describes a station with its lines, nearby localities, JSON-LD and app link, in published terms only', () => {
@@ -111,6 +112,17 @@ describe('directoryPages', () => {
     expect(p.open).toEqual({ hash: 'place/locality/Spring%20Hill', label: 'Open Spring Hill in Roadbeat' })
     expect(p.jsonLd?.[0]).toMatchObject({ '@type': 'Place', containedInPlace: { name: 'Brisbane City' } })
     expect(page('/places/townsville-city/').markdown).toContain('No train station, tram stop or ferry terminal')
+  })
+
+  it('writes a place with no council without an empty council name, and groups it last on the index', () => {
+    const p = page('/places/dundubara/')
+    expect(p.markdown).toContain('Dundubara is a locality in Queensland.')
+    expect(p.title).toBe('Dundubara: traffic, transport and warnings')
+    expect(p.description).toContain('at Dundubara, live')
+    expect(p.jsonLd?.[0]).toMatchObject({ containedInPlace: { '@type': 'State' } })
+    const index = page('/places/').markdown
+    expect(index).not.toMatch(/^## $/m)
+    expect(index.indexOf('## No council area')).toBeGreaterThan(index.indexOf('## Townsville City'))
   })
 
   it('keeps places with no station nearby out of search, and says nearby stations only when there are some', () => {
