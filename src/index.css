@@ -46,6 +46,19 @@ body,
   isolation: isolate;
 }
 
+/*
+ * The app is a full-window shell whose panels scroll inside it; the page
+ * itself never should. Screen-reader text (.sr-only, absolutely positioned)
+ * inside a scrolled panel with no positioned ancestor was placed against the
+ * page instead, stretching it to twice the window: scrolling to the end then
+ * pushed the whole app off screen, leaving a blank page. #root now holds such
+ * text and clips it. Only with JavaScript: the static fallback page scrolls.
+ */
+.js #root {
+  position: relative;
+  overflow: clip;
+}
+
 body {
   margin: 0;
   background: var(--color-kumo-canvas);
