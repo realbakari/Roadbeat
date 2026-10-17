@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildDirectory, distanceKm, slugify, type DirectoryInput } from './directory.ts'
 import { directoryPages, lineTitle } from './directoryPages.ts'
+import { isTwin } from './placePage.ts'
 
 // A toy network: Central (platforms 1 and 2) and Bowen Hills on T1, a ferry
 // terminal on F1, a turnback no route calls at, a bus stop on route 100 and a
@@ -154,5 +155,14 @@ describe('page titles and descriptions', () => {
     expect(page('/stations/central-station/').description).toMatch(/^Live departures, platforms and the published timetable for Central station/)
     expect(page('/lines/t1-caboolture/').description).toContain('live departures')
     expect(page('/lines/tsv-200/').description).not.toContain('live')
+  })
+})
+
+describe('isTwin', () => {
+  it('finds a parenthetical place whose plain name is in the same council area', () => {
+    const twins = buildDirectory({ ...input, places: { places: [['Mungindi', 148.98, -28.98, 'Balonne Shire'], ['Mungindi (Balonne Shire)', 148.99, -28.97, 'Balonne Shire'], ['Hope Vale (Hope Vale Shire)', 145.1, -15.3, 'Hope Vale Aboriginal Shire']] } })
+    const [hope, mungindi, twin] = twins.places
+    expect([hope.name, mungindi.name, twin.name]).toEqual(['Hope Vale (Hope Vale Shire)', 'Mungindi', 'Mungindi (Balonne Shire)'])
+    expect([isTwin(hope, twins), isTwin(mungindi, twins), isTwin(twin, twins)]).toEqual([false, false, true])
   })
 })

@@ -4,6 +4,19 @@
 import { NEAR_KM, stationKind, type Directory, type Place } from './directory.ts'
 import { DESCRIPTION_MAX, HOME, PLACES, TITLE_MAX, areaName, coords, count, fit, km, placePath, stationPath, type StaticPage } from './pageKit.ts'
 
+const placeKeys = new WeakMap<Directory, Set<string>>()
+
+/**
+ * Whether the gazetteer has this place twice: "Mungindi (Balonne Shire)" beside
+ * a "Mungindi" in the same council area. The plain name's page is the one to index.
+ */
+export function isTwin(p: Place, d: Directory) {
+  const base = p.name.match(/^(.+) \(.+\)$/)?.[1]
+  if (!base) return false
+  if (!placeKeys.has(d)) placeKeys.set(d, new Set(d.places.map((q) => `${q.name}|${q.council}`)))
+  return placeKeys.get(d)!.has(`${base}|${p.council}`)
+}
+
 export function placePage(p: Place, d: Directory): StaticPage {
   const stations = p.stations.map((n) => ({ ...n, mode: d.stations.find((s) => s.slug === n.slug)!.mode }))
   const area = areaName(p.council)
@@ -33,7 +46,8 @@ export function placePage(p: Place, d: Directory): StaticPage {
     crumbs: [HOME, PLACES, { name: p.name, path: placePath(p) }],
     // With no station nearby the page is the gazetteer point and the app link, the
     // same for thousands of localities: kept for people, left out of search.
-    noindex: !stations.length,
+    // So is the second of a gazetteer twin.
+    noindex: !stations.length || isTwin(p, d),
     open: { hash: `place/locality/${encodeURIComponent(p.name)}`, label: `Open ${p.name} in Roadbeat` },
     jsonLd: [
       {
