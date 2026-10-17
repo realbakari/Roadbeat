@@ -45,6 +45,7 @@ import { formatDateTime, formatDay, stripHtml, timeAgo, titleCase } from '../lib
 import { LAYER_COLOR } from '../lib/mapIcons'
 import type { Place } from '../lib/places'
 import { truckSubtitle } from '../lib/trucks'
+import { wazeLabel } from '../lib/waze'
 import { NewTabNote } from './NewTabNote'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
@@ -163,9 +164,9 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return (
         <>
           <Header
-            icon={CarProfileIcon}
+            icon={w.type === 'ACCIDENT' ? CarProfileIcon : WarningIcon}
             color={LAYER_COLOR.waze}
-            title={w.subtype === 'ACCIDENT_MINOR' ? 'Minor crash reported' : 'Crash reported'}
+            title={`${wazeLabel(w)} reported`}
             subtitle={where || 'Location reported by Waze users'}
           />
           <Banner

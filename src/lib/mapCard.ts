@@ -19,6 +19,7 @@ import { HOTSPOT_COLOR } from '../api/hotspots'
 import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
 import { dsColor, siteLoad } from './signals'
 import { truckKey } from './trucks'
+import { wazeLabel } from './waze'
 
 /**
  * A short card for a selected map item, shown on the map itself when the side
@@ -63,7 +64,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   rest: 'Rest area',
   dump: 'RV dump point',
   truck: 'Heavy vehicle restriction',
-  waze: 'Crash reported by Waze users',
+  waze: 'Reported by Waze users',
   clearance: 'Low clearance',
   clearway: 'Clearway',
   toilet: 'Public toilet',
@@ -86,7 +87,7 @@ function placeTitle(place: Place): string {
     case 'truck':
       return place.data.properties.name
     case 'waze':
-      return [place.data.street, place.data.city].filter(Boolean).join(', ') || 'Crash reported'
+      return [place.data.street, place.data.city].filter(Boolean).join(', ') || `${wazeLabel(place.data)} reported`
     case 'clearance':
       return place.data.title
     case 'clearway':
@@ -156,7 +157,9 @@ export function placeCard(place: Place): MapCard | null {
         ? 'Bike repair station'
         : place.kind === 'centre'
           ? `${place.data.type} · ${place.data.council}`
-          : place.kind === 'outage'
+          : place.kind === 'waze'
+            ? `${wazeLabel(place.data)} reported by Waze users`
+            : place.kind === 'outage'
             ? `${place.data.type} ${place.data.source === 'energex' ? 'outage reported by Energex' : `notice · ${place.data.council}`}`
             : PLACE_SUBTITLE[place.kind],
     facts: facts.slice(0, 2),

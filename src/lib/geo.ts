@@ -5,6 +5,7 @@ import { isClosure, isUpcoming } from './filters'
 import { eventIconId } from './mapIcons'
 import { eventMarkerPoints, flatten, type LngLat } from './eventAnchor'
 import { truckIconPoint, truckKey } from './trucks'
+import { wazeIcon, wazeLabel } from './waze'
 
 export { eventAnchor, eventBounds, type Bounds, type LngLat } from './eventAnchor'
 
@@ -103,9 +104,9 @@ export function placeMarkers(
       ...waze.map((w) =>
         point([w.location.x, w.location.y], {
           key: `place/waze/${w.uuid}`,
-          icon: 'waze',
+          icon: wazeIcon(w),
           color: '',
-          label: `Waze report · ${w.street ?? w.city ?? 'Crash'}`,
+          label: [`Waze: ${wazeLabel(w)}`, w.street ?? w.city].filter(Boolean).join(' · '),
         }),
       ),
     ],

@@ -79,7 +79,7 @@ export const FEEDS = [
   },
   {
     id: 'waze',
-    name: 'Waze crash reports',
+    name: 'Waze reports',
     publisher: 'TMR (QLDTraffic)',
     url: 'data.qldtraffic.qld.gov.au/displayed_waze_events.json',
     path: null,

@@ -11,7 +11,7 @@ The browser reads these while the app is open.
 | Road events | Transport and Main Roads (TMR) | `data.qldtraffic.qld.gov.au/events_v2.geojson` | Direct | 60 s | `src/api/client.ts` |
 | Traffic and flood cameras | TMR | `data.qldtraffic.qld.gov.au/webcameras.geojson`, `floodcameras.geojson` | Direct | 5 min | `src/api/client.ts` |
 | Rest areas, RV dump points, truck restrictions | TMR | `data.qldtraffic.qld.gov.au/QLD_RA_LITE.geojson`, `rvEffluentDumpSites.geojson`, `restrictedtruck.geojson` | Direct | Once per visit | `src/api/client.ts` |
-| Waze crash reports | TMR (QLDTraffic) | `data.qldtraffic.qld.gov.au/displayed_waze_events.json` | Direct | 60 s | `src/api/client.ts` |
+| Waze reports | TMR (QLDTraffic) | `data.qldtraffic.qld.gov.au/displayed_waze_events.json` | Direct | 60 s | `src/api/client.ts` |
 | TMR districts | TMR | `data.qldtraffic.qld.gov.au/districts.geojson` | Direct | Once per visit | `src/api/client.ts` |
 | Rain radar | Bureau of Meteorology via QLDTraffic | `rainradar.qldtraffic.qld.gov.au/radarimage` | Direct, as an image pinned to the area it covers, which moves with the map. Each image covers 30% more than the view on every side. | 5 min, and when the view leaves the covered area or the zoom changes | `src/components/map/RainRadar.tsx` |
 | TransLink network status and notices | Translink | `data.qldtraffic.qld.gov.au/translink/*.json` | Direct | 2 min | `src/api/client.ts` |
@@ -56,6 +56,8 @@ Three Brisbane City Council feeds need care:
 - **Intersection volumes** give each lane's degree of saturation (`dsN`, measured) and vehicle count (`mfN`, measured). They also give `rfN`, a flow that SCATS calculates. The app does not use `rfN`, because it is an estimate. The council does not publish which street each SCATS approach belongs to.
 
 The QLDTraffic files are the feeds behind qldtraffic.qld.gov.au. They are not part of the published QLDTraffic API specification, so they can change without notice. The documented API at `api.qldtraffic.qld.gov.au` has the same events, but its camera endpoints send no CORS headers. Set `VITE_QLDTRAFFIC_DATA_BASE` to read the files from a mirror.
+
+`displayed_waze_events.json` carries Waze's own report types, crashes (`ACCIDENT`) and hazards such as `HAZARD_ON_ROAD_TRAFFIC_LIGHT_FAULT`. Each report is named by its published type and subtype (`wazeLabel()` in `src/lib/waze.ts`), drawn with a car for a crash and a warning sign for anything else, and never assumed to be a crash.
 
 `restrictedtruck.geojson` gives every truck restriction the id 1 and no feature id, so a restriction is keyed by its id and name (`truckKey()` in `src/lib/trucks.ts`), and opening one flies to the icon drawn at the middle of its longest line. The Pacific Motorway restriction has no origin or destination, so its page is subtitled with its roads instead.
 

@@ -71,7 +71,7 @@ const BASEMAPS: { value: Basemap; label: string; hint: string }[] = [
 const TOGGLES: { key: keyof MapLayers; label: string; icon: string; group: 'traffic' | 'places' }[] = [
   { key: 'webcams', label: 'Traffic cameras', icon: 'camera-webcam', group: 'traffic' },
   { key: 'floodcams', label: 'Flood cameras', icon: 'camera-floodcam', group: 'traffic' },
-  { key: 'waze', label: 'Waze crash reports', icon: 'waze', group: 'traffic' },
+  { key: 'waze', label: 'Waze reports', icon: 'waze', group: 'traffic' },
   { key: 'trucks', label: 'Truck restrictions', icon: 'truck-restriction', group: 'traffic' },
   { key: 'restAreas', label: 'Rest areas', icon: 'rest-area', group: 'places' },
   { key: 'dumpPoints', label: 'RV dump points', icon: 'dump-point', group: 'places' },

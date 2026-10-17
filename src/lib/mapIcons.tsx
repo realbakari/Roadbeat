@@ -17,6 +17,7 @@ import {
   BicycleIcon,
   WrenchIcon,
   CalendarStarIcon,
+  WarningIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -117,6 +118,7 @@ function buildIcons(): Record<string, string> {
   icons['rest-area-hv'] = square(LAYER_COLOR.hvRestArea, TruckIcon)
   icons['dump-point'] = square(LAYER_COLOR.dumpPoint, VanIcon)
   icons['waze'] = disc(LAYER_COLOR.waze, CarProfileIcon)
+  icons['waze-hazard'] = disc(LAYER_COLOR.waze, WarningIcon)
   icons['truck-restriction'] = disc(LAYER_COLOR.truck, TruckIcon)
   icons['toilet'] = square(LAYER_COLOR.toilet, ToiletIcon)
   icons['toilet-accessible'] = square(LAYER_COLOR.toiletAccessible, ToiletIcon)
