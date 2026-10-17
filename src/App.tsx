@@ -38,6 +38,8 @@ import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSe
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { useAirQuality } from './hooks/useTrafficData'
 import { useHotspots, useSatelliteImagery } from './hooks/useSatellite'
+import { useQldWarnings } from './hooks/useQldWarnings'
+import { satelliteTiles } from './lib/satelliteImage'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
@@ -230,6 +232,10 @@ export default function App() {
   const air = useAirQuality(layers.airQuality || sel.place?.kind === 'air')
   const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
   const imagery = useSatelliteImagery(layers.satellite, now)
+  const satelliteImage = useMemo(() => satelliteTiles(imagery.source, imagery.live.time, imagery.date), [imagery.source, imagery.live.time, imagery.date])
+  const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
+  const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
+  const firesNewest = useMemo(() => (fires?.length ? Math.max(...fires.map((f) => f.published ?? 0)) || null : null), [fires])
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
     () => (sel.signal ? (signalSites?.find((s) => s.tsc === sel.signal) ?? null) : null),
@@ -295,7 +301,7 @@ export default function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, warnings: qw.warnings },
     setLayers,
     setFocus,
   )
@@ -336,6 +342,7 @@ export default function App() {
       trucks: ref.truckRestrictions.length,
       waze: waze.length,
       ...(fires ? { fires: fires.length } : {}),
+      ...(qw.warnings ? { warnings: qw.warnings.length } : {}),
       ...(gauges ? { gauges: gauges.length } : {}),
       ...(signalVolumes ? { signals: signalVolumes.size } : {}),
       ...(clearances ? { clearances: clearances.length } : {}),
@@ -350,7 +357,7 @@ export default function App() {
       ...(hot.hotspots ? { hotspots: hot.hotspots.length } : {}),
       ...(stories ? { news: mapStories.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations, hot.hotspots],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations, hot.hotspots, qw.warnings],
   )
 
   const locate = useCallback(() => {
@@ -596,6 +603,7 @@ export default function App() {
               crashFilter={crashFilter}
               vehicles={mapVehicles}
               fires={fires ?? []}
+              warnings={qw.warnings ?? []}
               gauges={replay ? replay.gauges : (gauges ?? [])}
               replayAt={replay?.at ?? null}
               signalSites={signalSites ?? []}
@@ -611,7 +619,7 @@ export default function App() {
               outages={news.snapshot?.outages ?? []}
               airStations={air.stations ?? []}
               hotspots={hot.hotspots ?? []}
-              satelliteDate={imagery.date}
+              satelliteImage={satelliteImage}
               newsStories={replay ? replayStories : mapStories}
               selectedStory={selectedStory}
               selectedVehicleId={sel.vehicle}
@@ -649,10 +657,11 @@ export default function App() {
               clearanceError={clearanceError}
               unplacedOutages={news.snapshot?.outages.filter(isUnplaced).length ?? 0}
               airError={air.error}
-              fireNotice={fireNotice}
+              fireState={{ newest: firesNewest, notice: fireNotice, fetchedAt: firesAt, now }}
+              warningState={{ count: qw.warnings?.length ?? null, notice: warningNotice, fetchedAt: qw.fetchedAt, now }}
               gaugeNotice={gaugeNotice}
-              hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt }}
-              imagery={{ date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
+              hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt, newest: hot.hotspots?.[0]?.observedAt ?? null, now }}
+              imagery={{ source: imagery.source, onSource: imagery.setSource, now, live: imagery.live, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               councilErrors={council.errors}
             />
             {timelineOpen ? (

@@ -21,7 +21,7 @@ export function pageTitle(
   if (sel.gauge) return of('Stream gauge')
   if (sel.signal) return of('Traffic signal')
   if (sel.vehicle) return of('Live vehicle')
-  if (sel.place) return of(sel.place.kind === 'rest' ? 'Rest area' : sel.place.kind === 'truck' ? 'Truck restriction' : sel.place.kind === 'dump' ? 'RV dump point' : sel.place.kind === 'air' ? 'Air quality station' : sel.place.kind === 'hotspot' ? 'Satellite hotspot' : 'Place')
+  if (sel.place) return of(sel.place.kind === 'rest' ? 'Rest area' : sel.place.kind === 'truck' ? 'Truck restriction' : sel.place.kind === 'dump' ? 'RV dump point' : sel.place.kind === 'air' ? 'Air quality station' : sel.place.kind === 'hotspot' ? 'Satellite hotspot' : sel.place.kind === 'warning' ? 'Queensland warning' : 'Place')
   if (sel.news != null) return of(sel.news ? 'News report' : 'Queensland news')
   const t = sel.transit
   if (t) {

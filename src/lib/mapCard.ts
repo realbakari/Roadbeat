@@ -16,6 +16,7 @@ import { CENTRE_COLOR, centreKind } from './councilCentres'
 import { OUTAGE_COLOR, outageFacts } from './outages'
 import { AIR_COLOR, AIR_RATINGS, worstRating } from '../api/airQuality'
 import { HOTSPOT_COLOR } from '../api/hotspots'
+import { WARNING_COLOR } from '../api/qldWarnings'
 import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
 import { dsColor, siteLoad } from './signals'
 import { truckKey } from './trucks'
@@ -76,6 +77,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   outage: 'Outage',
   air: 'Air quality station',
   hotspot: 'Heat detected by satellite',
+  warning: 'Queensland warning',
 }
 
 function placeTitle(place: Place): string {
@@ -109,6 +111,8 @@ function placeTitle(place: Place): string {
       return place.data.name
     case 'hotspot':
       return 'Satellite hotspot'
+    case 'warning':
+      return place.data.area ?? 'Queensland warning'
   }
 }
 
@@ -132,6 +136,10 @@ export function placeCard(place: Place): MapCard | null {
     const h = place.data
     facts.push(`${h.satellite}${h.sensor ? ` · ${h.sensor}` : ''} · ${observed.format(h.observedAt)}`, h.accuracy ? `Position ${h.accuracy}` : 'Position accuracy not published')
   }
+  if (place.kind === 'warning') {
+    const w = place.data
+    facts.push(...[w.callToAction, w.issued ? `${w.issued} (AEST)` : null].filter((f) => f != null))
+  }
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,
     dump: LAYER_COLOR.dumpPoint,
@@ -148,6 +156,7 @@ export function placeCard(place: Place): MapCard | null {
     outage: place.kind === 'outage' ? OUTAGE_COLOR[place.data.source] : '',
     air: place.kind === 'air' ? AIR_COLOR[worstRating(place.data) ?? 0] : '',
     hotspot: HOTSPOT_COLOR,
+    warning: place.kind === 'warning' ? WARNING_COLOR[place.data.level] : '',
   }
   return {
     key: `place-${place.kind}-${placeId(place)}`,
@@ -159,6 +168,8 @@ export function placeCard(place: Place): MapCard | null {
           ? `${place.data.type} · ${place.data.council}`
           : place.kind === 'waze'
             ? `${wazeLabel(place.data)} reported by Waze users`
+            : place.kind === 'warning'
+            ? [place.data.levelText, place.data.from].filter(Boolean).join(' · ')
             : place.kind === 'outage'
             ? `${place.data.type} ${place.data.source === 'energex' ? 'outage reported by Energex' : `notice · ${place.data.council}`}`
             : PLACE_SUBTITLE[place.kind],

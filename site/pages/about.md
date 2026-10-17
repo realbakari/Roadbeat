@@ -5,7 +5,7 @@ description: What Roadbeat is, where its data comes from, and why it shows only 
 
 # About Roadbeat
 
-Roadbeat is a free web app for people who drive, ride or take public transport in Queensland. It brings together live road conditions, traffic cameras, public transport, timetables, bushfire warnings, flood gauges, air quality, power outages and council and police notices, so you can check your trip in one place.
+Roadbeat is a free web app for people who drive, ride or take public transport in Queensland. It brings together live road conditions, traffic cameras, public transport, timetables, bushfire warnings, storm, flood and cyclone warnings, flood gauges, air quality, power outages and council and police notices, so you can check your trip in one place.
 
 ## Official data only
 
@@ -17,6 +17,7 @@ Every time, position, delay and count in Roadbeat comes from an official source.
 - **Rain radar:** the Bureau of Meteorology's radar images, as QLDTraffic publishes them.
 - **Public transport:** Translink's published timetables (GTFS) and live feeds (GTFS-RT) for South East Queensland and Cairns, and the published timetables of Translink's 17 other regional networks, with live times wherever TransLink's feed for that region carries them.
 - **Bushfire warnings:** the Queensland Fire Department's current incidents feed.
+- **Storm, flood and cyclone warnings:** Queensland's severe weather, flood and cyclone warnings feed from Queensland Disaster Management on disaster.qld.gov.au, with each warning's text, area and issuing agency as published.
 - **Stream heights, rainfall, signal traffic, planned council road closures, CBD car park spaces, pedestrian counts, corridor travel times and council events:** Brisbane City Council's open data.
 - **Clearways, low clearances, public toilets, accessible parking, parking meters, bike racks, bikeways, bus stop and ferry terminal access and the February 2022 flood extent:** Brisbane City Council's open data. Toilets come from the National Public Toilet Map, and rail bridge clearances from Queensland Rail.
 - **Station access and facilities:** Queensland Rail's station details, published by Brisbane City Council. Lift and escalator outages come from Translink's alerts.
@@ -29,10 +30,10 @@ Every time, position, delay and count in Roadbeat comes from an official source.
 - **Earthquakes:** Geoscience Australia's earthquakes of the last seven days in or off Queensland.
 - **News stories:** the headline, link and first sentence of reports in the Queensland feeds of ABC News, 7NEWS, Brisbane Times, Guardian Australia and SBS News. Each links to the publisher's own report.
 - **Satellite hotspots:** Geoscience Australia's Digital Earth Australia Hotspots, which gathers heat detected by NASA, NOAA, Japanese and other satellites. A hotspot is heat a satellite saw, not a confirmed fire.
-- **Satellite image:** NASA's Global Imagery Browse Services, from the NOAA-20 satellite's daily pass.
+- **Satellite image:** the Japan Meteorological Agency's Himawari-9 satellite every 10 minutes, infrared or visible, and the NOAA-20 satellite's daily true-colour pass, both served by NASA's Global Imagery Browse Services. The map shows one at a time, labelled with the image's own time. We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).
 - **Maps:** OpenFreeMap, OpenMapTiles and OpenStreetMap contributors.
 
-Most of this data is published under the Creative Commons Attribution 4.0 licence: that of the Department of Transport and Main Roads, Translink, the Queensland Fire Department, Brisbane City Council, the Department of Environment, Tourism, Science and Innovation, the Department of Local Government, Water and Volunteers, the Department of Resources, the Queensland Police Service, Geoscience Australia and the Bureau of Meteorology's flood gauge network. Roadbeat credits each publisher as that licence asks. The Bureau of Meteorology's radar images are shown as QLDTraffic publishes them. The councils' dashboards publish no licence; their notices, centres and outages are public safety information, shown as written and linked to each dashboard. NASA's imagery has no use restrictions. Map data is © OpenStreetMap contributors under the Open Database Licence. News headlines and summaries belong to their publishers, and Roadbeat shows only what a feed reader would.
+Most of this data is published under the Creative Commons Attribution 4.0 licence: that of the Department of Transport and Main Roads, Translink, the Queensland Fire Department, Brisbane City Council, the Department of Environment, Tourism, Science and Innovation, the Department of Local Government, Water and Volunteers, the Department of Resources, the Queensland Police Service, Queensland Disaster Management's warnings, Geoscience Australia and the Bureau of Meteorology's flood gauge network. Roadbeat credits each publisher as that licence asks. The Bureau of Meteorology's radar images are shown as QLDTraffic publishes them. The councils' dashboards publish no licence; their notices, centres and outages are public safety information, shown as written and linked to each dashboard. NASA's imagery has no use restrictions. Himawari-9 imagery is the Japan Meteorological Agency's, under its Public Data License, which asks for the source to be named, as Roadbeat does on the map. Map data is © OpenStreetMap contributors under the Open Database Licence. News headlines and summaries belong to their publishers, and Roadbeat shows only what a feed reader would.
 
 ## Find a station, line or place
 

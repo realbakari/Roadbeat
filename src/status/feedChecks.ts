@@ -2,6 +2,8 @@ import { fetchAirQuality } from '../api/airQuality'
 import { brisbaneDate } from '../api/airHistory'
 import { fetchHotspots } from '../api/hotspots'
 import { latestImageryDate } from '../api/satelliteImagery'
+import { latestHimawariTime } from '../api/himawari'
+import { fetchQldWarnings } from '../api/qldWarnings'
 import { BUS_STOPS_API, parseBusStopAudit } from '../api/bccBusStops'
 import { fetchCorridors, fetchCouncilEvents, fetchPedestrianDay } from '../api/bccDashboard'
 import { fetchGauges } from '../api/bccGauges'
@@ -100,6 +102,8 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
   // Healthy when any regional feed parses, empty or not; most are empty.
   'regional-realtime': (signal) => fetchTripUpdates([...PROBED_REGIONS], signal).then(none),
   bushfires: (signal) => fetchBushfires(signal).then(none),
+  // Healthy when the feed parses, empty or not. Its own timestamps are when it was regenerated, not issue times, so none is shown.
+  'qld-warnings': (signal) => fetchQldWarnings(signal).then(none),
   'bcc-gauges': (signal) => fetchGauges(signal).then((g) => ({ publisherTime: latestReading(g) })),
   'qld-gauges': (signal) => fetchQldGauges(signal).then((g) => ({ publisherTime: latestReading(g) })),
   signals: async (signal) => {
@@ -140,6 +144,11 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
     const date = await latestImageryDate(brisbaneDate(Date.now()), signal)
     if (!date) throw new Error('No image published over Brisbane in the last four days')
     return { publisherTime: { at: Date.parse(`${date}T00:00:00+10:00`), label: 'Newest image (day)' } }
+  },
+  himawari: async (signal) => {
+    const time = await latestHimawariTime('infrared', Date.now(), signal)
+    if (!time) throw new Error('No Himawari-9 infrared image listed in the last day')
+    return { publisherTime: { at: Date.parse(time), label: 'Newest infrared image' } }
   },
   crashes: (signal) => fetchCrashSummary(BRISBANE, signal).then(none),
   'camera-time': { skip: 'Asked only for a pinned camera’s image; nothing to ask without one' },

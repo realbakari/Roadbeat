@@ -1,6 +1,6 @@
 import type * as maplibregl from 'maplibre-gl'
 import { useEffect } from 'react'
-import { GIBS_CREDIT, GIBS_MAX_ZOOM, gibsTiles } from '../../api/satelliteImagery'
+import type { SatelliteTiles } from '../../lib/satelliteImage'
 
 const SOURCE = 'satellite-imagery'
 
@@ -15,21 +15,26 @@ function remove(map: maplibregl.Map) {
 }
 
 /**
- * NASA's satellite image for one day (`date`, yyyy-mm-dd), drawn over the base
- * map and under its labels and Roadbeat's layers. Null `date` removes it. It is
- * re-added after every style load (`ready`), since a new base map drops it.
+ * The one satellite image chosen in the layers panel (Himawari-9 or NASA's
+ * daily image), drawn over the base map and under its labels and Roadbeat's
+ * layers. Null `image` removes it. It is re-added after every style load
+ * (`ready`), since a new base map drops it. Above `maxzoom` MapLibre stretches
+ * the source's last tiles rather than asking for ones it doesn't serve.
  */
-export function SatelliteImagery({ map, ready, date }: { map: maplibregl.Map | null; ready: number; date: string | null }) {
+export function SatelliteImagery({ map, ready, image }: { map: maplibregl.Map | null; ready: number; image: SatelliteTiles | null }) {
+  const tiles = image?.tiles
+  const maxzoom = image?.maxzoom
+  const attribution = image?.attribution
   useEffect(() => {
     if (!map || !ready) return
     remove(map)
-    if (!date) return
-    map.addSource(SOURCE, { type: 'raster', tiles: [gibsTiles(date)], tileSize: 256, maxzoom: GIBS_MAX_ZOOM, attribution: `${GIBS_CREDIT}, ${date}` })
+    if (!tiles) return
+    map.addSource(SOURCE, { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom, attribution })
     map.addLayer({ id: SOURCE, type: 'raster', source: SOURCE, paint: { 'raster-opacity': 0.9 } }, firstLabelLayer(map))
     return () => {
       // The style may already be gone when the map itself is being removed.
       if (map.getStyle()) remove(map)
     }
-  }, [map, ready, date])
+  }, [map, ready, tiles, maxzoom, attribution])
   return null
 }

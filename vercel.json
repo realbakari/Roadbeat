@@ -69,6 +69,10 @@
       "destination": "https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json"
     },
     {
+      "source": "/qld-warnings",
+      "destination": "https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com/content/Feeds/StormFloodCycloneWarnings/StormWarnings.json"
+    },
+    {
       "source": "/air-quality",
       "destination": "https://apps.des.qld.gov.au/air-quality/xml/feed.php?category=1&region=ALL"
     },

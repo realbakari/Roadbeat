@@ -47,6 +47,7 @@ import type { Place } from '../lib/places'
 import { truckSubtitle } from '../lib/trucks'
 import { wazeLabel } from '../lib/waze'
 import { NewTabNote } from './NewTabNote'
+import { WarningBody } from './WarningDetail'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
 const REST_TYPES: Record<string, string> = {
@@ -210,6 +211,8 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return <AirBody s={place.data} now={now} />
     case 'hotspot':
       return <HotspotBody h={place.data} now={now} />
+    case 'warning':
+      return <WarningBody w={place.data} />
   }
 }
 

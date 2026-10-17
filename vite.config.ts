@@ -21,6 +21,12 @@ const translinkProxy = {
     changeOrigin: true,
     rewrite: () => '/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json',
   },
+  // Queensland's severe weather, flood and cyclone warnings (no CORS headers either); functions/qld-warnings in production.
+  '/qld-warnings': {
+    target: 'https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com',
+    changeOrigin: true,
+    rewrite: () => '/content/Feeds/StormFloodCycloneWarnings/StormWarnings.json',
+  },
   // The state's live air quality feed (no CORS headers either); functions/air-quality in production.
   '/air-quality': {
     target: 'https://apps.des.qld.gov.au',

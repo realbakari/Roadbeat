@@ -1,6 +1,7 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
-import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon } from '@phosphor-icons/react'
-import { FIRE_COLOR, FIRE_LEVEL_LABEL } from '../api/bushfires'
+import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon, WarningIcon } from '@phosphor-icons/react'
+import { FIRE_COLOR } from '../api/bushfires'
+import { WARNING_COLOR } from '../api/qldWarnings'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
 import { useRef, useState, type ComponentProps, type ReactNode } from 'react'
@@ -25,7 +26,9 @@ import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS } from '../api/airQuality'
 import type { Basemap, MapLayers } from './map/settings'
 import { NewTabNote } from './NewTabNote'
 import { HOTSPOT_COLOR } from '../api/hotspots'
-import { HotspotsNote, SatelliteImageNote } from './SatelliteLayerNotes'
+import { HotspotsNote } from './SatelliteLayerNotes'
+import { SatelliteImageNote } from './SatelliteImageNote'
+import { FiresNote, WarningsNote } from './WarningLayerNotes'
 import { chipClass } from './chip'
 
 interface Props {
@@ -44,12 +47,14 @@ interface Props {
   airError: string | null
   /** Energex outages kept off the map because their suburb isn't in the gazetteer. */
   unplacedOutages: number
-  /** Why bushfire warnings or gauges are missing or stale, or null while their feeds are fine. */
-  fireNotice: string | null
+  /** The bushfire and Queensland warnings feeds' state, for their notes. */
+  fireState: ComponentProps<typeof FiresNote>
+  warningState: ComponentProps<typeof WarningsNote>
+  /** Why gauges are missing or stale, or null while their feeds are fine. */
   gaugeNotice: string | null
   /** The hotspot feed's state, for its note. */
   hotspotState: ComponentProps<typeof HotspotsNote>
-  /** The satellite image's day and how it was chosen. */
+  /** Which satellite image is chosen, and the state of each source. */
   imagery: ComponentProps<typeof SatelliteImageNote>
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
@@ -147,7 +152,8 @@ export function MapLayersPanel({
   clearanceError,
   airError,
   unplacedOutages,
-  fireNotice,
+  fireState,
+  warningState,
   gaugeNotice,
   hotspotState,
   imagery,
@@ -259,21 +265,16 @@ export function MapLayersPanel({
             checked={layers.fires}
             onChange={(v) => set('fires', v)}
           >
-            <div className="grid gap-1">
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
-                {(['Emergency Warning', 'Watch and Act', 'Advice', 'Information'] as const).map((l) => (
-                  <span key={l} className="inline-flex items-center gap-1">
-                    <span className="size-2 rounded-full" style={{ background: FIRE_COLOR[l] }} />
-                    {FIRE_LEVEL_LABEL[l]}
-                  </span>
-                ))}
-              </div>
-              {fireNotice && (
-                <Text size="xs" variant="error">
-                  {fireNotice}
-                </Text>
-              )}
-            </div>
+            <FiresNote {...fireState} />
+          </LayerRow>
+          <LayerRow
+            icon={<Badge color={WARNING_COLOR['Watch and Act']} icon={<WarningIcon size={12} weight="fill" />} />}
+            label="Storm, flood and cyclone warnings"
+            count={counts.warnings}
+            checked={layers.warnings}
+            onChange={(v) => set('warnings', v)}
+          >
+            <WarningsNote {...warningState} />
           </LayerRow>
           <LayerRow
             icon={<Badge color={HOTSPOT_COLOR} icon={<FireSimpleIcon size={12} weight="fill" />} />}

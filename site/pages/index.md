@@ -14,7 +14,7 @@ Roadbeat is a free web app that puts Queensland's live road and public transport
 - Follow Translink buses, trains, trams and ferries in South East Queensland and Cairns, with next departures and delays, and see published timetables for Townsville, Toowoomba, Mackay and Translink's other regional networks.
 - Read the full published timetable for any line or stop, for any day it covers.
 - Plan a trip from the published timetable: direct services, or one change at the same station or stop.
-- See Queensland Fire Department bushfire warnings, satellite hotspots and the latest NASA satellite image, and stream heights and rainfall from Brisbane City Council and Queensland Government gauges.
+- See Queensland Fire Department bushfire warnings, Queensland's storm, flood and cyclone warnings, satellite hotspots, Himawari-9's satellite image every 10 minutes or NASA's daily image, and stream heights and rainfall from Brisbane City Council and Queensland Government gauges.
 - Check air quality and its recent history, Energex power outages and council evacuation centres, and read council, police and news reports on a map.
 - Get notified about events, routes and bushfire warnings that match your settings while the app is open, and turn on push alerts for your commute to hear about it when the app is closed.
 

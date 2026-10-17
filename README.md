@@ -16,7 +16,8 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Journey planner.** Direct trips and trips with one change at the same station or stop, built from the published timetable. Trips that need a walk link to TransLink's own planner.
 - **My trips.** Save a from → to trip, as in TripView, and the Transit home lists its next departures from the published timetable, counting down, with TransLink's real-time delay where reported.
 - **Bushfire warnings.** Queensland Fire Department warnings and incidents on the map, in the events list and in notifications.
-- **Satellite hotspots and imagery.** Geoscience Australia's satellite hotspots for the last 24 hours, labelled as heat detections rather than fires, each with its satellite, time and position accuracy, and NASA's daily true-colour satellite image for a chosen day.
+- **Storm, flood and cyclone warnings.** Queensland's severe weather, flood, cyclone and other hazard warnings from disaster.qld.gov.au, with each warning's published area coloured by its level and a page with its text as published.
+- **Satellite hotspots and imagery.** Geoscience Australia's satellite hotspots for the last 24 hours, labelled as heat detections rather than fires, each with its satellite, time and position accuracy, and one satellite image at a time: Himawari-9's infrared or visible image every 10 minutes, labelled with its own time in AEST and its age, or NASA's daily true-colour image for a chosen day.
 - **Stream gauges and signals.** Brisbane City Council's live stream heights and rainfall, and the latest stream height at about 400 Queensland Government gauging stations across the state, shown on the map and next to nearby flooding events. Each council gauge links to the Bureau of Meteorology's flood warning for its area, and each state gauge to its page on the Water Monitoring Information Portal. Also how busy each council-run traffic signal is right now.
 - **Air quality.** The state's monitoring stations on the map, each coloured by the department's worst rating this hour, with every reading and its rating on the station page, and the department's hourly history for any pollutant over a day, week or month, with its published guidelines.
 - **Low clearances.** Signed clearances of about 20 low Brisbane City Council structures and about 100 Queensland Rail bridges in South East Queensland, for truck and caravan drivers, each with its owner's phone number and the date the council validated it or Queensland Rail's extract was taken.
@@ -56,7 +57,7 @@ You need Node.js 22 or later and `unzip` (for the data build scripts).
 
 3. Open the URL that Vite prints, usually http://localhost:5173.
 
-The development server proxies the TransLink and Queensland Fire Department feeds, so live transport and bushfire warnings work locally.
+The development server proxies the TransLink, Queensland Fire Department and Queensland warnings feeds, so live transport, bushfire warnings and storm, flood and cyclone warnings work locally.
 
 ## Commands
 
