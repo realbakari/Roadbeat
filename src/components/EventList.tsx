@@ -166,7 +166,7 @@ export function EventList({
               </InputGroup>
               <Button
                 variant="secondary"
-                className="shrink-0 md:hidden"
+                className="shrink-0"
                 icon={<FunnelSimpleIcon />}
                 aria-expanded={moreOpen}
                 aria-controls="event-more-filters"
@@ -206,7 +206,7 @@ export function EventList({
               </button>
             </div>
 
-            <div id="event-more-filters" className={`${moreOpen ? 'grid' : 'hidden'} grid-cols-2 gap-2 md:grid`}>
+            <div id="event-more-filters" className={`${moreOpen ? 'grid' : 'hidden'} grid-cols-2 gap-2`}>
               <Select
                 aria-label="District"
                 size="sm"
