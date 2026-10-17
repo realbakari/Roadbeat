@@ -11,7 +11,7 @@ function visitorsTitle(v: Visitors): string {
 export function VisitorCount({ visitors, className = '' }: { visitors: Visitors | null; className?: string }) {
   if (!visitors) return null
   return (
-    <span className={`items-center gap-1.5 text-sm whitespace-nowrap text-kumo-subtle ${className}`} title={visitorsTitle(visitors)} aria-label={visitorsTitle(visitors)}>
+    <span className={`items-center gap-1.5 text-sm whitespace-nowrap text-kumo-subtle ${className}`} title={visitorsTitle(visitors)}>
       <UsersThreeIcon size={16} aria-hidden />
       <span className="tabular-nums">
         <span className="font-medium text-kumo-default">{count.format(visitors.online)}</span> online
