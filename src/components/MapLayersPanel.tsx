@@ -3,7 +3,7 @@ import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, Bu
 import { FIRE_COLOR } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
-import { useState, type ComponentProps, type ReactNode } from 'react'
+import { useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import {
   CRASH_DATA_END,
   CRASH_DATASET_URL,
@@ -154,13 +154,24 @@ export function MapLayersPanel({
   basemap,
   onBasemapChange,
 }: Props) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpenState] = useState(false)
+  // The button and the panel are separate trees, so focus moves to whichever one replaces the other.
+  const toggled = useRef(false)
+  const setOpen = (v: boolean) => {
+    toggled.current = true
+    setOpenState(v)
+  }
+  const takeFocus = (el: HTMLButtonElement | null) => {
+    if (!el || !toggled.current) return
+    toggled.current = false
+    el.focus()
+  }
   const set = (key: keyof MapLayers, v: boolean) => onChange({ ...layers, [key]: v })
 
   if (!open) {
     return (
       <div className="absolute top-3 left-3 z-10">
-        <Button size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
+        <Button ref={takeFocus} size="sm" icon={<StackIcon />} onClick={() => setOpen(true)} className="shadow-md">
           Layers
         </Button>
       </div>
@@ -169,12 +180,19 @@ export function MapLayersPanel({
 
   // Above the map's popups and camera thumbnails, which carry their own z-index.
   return (
-    <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line">
+    <div
+      className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line"
+      onKeyDown={(e) => {
+        if (e.key !== 'Escape') return
+        e.preventDefault()
+        setOpen(false)
+      }}
+    >
       <div className="flex items-center justify-between border-b border-kumo-line py-1.5 pr-1.5 pl-3">
         <Text bold size="sm">
           Map layers
         </Text>
-        <Button size="xs" variant="ghost" shape="square" aria-label="Hide layers" icon={<XIcon />} onClick={() => setOpen(false)} />
+        <Button ref={takeFocus} size="sm" variant="ghost" shape="square" aria-label="Hide layers" icon={<XIcon />} onClick={() => setOpen(false)} className="max-md:size-11" />
       </div>
       <div className="grid gap-3 overflow-y-auto px-3 py-3">
         <div className="grid gap-1.5">

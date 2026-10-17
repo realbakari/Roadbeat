@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+
+/** The ids of the two views, which take focus when switching hides the focused element. */
+export const VIEW_IDS = { list: 'list-view', map: 'map-view' } as const
 
 /** Desktop panel: today's width, full screen for detail, or closed for a full map. */
 export type PanelMode = 'normal' | 'expanded' | 'closed'
@@ -40,6 +43,16 @@ export function usePanelLayout() {
     setMobileView('list')
     setPanelMode((m) => (m === 'closed' ? 'normal' : m))
   }, [setPanelMode])
+  // On phones the view being left is display:none, so whatever had focus in it is lost and
+  // focus falls to the page. Move it to the view now shown, unless it is still somewhere visible.
+  const shownView = useRef(mobileView)
+  useEffect(() => {
+    if (shownView.current === mobileView) return
+    shownView.current = mobileView
+    const active = document.activeElement
+    if (active && active !== document.body && active.checkVisibility()) return
+    document.getElementById(VIEW_IDS[mobileView])?.focus()
+  }, [mobileView])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return
