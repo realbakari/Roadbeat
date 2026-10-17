@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { FIRE_TEXT, type FireLevel, type FireWarning } from '../api/bushfires'
+import { FIRE_LEVEL_LABEL, FIRE_TEXT, type FireLevel, type FireWarning } from '../api/bushfires'
 import { CORRIDORS_URL, EVENTS_URL, PEDESTRIANS_URL, type CouncilEvent } from '../api/bccDashboard'
 import type { CarParkSpaces } from '../api/bccParking'
 import type { TransitAlert } from '../api/translink'
@@ -150,7 +150,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
   ),
 
   fires: (d) => (
-    <Tile title="Bushfire warnings" source="Queensland Fire Department current incidents and warnings.">
+    <Tile title="Bushfires" source="Queensland Fire Department current incidents and warnings.">
       {d.fireLevels && d.fires ? (
         <div className="grid gap-3">
           <div className="grid grid-cols-2 gap-2">
@@ -159,13 +159,13 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
                 <span className={`text-2xl font-semibold tabular-nums ${count ? FIRE_TEXT[level] : ''}`}>
                   {count}
                 </span>
-                <span className="truncate text-xs text-kumo-subtle">{level}</span>
+                <span className="truncate text-xs text-kumo-subtle">{FIRE_LEVEL_LABEL[level]}</span>
               </div>
             ))}
           </div>
           <ul className="grid gap-0.5">
             {d.fires.slice(0, 2).map((f) => (
-              <Row key={f.id} label={f.title} detail={f.level} value="" href={`/#fire/${encodeURIComponent(f.id)}`} />
+              <Row key={f.id} label={f.title} detail={FIRE_LEVEL_LABEL[f.level]} value="" href={`/#fire/${encodeURIComponent(f.id)}`} />
             ))}
           </ul>
         </div>

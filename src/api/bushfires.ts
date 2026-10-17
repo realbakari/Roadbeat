@@ -17,6 +17,14 @@ export const FIRE_COLOR: Record<FireLevel, string> = {
   Information: '#6b7280',
 }
 
+/** A level's name on screen. QFD's 'Information' is a fire it has reported, not a warning. */
+export const FIRE_LEVEL_LABEL: Record<FireLevel, string> = {
+  'Emergency Warning': 'Emergency Warning',
+  'Watch and Act': 'Watch and Act',
+  Advice: 'Advice',
+  Information: 'Fire reported',
+}
+
 /**
  * Text classes for a level's name, in the same hues as FIRE_COLOR but shaded
  * to keep at least 4.5:1 on light and dark surfaces. The warning colours are

@@ -1,6 +1,6 @@
 import { Button, Select, Switch, Text } from '@cloudflare/kumo'
 import { ArrowsVerticalIcon, DropHalfBottomIcon, ProhibitIcon, BuildingsIcon, BusIcon, FlameIcon, WavesIcon, ClockCounterClockwiseIcon, CloudRainIcon, HouseLineIcon, LightningIcon, WindIcon, NewspaperIcon, StackIcon, XIcon, FireSimpleIcon, GlobeHemisphereEastIcon } from '@phosphor-icons/react'
-import { FIRE_COLOR } from '../api/bushfires'
+import { FIRE_COLOR, FIRE_LEVEL_LABEL } from '../api/bushfires'
 import { DS_BANDS } from '../lib/signals'
 import type { VehicleMode } from '../api/translink'
 import { useRef, useState, type ComponentProps, type ReactNode } from 'react'
@@ -253,7 +253,7 @@ export function MapLayersPanel({
         <Group title="Hazards and weather">
           <LayerRow
             icon={<Badge color={FIRE_COLOR['Watch and Act']} icon={<FlameIcon size={12} weight="fill" />} />}
-            label="Bushfire warnings"
+            label="Bushfires"
             count={counts.fires}
             checked={layers.fires}
             onChange={(v) => set('fires', v)}
@@ -263,7 +263,7 @@ export function MapLayersPanel({
                 {(['Emergency Warning', 'Watch and Act', 'Advice', 'Information'] as const).map((l) => (
                   <span key={l} className="inline-flex items-center gap-1">
                     <span className="size-2 rounded-full" style={{ background: FIRE_COLOR[l] }} />
-                    {l === 'Information' ? 'Fire reported' : l}
+                    {FIRE_LEVEL_LABEL[l]}
                   </span>
                 ))}
               </div>

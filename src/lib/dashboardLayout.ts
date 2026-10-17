@@ -23,7 +23,7 @@ export const PANELS = [
   { id: 'news', title: "What's happening", kind: 'strip', source: 'News outlets and official sources' },
   { id: 'districts', title: 'Closures and crashes by district', kind: 'tile', source: 'QLDTraffic' },
   { id: 'transit', title: 'Public transport running', kind: 'tile', source: 'TransLink real-time' },
-  { id: 'fires', title: 'Bushfire warnings', kind: 'tile', source: 'Queensland Fire Department' },
+  { id: 'fires', title: 'Bushfires', kind: 'tile', source: 'Queensland Fire Department' },
   { id: 'gauges', title: 'Brisbane creeks rising fastest', kind: 'tile', source: 'Brisbane City Council gauges' },
   { id: 'signals', title: 'Busiest intersections', kind: 'tile', source: 'Brisbane City Council signals' },
   { id: 'corridors', title: 'Key corridor travel times', kind: 'tile', source: 'Brisbane City Council' },
