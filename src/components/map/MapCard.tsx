@@ -1,4 +1,4 @@
-import { Button } from '@cloudflare/kumo'
+import { Button, LinkButton } from '@cloudflare/kumo'
 import { ArrowRightIcon, NavigationArrowIcon, XIcon } from '@phosphor-icons/react'
 import * as maplibregl from 'maplibre-gl'
 import { useEffect, useState } from 'react'
@@ -54,15 +54,17 @@ export function MapCard({ map, card, onDetails, onClose }: { map: maplibregl.Map
           Details
         </Button>
         {card.directions !== false && (
-        <a
+        <LinkButton
+          variant="secondary"
+          size="sm"
+          icon={<NavigationArrowIcon weight="fill" />}
           href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm ring ring-kumo-line hover:bg-kumo-tint"
         >
-          <NavigationArrowIcon weight="fill" /> Directions
+          Directions
           <NewTabNote />
-        </a>
+        </LinkButton>
         )}
       </div>
     </div>,
