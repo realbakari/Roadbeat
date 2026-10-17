@@ -677,8 +677,11 @@ export default function App() {
               </Button>
             )}
             {vehicleFilter && layers.vehicles && (
-              <div className={`absolute ${timelineOpen ? 'bottom-36' : 'bottom-10'} left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line`}>
-                <span className="whitespace-nowrap">
+              // On phones it sits a row above the Replay button, which shares its line at bottom-10.
+              <div
+                className={`absolute ${timelineOpen ? 'bottom-36' : 'bottom-10 max-md:bottom-20'} left-1/2 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base py-1 pr-1 pl-3 text-sm shadow-md ring ring-kumo-line`}
+              >
+                <span className="min-w-0 truncate">
                   Showing <span className="font-medium">{vehicleFilter.title}</span> · {mapVehicles.length} live
                 </span>
                 <Button size="xs" variant="ghost" onClick={() => setVehicleFilter(null)}>
