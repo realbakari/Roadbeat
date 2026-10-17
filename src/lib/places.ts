@@ -3,6 +3,7 @@ import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '..
 import type { Clearance } from '../api/clearances'
 import type { AirStation } from '../api/airQuality'
 import type { Hotspot } from '../api/hotspots'
+import type { QldWarning } from '../api/qldWarnings'
 import type { NswFire } from '../api/nswFires'
 import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
@@ -30,6 +31,7 @@ export type Place =
   | { kind: 'outage'; data: Outage }
   | { kind: 'air'; data: AirStation }
   | { kind: 'hotspot'; data: Hotspot }
+  | { kind: 'warning'; data: QldWarning }
   | { kind: 'nswfire'; data: NswFire }
   | { kind: 'cyclone'; data: Cyclone }
   | { kind: 'pastcyclone'; data: PastCyclone }
@@ -51,6 +53,7 @@ export interface PlaceSources {
   outages: Outage[] | null
   airStations: AirStation[] | null
   hotspots: Hotspot[] | null
+  warnings: QldWarning[] | null
   nswFires: NswFire[] | null
   cyclones: Cyclone[] | null
   pastCyclones: PastCyclone[] | null
@@ -73,6 +76,7 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   outage: 'outages',
   air: 'airQuality',
   hotspot: 'hotspots',
+  warning: 'warnings',
   nswfire: 'nswFires',
   cyclone: 'cyclones',
   pastcyclone: 'pastCyclones',
@@ -141,6 +145,10 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.hotspots?.find((h) => h.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'warning') {
+    const data = s.warnings?.find((w) => w.id === id)
+    return data ? { kind, data } : null
+  }
   if (kind === 'nswfire') {
     const data = s.nswFires?.find((f) => f.id === id)
     return data ? { kind, data } : null
@@ -183,6 +191,8 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
       return { center: place.data.position, zoom: 12 }
     case 'hotspot':
       return { center: place.data.position, zoom: 11 }
+    case 'warning':
+      return { center: place.data.position, zoom: 10 }
     case 'nswfire':
       return { center: place.data.position, zoom: 11 }
     case 'cyclone':

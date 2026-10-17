@@ -34,13 +34,13 @@ export function useSelectedPlace(
   setLayers: Dispatch<SetStateAction<MapLayers>>,
   setFocus: Dispatch<SetStateAction<MapFocus | null>>,
 ): Place | null {
-  const { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops, councilEvents, councilCentres, outages, airStations, hotspots, nswFires, cyclones, pastCyclones } = sources
+  const { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops, councilEvents, councilCentres, outages, airStations, hotspots, nswFires, cyclones, pastCyclones, warnings } = sources
   const place = useMemo(
     () =>
       sel.place
-        ? findPlace(sel.place, { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops, councilEvents, councilCentres, outages, airStations, hotspots, nswFires, cyclones, pastCyclones })
+        ? findPlace(sel.place, { restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops, councilEvents, councilCentres, outages, airStations, hotspots, nswFires, cyclones, pastCyclones, warnings })
         : null,
-    [sel.place, restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops, councilEvents, councilCentres, outages, airStations, hotspots, nswFires, cyclones, pastCyclones],
+    [sel.place, restAreas, dumpPoints, truckRestrictions, waze, clearances, clearways, toilets, bays, meters, bikeStops, councilEvents, councilCentres, outages, airStations, hotspots, nswFires, cyclones, pastCyclones, warnings],
   )
 
   const kind = sel.place?.kind

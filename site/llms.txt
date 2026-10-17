@@ -1,6 +1,6 @@
 # Roadbeat
 
-> Roadbeat is a free web app for live Queensland road conditions and public transport: QLDTraffic road events and cameras, Translink vehicles, departures and published timetables, a timetable-based journey planner, Queensland Fire Department bushfire warnings, satellite hotspots and imagery, Brisbane City Council and Queensland Government stream gauges, air quality, Energex power outages and council notices, traffic signal volumes and planned road closures, Queensland Rail station access details with Translink's lift and escalator outages, and a map of police, council and news reports. It shows only data that official sources publish and never estimates times, positions or delays.
+> Roadbeat is a free web app for live Queensland road conditions and public transport: QLDTraffic road events and cameras, Translink vehicles, departures and published timetables, a timetable-based journey planner, Queensland Fire Department bushfire warnings, Queensland's storm, flood and cyclone warnings, satellite hotspots and imagery, Brisbane City Council and Queensland Government stream gauges, air quality, Energex power outages and council notices, traffic signal volumes and planned road closures, Queensland Rail station access details with Translink's lift and escalator outages, and a map of police, council and news reports. It shows only data that official sources publish and never estimates times, positions or delays.
 
 ## When to use Roadbeat
 
@@ -71,12 +71,14 @@ All are published under Creative Commons Attribution 4.0 unless noted.
 - Department of Transport and Main Roads: road events, cameras, rest areas, truck restrictions and crash history (QLDTraffic feeds and data.qld.gov.au). Rain radar images are the Bureau of Meteorology's, as QLDTraffic publishes them.
 - Translink: GTFS timetables and GTFS-RT vehicle positions, trip updates and service alerts for South East Queensland and Cairns, and published timetables for the 17 other regional networks (real-time too where Translink's feed for that region carries data).
 - Queensland Fire Department: current bushfire incidents and warnings.
+- Queensland Disaster Management (disaster.qld.gov.au): severe weather, flood and cyclone warnings, as published (CC BY 4.0).
 - Brisbane City Council: bus stop audits, clearways, parking meters, bikeways and bike racks, public toilets (National Public Toilet Map), accessible parking, council events, ferry terminals, the February 2022 flood extent, telemetry gauges, intersection volumes, planned temporary road occupancies, CBD car park spaces, and Queensland Rail's railway station facilities (data.brisbane.qld.gov.au).
 - Department of Local Government, Water and Volunteers: the latest stream heights at open gauging stations (Water Monitoring Information Portal, water-monitoring.information.qld.gov.au) and the station list (data.qld.gov.au).
 - Bureau of Meteorology: National Flood Gauge Network catchments (data.gov.au).
 - Department of Environment, Tourism, Science and Innovation: hourly air quality and each station's history (Air Quality API).
 - Geoscience Australia: Digital Earth Australia satellite hotspots and recent earthquakes.
-- NASA Global Imagery Browse Services: the daily satellite image (no use restrictions).
+- NASA Global Imagery Browse Services: the daily NOAA-20 satellite image (no use restrictions), the daily Terra morning image, and the Japan Meteorological Agency's Himawari-9 image every 10 minutes (JMA Public Data License).
+- Japan Meteorological Agency: Himawari-9 infrared and true-colour images from its weather map (Source: Japan Meteorological Agency website).
 - Queensland Police Service: media releases.
 - 58 Queensland councils' disaster dashboards: bulletins, evacuation centres, council cameras and notices, and the Energex power outages they relay (no licence published; shown as written, linked to each dashboard).
 - News outlets (ABC News, 7NEWS, Brisbane Times, Guardian Australia, SBS News): headline, link and first sentence only, under each publisher's terms.

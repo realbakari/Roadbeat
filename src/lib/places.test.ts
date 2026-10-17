@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { CouncilEvent } from '../api/bccDashboard'
 import type { Clearway, Toilet } from '../api/bccPlaces'
+import { parseQldWarnings } from '../api/qldWarnings'
+import SAMPLES from '../test/qldWarnings.json'
 import { findPlace, placeFocus, type PlaceSources } from './places'
 
 const clearway: Clearway = {
@@ -71,12 +73,14 @@ const sources: PlaceSources = {
   councilCentres: null,
   outages: null,
   airStations: null,
+  warnings: parseQldWarnings(SAMPLES.live),
 }
 
 describe('findPlace', () => {
   it('finds a loaded place by kind and id', () => {
     expect(findPlace({ kind: 'clearway', id: '505' }, sources)).toEqual({ kind: 'clearway', data: clearway })
     expect(findPlace({ kind: 'event', id: '182353296' }, sources)).toEqual({ kind: 'event', data: event })
+    expect(findPlace({ kind: 'warning', id: 'HN_15102026' }, sources)?.data).toMatchObject({ area: 'Isisford' })
   })
 
   it('flies to an event at its published position, and nowhere when it has none', () => {

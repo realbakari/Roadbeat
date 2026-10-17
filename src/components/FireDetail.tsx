@@ -3,8 +3,8 @@ import { ArrowLeftIcon, ArrowSquareOutIcon, FlameIcon } from '@phosphor-icons/re
 import { FIRE_BADGE, FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
 import { timeAgo } from '../lib/format'
 import { readableTextOn } from '../lib/routeColor'
-import { parseWarningText } from '../lib/warningText'
 import { NewTabNote } from './NewTabNote'
+import { PublishedText, TextPart } from './PublishedText'
 
 const when = new Intl.DateTimeFormat('en-AU', {
   timeZone: 'Australia/Brisbane',
@@ -54,11 +54,11 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
               <span className="w-1 shrink-0" style={{ backgroundColor: color }} aria-hidden />
               <div className="grid gap-1 px-3 py-2.5">
                 <Text bold>{fire.callToAction}</Text>
-                {fire.header && <QfdText text={fire.header} />}
+                {fire.header && <PublishedText text={fire.header} />}
               </div>
             </div>
           )}
-          {!warning && fire.text && <QfdText text={fire.text} />}
+          {!warning && fire.text && <PublishedText text={fire.text} />}
 
           <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5 text-sm">
             {fire.location && (
@@ -91,10 +91,10 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
 
           {warning && (
             <>
-              <Part title="Impacts">{fire.impacts}</Part>
-              <Part title="What you should do">{fire.shouldDo}</Part>
-              <Part title="Leaving safely">{fire.leaveSafely}</Part>
-              <Part title="More information">{fire.further}</Part>
+              <TextPart title="Impacts">{fire.impacts}</TextPart>
+              <TextPart title="What you should do">{fire.shouldDo}</TextPart>
+              <TextPart title="Leaving safely">{fire.leaveSafely}</TextPart>
+              <TextPart title="More information">{fire.further}</TextPart>
             </>
           )}
 
@@ -109,40 +109,6 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
           </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Part({ title, children }: { title: string; children: string | null }) {
-  if (!children) return null
-  return (
-    <section className="grid gap-1.5">
-      <Text as="h3" variant="heading">
-        {title}
-      </Text>
-      <QfdText text={children} />
-    </section>
-  )
-}
-
-/** QFD's warning text, word for word, laid out as paragraphs and bullet points. */
-function QfdText({ text }: { text: string }) {
-  const blocks = parseWarningText(text)
-  return (
-    <div className="grid gap-2 text-sm">
-      {blocks.map((b, i) =>
-        b.kind === 'p' ? (
-          <p key={i}>{b.text}</p>
-        ) : (
-          <ul key={i} className="grid list-disc gap-1 pl-5">
-            {b.items.map((it, j) => (
-              <li key={j} className={it.nested ? 'ml-4 list-[circle]' : undefined}>
-                {it.text}
-              </li>
-            ))}
-          </ul>
-        ),
-      )}
     </div>
   )
 }

@@ -16,7 +16,8 @@ It is built with React 19, [Kumo](https://kumo-ui.com/) (Cloudflare's component 
 - **Journey planner.** Direct trips and trips with one change at the same station or stop, built from the published timetable. Trips that need a walk link to TransLink's own planner.
 - **My trips.** Save a from → to trip, as in TripView, and the Transit home lists its next departures from the published timetable, counting down, with TransLink's real-time delay where reported.
 - **Bushfire warnings.** Queensland Fire Department warnings and incidents on the map, in the events list and in notifications.
-- **Satellite hotspots and imagery.** Geoscience Australia's satellite hotspots for the last 24 hours, labelled as heat detections rather than fires, each with its satellite, time and position accuracy, and NASA's daily true-colour satellite image for a chosen day.
+- **Storm, flood and cyclone warnings.** Queensland's severe weather, flood, cyclone and other hazard warnings from disaster.qld.gov.au, with each warning's published area coloured by its level and a page with its text as published.
+- **Satellite hotspots and imagery.** Geoscience Australia's satellite hotspots for the last 24 hours, labelled as heat detections rather than fires, each with its satellite, time and position accuracy, and a one-tap Map / Satellite switch that shows one satellite image at a time: Himawari-9 every 10 minutes from NASA (infrared or visible) or the Japan Meteorological Agency (infrared or true colour), labelled with its own time in AEST and its age, or NASA's daily true-colour image from NOAA-20 (afternoon) or Terra (morning) for a chosen day.
 - **Fire bans, border fires and cyclones.** The Queensland Fire Department's fire bans in its own words, NSW Rural Fire Service incidents just south of the border, the US Joint Typhoon Warning Center's current cyclones near Australia (labelled as not the official Australian warning), and past cyclone tracks near Queensland since 1980 from NOAA's IBTrACS.
 - **Model forecast.** On each place page, the next day of the DWD ICON weather model via Open-Meteo, labelled as raw computer output with its run time.
 - **Stream gauges and signals.** Brisbane City Council's live stream heights and rainfall, and the latest stream height at about 400 Queensland Government gauging stations across the state, shown on the map and next to nearby flooding events. Each council gauge links to the Bureau of Meteorology's flood warning for its area, and each state gauge to its page on the Water Monitoring Information Portal. Also how busy each council-run traffic signal is right now.
@@ -58,7 +59,7 @@ You need Node.js 22 or later and `unzip` (for the data build scripts).
 
 3. Open the URL that Vite prints, usually http://localhost:5173.
 
-The development server proxies the TransLink and Queensland Fire Department feeds, so live transport and bushfire warnings work locally.
+The development server proxies the TransLink, Queensland Fire Department and Queensland warnings feeds, so live transport, bushfire warnings and storm, flood and cyclone warnings work locally.
 
 ## Commands
 

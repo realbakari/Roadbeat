@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Gauge } from '../api/bccGauges'
+import { parseQldWarnings } from '../api/qldWarnings'
 import type { TrafficEvent } from '../api/types'
+import SAMPLES from '../test/qldWarnings.json'
 import { eventCard, gaugeCard, mapCardFor, newsCard, placeCard } from './mapCard'
 import { groupStories } from './newsStories'
 import { gazetteerPlace, newsItem } from '../test/fixtures'
@@ -58,6 +60,17 @@ describe('gaugeCard', () => {
 })
 
 describe('placeCard and mapCardFor', () => {
+  it('shows a Queensland warning with its level, issuer, call to action and issue time in AEST', () => {
+    const card = placeCard({ kind: 'warning', data: parseQldWarnings(SAMPLES.live)[0] })
+    expect(card).toMatchObject({
+      title: 'Isisford',
+      subtitle: 'Advice · Longreach Regional Council',
+      facts: ['Other - Adv - Stay informed', 'Issued at 10:00am, Friday 16 October 2026 (AEST)'],
+      color: '#e8b400',
+      position: [144.44344148638393, -24.259684640453134],
+    })
+  })
+
   it('names a toilet and says whether it is accessible', () => {
     const card = placeCard({
       kind: 'toilet',

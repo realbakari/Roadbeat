@@ -9,6 +9,8 @@ import type { Clearance } from '../api/clearances'
 import type { AccessibleBay, BikeStop, Clearway, ParkingMeter, Toilet } from '../api/bccPlaces'
 import type { CouncilEvent } from '../api/bccDashboard'
 import type { FireWarning } from '../api/bushfires'
+import { warningFeatures, type QldWarning } from '../api/qldWarnings'
+import type { SatelliteTiles } from '../lib/satelliteImage'
 import { loadTracks } from '../api/tracks'
 import { loadStopFeatures } from '../lib/stopFeatures'
 import type { LiveVehicle } from '../api/translink'
@@ -89,6 +91,8 @@ interface Props {
   vehicles: LiveVehicle[]
   /** Queensland Fire Department warnings and incidents. */
   fires: FireWarning[]
+  /** Queensland's severe weather, flood and cyclone warnings. */
+  warnings: QldWarning[]
   gauges: Gauge[]
   /** The replayed time while the timeline is scrubbed, or null when live: gauge labels are read as of this time. */
   replayAt: number | null
@@ -110,8 +114,8 @@ interface Props {
   airStations: AirStation[]
   /** Geoscience Australia's satellite hotspots in the last 24 hours. */
   hotspots: Hotspot[]
-  /** The day of NASA's satellite image to show, as yyyy-mm-dd, or null for none. */
-  satelliteDate: string | null
+  /** The one satellite image to draw while the base is Satellite, or null for the street map alone. */
+  satelliteImage: SatelliteTiles | null
   /** NSW RFS incidents near the Queensland border. */
   nswFires: NswFire[]
   /** JTWC's current cyclones near Australia. */
@@ -156,6 +160,7 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   vehicles: ['vehicles', 'vehicles-selected', 'tracks-network', 'stops-bus', 'stops-station', 'stops-station-label'],
   buildings3d: ['qldt-buildings-3d'],
   fires: ['fire-areas', 'fire-area-lines', 'fire-markers'],
+  warnings: ['warning-areas', 'warning-area-lines', 'warning-markers'],
   gauges: ['gauges', 'gauges-label'],
   signals: ['signals', 'signals-label', 'signals-halo', 'signals-ring'],
   clearances: ['clearances'],
@@ -171,13 +176,12 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   outages: ['outages', 'outages-line', 'outages-area'],
   airQuality: ['air-quality'],
   hotspots: ['hotspots'],
-  satellite: [],
   nswFires: ['nsw-fires'],
   cyclones: ['cyclone-track', 'cyclone-points'],
   pastCyclones: ['past-cyclones'],
 }
 
-const CLICKABLE_PLACES = ['air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 
 const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
@@ -213,6 +217,7 @@ export function TrafficMap(props: Props) {
     crashFilter,
     vehicles,
     fires,
+    warnings,
     gauges,
     replayAt,
     signalSites,
@@ -229,7 +234,7 @@ export function TrafficMap(props: Props) {
     outages,
     airStations,
     hotspots,
-    satelliteDate,
+    satelliteImage,
     nswFires,
     cyclones,
     pastCyclones,
@@ -465,6 +470,10 @@ export function TrafficMap(props: Props) {
   useEffect(() => {
     if (ready && map) setData(map, 'fires', fireData)
   }, [map, ready, fireData])
+  const warningData = useMemo(() => warningFeatures(warnings), [warnings])
+  useEffect(() => {
+    if (ready && map) setData(map, 'qld-warnings', warningData)
+  }, [map, ready, warningData])
   useAnimatedVehicles(map, ready, vehicles, followVehicle ? selectedVehicleId : null)
   useEffect(() => {
     if (ready && map) map.setFilter('vehicles-selected', ['==', ['get', 'key'], `vehicle/${selectedVehicleId ?? ''}`])
@@ -555,7 +564,7 @@ export function TrafficMap(props: Props) {
     <div className="relative h-full w-full">
       <div ref={container} className="h-full w-full" aria-label="Traffic map" role="region" />
       <RainRadar map={map} enabled={layers.radar} ready={ready} />
-      <SatelliteImagery map={map} ready={ready} date={layers.satellite ? satelliteDate : null} />
+      <SatelliteImagery map={map} ready={ready} image={satelliteImage} />
       {map && <CrashLayer map={map} ready={ready} enabled={layers.crashes} filter={crashFilter} />}
       {map && (
         <CameraThumbs

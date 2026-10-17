@@ -2,6 +2,7 @@ import type * as maplibregl from 'maplibre-gl'
 import type { ColorMode } from '../../hooks/useColorMode'
 import { LAYER_COLOR } from '../../lib/mapIcons'
 import { addCrashLayers } from './crashLayers'
+import { addWarningAreas, addWarningMarkers } from './warningLayers'
 import { addHazardLayers } from './hazardLayers'
 
 export const isLine = ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]] as never
@@ -88,6 +89,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     filter: ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]] as never,
     paint: { 'line-color': color, 'line-width': 1.5, 'line-dasharray': [3, 1.5] },
   })
+  addWarningAreas(map)
   map.addLayer({
     id: 'event-areas',
     type: 'fill',
@@ -231,6 +233,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
       'symbol-sort-key': ['-', 10, ['get', 'rank']] as never,
     },
   })
+  addWarningMarkers(map)
 
   // Train, tram and ferry tracks (TransLink GTFS shapes): the network faintly with
   // live vehicles, and a shown line or the selected vehicle's route in its colour.

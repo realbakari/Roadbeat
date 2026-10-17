@@ -10,6 +10,7 @@ import {
   VanIcon,
   VideoCameraIcon,
   FlameIcon,
+  CampfireIcon,
   TrafficSignalIcon,
   ToiletIcon,
   WheelchairIcon,
@@ -131,7 +132,10 @@ function buildIcons(): Record<string, string> {
   icons['vehicle-train'] = disc(VEHICLE_COLOR.train, TrainIcon)
   icons['vehicle-tram'] = disc(VEHICLE_COLOR.tram, TramIcon)
   icons['vehicle-ferry'] = disc(VEHICLE_COLOR.ferry, BoatIcon)
-  for (const level of FIRE_LEVELS) icons[fireIcon(level)] = disc(FIRE_COLOR[level], FlameIcon)
+  for (const level of FIRE_LEVELS) {
+    icons[fireIcon(level)] = disc(FIRE_COLOR[level], FlameIcon)
+    icons[fireIcon(level, 'FIRE PERMITTED BURN')] = disc(FIRE_COLOR[level], CampfireIcon)
+  }
   DS_BANDS.forEach(([, color], band) => (icons[signalIcon(band)] = disc(color, TrafficSignalIcon)))
   return icons
 }
@@ -141,9 +145,14 @@ export function signalIcon(band: number) {
   return `signal-${band}`
 }
 
-/** Map image id for a bushfire warning level. */
-export function fireIcon(level: string) {
-  return `fire-${level.toLowerCase().replace(/[^a-z]+/g, '-')}`
+/**
+ * Map image id for a bushfire warning level and QFD's published incident type
+ * (GroupedType): a campfire for a permitted (planned) burn, a flame for any
+ * other fire. Only the type QFD publishes is read; nothing is inferred.
+ */
+export function fireIcon(level: string, kind: string | null = null) {
+  const base = `fire-${level.toLowerCase().replace(/[^a-z]+/g, '-')}`
+  return kind?.toUpperCase().includes('PERMITTED BURN') ? `${base}-burn` : base
 }
 
 const SVGS = buildIcons()

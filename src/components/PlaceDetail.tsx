@@ -46,6 +46,7 @@ import type { Place } from '../lib/places'
 import { truckSubtitle } from '../lib/trucks'
 import { wazeLabel } from '../lib/waze'
 import { NewTabNote } from './NewTabNote'
+import { WarningBody } from './WarningDetail'
 import { ExternalLink, Header, Section } from './PlaceParts'
 import { CycloneBody, NswFireBody, PastCycloneBody } from './HazardPlaces'
 
@@ -211,6 +212,8 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return <AirBody s={place.data} now={now} />
     case 'hotspot':
       return <HotspotBody h={place.data} now={now} />
+    case 'warning':
+      return <WarningBody w={place.data} />
     case 'nswfire':
       return <NswFireBody f={place.data} />
     case 'cyclone':

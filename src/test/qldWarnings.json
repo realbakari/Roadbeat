@@ -1,0 +1,85 @@
+{
+  "live": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            144.44344148638393,
+            -24.259684640453134
+          ]
+        },
+        "properties": {
+          "WarningTitle": "ADVICE - STAY INFORMED - Isisford and Surrounding Area (Longreach) - DO NOT USE TREATED TAP WATER - Issued at 10:00am, Friday 16 October 2026.",
+          "WarningLevel": "Advice",
+          "WarningType": "Other",
+          "ModifiedDate": "2026-10-17T13:38:34",
+          "PolygonCoords": "-24.230371143346,144.405000075951 -24.2275534196566,144.486367568626 -24.2848348702651,144.486024245872 -24.286712513583,144.404828414573 -24.230371143346,144.405000075951",
+          "Header": "Longreach Regional Council advises people in the Isisford area to Stay Informed of the following Public Heath Alert.\n\nIn life threatening situations, call Triple Zero (000) immediately. \n\nLongreach Regional Council advises all residents in Isisford not to use treated tap water for drinking following the identification of Raphidiopsis Raciborksii (a freshwater cyanobacterium) in the Isisford treated water supply scheme.\n\nThis alert applies to all residents in Isisford from 14 October 2026.\n\nLongreach Regional Council is working closely with Queensland Health and the Water Supply Regulator to resolve the situation.\n\nThe issue was detected on 12 October 2026. Longreach Regional Council is conducting water quality sampling and making required changes to the treatment processes at the water treatment plant.\n\nThis alert will stay in effect until Longreach Regional Council and Queensland Health are confident there is no longer a public health concern. Regular updates will be provided to affected communities.",
+          "Impacts": "• Consuming drinking water or raw water during this alert could lead to illness or discomfort.\n• Residents should note that boiling the water will not make it safe to drink or use for food preparation as it does not remove the contamination.\n• Residents and visitors are advised not to swim in waterholes on the Barcoo River at Isisford due to blue-green algae.\n• Blue-green algae can pose a risk to human and animal health.",
+          "WarningLevelSort": "3",
+          "ShouldDo": "• Alternative safe supplies of drinking water should be used for drinking, preparing food and beverages, brushing teeth and making ice. Residents are urged to share this alert with neighbours and friends.\n• Bottled water will be made available to residents at Council’s administration building located in St Mary Street from 15 October 2026.\n• Residents can continue the use of water for dishwashing, flushing toilets, washing clothes, showering and bathing.\n• If you believe the water has made you sick, contact the Central Queensland Public Health Unit on 07 4920 6989, your local doctor or local hospital, and advise them of this alert.\n• Avoid swimming or other recreational activities that could result in contact with river water.\n• Keep pets away from the river.",
+          "WarningArea": "Isisford",
+          "WarningPolygonCount": "1",
+          "MoreInformation": "•\tFollow our local council disaster dashboard here https://rapad.qitplus.com/longreach\n•\tContact Longreach Regional Council on (07) 4658 4111.",
+          "NextUpdate": "Monday 19 October 2026",
+          "Symbology_level_type": "Other_Advice",
+          "Warningfrom": "Longreach Regional Council",
+          "UniqueID": "HN_15102026",
+          "GlobalID": "8b5e5653-3eca-481b-94cb-5757612a839e",
+          "last_edited_date": "2026-10-17T13:38:34",
+          "CallToAction": "Other - Adv - Stay informed",
+          "created_user": "qps_piwu",
+          "created_date": "2026-10-17T13:38:34",
+          "last_edited_user": "qps_piwu"
+        }
+      }
+    ],
+    "metadata": {
+      "featureCount": 1,
+      "generatedAt": "2026-10-17T13:38:34.371135",
+      "source": "MS Fabric Lakehouse"
+    }
+  },
+  "february": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            147.2545264123,
+            -19.7379210773
+          ]
+        },
+        "properties": {
+          "WarningTitle": "WATCH AND ACT - MONITOR CONDITIONS - Burdekin LGA - Flood - Issued at 5:00pm, Saturday 21 February 2026",
+          "WarningLevel": "Watch and Act",
+          "WarningType": "Flood",
+          "ModifiedDate": "2026-02-21T07:00:00Z",
+          "PolygonCoords": "-19.7849057931279,146.922053124996 -19.7858749593884,146.926516320797 -19.7842596790114,146.934412744137 -19.7810290691164,146.939219262691 -19.7787676032087,146.944369104001 -19.7849057931279,146.922053124996",
+          "Header": "The Burdekin Local Disaster Management Group advises people in the Burdekin Local Government Area to MONITOR CONDITIONS for possible MINOR flooding on the Burdekin River at Inkerman Bridge. \nThe Bureau of Meteorology advises the Burdekin River at Inkerman Bridge is currently below the MINOR flood level and may reach the MINOR flood level (7.00 m) from Sunday morning. \nThe Burdekin River at Inkerman Bridge (Burdekin Bridge) is currently at 6.05 m and rising slowly, below the minor flood level. The Burdekin River at Inkerman Bridge (Burdekin Bridge) may exceed the minor flood level (7.00 m) Sunday morning. The river may reach around 7.50 m during Monday, with minor flooding. Further rises are possible.\nFurther showers and thunderstorms are forecast across the catchment over the next few days, which may cause additional river level rises across the Burdekin River catchment. The situation is being monitored, and this warning will be updated as required.\nFor emergency help in floods and storms, call the QLD SES on 132 500 or download the SES Assistance QLD App. In life threatening situations, call Triple Zero (000) immediately.",
+          "Impacts": "• Roads and access points could become impassable.\n• You may become isolated until flood waters recede.\n• For those living in Rita Island, you may be isolated for an extended period of time if river levels rise. Make sure you have essential supplies to last for 5 days, including food, drinking water, medications and pet food.",
+          "WarningLevelSort": 2,
+          "ShouldDo": "• Find out how to get ready for a flood at the Get Ready Queensland website (Get Prepared).\n• Never drive, walk, ride through, play or swim in flood water. If it’s flooded, forget it. \n• Consider the consequences of road and bridge closures. Damage to roads, bridges or buildings caused by flooding and landslip may exist in your area. Consider the need to make alternate arrangements for work, children, and travel.\n• Drive to conditions and remain alert. Be aware of road hazards including mud, debris, and water in low lying areas.\n• Obey all signs about road closures and instructions from emergency services.\n• Tell friends, family, and neighbours in the area.",
+          "WarningArea": "Burdekin LGA",
+          "WarningPolygonCount": "",
+          "MoreInformation": "• Follow the Burdekin Disaster Dashboard here disaster.burdekin.qld.gov.au.\n• Listen to your local radio Sweet FM 97.1. \n• Check the latest weather, warnings, rainfall, and river heights at the Bureau of Meteorology Queensland website.\n• Check road closures at the QLD Traffic website or for phone service call 13 19 40.",
+          "NextUpdate": "As the situation changes.",
+          "Symbology_level_type": "Flood_WatchAndAct",
+          "Warningfrom": "Burdekin Shire Council",
+          "UniqueID": "TR_210226_1700",
+          "GlobalID": "{CA105132-8361-495F-A398-122FEFC25B4F}",
+          "last_edited_date": "20260221190256.400000",
+          "CallToAction": "Flood - WA - Monitor conditions",
+          "created_user": "joiner.rhys@police.qld.gov.au",
+          "created_date": "20260220064922.748000",
+          "last_edited_user": "joiner.rhys@police.qld.gov.au"
+        }
+      }
+    ]
+  }
+}

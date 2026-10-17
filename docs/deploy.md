@@ -1,15 +1,16 @@
 # Deploy the app
 
-`npm run build` writes a static site to `dist/`. Any static host can serve it. Live transport, bushfire warnings, the statewide stream gauges and air quality also need proxies, because their sources send no CORS headers. Everything else works without them.
+`npm run build` writes a static site to `dist/`. Any static host can serve it. Live transport, bushfire warnings, Queensland's severe weather, flood and cyclone warnings, the statewide stream gauges and air quality also need proxies, because their sources send no CORS headers. Everything else works without them.
 
 | Path | Proxies |
 | --- | --- |
 | `/translink-rt/<region>/<feed>` | `https://gtfsrt.api.translink.com.au/api/realtime/<region>/<feed>` |
 | `/qfd-bushfires` | `https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json` |
+| `/qld-warnings` | `https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com/content/Feeds/StormFloodCycloneWarnings/StormWarnings.json` |
 | `/air-quality` | `https://apps.des.qld.gov.au/air-quality/xml/feed.php?category=1&region=ALL` |
 | `/qld-gauges` | A POST to `https://water-monitoring.information.qld.gov.au/cgi/webservice.pl` for the latest stream height at every station in `public/qld-gauges.json` |
 
-Without the proxies, the Transit tab falls back to TransLink's RSS notices, the bushfire and air quality layers stay empty, and the gauges layer shows Brisbane City Council's gauges only.
+Without the proxies, the Transit tab falls back to TransLink's RSS notices, the bushfire, Queensland warnings and air quality layers stay empty, and the gauges layer shows Brisbane City Council's gauges only.
 
 ## Set the site address and contact email
 
@@ -29,7 +30,7 @@ Cloudflare Pages runs the functions in `functions/` with no extra setup.
 
 1. Set the build command to `npm run build` and the output folder to `dist`.
 2. Add `SITE_URL`, `CONTACT_EMAIL` and `GA_MEASUREMENT_ID` under **Settings** > **Environment variables**.
-3. Deploy. `functions/translink-rt/[[path]].ts`, `functions/qfd-bushfires.ts`, `functions/air-quality.ts` and `functions/qld-gauges.ts` serve the proxy paths and cache each response at the edge for 10 to 60 seconds. `functions/_middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, and a Markdown 404 for unknown pages.
+3. Deploy. `functions/translink-rt/[[path]].ts`, `functions/qfd-bushfires.ts`, `functions/qld-warnings.ts`, `functions/air-quality.ts` and `functions/qld-gauges.ts` serve the proxy paths and cache each response at the edge for 10 to 60 seconds. `functions/_middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, and a Markdown 404 for unknown pages.
 
 ## Deploy to Vercel
 
@@ -83,6 +84,7 @@ Add the rewrites to `public/_redirects` before you build:
 ```
 /translink-rt/*  https://gtfsrt.api.translink.com.au/api/realtime/:splat  200
 /qfd-bushfires   https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json  200
+/qld-warnings    https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com/content/Feeds/StormFloodCycloneWarnings/StormWarnings.json  200
 /air-quality     https://apps.des.qld.gov.au/air-quality/xml/feed.php?category=1&region=ALL  200
 ```
 
@@ -90,10 +92,10 @@ A rewrite can't serve `/qld-gauges`, because the water monitoring portal wants a
 
 ## Deploy elsewhere
 
-On any other host, serve `dist/` and add a reverse proxy for the three rewrite paths in the table, and a small function for `/qld-gauges` that POSTs the request in `src/api/qldGaugesFeed.ts` to the water monitoring portal. If the proxies run on another origin, point the app at them at build time:
+On any other host, serve `dist/` and add a reverse proxy for the four rewrite paths in the table, and a small function for `/qld-gauges` that POSTs the request in `src/api/qldGaugesFeed.ts` to the water monitoring portal. If the proxies run on another origin, point the app at them at build time:
 
 ```bash
-VITE_TRANSLINK_RT_BASE=https://proxy.example.com/translink-rt VITE_QFD_BUSHFIRES_URL=https://proxy.example.com/qfd-bushfires VITE_AIR_QUALITY_URL=https://proxy.example.com/air-quality VITE_QLD_GAUGES_URL=https://proxy.example.com/qld-gauges npm run build
+VITE_TRANSLINK_RT_BASE=https://proxy.example.com/translink-rt VITE_QFD_BUSHFIRES_URL=https://proxy.example.com/qfd-bushfires VITE_QLD_WARNINGS_URL=https://proxy.example.com/qld-warnings VITE_AIR_QUALITY_URL=https://proxy.example.com/air-quality VITE_QLD_GAUGES_URL=https://proxy.example.com/qld-gauges npm run build
 ```
 
 ## Check search and agent readiness

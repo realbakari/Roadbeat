@@ -15,6 +15,8 @@ export interface MapLayers {
   buildings3d: boolean
   /** Queensland Fire Department bushfire warnings and incidents. */
   fires: boolean
+  /** Queensland's severe weather, flood and cyclone warnings, from Queensland Disaster Management. */
+  warnings: boolean
   /** Brisbane City Council and Queensland Government stream height and rain gauges. */
   gauges: boolean
   /** Brisbane City Council signalised intersections, coloured by measured saturation. */
@@ -45,8 +47,6 @@ export interface MapLayers {
   airQuality: boolean
   /** Geoscience Australia's satellite hotspots: heat a satellite detected in the last 24 hours. */
   hotspots: boolean
-  /** NASA's daily true-colour satellite image, for one chosen day. */
-  satellite: boolean
   /** NSW Rural Fire Service incidents just south of the Queensland border. */
   nswFires: boolean
   /** The US Joint Typhoon Warning Center's current cyclones near Australia, with its forecast track. */
@@ -67,6 +67,7 @@ export const DEFAULT_LAYERS: MapLayers = {
   vehicles: false,
   buildings3d: false,
   fires: true,
+  warnings: true,
   gauges: false,
   signals: false,
   clearances: false,
@@ -82,7 +83,6 @@ export const DEFAULT_LAYERS: MapLayers = {
   outages: true,
   airQuality: false,
   hotspots: false,
-  satellite: false,
   nswFires: false,
   cyclones: false,
   pastCyclones: false,

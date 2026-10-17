@@ -37,7 +37,18 @@ import { useLocality } from './hooks/useLocality'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
 import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
 import { useAirQuality } from './hooks/useTrafficData'
-import { useHotspots, useSatelliteImagery } from './hooks/useSatellite'
+import { useHotspots } from './hooks/useSatellite'
+import { useSatelliteImagery } from './hooks/useSatelliteImagery'
+import { useQldWarnings } from './hooks/useQldWarnings'
+import { isGibsLive, jmaProduct, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
+import { recentFrames } from './lib/frames'
+import { layerTimes } from './lib/layerInfo'
+import { SatelliteTimeline } from './components/map/SatelliteTimeline'
+import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
+import { useStoredChoice } from './hooks/useStoredChoice'
+import { searchWithView, viewFromSearch } from './lib/viewUrl'
+import { parseDismissed, satelliteSuggestion } from './lib/satelliteSuggestion'
+import { SatelliteSuggestion } from './components/map/SatelliteSuggestion'
 import { useCyclones, useFireBans, useNswFires, usePastCyclones } from './hooks/useHazardFeeds'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
@@ -68,7 +79,9 @@ export default function App() {
   const [mapView, setMapView] = useState<{ center: LngLat; zoom: number } | null>(null)
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS)
   // A link to the News tab or a story (#news/…) opens with the news pins on.
-  const [layers, setLayers] = useState<MapLayers>(() => (location.hash.startsWith('#news') ? { ...DEFAULT_LAYERS, news: true } : DEFAULT_LAYERS))
+  // A shared link's base, image and layers (?base=satellite&layers=…) open that view; see src/lib/viewUrl.ts.
+  const [linked] = useState(() => viewFromSearch(location.search))
+  const [layers, setLayers] = useState<MapLayers>(() => linked.layers ?? (location.hash.startsWith('#news') ? { ...DEFAULT_LAYERS, news: true } : DEFAULT_LAYERS))
   // Base map style and 3D buildings are remembered in this browser.
   const [basemap, setBasemapState] = useState<Basemap>(() => {
     try {
@@ -86,6 +99,13 @@ export default function App() {
       // Storage blocked: the choice lasts for this visit.
     }
   }
+  // The base (street map or satellite) and the satellite image chosen are remembered too.
+  const [base, setBase] = useStoredChoice<MapBase>('qldt-base', parseBase, 'map', linked.base)
+  const [satelliteSource, setSatelliteSource] = useStoredChoice<SatelliteSource>('qldt-satellite', parseSatelliteSource, 'infrared', linked.image)
+  useEffect(() => {
+    const search = searchWithView(location.search, { base, image: satelliteSource, layers })
+    if (search !== location.search) history.replaceState(history.state, '', location.pathname + search + location.hash)
+  }, [base, satelliteSource, layers])
   const [crashFilter, setCrashFilter] = useState<CrashFilter>(DEFAULT_CRASH_FILTER)
   const [userLocation, setUserLocation] = useState<LngLat | null>(null)
   const [locating, setLocating] = useState(false)
@@ -232,9 +252,55 @@ export default function App() {
   const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
   const fireBans = useFireBans(layers.fires)
   const nswFires = useNswFires(layers.nswFires || sel.place?.kind === 'nswfire')
-  const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone')
+  // Also read while the street map is the base, so a storm near Australia can suggest the satellite view.
+  const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone' || base === 'map')
   const pastCyclones = usePastCyclones(layers.pastCyclones || sel.place?.kind === 'pastcyclone')
-  const imagery = useSatelliteImagery(layers.satellite, now)
+  const imagery = useSatelliteImagery(base === 'satellite', satelliteSource, now)
+  // The live image's frames from the last 3 hours, for the satellite timeline; `frame` is the one picked there, or null to follow the newest.
+  const [frame, setFrame] = useState<string | null>(null)
+  const liveFrames = useMemo(
+    () => recentFrames(isGibsLive(satelliteSource) ? imagery.live.frames : jmaProduct(satelliteSource) ? imagery.jma.frames.map((f) => f.time) : [], 3),
+    [satelliteSource, imagery.live.frames, imagery.jma.frames],
+  )
+  const shownFrame = frame && liveFrames.includes(frame) ? frame : null
+  const satelliteImage = useMemo(
+    () =>
+      base === 'satellite'
+        ? satelliteTiles(satelliteSource, {
+            gibsTime: shownFrame ?? imagery.live.time,
+            jmaFrame: (shownFrame && imagery.jma.frames.find((f) => f.time === shownFrame)) || imagery.jma.latest,
+            date: imagery.date,
+          })
+        : null,
+    [base, satelliteSource, shownFrame, imagery.live.time, imagery.jma.frames, imagery.jma.latest, imagery.date],
+  )
+  const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
+  const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
+  const [dismissed, setDismissed] = useState<string[]>(() => {
+    try {
+      return parseDismissed(localStorage.getItem('qldt-satellite-dismissed'))
+    } catch {
+      return []
+    }
+  })
+  const dismissSuggestion = (key: string) => {
+    const next = [...dismissed, key]
+    setDismissed(next)
+    try {
+      localStorage.setItem('qldt-satellite-dismissed', JSON.stringify(next.slice(-50)))
+    } catch {
+      // Storage blocked: the dismissal lasts for this visit.
+    }
+  }
+  const suggestion = useMemo(
+    () => (base === 'map' ? satelliteSuggestion(cyclones.data ?? [], qw.warnings ?? [], dismissed) : null),
+    [base, cyclones.data, qw.warnings, dismissed],
+  )
+  const layerTimesNow = useMemo(
+    () => layerTimes({ gauges, airStations: air.stations, cyclones: cyclones.data, newsReadAt: news.snapshot?.fetchedAt ?? null, nswReadAt: nswFires.fetchedAt }),
+    [gauges, air.stations, cyclones.data, news.snapshot, nswFires.fetchedAt],
+  )
+  const firesNewest = useMemo(() => (fires?.length ? Math.max(...fires.map((f) => f.published ?? 0)) || null : null), [fires])
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
   const selectedSignal = useMemo(
     () => (sel.signal ? (signalSites?.find((s) => s.tsc === sel.signal) ?? null) : null),
@@ -300,7 +366,7 @@ export default function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, nswFires: nswFires.data, cyclones: cyclones.data, pastCyclones: pastCyclones.data },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, warnings: qw.warnings, nswFires: nswFires.data, cyclones: cyclones.data, pastCyclones: pastCyclones.data },
     setLayers,
     setFocus,
   )
@@ -341,6 +407,7 @@ export default function App() {
       trucks: ref.truckRestrictions.length,
       waze: waze.length,
       ...(fires ? { fires: fires.length } : {}),
+      ...(qw.warnings ? { warnings: qw.warnings.length } : {}),
       ...(gauges ? { gauges: gauges.length } : {}),
       ...(signalVolumes ? { signals: signalVolumes.size } : {}),
       ...(clearances ? { clearances: clearances.length } : {}),
@@ -355,7 +422,7 @@ export default function App() {
       ...(hot.hotspots ? { hotspots: hot.hotspots.length } : {}),
       ...(stories ? { news: mapStories.length } : {}),
     }),
-    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations, hot.hotspots],
+    [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations, hot.hotspots, qw.warnings],
   )
 
   const locate = useCallback(() => {
@@ -602,6 +669,7 @@ export default function App() {
               crashFilter={crashFilter}
               vehicles={mapVehicles}
               fires={fires ?? []}
+              warnings={qw.warnings ?? []}
               gauges={replay ? replay.gauges : (gauges ?? [])}
               replayAt={replay?.at ?? null}
               signalSites={signalSites ?? []}
@@ -617,10 +685,10 @@ export default function App() {
               outages={news.snapshot?.outages ?? []}
               airStations={air.stations ?? []}
               hotspots={hot.hotspots ?? []}
+              satelliteImage={satelliteImage}
               nswFires={nswFires.data ?? []}
               cyclones={cyclones.data ?? []}
               pastCyclones={pastCyclones.data ?? []}
-              satelliteDate={imagery.date}
               newsStories={replay ? replayStories : mapStories}
               selectedStory={selectedStory}
               selectedVehicleId={sel.vehicle}
@@ -658,13 +726,37 @@ export default function App() {
               clearanceError={clearanceError}
               unplacedOutages={news.snapshot?.outages.filter(isUnplaced).length ?? 0}
               airError={air.error}
-              fireNotice={fireNotice}
+              fireState={{ newest: firesNewest, notice: fireNotice, fetchedAt: firesAt, now }}
+              warningState={{ count: qw.warnings?.length ?? null, notice: warningNotice, fetchedAt: qw.fetchedAt, now }}
               gaugeNotice={gaugeNotice}
-              hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt }}
+              hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt, newest: hot.hotspots?.[0]?.observedAt ?? null, now }}
+              base={base}
+              onBaseChange={setBase}
+              times={{ latest: layerTimesNow, now }}
+              aside={
+                suggestion && (
+                  <SatelliteSuggestion
+                    suggestion={suggestion}
+                    onShow={() => setBase('satellite')}
+                    onDismiss={() => dismissSuggestion(suggestion.key)}
+                  />
+                )
+              }
+              imagery={{ source: satelliteSource, onSource: (s) => (setSatelliteSource(s), setFrame(null)), now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               hazards={{ fireBans, nswFires, cyclones, pastCyclones }}
-              imagery={{ date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
               councilErrors={council.errors}
             />
+            {base === 'satellite' && !timelineOpen && (
+              <div className="pointer-events-none absolute inset-x-3 bottom-20 z-10 flex justify-center max-md:bottom-32 [&>*]:pointer-events-auto">
+                <SatelliteTimeline
+                  frames={liveFrames}
+                  current={shownFrame}
+                  onChange={setFrame}
+                  now={now}
+                  source={isGibsLive(satelliteSource) ? 'NASA GIBS' : 'JMA'}
+                />
+              </div>
+            )}
             {timelineOpen ? (
               <>
                 {replay && <ReplayBanner at={replay.at} run={replay.run} className="absolute inset-x-3 top-14 z-10 text-center xl:inset-x-auto xl:top-3 xl:left-1/2 xl:-translate-x-1/2 xl:whitespace-nowrap" />}
