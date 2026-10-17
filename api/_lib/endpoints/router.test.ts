@@ -38,6 +38,12 @@ describe('api/[endpoint].ts router', () => {
     expect((await POST(req('/api/visits', 'POST'))).status).toBe(204)
   })
 
+  it('takes feedback only where a store is connected, and never lists it without the owner secret', async () => {
+    const res = await GET(req('/api/feedback'))
+    expect(await res.json()).toEqual({ enabled: false })
+    expect((await POST(req('/api/feedback', 'POST'))).status).toBe(503)
+  })
+
   it('answers 405 to POST on read-only endpoints and 404 on unknown ones', async () => {
     expect((await POST(req('/api/events', 'POST'))).status).toBe(405)
     expect((await POST(req('/api/nope', 'POST'))).status).toBe(404)

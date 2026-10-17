@@ -14,6 +14,7 @@ import { DEFAULT_CRASH_FILTER, type CrashFilter } from './api/crashes'
 import { loadTracks, trackBounds } from './api/tracks'
 import { allRouteCodes, type VehicleMode } from './api/translink'
 import { AlertSettingsDialog } from './components/AlertSettingsDialog'
+import { FeedbackDialog } from './components/FeedbackDialog'
 import { AppHeader } from './components/AppHeader'
 import { commuteWindow } from './lib/commute'
 import { useCommute } from './lib/commuteStore'
@@ -116,6 +117,7 @@ export default function App() {
   const [focus, setFocus] = useState<MapFocus | null>(null)
   const [alertSettings, setAlertSettings] = useAlertSettings()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [vehicleModes, setVehicleModes] = useState<VehicleMode[]>(['train', 'bus', 'tram', 'ferry'])
   const [vehicleFilter, setVehicleFilter] = useState<{ title: string; match: (code: string) => boolean } | null>(null)
   const [followVehicle, setFollowVehicle] = useState(false)
@@ -527,6 +529,7 @@ export default function App() {
           notifications={notifications}
           onOpenHref={openHref}
           onAlertSettings={() => setSettingsOpen(true)}
+          onFeedback={() => setFeedbackOpen(true)}
           error={error}
           fetchedAt={fetchedAt}
           loading={loading}
@@ -857,6 +860,7 @@ export default function App() {
           districts={districts}
           events={events}
         />
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
       </div>
     </TooltipProvider>
   )

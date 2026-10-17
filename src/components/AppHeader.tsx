@@ -4,6 +4,7 @@ import {
   ArrowsInSimpleIcon,
   CoffeeIcon,
   ArrowsOutSimpleIcon,
+  ChatCircleTextIcon,
   CarProfileIcon,
   DotsThreeIcon,
   EnvelopeSimpleIcon,
@@ -52,6 +53,8 @@ interface Props {
   notifications: ReturnType<typeof useNotifications>
   onOpenHref: (href: string) => void
   onAlertSettings: () => void
+  /** Opens the feedback form. */
+  onFeedback: () => void
   error: string | null
   fetchedAt: number | null
   loading: boolean
@@ -81,6 +84,7 @@ export function AppHeader({
   notifications,
   onOpenHref,
   onAlertSettings,
+  onFeedback,
   error,
   fetchedAt,
   loading,
@@ -262,6 +266,9 @@ export function AppHeader({
             <DropdownMenu.LinkItem href="/privacy/" icon={ShieldCheckIcon}>
               Privacy
             </DropdownMenu.LinkItem>
+            <DropdownMenu.Item icon={ChatCircleTextIcon} onClick={onFeedback}>
+              Send feedback
+            </DropdownMenu.Item>
             <DropdownMenu.LinkItem href="/contact/" icon={EnvelopeSimpleIcon}>
               Contact
             </DropdownMenu.LinkItem>

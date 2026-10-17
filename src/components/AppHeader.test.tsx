@@ -34,6 +34,7 @@ function header(visitors: Props['visitors']) {
     notifications: { items: [], unread: 0, markRead: () => {}, markAllRead: () => {}, clear: () => {} } as unknown as Props['notifications'],
     onOpenHref: () => {},
     onAlertSettings: () => {},
+    onFeedback: () => {},
     error: null,
     fetchedAt: Date.now(),
     loading: false,

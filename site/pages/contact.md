@@ -12,6 +12,10 @@ To contact Roadbeat about the app, a bug or privacy, email [%CONTACT_EMAIL%](mai
 A contact email for Roadbeat will be published here soon.
 <!--endif-->
 
+## Feedback and feature requests
+
+To report a bug or suggest a feature, choose **Send feedback** in the app's menu (the three dots at the top right).
+
 ## Report a problem with official information
 
 Roadbeat shows data exactly as official sources publish it. If a road event, timetable or warning looks wrong, the source can correct it:

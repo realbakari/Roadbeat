@@ -55,6 +55,10 @@ The server stores this in a database (Upstash Redis, through Roadbeat's host, Ve
 
 Turning push alerts off, or removing your commute, deletes your subscription from the server. If your browser withdraws the subscription, for example because you blocked notifications, Roadbeat deletes it the next time it tries to send.
 
+## Feedback
+
+If you send feedback from the app's menu, Roadbeat keeps what you wrote, the kind of message you chose, the page you were on and when you sent it, in the same database as push alerts. It does not keep your address or browser. To stop a flood of messages, the server counts how many each browser sends in a day under a hash of its address and browser, as for the visitor count, and forgets the count after a day. An email address is kept only if you give one, and is used only to reply to you. The newest 2,000 messages are kept, and older ones are deleted.
+
 ## Changes and questions
 
 If this policy changes, this page will show the change. For questions about privacy, see the [Contact](/contact/) page.

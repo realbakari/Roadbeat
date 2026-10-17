@@ -77,15 +77,21 @@ function devApi(path: string, module: string): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (req.url?.split('?')[0] !== path) return next()
-        server
-          .ssrLoadModule(module)
-          .then((m) => {
-            const handlers = m as Record<string, (r: Request) => Promise<Response>>
-            const method = req.method ?? 'GET'
-            return (handlers[method] ?? handlers.GET)(new Request(`http://localhost${req.url}`, { method }))
-          })
-          .then(async (r) => res.writeHead(r.status, { 'content-type': r.headers.get('content-type') ?? 'application/json' }).end(await r.text()))
-          .catch((e: Error) => res.writeHead(500, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message })))
+        const method = req.method ?? 'GET'
+        // POST bodies (visits, feedback) are passed on as the deployed function would get them.
+        const chunks: Buffer[] = []
+        req.on('data', (c: Buffer) => chunks.push(c))
+        req.on('end', () =>
+          server
+            .ssrLoadModule(module)
+            .then((m) => {
+              const handlers = m as Record<string, (r: Request) => Promise<Response>>
+              const body = method === 'GET' || method === 'HEAD' ? undefined : Buffer.concat(chunks)
+              return (handlers[method] ?? handlers.GET)(new Request(`http://localhost${req.url}`, { method, body, headers: { 'content-type': req.headers['content-type'] ?? '' } }))
+            })
+            .then(async (r) => res.writeHead(r.status, { 'content-type': r.headers.get('content-type') ?? 'application/json' }).end(await r.text()))
+            .catch((e: Error) => res.writeHead(500, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message }))),
+        )
       })
     },
   }
@@ -126,7 +132,7 @@ export default defineConfig(({ mode, command }) => {
   // Analytics only in built sites, so local development doesn't count as visits.
   const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/[endpoint].ts'), devApi('/api/history', '/api/[endpoint].ts'), devApi('/api/share', '/api/[endpoint].ts'), devApi('/api/visits', '/api/[endpoint].ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
+    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/[endpoint].ts'), devApi('/api/history', '/api/[endpoint].ts'), devApi('/api/share', '/api/[endpoint].ts'), devApi('/api/visits', '/api/[endpoint].ts'), devApi('/api/feedback', '/api/[endpoint].ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
     server: { proxy: translinkProxy },
     preview: { proxy: translinkProxy },
   }
