@@ -1,5 +1,6 @@
 // A page per gazetteer locality: where the gazetteer puts it and the
-// stations within NEAR_KM of that point.
+// stations within NEAR_KM of that point. Localities with no station that
+// close are noindex, so they stay out of search and the sitemap.
 import { NEAR_KM, stationKind, type Directory, type Place } from './directory.ts'
 import { HOME, PLACES, capital, coords, km, placePath, stationPath, type StaticPage } from './pageKit.ts'
 
@@ -20,9 +21,12 @@ export function placePage(p: Place, d: Directory): StaticPage {
   return {
     path: placePath(p),
     title: p.name,
-    description: `${p.name}, ${p.council}, Queensland: nearby stations and a link to the live road, transport, fire and gauge information official sources publish there, in Roadbeat.`,
+    description: `${p.name}, ${p.council}, Queensland: ${stations.length ? 'nearby stations and ' : ''}a link to the live road, transport, fire and gauge information official sources publish there, in Roadbeat.`,
     markdown: md,
     crumbs: [HOME, PLACES, { name: p.name, path: placePath(p) }],
+    // With no station nearby the page is the gazetteer point and the app link, the
+    // same for thousands of localities: kept for people, left out of search.
+    noindex: !stations.length,
     open: { hash: `place/locality/${encodeURIComponent(p.name)}`, label: `Open ${p.name} in Roadbeat` },
     jsonLd: [
       {

@@ -93,6 +93,9 @@ describe('directory pages', () => {
     expect(files['/lines/t1-caboolture/index.html'].body).toContain('/stations/central-station/')
     expect(files['/places/goodna/index.html'].body).toContain('/stations/goodna-station/')
     expect(Object.keys(files).filter((k) => k.startsWith('/places/')).length).toBeGreaterThan(3000)
+    expect(files['/places/birdsville/index.html'].body).toContain('<meta name="robots" content="noindex" />')
+    expect(files['/sitemap.xml'].body).not.toContain('/places/birdsville/')
+    expect(files['/sitemap.xml'].body).toContain('/places/goodna/')
   })
 })
 

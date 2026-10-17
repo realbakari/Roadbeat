@@ -111,4 +111,11 @@ describe('directoryPages', () => {
     expect(p.jsonLd?.[0]).toMatchObject({ '@type': 'Place', containedInPlace: { name: 'Brisbane City' } })
     expect(page('/places/townsville-city/').markdown).toContain('No train station, tram stop or ferry terminal')
   })
+
+  it('keeps places with no station nearby out of search, and says nearby stations only when there are some', () => {
+    expect(page('/places/spring-hill/').noindex).toBe(false)
+    expect(page('/places/spring-hill/').description).toContain('nearby stations')
+    expect(page('/places/townsville-city/').noindex).toBe(true)
+    expect(page('/places/townsville-city/').description).not.toContain('station')
+  })
 })
