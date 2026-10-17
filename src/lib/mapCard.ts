@@ -18,6 +18,7 @@ import { AIR_COLOR, AIR_RATINGS, worstRating } from '../api/airQuality'
 import { HOTSPOT_COLOR } from '../api/hotspots'
 import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories'
 import { dsColor, siteLoad } from './signals'
+import { truckKey } from './trucks'
 
 /**
  * A short card for a selected map item, shown on the map itself when the side
@@ -168,7 +169,7 @@ export function placeCard(place: Place): MapCard | null {
 function placeId(place: Place): string {
   switch (place.kind) {
     case 'truck':
-      return String(place.data.properties.id)
+      return truckKey(place.data)
     case 'waze':
       return place.data.uuid
     default:

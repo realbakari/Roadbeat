@@ -61,7 +61,7 @@ export interface Selection {
 
 /**
  * Selection lives in the URL hash so links can be shared:
- * #event/123, #camera/webcam-5, #place/rest/long007, #place/truck/1, #place/locality/Goodna,
+ * #event/123, #camera/webcam-5, #place/rest/long007, #place/truck/1-truck-restrictions, #place/locality/Goodna,
  * #vehicle/SEQ-…, #transit, #transit/line/train/T1%20Caboolture, #transit/alert/SEQ-500656,
  * #fire/WARN-1, #gauge/E1594, #signal/546, #news, #news/k3j9x2, #transit/stop/SEQ/place_albsta, #transit/route/TSV/V200, #transit/trip/SEQ/<trip id>/<route>[/2026-10-16], #transit/plan/SEQ/place_censta/place_cabstn[/2026-10-16/480/arrive[/train,ferry,direct]]
  */

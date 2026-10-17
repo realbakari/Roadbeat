@@ -4,6 +4,7 @@ import { CAMERA_COLOR, priorityRank, typeMeta } from './eventMeta'
 import { isClosure, isUpcoming } from './filters'
 import { eventIconId } from './mapIcons'
 import { eventMarkerPoints, flatten, type LngLat } from './eventAnchor'
+import { truckIconPoint, truckKey } from './trucks'
 
 export { eventAnchor, eventBounds, type Bounds, type LngLat } from './eventAnchor'
 
@@ -114,11 +115,10 @@ export function placeMarkers(
 export function truckLines(trucks: TruckRestriction[]): GjCollection<Geometry, PlaceProps> {
   const features: GjFeature<Geometry, PlaceProps>[] = []
   for (const t of trucks) {
-    const props = { key: `place/truck/${t.properties.id}`, icon: 'truck-restriction', color: '', label: t.properties.name }
+    const props = { key: `place/truck/${truckKey(t)}`, icon: 'truck-restriction', color: '', label: t.properties.name }
     features.push({ type: 'Feature', geometry: t.geometry, properties: props })
-    const lines = t.geometry.coordinates
-    const longest = lines.reduce((a, b) => (b.length > a.length ? b : a), lines[0] ?? [])
-    if (longest.length) features.push(point(longest[Math.floor(longest.length / 2)], props))
+    const icon = truckIconPoint(t)
+    if (icon) features.push(point(icon, props))
   }
   return { type: 'FeatureCollection', features }
 }

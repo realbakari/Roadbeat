@@ -44,6 +44,7 @@ import { clearwayInEffect, parseClearwayTimes } from '../lib/clearways'
 import { formatDateTime, formatDay, stripHtml, timeAgo, titleCase } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
 import type { Place } from '../lib/places'
+import { truckSubtitle } from '../lib/trucks'
 import { NewTabNote } from './NewTabNote'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
@@ -138,7 +139,7 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
             icon={TruckIcon}
             color={LAYER_COLOR.truck}
             title={t.name}
-            subtitle={`${t.originterm} to ${t.destinationterm}`}
+            subtitle={truckSubtitle(place.data) ?? t.roads}
           />
           <Banner
             variant="error"

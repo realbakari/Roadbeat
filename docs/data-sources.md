@@ -57,6 +57,8 @@ Three Brisbane City Council feeds need care:
 
 The QLDTraffic files are the feeds behind qldtraffic.qld.gov.au. They are not part of the published QLDTraffic API specification, so they can change without notice. The documented API at `api.qldtraffic.qld.gov.au` has the same events, but its camera endpoints send no CORS headers. Set `VITE_QLDTRAFFIC_DATA_BASE` to read the files from a mirror.
 
+`restrictedtruck.geojson` gives every truck restriction the id 1 and no feature id, so a restriction is keyed by its id and name (`truckKey()` in `src/lib/trucks.ts`), and opening one flies to the icon drawn at the middle of its longest line. The Pacific Motorway restriction has no origin or destination, so its page is subtitled with its roads instead.
+
 ## News monitor feeds
 
 The **News** tab, its map pins and the dashboard's **What's happening** strip come from these feeds. Most send no CORS headers, so the server reads them, not the browser: `api/news-ingest.ts` every 5 minutes, or `api/news.ts` on demand when there is no store or the stored copy is more than 15 minutes old (see [Deploy the app](deploy.md)). The browser polls `/api/news` every 2 minutes while the tab, the map layer, the dashboard or a news alert needs it. `npm run news:ingest` reads every feed once from your own machine and prints what each one gave.
