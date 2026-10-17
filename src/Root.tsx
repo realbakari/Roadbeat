@@ -1,3 +1,4 @@
+import { Loader } from '@cloudflare/kumo'
 import { lazy, Suspense } from 'react'
 import App from './App.tsx'
 import { parsePath } from './lib/route'
@@ -11,7 +12,14 @@ const StatusPage = lazy(() => import('./status/StatusPage').then((m) => ({ defau
 export function Root() {
   const screen = parsePath(location.pathname)
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <div className="grid h-full place-items-center bg-kumo-canvas" role="status">
+          <Loader />
+          <span className="sr-only">Loading…</span>
+        </div>
+      }
+    >
       {screen.kind === 'dashboard' ? (
         <Dashboard />
       ) : screen.kind === 'status' ? (
