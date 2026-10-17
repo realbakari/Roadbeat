@@ -64,8 +64,9 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
       <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5">
         <div className="grid min-w-0 gap-0.5">
           <div className="flex min-w-0 items-start justify-between gap-2">
-            <Text as={headingAs} bold truncate>
-              <button type="button" onClick={() => onSelect(p.id)} className="block w-full truncate text-left after:absolute after:inset-0 focus-visible:outline-none">
+            {/* Two lines, not one: multi-road titles put the cross street last. */}
+            <Text as={headingAs} bold>
+              <button type="button" onClick={() => onSelect(p.id)} className="line-clamp-2 w-full text-left break-words after:absolute after:inset-0 focus-visible:outline-none">
                 {eventTitle(event)}
               </button>
             </Text>

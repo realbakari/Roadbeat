@@ -59,11 +59,11 @@ export function FireList({ fires, now, onOpen }: { fires: FireWarning[]; now: nu
                   <FlameIcon size={11} weight="fill" />
                 </span>
                 <div className="grid min-w-0 flex-1 gap-0.5">
-                  <Text as="h3" size="sm" truncate>
+                  <Text as="h3" size="sm">
                     <button
                       type="button"
                       onClick={() => onOpen(`fire/${encodeURIComponent(f.id)}`)}
-                      className="block w-full truncate text-left after:absolute after:inset-0 focus-visible:outline-none"
+                      className="line-clamp-2 w-full text-left break-words after:absolute after:inset-0 focus-visible:outline-none"
                     >
                       {f.area ?? f.title}
                     </button>
