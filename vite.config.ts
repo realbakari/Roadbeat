@@ -27,6 +27,12 @@ const translinkProxy = {
     changeOrigin: true,
     rewrite: () => '/content/Feeds/StormFloodCycloneWarnings/StormWarnings.json',
   },
+  // Queensland Fire Department fire bans (no CORS headers); functions/qfd-firebans in production on Cloudflare.
+  '/qfd-firebans': {
+    target: 'https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com',
+    changeOrigin: true,
+    rewrite: () => '/content/Feeds/QLDFireban/FIREBAN.xml',
+  },
   // The state's live air quality feed (no CORS headers either); functions/air-quality in production.
   '/air-quality': {
     target: 'https://apps.des.qld.gov.au',

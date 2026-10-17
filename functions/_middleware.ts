@@ -19,7 +19,7 @@ function markdownPathFor(path: string) {
 
 export async function onRequest({ request, next, env }: Context): Promise<Response> {
   const url = new URL(request.url)
-  const isPage = request.method === 'GET' && !url.pathname.includes('.') && !url.pathname.startsWith('/translink-rt') && url.pathname !== '/qfd-bushfires' && url.pathname !== '/qld-warnings' && url.pathname !== '/qld-gauges'
+  const isPage = request.method === 'GET' && !url.pathname.includes('.') && !url.pathname.startsWith('/translink-rt') && url.pathname !== '/qfd-bushfires' && url.pathname !== '/qld-warnings' && url.pathname !== '/qfd-firebans' && url.pathname !== '/qld-gauges'
 
   if (url.pathname.endsWith('.md')) {
     const res = await env.ASSETS.fetch(url)

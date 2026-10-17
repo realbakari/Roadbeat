@@ -20,6 +20,7 @@
     "data:flood2022": "node scripts/build-flood-2022.mjs",
     "data:bikeways": "node scripts/build-bikeways.mjs",
     "data:qld-gauges": "node scripts/build-qld-gauges.mjs",
+    "data:cyclones": "node scripts/build-cyclones.mjs",
     "data:places": "node scripts/build-places.mjs",
     "news:ingest": "node scripts/ingest-news.mjs",
     "data:dashboards": "node scripts/build-council-dashboards.mjs"

@@ -56,6 +56,9 @@ const event: CouncilEvent = {
 
 const sources: PlaceSources = {
   hotspots: null,
+  nswFires: null,
+  cyclones: null,
+  pastCyclones: null,
   restAreas: [],
   dumpPoints: [],
   truckRestrictions: [],

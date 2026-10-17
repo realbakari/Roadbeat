@@ -2,6 +2,8 @@ import { Banner, Button, Empty, InputGroup, Loader, Select, Tabs, Text } from '@
 import { CheckCircleIcon, FlameIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react'
 import type { FireWarning } from '../api/bushfires'
+import type { FireBans } from '../api/fireBans'
+import { FireBansCard } from './FireBansCard'
 import type { EventType, TrafficEvent } from '../api/types'
 import { FireList } from './FireList'
 import { CouncilWorksList } from './CouncilWorksList'
@@ -28,6 +30,8 @@ interface Props {
   onSelect: (id: number) => void
   /** Queensland Fire Department warnings and fires, shown above current events. */
   fires: FireWarning[] | null
+  /** The Queensland Fire Department's fire bans; a card shows only while one is listed. */
+  fireBans: FireBans | null
   /** Why the bushfire list is missing or stale, or null while the feed is fine. */
   fireNotice?: string | null
   onOpenHref: (hash: string) => void
@@ -50,6 +54,7 @@ export function EventList({
   onLocate,
   onSelect,
   fires,
+  fireBans,
   fireNotice,
   onOpenHref,
   top,
@@ -281,6 +286,7 @@ export function EventList({
             <Banner variant="alert" size="sm" icon={<FlameIcon weight="fill" />} description={fireNotice} />
           </div>
         )}
+        {filters.when === 'now' && <FireBansCard bans={fireBans} />}
         {filters.when === 'now' && fires && <FireList fires={fires} now={now} onOpen={onOpenHref} />}
         {filters.when === 'now' && occupancies && <CouncilWorksList occupancies={occupancies} query={filters.query} now={now} />}
         {loading ? (

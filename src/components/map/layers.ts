@@ -3,6 +3,7 @@ import type { ColorMode } from '../../hooks/useColorMode'
 import { LAYER_COLOR } from '../../lib/mapIcons'
 import { addCrashLayers } from './crashLayers'
 import { addWarningAreas, addWarningMarkers } from './warningLayers'
+import { addHazardLayers } from './hazardLayers'
 
 export const isLine = ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]] as never
 
@@ -520,6 +521,8 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
       'circle-stroke-width': 2,
     },
   })
+  // NSW border fires, JTWC cyclones and past cyclone tracks, under hotspots and markers.
+  addHazardLayers(map)
   // Satellite hotspots: small dots, newest on top, under the stations and markers above.
   map.addLayer({
     id: 'hotspots',

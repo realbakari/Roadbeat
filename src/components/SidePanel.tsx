@@ -3,6 +3,7 @@ import type { Gauge } from '../api/bccGauges'
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import type { FireWarning } from '../api/bushfires'
+import type { FireBans } from '../api/fireBans'
 import type { NewsPlace, NewsRoad, NewsSnapshot } from '../api/newsTypes'
 import type { LiveVehicle, TransitAlert } from '../api/translink'
 import type { Camera, TrafficEvent } from '../api/types'
@@ -76,6 +77,7 @@ interface Props {
 
   selectedPlace: Place | null
   fires: FireWarning[] | null
+  fireBans: FireBans | null
   /** Why the bushfire list is missing or stale, or null while the feed is fine. */
   fireNotice: string | null
   selectedFire: FireWarning | null
@@ -230,6 +232,7 @@ export function SidePanel(p: Props) {
           onLocate={p.onLocate}
           onSelect={p.onSelectEvent}
           fires={p.fires}
+          fireBans={p.fireBans}
           fireNotice={p.fireNotice}
           onOpenHref={p.onOpenHref}
           occupancies={p.occupancies}

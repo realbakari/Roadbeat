@@ -39,6 +39,10 @@ import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { AirStation } from '../api/airQuality'
 import type { Hotspot } from '../api/hotspots'
 import { SatelliteImagery } from './map/SatelliteImagery'
+import { cycloneFeatures, nswFireFeatures, pastCycloneFeatures } from './map/hazardLayers'
+import type { NswFire } from '../api/nswFires'
+import type { Cyclone } from '../api/jtwc'
+import type { PastCyclone } from '../api/pastCyclones'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -112,6 +116,12 @@ interface Props {
   hotspots: Hotspot[]
   /** The one satellite image to draw (Himawari-9 or NASA's daily image), or null for none. */
   satelliteImage: SatelliteTiles | null
+  /** NSW RFS incidents near the Queensland border. */
+  nswFires: NswFire[]
+  /** JTWC's current cyclones near Australia. */
+  cyclones: Cyclone[]
+  /** Past cyclone tracks near Queensland. */
+  pastCyclones: PastCyclone[]
   /** The open news story: its places are ringed and its roads drawn wider. */
   selectedStory: NewsStory | null
   selectedVehicleId: string | null
@@ -167,9 +177,12 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   airQuality: ['air-quality'],
   hotspots: ['hotspots'],
   satellite: [],
+  nswFires: ['nsw-fires'],
+  cyclones: ['cyclone-track', 'cyclone-points'],
+  pastCyclones: ['past-cyclones'],
 }
 
-const CLICKABLE_PLACES = ['air-quality', 'hotspots', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 
 const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
@@ -223,6 +236,9 @@ export function TrafficMap(props: Props) {
     airStations,
     hotspots,
     satelliteImage,
+    nswFires,
+    cyclones,
+    pastCyclones,
     selectedStory,
     selectedVehicleId,
     card,
@@ -382,6 +398,15 @@ export function TrafficMap(props: Props) {
   useEffect(() => {
     if (ready && map) setData(map, 'hotspots', hotspotData)
   }, [map, ready, hotspotData])
+  const nswFireData = useMemo(() => nswFireFeatures(nswFires), [nswFires])
+  const cycloneData = useMemo(() => cycloneFeatures(cyclones), [cyclones])
+  const pastCycloneData = useMemo(() => pastCycloneFeatures(pastCyclones), [pastCyclones])
+  useEffect(() => {
+    if (!ready || !map) return
+    setData(map, 'nsw-fires', nswFireData)
+    setData(map, 'cyclones', cycloneData)
+    setData(map, 'past-cyclones', pastCycloneData)
+  }, [map, ready, nswFireData, cycloneData, pastCycloneData])
   useEffect(() => {
     if (!ready || !map) return
     setData(map, 'council-centres', centreData)

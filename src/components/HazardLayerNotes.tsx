@@ -1,0 +1,87 @@
+import { Text } from '@cloudflare/kumo'
+import { FIRE_BANS_PAGE, type FireBans } from '../api/fireBans'
+import { BOM_CYCLONES, JTWC_PAGE, type Cyclone } from '../api/jtwc'
+import { NSW_ALERT_COLOR, NSW_FIRES_ATTRIBUTION, NSW_FIRES_PAGE, type NswFire } from '../api/nswFires'
+import { IBTRACS_PAGE, type PastCyclone } from '../api/pastCyclones'
+import type { Feed } from '../hooks/useHazardFeeds'
+import { feedNotice } from '../lib/feedNotice'
+import { NewTabNote } from './NewTabNote'
+
+const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+const link = 'text-kumo-link underline decoration-1 underline-offset-2'
+
+function Out({ href, children }: { href: string; children: string }) {
+  return (
+    <a href={href} target="_blank" rel="noopener" className={link}>
+      {children}
+      <NewTabNote />
+    </a>
+  )
+}
+
+/** Fire ban status under the bushfire warnings switch: QFD's own words, or why it couldn't be read. */
+export function FireBansLine({ feed }: { feed: Feed<FireBans> }) {
+  const notice = feedNotice('Fire bans', feed.data != null, feed.error, feed.fetchedAt)
+  if (notice) return <Text size="xs" variant="error">{notice}</Text>
+  if (!feed.data) return <Text size="xs" variant="secondary">Checking fire bans…</Text>
+  const at = feed.data.feedUpdatedAt
+  return (
+    <Text size="xs" variant="secondary">
+      {feed.data.none ? 'No current fire bans' : `${feed.data.bans.length} fire ${feed.data.bans.length === 1 ? 'ban' : 'bans'} listed above the road events`}, Queensland Fire
+      Department{at ? `, updated ${clock.format(at)} AEST` : ''}. <Out href={FIRE_BANS_PAGE}>Fire bans and restrictions</Out>
+    </Text>
+  )
+}
+
+export function NswFiresNote({ feed }: { feed: Feed<NswFire[]> }) {
+  const notice = feedNotice('NSW RFS incidents', feed.data != null, feed.error, feed.fetchedAt)
+  return (
+    <div className="grid gap-1">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+        {Object.entries(NSW_ALERT_COLOR).map(([level, color]) => (
+          <span key={level} className="inline-flex items-center gap-1">
+            <span className="size-2 rounded-full" style={{ background: color }} />
+            {level}
+          </span>
+        ))}
+      </div>
+      {notice && <Text size="xs" variant="error">{notice}</Text>}
+      <Text size="xs" variant="secondary">
+        NSW Rural Fire Service major incidents north of 29.6° S, within about 150 km of the border, read every 2 minutes. {NSW_FIRES_ATTRIBUTION}, CC BY 4.0.{' '}
+        <Out href={NSW_FIRES_PAGE}>Fires Near Me</Out>
+      </Text>
+    </div>
+  )
+}
+
+export function CyclonesNote({ feed }: { feed: Feed<Cyclone[]> }) {
+  const notice = feedNotice('JTWC cyclone warnings', feed.data != null, feed.error, feed.fetchedAt)
+  return (
+    <div className="grid gap-1">
+      {notice ? (
+        <Text size="xs" variant="error">{notice}</Text>
+      ) : feed.data && !feed.data.length ? (
+        <Text size="xs" variant="secondary">
+          JTWC has no cyclone warnings near Australia{feed.fetchedAt ? ` (checked ${clock.format(feed.fetchedAt)} AEST)` : ''}.
+        </Text>
+      ) : null}
+      <Text size="xs" variant="secondary">
+        The US Joint Typhoon Warning Center's warning position and forecast track, every 30 minutes. Not the official Australian warning: follow the{' '}
+        <Out href={BOM_CYCLONES}>Bureau of Meteorology</Out>. From <Out href={JTWC_PAGE}>JTWC</Out>.
+      </Text>
+    </div>
+  )
+}
+
+export function PastCyclonesNote({ feed }: { feed: Feed<PastCyclone[]> }) {
+  const notice = feedNotice('Past cyclone tracks', feed.data != null, feed.error, feed.fetchedAt)
+  return (
+    <div className="grid gap-1">
+      {notice && <Text size="xs" variant="error">{notice}</Text>}
+      <Text size="xs" variant="secondary">
+        Tracks of tropical cyclones that came near Queensland since 1980, from positions agencies reported. History for context, not a warning; recent
+        seasons are provisional. From NOAA NCEI's <Out href={IBTRACS_PAGE}>IBTrACS</Out>.
+      </Text>
+    </div>
+  )
+}

@@ -41,6 +41,7 @@ import { useHotspots } from './hooks/useSatellite'
 import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
 import { satelliteTiles } from './lib/satelliteImage'
+import { useCyclones, useFireBans, useNswFires, usePastCyclones } from './hooks/useHazardFeeds'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
@@ -232,6 +233,10 @@ export default function App() {
   })
   const air = useAirQuality(layers.airQuality || sel.place?.kind === 'air')
   const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
+  const fireBans = useFireBans(layers.fires)
+  const nswFires = useNswFires(layers.nswFires || sel.place?.kind === 'nswfire')
+  const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone')
+  const pastCyclones = usePastCyclones(layers.pastCyclones || sel.place?.kind === 'pastcyclone')
   const imagery = useSatelliteImagery(layers.satellite, now)
   const satelliteImage = useMemo(() => satelliteTiles(imagery.source, { gibsTime: imagery.live.time, jmaFrame: imagery.jma.latest, date: imagery.date }), [imagery.source, imagery.live.time, imagery.jma.latest, imagery.date])
   const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
@@ -302,7 +307,7 @@ export default function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, warnings: qw.warnings },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, warnings: qw.warnings, nswFires: nswFires.data, cyclones: cyclones.data, pastCyclones: pastCyclones.data },
     setLayers,
     setFocus,
   )
@@ -525,6 +530,7 @@ export default function App() {
                 mapView={mapView}
                 selectedPlace={selectedPlace}
                 fires={fires}
+                fireBans={fireBans.data}
                 fireNotice={fireNotice}
                 selectedFire={selectedFire}
                 gauges={gauges}
@@ -621,6 +627,9 @@ export default function App() {
               airStations={air.stations ?? []}
               hotspots={hot.hotspots ?? []}
               satelliteImage={satelliteImage}
+              nswFires={nswFires.data ?? []}
+              cyclones={cyclones.data ?? []}
+              pastCyclones={pastCyclones.data ?? []}
               newsStories={replay ? replayStories : mapStories}
               selectedStory={selectedStory}
               selectedVehicleId={sel.vehicle}
@@ -663,6 +672,7 @@ export default function App() {
               gaugeNotice={gaugeNotice}
               hotspotState={{ hasData: hot.hotspots != null, error: hot.error, fetchedAt: hot.fetchedAt, newest: hot.hotspots?.[0]?.observedAt ?? null, now }}
               imagery={{ source: imagery.source, onSource: imagery.setSource, now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
+              hazards={{ fireBans, nswFires, cyclones, pastCyclones }}
               councilErrors={council.errors}
             />
             {timelineOpen ? (
