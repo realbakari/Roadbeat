@@ -1,5 +1,5 @@
-import type { TrafficEvent } from '../api/types'
-import { clean } from './format'
+import type { TrafficEvent } from '../api/types.js'
+import { clean } from './format.js'
 
 export function eventTitle(e: TrafficEvent): string {
   const p = e.properties

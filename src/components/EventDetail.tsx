@@ -24,6 +24,7 @@ import { GaugesNearby } from './GaugesNearby'
 import { RoadContacts } from './RoadContacts'
 import { TypeIcon } from './EventCard'
 import { eventPlace, eventTitle } from '../lib/eventText'
+import { shareUrl } from '../lib/sharePage'
 import { NewTabNote } from './NewTabNote'
 
 interface Props {
@@ -65,7 +66,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
   const [copied, setCopied] = useState(false)
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(location.href)
+      await navigator.clipboard.writeText(shareUrl(location.origin, location.hash) ?? location.href)
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
