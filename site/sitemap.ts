@@ -8,6 +8,9 @@ Allow: /
 Disallow: /translink-rt/
 Disallow: /qfd-bushfires
 Disallow: /qfd-firebans
+Disallow: /qld-warnings
+Disallow: /qld-gauges
+Disallow: /air-quality
 Disallow: /api/
 Disallow: /mcp
 ${s.siteUrl ? `\nSitemap: ${s.siteUrl}/sitemap.xml\n` : ''}`

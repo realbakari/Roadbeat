@@ -3,8 +3,8 @@
 // `Accept: text/markdown` gets the page's Markdown version from site/plugin.ts,
 // and an unknown page gets the Markdown 404 with status 404.
 
-// Pages only: skip files (paths with a dot), the API, the MCP server and the three proxies.
-export const config = { matcher: ['/((?!api/|mcp|translink-rt|qfd-bushfires|qld-gauges|.*\\..*).*)'], runtime: 'nodejs' }
+// Pages only: skip files (paths with a dot), the API, the MCP server and the six proxies.
+export const config = { matcher: ['/((?!api/|mcp|translink-rt|qfd-bushfires|qfd-firebans|qld-warnings|qld-gauges|air-quality|.*\\..*).*)'], runtime: 'nodejs' }
 
 const MARKDOWN = { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept', 'cache-control': 'public, max-age=300' }
 

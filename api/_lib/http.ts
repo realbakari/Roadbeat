@@ -25,12 +25,16 @@ export function query<T extends z.ZodType>(request: Request, schema: T): z.infer
   return parsed.success ? parsed.data : json({ error: 'Invalid query', issues: z.flattenError(parsed.error).fieldErrors }, 400)
 }
 
-/** Runs a handler and turns a failed upstream fetch into a 502 that names the source. */
+/**
+ * Runs a handler and turns a failed upstream fetch into a 502. The error itself
+ * goes to the function log, not the caller: it can name internal addresses.
+ */
 export async function upstream(handler: () => Promise<Response>): Promise<Response> {
   try {
     return await handler()
   } catch (e) {
-    return json({ error: 'An official data source did not respond. Try again shortly.', detail: e instanceof Error ? e.message : String(e) }, 502)
+    console.error('Upstream failed:', e)
+    return json({ error: 'An official data source did not respond. Try again shortly.' }, 502)
   }
 }
 

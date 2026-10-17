@@ -9,4 +9,13 @@ describe('isCameraImage', () => {
     expect(isCameraImage('https://example.com/x.jpg')).toBe(false)
     expect(isCameraImage('not a url')).toBe(false)
   })
+
+  it("accepts the councils' own storage buckets, not any bucket on those clouds", () => {
+    expect(isCameraImage('https://camera-custom-image.s3-ap-southeast-2.amazonaws.com/a.jpg')).toBe(true)
+    expect(isCameraImage('https://d2w9pjl8ozl6el.cloudfront.net/a.jpg')).toBe(true)
+    expect(isCameraImage('https://prospectsstorageaccount.blob.core.windows.net/c/a.jpg')).toBe(true)
+    expect(isCameraImage('https://someone-else.s3.amazonaws.com/a.jpg')).toBe(false)
+    expect(isCameraImage('https://abc123.cloudfront.net/a.jpg')).toBe(false)
+    expect(isCameraImage('https://other.blob.core.windows.net/a.jpg')).toBe(false)
+  })
 })

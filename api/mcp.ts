@@ -9,10 +9,11 @@ import { findStops, nextDepartures, resolveStop, searchBushfires, searchRoadEven
 // return the same JSON as the REST API in /api.
 
 const result = (data: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] })
-const failure = (e: unknown) => ({
-  isError: true,
-  content: [{ type: 'text' as const, text: `An official data source did not respond: ${e instanceof Error ? e.message : String(e)}. Try again shortly.` }],
-})
+/** The error goes to the function log; the agent is told only that the source didn't answer. */
+const failure = (e: unknown) => {
+  console.error('MCP tool failed:', e)
+  return { isError: true, content: [{ type: 'text' as const, text: 'An official data source did not respond. Try again shortly.' }] }
+}
 const readOnly = { readOnlyHint: true, openWorldHint: true } as const
 
 function server() {
