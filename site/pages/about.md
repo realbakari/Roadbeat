@@ -9,13 +9,13 @@ Roadbeat is a free web app for people who drive, ride or take public transport i
 
 ## Official data only
 
-Every time, position, delay and count in Roadbeat comes from an official source. Roadbeat does not fill gaps with estimates. News stories are the one exception to official sources, and they are always labelled with the outlet that published them. A bus between two GPS reports is shown where it last reported. A journey that needs a walk between stops is handed to TransLink's own journey planner, because no source publishes walking times. When a source has no data, Roadbeat says so.
+Every time, position, delay and count in Roadbeat comes from an official source. Roadbeat does not fill gaps with estimates. News stories are the one exception to official sources, and they are always labelled with the outlet that published them. A bus between two GPS reports is shown where it last reported. A journey that needs a walk between stops is handed to Translink's own journey planner, because no source publishes walking times. When a source has no data, Roadbeat says so.
 
 ## Where the data comes from
 
 - **Road events, cameras, rest areas, truck restrictions and the Waze reports QLDTraffic shows:** the Department of Transport and Main Roads, through the feeds behind qldtraffic.qld.gov.au.
 - **Rain radar:** the Bureau of Meteorology's radar images, as QLDTraffic publishes them.
-- **Public transport:** Translink's published timetables (GTFS) and live feeds (GTFS-RT) for South East Queensland and Cairns, and the published timetables of Translink's 17 other regional networks, with live times wherever TransLink's feed for that region carries them.
+- **Public transport:** Translink's published timetables (GTFS) and live feeds (GTFS-RT) for South East Queensland and Cairns, and the published timetables of Translink's 17 other regional networks, with live times wherever Translink's feed for that region carries them.
 - **Bushfire warnings:** the Queensland Fire Department's current incidents feed.
 - **Storm, flood and cyclone warnings:** Queensland's severe weather, flood and cyclone warnings feed from Queensland Disaster Management on disaster.qld.gov.au, with each warning's text, area and issuing agency as published.
 - **Stream heights, rainfall, signal traffic, planned council road closures, CBD car park spaces, pedestrian counts, corridor travel times and council events:** Brisbane City Council's open data.
@@ -43,7 +43,7 @@ Most of this data is published under the Creative Commons Attribution 4.0 licenc
 
 ## Find a station, line or place
 
-Three directories list what the app covers, as plain pages a search engine can read: every [train station, tram stop and ferry terminal](/stations/) in South East Queensland, every [TransLink line and regional route](/lines/), and every [Queensland town, suburb and locality](/places/). Each page names only what TransLink and the Queensland place names gazetteer publish, and opens the live view in the app.
+Three directories list what the app covers, as plain pages a search engine can read: every [train station, tram stop and ferry terminal](/stations/) in South East Queensland, every [Translink line and regional route](/lines/), and every [Queensland town, suburb and locality](/places/). Each page names only what Translink and the Queensland place names gazetteer publish, and opens the live view in the app.
 
 ## Support Roadbeat
 

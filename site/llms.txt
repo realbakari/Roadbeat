@@ -28,7 +28,7 @@
 - [Privacy](%SITE_URL%/privacy/): no accounts or advertising; Google Analytics counts visits; settings stay in the browser.
 <!--endif-->
 <!--ifnot:GA_MEASUREMENT_ID-->
-- [Privacy](%SITE_URL%/privacy/): no accounts, cookies or analytics; settings stay in the browser.
+- [Privacy](%SITE_URL%/privacy/): no accounts, ads or cookies; visits are counted without identifying you; settings stay in your browser.
 <!--endif-->
 - [Contact](%SITE_URL%/contact/): how to reach Roadbeat and where to report problems with official data.
 - [Stations](%SITE_URL%/stations/): a page per train station, tram stop and ferry terminal in South East Queensland (`%SITE_URL%/stations/central-station/`), with its lines, platforms, published position and nearby localities.

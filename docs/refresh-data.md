@@ -1,12 +1,12 @@
 # Refresh the published data
 
-TransLink publishes a new GTFS timetable every few weeks. The app's stops, timetables, tracks and route names are built from it, so rebuild them when TransLink publishes a new one. A stale build still works, but its timetables stop at the old calendar's last day.
+Translink publishes a new GTFS timetable every few weeks. The app's stops, timetables, tracks and route names are built from it, so rebuild them when Translink publishes a new one. A stale build still works, but its timetables stop at the old calendar's last day.
 
 To see the dates the current build covers, look at `start` and `days` in `public/timetables/index.json`.
 
 ## Before you start
 
-You need Node.js 22 or later, `unzip` on your `PATH`, and an internet connection. Each script downloads TransLink's GTFS files itself.
+You need Node.js 22 or later, `unzip` on your `PATH`, and an internet connection. Each script downloads Translink's GTFS files itself.
 
 ## Rebuild everything from one download
 
@@ -38,11 +38,11 @@ The GTFS files are about 40 MB, almost all of it SEQ. To download them once and 
    npm run data:routes
    ```
 
-Each script prints what it wrote. `data:timetables` also prints the total and per-route compressed sizes. If the total grows far past 1.1 MB, check the output before you commit it.
+Each script prints what it wrote. `data:timetables` also prints the total and per-route compressed sizes. If the total grows far past the size given in [Published data built into the app](data-sources.md#published-data-built-into-the-app), check the output before you commit it.
 
 ## Rebuild the list of printable maps
 
-TransLink changes its maps page independently of the timetable. To rebuild the list:
+Translink changes its maps page independently of the timetable. To rebuild the list:
 
 ```bash
 npm run data:maps
@@ -86,6 +86,16 @@ npm run data:qld-gauges
 
 The script reads the stream gauging station network list from data.qld.gov.au, asks the Water Monitoring Information Portal's web service for every station's latest stream height (about 20 seconds), keeps the stations that have one, and writes `public/qld-gauges.json`. It stops without writing if the list has fewer than 300 stations.
 
+## Rebuild the past cyclone tracks
+
+NOAA updates IBTrACS after each cyclone season. Once a season, after it does, rebuild the tracks:
+
+```bash
+npm run data:cyclones
+```
+
+The script downloads IBTrACS v04r01 for the South Pacific basin from NOAA NCEI and writes `public/cyclone-tracks.json`: every storm since the 1980 season with a reported position near Queensland (137° to 160° E, 9° to 30° S). It keeps only the positions the agencies reported and drops IBTrACS's interpolated 3-hourly points, so the map never draws a position nobody observed. It prints how many storms and positions it kept, and stops without writing if it finds fewer than 100 storms.
+
 ## Rebuild the gauge flood warning areas
 
 When Brisbane City Council adds stream gauges, or BoM redraws its flood warning catchments, match each gauge to its catchment again:
@@ -122,4 +132,4 @@ This reads the Queensland Government's CSV of local government disaster dashboar
 
    The build also regenerates the directory pages under `dist/stations/`, `dist/lines/` and `dist/places/` and the sitemap from the refreshed stop, route, timetable index and gazetteer files (see [Architecture](architecture.md)); no separate step is needed. A route that disappears from the timetable loses its page, and `sitemap.xml` lists only pages that exist.
 
-2. Start the app with `npm run dev`, open a line page such as T1 Caboolture, and compare a few times in the **Timetable** grid with the same line on [TransLink's timetable pages](https://jp.translink.com.au/plan-your-journey/timetables).
+2. Start the app with `npm run dev`, open a line page such as T1 Caboolture, and compare a few times in the **Timetable** grid with the same line on [Translink's timetable pages](https://jp.translink.com.au/plan-your-journey/timetables).

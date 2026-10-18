@@ -32,7 +32,7 @@ Schedules, filters, alert rules and the planner are pure functions in `src/lib/`
 
 Name things so the code explains itself. Write a comment only for:
 
-- A fact about an outside system that the code must work around. For example, TransLink's T-code mapping files trains under the line they end on.
+- A fact about an outside system that the code must work around. For example, Translink's T-code mapping files trains under the line they end on.
 - The contract of an exported function, type or component, as a doc comment.
 - A link to the source of a constraint, such as a dataset page.
 
@@ -68,7 +68,34 @@ The social card (`public/og-image.jpg`), `favicon.ico`, the Apple touch icon and
    ```
 
    ```bash
+   npm run typecheck
+   ```
+
+   ```bash
    npm run build
    ```
 
-3. Run the app with `npm run dev` and use the feature in the browser. For anything that shows times or positions, compare a few values with the official source, such as TransLink's own timetable or stop page.
+3. Run the app with `npm run dev` and use the feature in the browser. For anything that shows times or positions, compare a few values with the official source, such as Translink's own timetable or stop page.
+
+## Propose a change
+
+1. Fork [the repository](https://github.com/realbakari/Roadbeat) and create a branch from `main`.
+2. Make the change, following the rules on this page. Update the docs in `docs/` and the public pages in `site/pages/` if the change affects them.
+3. Before you open a pull request, run:
+
+   ```bash
+   npm run lint && npm run typecheck && npm test
+   ```
+
+4. Open a pull request against `main`. CI runs the same checks and the build.
+
+Keep each pull request to one change. A bug fix and a new feature go in separate pull requests.
+
+In the description, say:
+
+- what the change does and why;
+- which official source any new data comes from, with a link to its licence or terms;
+- how you tested it, including any values you compared with the official source;
+- a screenshot for a change to the interface.
+
+For a bug or an idea, open an [issue](https://github.com/realbakari/Roadbeat/issues) first. Report security problems privately, as [SECURITY.md](../SECURITY.md) describes, never in an issue.
