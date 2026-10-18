@@ -2,8 +2,8 @@
 import { regionName, slugify, stationKind, type Directory } from './directory.ts'
 import { HOME, LINES, PLACES, STATIONS, capital, count, lineTitle, linePath, placePath, stationPath, type StaticPage } from './pageKit.ts'
 
-/** One line of in-page links to each group's heading, for long indexes. */
-const jumpList = (label: string, titles: string[]) => `${label}: ${titles.map((t) => `[${t}](#${slugify(t)})`).join(', ')}.`
+/** In-page links to each group's heading, for long indexes; the pages set a list of links in columns. */
+const jumpList = (label: string, titles: string[]) => `${label}:\n\n${titles.map((t) => `- [${t}](#${slugify(t)})`).join('\n')}`
 
 function grouped<T>(items: T[], key: (t: T) => string, order?: string[]): [string, T[]][] {
   const groups = new Map<string, T[]>()

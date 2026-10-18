@@ -25,7 +25,8 @@ Roadbeat shows data exactly as official sources publish it. If a road event, tim
 - **Bushfires:** the Queensland Fire Department, at fire.qld.gov.au.
 - **Brisbane gauges and traffic signals:** Brisbane City Council, on (07) 3403 8888.
 
-In an emergency, call Triple Zero (000).
+> [!WARNING]
+> Roadbeat is not an emergency service. In an emergency, call Triple Zero (000).
 
 ## About this project
 

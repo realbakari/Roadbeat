@@ -57,7 +57,18 @@ Each layer has one job.
 
 ## Search engines and AI agents read static pages
 
-The app itself needs JavaScript, so `site/plugin.ts` gives search engines and AI agents a static surface. Each page in `site/pages/` is written once in Markdown and becomes an HTML page (`/about/`) and a Markdown page (`/about.md`). The home page's Markdown is rendered inside `#root` in `index.html`, so a crawler without JavaScript still reads a real heading and description. The app replaces it when it starts. The plugin also writes `robots.txt`, `sitemap.xml`, `llms.txt`, the web app manifest, and the meta tags and JSON-LD in `index.html`. Its parts are small files beside it: `markdown.ts` (the Markdown subset), `head.ts` (meta tags and JSON-LD), `pageHtml.ts` (the HTML shell), `sitemap.ts` (robots and sitemap), `manifest.ts` and `settings.ts`. `SITE_URL` and `CONTACT_EMAIL` set the absolute links and contact details (see [Deploy the app](deploy.md)).
+The app itself needs JavaScript, so `site/plugin.ts` gives search engines and AI agents a static surface. Each page in `site/pages/` is written once in Markdown and becomes an HTML page (`/about/`) and a Markdown page (`/about.md`). The home page's Markdown is rendered inside `#root` in `index.html`, so a crawler without JavaScript still reads a real heading and description. The app replaces it when it starts. The plugin also writes `robots.txt`, `sitemap.xml`, `llms.txt`, the web app manifest, and the meta tags and JSON-LD in `index.html`. Its parts are small files beside it: `markdown.ts` (the Markdown subset), `head.ts` (meta tags and JSON-LD), `pageHtml.ts` (the HTML shell), `pageLayout.ts` and `pageStyle.ts` (the page layout and its stylesheet), `sitemap.ts` (robots and sitemap), `manifest.ts` and `settings.ts`. `SITE_URL` and `CONTACT_EMAIL` set the absolute links and contact details (see [Deploy the app](deploy.md)).
+
+### How the static pages look
+
+The pages follow the component patterns of the [Queensland Government Design System](https://www.designsystem.qld.gov.au/components), in Roadbeat's own colours. Roadbeat is not a government site, so it borrows the patterns and not the Queensland Government brand: no coat of arms, government header or "Queensland Government" name.
+
+- **Skip link, header and footer.** A skip link, a header with the main links and an **Open the app** button, and a dark footer of link columns.
+- **Banner.** A banner holds the breadcrumbs, the page's title, its first paragraph as the lead, and the **Open in Roadbeat** button. `splitLead` in `pageLayout.ts` takes the title and lead from the rendered Markdown.
+- **On this page.** A page with 3 to 12 sections gets an **On this page** list, beside the text on wide screens. Long indexes keep their own jump list instead.
+- **Callouts and alerts.** In the Markdown, a quote (`> …`) becomes a callout, and a quote that opens with `[!NOTE]` or `[!WARNING]` becomes an in-page alert. Both stay plain Markdown in the `.md` twin.
+- **Link columns.** A list of nothing but links is set in columns.
+- **Light and dark.** Light or dark mode follows the app's own choice, or the system's.
 
 ### The directory pages
 

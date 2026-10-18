@@ -1,35 +1,41 @@
 // The HTML shell of every static page: the trust pages, the 404 page and
-// every directory page.
+// every directory page. A skip link, the site header, a banner with the
+// breadcrumbs, title and lead, the page's sections with an "On this page"
+// list, and a footer of link columns (see site/pageStyle.ts for where the
+// layout comes from).
 import { SUPPORT_URL } from '../src/lib/support.ts'
 import type { Crumb, StaticPage } from './directoryPages.ts'
 import { fullTitle, headTags, pageJsonLd } from './head.ts'
 import { escape, markdownToHtml } from './markdown.ts'
+import { inPageNav, splitLead } from './pageLayout.ts'
+import { STYLE } from './pageStyle.ts'
 import { SITE, type SiteSettings } from './settings.ts'
 
 type Page = StaticPage
 
-const DARK = 'color-scheme:dark;--bg:#111;--fg:#e5e7eb;--sub:#9ca3af;--line:#262626;--link:#7aa2ff'
-
-// Light or dark follows the app's own choice (data-mode, set by MODE_SCRIPT) and otherwise the system's.
-const STYLE = `
-:root{color-scheme:light dark;--bg:#fff;--fg:#1f2937;--sub:#6b7280;--line:#e5e7eb;--link:#2563eb;--brand:${SITE.themeColor}}
-:root[data-mode=light]{color-scheme:light}:root[data-mode=dark]{${DARK}}
-@media (prefers-color-scheme:dark){:root:not([data-mode=light]){${DARK}}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header,main,footer{max-width:44rem;margin:0 auto;padding:0 16px}
-header{display:flex;align-items:center;gap:10px;padding-top:20px;padding-bottom:12px;border-bottom:1px solid var(--line)}
-header a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-weight:600;font-size:16px}
-header img{width:28px;height:28px}main{padding-top:8px;padding-bottom:32px}
-h1,h2{font-weight:600}h1{font-size:24px;line-height:1.25;margin:20px 0 8px}h2{font-size:16px;margin:24px 0 6px}p,ul{margin:6px 0}ul{padding-left:20px}li{margin:3px 0}
-a{color:var(--link)}code{font-size:.9em}footer{border-top:1px solid var(--line);padding-top:12px;padding-bottom:28px;color:var(--sub)}
-footer nav{display:flex;flex-wrap:wrap;gap:4px 16px}footer a{color:var(--sub)}
-nav.crumbs{margin:14px 0 -10px;color:var(--sub)}nav.crumbs ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px}nav.crumbs li+li::before{content:"›";margin-right:4px}
-a.open{display:inline-block;margin:12px 0 4px;padding:10px 16px;border-radius:8px;background:var(--brand);color:#fff;font-weight:600;text-decoration:none}a.open:hover{filter:brightness(1.1)}`
+const REPO = 'https://github.com/realbakari/Roadbeat'
 
 /** Applies the light or dark mode chosen in the app (index.html does the same), so the pages match it. */
 const MODE_SCRIPT = `<script>try{var m=localStorage.getItem('qldt-mode');if(m==='light'||m==='dark')document.documentElement.dataset.mode=m}catch(e){}</script>`
 
-const FOOTER = `<footer><nav><a href="/">Open the app</a><a href="/stations/">Stations</a><a href="/lines/">Lines</a><a href="/places/">Places</a><a href="/about/">About</a><a href="/privacy/">Privacy</a><a href="/contact/">Contact</a><a href="/llms.txt">For AI agents</a><a href="${SUPPORT_URL}" rel="noopener">Buy me a coffee</a></nav><p>Roadbeat is independent and not affiliated with the Queensland Government. Data from official publishers, most under CC BY 4.0: see <a href="/about/#where-the-data-comes-from">About</a> for every source and its terms. Map data © OpenStreetMap contributors.</p></footer>`
+const HEADER = `<header class="site"><div class="wrap">
+      <a class="brand" href="/"><img src="/favicon.svg" alt="" /><span><b>${SITE.name}</b><span>${SITE.tagline}</span></span></a>
+      <a class="btn" href="/">Open the app</a>
+      <nav aria-label="Main"><ul><li><a href="/places/">Places</a></li><li><a href="/stations/">Stations</a></li><li><a href="/lines/">Lines</a></li><li><a href="/about/">About</a></li></ul></nav>
+    </div></header>`
+
+const column = (title: string, links: [string, string, string?][]) =>
+  `<div><h2>${title}</h2><ul>${links.map(([label, href, rel]) => `<li><a href="${href}"${rel ? ` rel="${rel}"` : ''}>${label}</a></li>`).join('')}</ul></div>`
+
+const FOOTER = `<footer><div class="wrap">
+      <div class="cols">
+        ${column('Browse', [['Queensland places', '/places/'], ['Stations and stops', '/stations/'], ['Lines and routes', '/lines/']])}
+        ${column('Roadbeat', [['Open the app', '/'], ['About', '/about/'], ['Privacy', '/privacy/'], ['Contact', '/contact/']])}
+        ${column('Open source', [['Source code on GitHub', REPO, 'noopener'], ['For AI agents', '/llms.txt'], ['Buy me a coffee', SUPPORT_URL, 'noopener']])}
+      </div>
+      <p class="fine">Roadbeat is independent and not affiliated with the Queensland Government. Data from official publishers, most under CC BY 4.0: see <a href="/about/#where-the-data-comes-from">About</a> for every source and its terms. Map data © OpenStreetMap contributors. In an emergency, call Triple Zero (000).</p>
+      <a class="top" href="#top">Back to top</a>
+    </div></footer>`
 
 function crumbsNav(crumbs: Crumb[]) {
   if (crumbs.length < 2) return ''
@@ -39,12 +45,10 @@ function crumbsNav(crumbs: Crumb[]) {
 
 /** A full static HTML page: the trust pages, the 404 page and every directory page. */
 export function pageHtml(page: Page, s: SiteSettings) {
-  const open = page.open ? `\n<p><a class="open" href="/#${page.open.hash}">${escape(page.open.label)}</a></p>` : ''
-  // The app button goes under the first paragraph, so it is on the first screen on a phone,
-  // and again at the end, after the lists.
-  const body = markdownToHtml(page.markdown)
-  const intro = body.indexOf('</p>') + '</p>'.length
-  const content = open && intro > 3 ? `${body.slice(0, intro)}${open}${body.slice(intro)}${open}` : `${body}${open}`
+  const { title, lead, body } = splitLead(markdownToHtml(page.markdown))
+  // The app button sits in the banner, so it is on the first screen on a phone, and again after the lists.
+  const open = page.open ? `<a class="open" href="/#${page.open.hash}">${escape(page.open.label)}</a>` : ''
+  const toc = inPageNav(body)
   return `<!doctype html>
 <html lang="en-AU">
   <head>
@@ -56,10 +60,18 @@ export function pageHtml(page: Page, s: SiteSettings) {
     ${MODE_SCRIPT}
     <style>${STYLE}</style>
   </head>
-  <body>
-    <header><a href="/"><img src="/favicon.svg" alt="" />${SITE.name}</a></header>
-    <main>
-${crumbsNav(page.crumbs)}${content}
+  <body id="top">
+    <a class="skip" href="#main">Skip to main content</a>
+    ${HEADER}
+    <main id="main">
+      <div class="banner"><div class="wrap">
+${crumbsNav(page.crumbs)}<h1>${title ?? escape(page.title)}</h1>${lead ? `\n<p class="lead">${lead}</p>` : ''}${open ? `\n<p>${open}</p>` : ''}
+      </div></div>
+      <div class="wrap page${toc ? ' has-toc' : ''}">
+${toc}<div class="content">
+${body}${open ? `\n<div class="cta"><p>See what's happening there now</p>${open}</div>` : ''}
+</div>
+      </div>
     </main>
     ${FOOTER}
   </body>

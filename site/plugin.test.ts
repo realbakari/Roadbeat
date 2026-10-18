@@ -23,6 +23,20 @@ describe('markdownToHtml', () => {
   })
 })
 
+describe('markdownToHtml callouts, alerts and link lists', () => {
+  it('turns a quote into a callout, and a [!WARNING] quote into an alert', () => {
+    expect(markdownToHtml('> **In short:** no accounts.')).toBe('<aside class="callout">\n<p><strong>In short:</strong> no accounts.</p>\n</aside>')
+    expect(markdownToHtml('> [!WARNING]\n> In an emergency, call 000.')).toBe(
+      '<div class="alert alert-warning" role="note"><p class="alert-title">Warning</p>\n<p>In an emergency, call 000.</p>\n</div>',
+    )
+  })
+
+  it('marks a list of nothing but links for columns, and leaves any other list alone', () => {
+    expect(markdownToHtml('- [A](/a/)\n- [B](/b/)')).toBe('<ul class="links">\n<li><a href="/a/">A</a></li>\n<li><a href="/b/">B</a></li>\n</ul>')
+    expect(markdownToHtml('- [A](/a/), 2 km\n- [B](/b/)')).toContain('<ul>\n')
+  })
+})
+
 describe('markdownToHtml headings', () => {
   it('gives second- and third-level headings an id to link to', () => {
     expect(markdownToHtml('# Places\n\n## Brisbane City\n\n### No council area')).toBe('<h1>Places</h1>\n<h2 id="brisbane-city">Brisbane City</h2>\n<h3 id="no-council-area">No council area</h3>')

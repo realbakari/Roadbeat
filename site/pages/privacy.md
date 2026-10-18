@@ -12,6 +12,8 @@ description: No accounts, ads or cookies. Visits are counted without identifying
 
 Roadbeat is built to need as little information about you as possible. There are no accounts and no advertising. Roadbeat counts how many people use it without cookies and without identifying you, as described under [Analytics](#analytics).<!--if:GA_MEASUREMENT_ID--> It also uses Google Analytics, described below.<!--endif-->
 
+> **In short:** no accounts and no ads. Your location, settings, saved stops and saved places stay in your browser. Roadbeat's server stores nothing of yours except your commute, if you turn on push alerts, and your message, if you send feedback.
+
 ## What stays in your browser
 
 Roadbeat saves your preferences in your browser's local storage, on your device only. That includes your notification settings and notification list, your saved stops, recent stops and saved trips, your saved places and their nicknames, your commute (roads, stop, line, time and days), and display choices such as the colour theme, base map, panel size, time format and which dashboard panels show. Roadbeat never sends this information to a server, except your commute if you turn on [push alerts](#push-alerts-for-your-commute). Clearing your browser's site data for Roadbeat deletes it.

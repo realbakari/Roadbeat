@@ -51,7 +51,10 @@ Roadbeat is free to use, with no ads and no account. If it's useful to you, you 
 
 ## What Roadbeat is not
 
-Roadbeat is an independent project. It is not run by, affiliated with or endorsed by the Queensland Government, Translink, the Queensland Fire Department, Brisbane City Council or any other source above. It is not an emergency service. For emergencies, call Triple Zero (000). For official road information, call 13 19 40 or visit qldtraffic.qld.gov.au. For public transport, call 13 12 30 or visit translink.com.au.
+Roadbeat is an independent project. It is not run by, affiliated with or endorsed by the Queensland Government, Translink, the Queensland Fire Department, Brisbane City Council or any other source above. For official road information, call 13 19 40 or visit qldtraffic.qld.gov.au. For public transport, call 13 12 30 or visit translink.com.au.
+
+> [!WARNING]
+> Roadbeat is not an emergency service. In an emergency, call Triple Zero (000).
 
 ## How Roadbeat is built
 
