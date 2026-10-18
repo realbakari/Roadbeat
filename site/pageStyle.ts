@@ -34,7 +34,8 @@ a{color:var(--link);text-underline-offset:2px}a:hover{text-decoration-thickness:
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 16px}
 .skip{position:absolute;left:8px;top:-60px;z-index:10;padding:10px 16px;border-radius:6px;background:var(--fg);color:var(--bg);font-weight:600}.skip:focus{top:8px}
-.site{border-bottom:1px solid var(--line);background:var(--bg)}
+.site{border-bottom:1px solid var(--line);background:var(--bg);padding-top:env(safe-area-inset-top)}
+@media (display-mode:standalone){body::before{content:"";position:fixed;inset:0 0 auto;height:max(env(safe-area-inset-top),6px);background:var(--bg);z-index:20;pointer-events:none}}
 .site .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;padding-top:12px;padding-bottom:12px}
 .brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;margin-right:auto}
 .brand img{width:32px;height:32px}@media (max-width:479px){.brand b+span{display:none}}.brand b{display:block;font-size:18px;line-height:1.2}.brand span{display:block;font-size:13px;color:var(--sub)}
@@ -69,7 +70,7 @@ ul.links li{break-inside:avoid;margin:0;padding:8px 0;border-bottom:1px solid va
 .cta{margin:32px 0 0;padding:24px;border-radius:12px;background:var(--panel);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}
 .cta p{margin:0;font-weight:600;font-size:18px}
 footer{background:var(--foot);color:#d6d3d1;margin-top:24px}
-footer .wrap{padding-top:36px;padding-bottom:36px}
+footer .wrap{padding-top:36px;padding-bottom:max(36px,env(safe-area-inset-bottom))}
 footer a{color:#fafaf9}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:24px;margin-bottom:24px}
 .cols h2{font-size:15px;margin:0 0 8px;color:#fff}.cols ul{list-style:none;margin:0;padding:0}.cols li{margin:6px 0}

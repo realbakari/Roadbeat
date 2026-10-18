@@ -53,7 +53,7 @@ export function pageHtml(page: Page, s: SiteSettings) {
 <html lang="en-AU">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>${escape(fullTitle(page))}</title>
     ${headTags(page, s)}
     <script type="application/ld+json">${JSON.stringify(pageJsonLd(page, s))}</script>

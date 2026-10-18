@@ -157,7 +157,7 @@ export function AppHeader({
   ]
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-kumo-line bg-kumo-base px-4">
+    <header className="flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center justify-between gap-3 border-b border-kumo-line bg-kumo-base px-4 pt-[env(safe-area-inset-top)]">
       <a href="#" onClick={(e) => (e.preventDefault(), onHome())} className="flex min-w-0 shrink-0 items-center gap-2.5 sm:shrink">
         <img src="/favicon.svg" alt="" className="size-7" />
         <div className="grid min-w-0 leading-tight">

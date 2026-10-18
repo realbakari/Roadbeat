@@ -57,6 +57,29 @@ body,
 .js #root {
   position: relative;
   overflow: clip;
+  /* With viewport-fit=cover the page reaches the screen's edges; the notch and rounded corners stay clear in landscape. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/*
+ * iOS 26 and later run a Home Screen web app full screen and blur whatever
+ * sits under the status bar, whatever the status bar meta tag says. iOS
+ * paints the status bar solid instead when a fixed box with a background
+ * covers the top edge: at least 6px tall, 80% of the width, and within 4px
+ * of the top. This strip is that box, in the page's own colour, and the
+ * header starts below it (see AppHeader's safe-area padding).
+ */
+@media (display-mode: standalone) {
+  .js #root::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: max(env(safe-area-inset-top), 6px);
+    background: var(--color-kumo-base);
+    z-index: 60;
+    pointer-events: none;
+  }
 }
 
 body {
@@ -154,4 +177,23 @@ body {
    can span the whole bottom edge on a narrow map. */
 .maplibregl-ctrl-bottom-left {
   bottom: 22px;
+}
+
+/*
+ * On touch screens Kumo's compact controls (22 to 29px) are hard to hit with
+ * a thumb. Apple asks for 44pt; 36px is as far as the layout stretches
+ * without changing its shape. Mouse and trackpad keep the compact sizes.
+ */
+@media (pointer: coarse) {
+  [data-kumo-component="Button"],
+  [role="tab"] {
+    min-height: 36px;
+  }
+  [data-kumo-component="Button"][class*="size-"] {
+    min-width: 36px;
+  }
+  .maplibregl-ctrl-group button {
+    width: 36px;
+    height: 36px;
+  }
 }

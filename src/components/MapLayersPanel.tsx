@@ -131,7 +131,7 @@ export function MapLayersPanel({
   return (
     <LayerTimes.Provider value={times}>
     <div
-      className="absolute top-3 left-3 z-20 flex max-h-[calc(100%-5rem)] w-64 flex-col overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line"
+      className="absolute top-3 left-3 z-20 flex max-h-[calc(100%-5rem)] w-64 flex-col max-sm:right-3 max-sm:w-auto overflow-hidden rounded-xl bg-kumo-base shadow-md ring ring-kumo-line"
       onKeyDown={(e) => {
         if (e.key !== 'Escape') return
         e.preventDefault()
