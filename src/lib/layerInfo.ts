@@ -41,6 +41,7 @@ const SOURCES: Partial<Record<keyof MapLayers, Source>> = {
   cyclones: { feeds: ['jtwc'] },
   pastCyclones: { feeds: ['past-cyclones'] },
   speedCameras: { feeds: ['speed-cameras'] },
+  fuel: { feeds: ['fuel'] },
 }
 
 export interface LayerInfo {

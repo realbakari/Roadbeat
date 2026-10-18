@@ -11,6 +11,7 @@ const PLACE_TITLE: Record<string, string> = {
   cyclone: 'Tropical cyclone (JTWC)',
   pastcyclone: 'Past cyclone',
   speedcamera: 'Speed camera site',
+  fuel: 'Service station fuel',
 }
 
 /** The site's own title, as the built page sets it, kept for the home view. */

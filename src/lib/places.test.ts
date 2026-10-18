@@ -60,6 +60,7 @@ const sources: PlaceSources = {
   cyclones: null,
   pastCyclones: null,
   speedCameras: null,
+  fuelStations: null,
   restAreas: [],
   dumpPoints: [],
   truckRestrictions: [],

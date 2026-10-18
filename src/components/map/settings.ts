@@ -55,6 +55,8 @@ export interface MapLayers {
   pastCyclones: boolean
   /** Fixed speed, red light and point-to-point camera sites, from the Queensland Government's camera map. */
   speedCameras: boolean
+  /** Whether service stations have fuel, from the fuel status layer council disaster dashboards show. */
+  fuel: boolean
 }
 
 export const DEFAULT_LAYERS: MapLayers = {
@@ -89,4 +91,5 @@ export const DEFAULT_LAYERS: MapLayers = {
   cyclones: false,
   pastCyclones: false,
   speedCameras: false,
+  fuel: false,
 }

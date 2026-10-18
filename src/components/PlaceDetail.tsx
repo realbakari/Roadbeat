@@ -19,6 +19,7 @@ import { Directions } from './place/Directions'
 import { AirBody, HotspotBody } from './place/EnvironmentPlaces'
 import { BayBody, ClearwayBody, MeterBody } from './place/ParkingPlaces'
 import { RelativeTime } from './ui/RelativeTime'
+import { FuelBody } from './FuelParts'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
 const REST_TYPES: Record<string, string> = {
@@ -192,6 +193,8 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return <PastCycloneBody c={place.data} />
     case 'speedcamera':
       return <SpeedCameraBody c={place.data} />
+    case 'fuel':
+      return <FuelBody s={place.data} now={now} />
   }
 }
 

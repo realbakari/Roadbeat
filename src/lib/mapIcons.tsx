@@ -28,6 +28,7 @@ import {
   DropHalfBottomIcon,
   CloudRainIcon,
   GaugeIcon,
+  GasPumpIcon,
   type Icon,
   type IconWeight,
 } from '@phosphor-icons/react'
@@ -72,6 +73,10 @@ export const LAYER_COLOR = {
   speedCamera: '#0f172a',
   redLightCamera: '#b91c1c',
   p2pCamera: '#c2410c',
+  fuelAvailable: '#15803d',
+  fuelPartial: '#b45309',
+  fuelUnavailable: '#b91c1c',
+  fuelUnknown: '#6b7280',
 } as const
 
 export const VEHICLE_COLOR = {
@@ -182,6 +187,11 @@ function buildIcons(): Record<string, string> {
   icons['speedcam-combined'] = square(LAYER_COLOR.redLightCamera, CameraIcon)
   icons['speedcam-redlight'] = square(LAYER_COLOR.redLightCamera, TrafficSignalIcon)
   icons['speedcam-p2p'] = square(LAYER_COLOR.p2pCamera, GaugeIcon)
+  // Fuel: a pump, crossed out like a no-entry sign when the station has none, so it reads without colour.
+  icons['fuel-available'] = disc(LAYER_COLOR.fuelAvailable, GasPumpIcon)
+  icons['fuel-partial'] = disc(LAYER_COLOR.fuelPartial, GasPumpIcon)
+  icons['fuel-unavailable'] = prohibition(GasPumpIcon)
+  icons['fuel-unknown'] = ring(LAYER_COLOR.fuelUnknown, GasPumpIcon)
   return icons
 }
 

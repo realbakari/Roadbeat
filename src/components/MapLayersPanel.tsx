@@ -24,6 +24,7 @@ import { HazardLayers } from './layers/HazardLayers'
 import { TrafficLayers } from './layers/TrafficLayers'
 import { TransitLayers } from './layers/TransitLayers'
 import { PlaceLayers } from './layers/PlaceLayers'
+import type { FuelStation } from '../api/fuelAvailability'
 
 interface Props {
   basemap: Basemap
@@ -58,7 +59,7 @@ interface Props {
   /** Which satellite image is chosen, and the state of each source. */
   imagery: ComponentProps<typeof SatelliteImageNote>
   /** Fire bans, NSW border fires, JTWC cyclones and past cyclone tracks, for their notes. */
-  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]>; speedCameras: Feed<SpeedCamera[]> }
+  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]>; speedCameras: Feed<SpeedCamera[]>; fuel: Feed<FuelStation[]> }
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }
@@ -228,7 +229,7 @@ export function MapLayersPanel({
           onCrashFilterChange={onCrashFilterChange}
         />
 
-        <TrafficLayers layers={layers} counts={counts} set={set} speedCameras={hazards.speedCameras} clearanceError={clearanceError} clearwaysError={councilErrors.clearways} />
+        <TrafficLayers layers={layers} counts={counts} set={set} speedCameras={hazards.speedCameras} fuel={hazards.fuel} clearanceError={clearanceError} clearwaysError={councilErrors.clearways} />
 
         <TransitLayers
           layers={layers}

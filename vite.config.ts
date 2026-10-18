@@ -140,6 +140,8 @@ function newsDevApi(): Plugin {
 export default defineConfig(({ mode, command }) => {
   // SITE_URL, CONTACT_EMAIL and GA_MEASUREMENT_ID feed the SEO and agent pages (see site/plugin.ts and docs/deploy.md).
   const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env }
+  // The dev server's API routes read server settings (such as FUEL_LAYER_URL) from process.env, as on Vercel, so .env.local fills in any not already set.
+  if (command === 'serve') for (const [k, v] of Object.entries(loadEnv(mode, process.cwd(), ''))) process.env[k] ??= v
   // On Vercel, fall back to the project's production address until SITE_URL is set.
   const siteUrl = env.SITE_URL || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
   // Analytics only in built sites, so local development doesn't count as visits.

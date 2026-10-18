@@ -32,6 +32,7 @@ import type { PublisherTime } from '../lib/feedHealth'
 import type { FeedId } from '../lib/feedRegistry'
 import { MAIN_REGIONS, PROBED_REGIONS } from '../lib/transitRegions'
 import { brisbaneDate, brisbaneDayKey as dayKey } from '../lib/aest'
+import { fetchFuelStations } from '../api/fuelAvailability'
 
 // One check per feed in the registry, through the same fetch and parse
 // functions the app uses, so a feed counts as healthy only when its data
@@ -169,6 +170,7 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
   jtwc: (signal) => fetchCyclones(signal).then(none),
   'past-cyclones': (signal) => fetchPastCyclones(signal).then(none),
   'speed-cameras': (signal) => fetchSpeedCameras(signal).then(none),
+  fuel: (signal) => fetchFuelStations(signal).then(none),
   'model-forecast': async (signal) => {
     const f = await fetchModelForecast(BRISBANE, signal)
     if (!f) throw new Error('Open-Meteo answered with no forecast')

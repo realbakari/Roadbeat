@@ -48,6 +48,12 @@ export function mapKeySections(layers: MapLayers): KeySection[] {
     { label: 'Red light camera', icon: 'speedcam-redlight' },
     { label: 'Point-to-point section, start or end', icon: 'speedcam-p2p' },
   ])
+  add(layers.fuel, 'Fuel at service stations (council disaster dashboards)', [
+    { label: 'Fuel available', icon: 'fuel-available' },
+    { label: 'Some fuels unavailable', icon: 'fuel-partial' },
+    { label: 'No fuel available', icon: 'fuel-unavailable' },
+    { label: 'Status unknown', icon: 'fuel-unknown' },
+  ])
   add(layers.councilCentres, 'Council centres (disaster dashboards)', [
     { label: 'Evacuation centre or place of refuge', icon: 'centre-shelter' },
     { label: 'Sandbag point', icon: 'centre-sandbag' },

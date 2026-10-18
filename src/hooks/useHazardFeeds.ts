@@ -9,6 +9,7 @@ import { fetchPastCyclones, type PastCyclone } from '../api/pastCyclones'
 import { fetchSpeedCameras, type SpeedCamera } from '../api/speedCameras'
 import type { LngLat } from '../lib/geo'
 import { poll } from './poll'
+import { fetchFuelStations, type FuelStation } from '../api/fuelAvailability'
 
 /** A polled feed's last read: its value, the error from the latest read, and when it last succeeded. */
 export interface Feed<T> {
@@ -55,6 +56,9 @@ export const useCyclones = (enabled: boolean): Feed<Cyclone[]> => usePolled(enab
 export const usePastCyclones = (enabled: boolean): Feed<PastCyclone[]> => usePolled(enabled, fetchPastCyclones, null)
 
 /** The state's fixed, red light and point-to-point camera sites, read once when their layer is first turned on. */
+/** Fuel availability at service stations, read every 5 minutes (the server's cache) while the layer or a station page is open. */
+export const useFuelStations = (enabled: boolean): Feed<FuelStation[]> => usePolled(enabled, fetchFuelStations, 5 * 60_000)
+
 export const useSpeedCameras = (enabled: boolean): Feed<SpeedCamera[]> => usePolled(enabled, fetchSpeedCameras, null)
 
 /** The DWD ICON model forecast for one point, read when `at` is set, and again if it changes. */

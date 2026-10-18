@@ -26,6 +26,8 @@ import { dsColor, siteLoad } from './signals'
 import { truckKey } from './trucks'
 import { wazeLabel } from './waze'
 import { brisbaneDayClock as observed, brisbaneClock as clock } from './aest'
+import { FUEL_STATUS_LABEL } from '../api/fuelAvailability'
+import { brandedName } from './fuelBrands'
 
 /**
  * A short card for a selected map item, shown on the map itself when the side
@@ -85,6 +87,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   cyclone: 'JTWC warning, not the official Australian warning',
   pastcyclone: 'Past cyclone track, IBTrACS',
   speedcamera: 'Camera site, Queensland Government',
+  fuel: 'Service station fuel, via council dashboards',
 }
 
 function placeTitle(place: Place): string {
@@ -126,6 +129,8 @@ function placeTitle(place: Place): string {
       return place.data.name ? `Tropical cyclone ${place.data.name} (${place.data.id})` : `Tropical cyclone ${place.data.id}`
     case 'pastcyclone':
       return pastCycloneTitle(place.data)
+    case 'fuel':
+      return brandedName(place.data)
     case 'speedcamera':
       return place.data.site || SPEED_CAMERA_LABEL[place.data.type]
   }
@@ -162,6 +167,10 @@ export function placeCard(place: Place): MapCard | null {
   }
   if (place.kind === 'pastcyclone') facts.push(place.data.peakKt ? `Peak ${place.data.peakKt} kt (${place.data.agency ?? 'WMO agency'})` : 'Peak wind not recorded', 'History, not a current warning')
   if (place.kind === 'speedcamera') facts.push(SPEED_CAMERA_LABEL[place.data.type])
+  if (place.kind === 'fuel') {
+    const out = place.data.fuels.filter((f) => !f.available).map((f) => f.name)
+    facts.push(FUEL_STATUS_LABEL[place.data.status], ...(out.length && place.data.status !== 'unavailable' ? [`Unavailable: ${out.join(', ')}`] : []))
+  }
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,
     dump: LAYER_COLOR.dumpPoint,
@@ -182,6 +191,7 @@ export function placeCard(place: Place): MapCard | null {
     nswfire: place.kind === 'nswfire' ? (NSW_ALERT_COLOR[place.data.alertLevel] ?? NSW_ALERT_COLOR['Not Applicable']) : '',
     cyclone: CYCLONE_COLOR,
     pastcyclone: PAST_CYCLONE_COLOR,
+    fuel: place.kind === 'fuel' ? { available: LAYER_COLOR.fuelAvailable, partial: LAYER_COLOR.fuelPartial, unavailable: LAYER_COLOR.fuelUnavailable, unknown: LAYER_COLOR.fuelUnknown }[place.data.status] : '',
     speedcamera: place.kind === 'speedcamera' ? (place.data.type === 'fixed' ? LAYER_COLOR.speedCamera : place.data.type === 'p2p' ? LAYER_COLOR.p2pCamera : LAYER_COLOR.redLightCamera) : '',
   }
   return {

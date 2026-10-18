@@ -3,6 +3,7 @@ import * as cameraTime from './_lib/endpoints/camera-time.js'
 import * as departures from './_lib/endpoints/departures.js'
 import * as events from './_lib/endpoints/events.js'
 import * as feedback from './_lib/endpoints/feedback.js'
+import * as fuel from './_lib/endpoints/fuel.js'
 import * as history from './_lib/endpoints/history.js'
 import * as share from './_lib/endpoints/share.js'
 import * as stops from './_lib/endpoints/stops.js'
@@ -11,7 +12,7 @@ import { json } from './_lib/http.js'
 
 // One Vercel function for the small endpoints: /api/events, /api/stops,
 // /api/departures, /api/bushfires, /api/history, /api/camera-time,
-// /api/share (an HTML page for link previews), /api/visits and /api/feedback
+// /api/fuel, /api/share (an HTML page for link previews), /api/visits and /api/feedback
 // (the two that take POST). Vercel's Hobby plan deploys at
 // most 12 functions, and each file in api/ (plus middleware.ts) is one, so
 // these share a file. The handlers live in api/_lib/endpoints/, which Vercel
@@ -30,6 +31,7 @@ const ENDPOINTS: Record<string, Endpoint> = {
   departures,
   events,
   feedback,
+  fuel,
   history,
   share,
   stops,

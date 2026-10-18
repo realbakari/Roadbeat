@@ -47,6 +47,8 @@ import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
 import type { SpeedCamera } from '../api/speedCameras'
 import { speedCameraFeatures } from './map/speedCameraLayers'
+import { fuelFeatures } from './map/fuelLayers'
+import type { FuelStation } from '../api/fuelAvailability'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -54,6 +56,7 @@ import { useAnimatedVehicles } from './map/useAnimatedVehicles'
 import { useSourceData } from './map/useSourceData'
 import { useFitEvent } from './map/useFitEvent'
 import { prefersReducedMotion, useSignalAnimation } from './map/useSignalAnimation'
+import { byBrand, useFuelBrands } from '../lib/fuelBrands'
 
 // Vite pre-bundles maplibre-gl away from its sibling worker file, so point at it explicitly.
 maplibregl.setWorkerUrl(workerUrl)
@@ -137,6 +140,7 @@ interface Props {
   /** Past cyclone tracks near Queensland. */
   pastCyclones: PastCyclone[]
   speedCameras: SpeedCamera[]
+  fuelStations: FuelStation[]
   /** The open news story: its places are ringed and its roads drawn wider. */
   selectedStory: NewsStory | null
   selectedVehicleId: string | null
@@ -195,9 +199,10 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   cyclones: ['cyclone-track', 'cyclone-points'],
   pastCyclones: ['past-cyclones'],
   speedCameras: ['speed-cameras'],
+  fuel: ['fuel'],
 }
 
-const CLICKABLE_PLACES = ['speed-cameras', 'air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['fuel', 'speed-cameras', 'air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 /** What the crosshair reads under the centre: everything a tap can open. */
 const READABLE = [...EVENT_LAYERS, ...CLICKABLE_PLACES]
@@ -242,6 +247,7 @@ export function TrafficMap(props: Props) {
     cyclones,
     pastCyclones,
     speedCameras,
+    fuelStations,
     selectedStory,
     selectedVehicleId,
     card,
@@ -398,6 +404,9 @@ export function TrafficMap(props: Props) {
   useSourceData(map, ready, 'past-cyclones', pastCycloneData)
   const speedCameraData = useMemo(() => speedCameraFeatures(speedCameras), [speedCameras])
   useSourceData(map, ready, 'speed-cameras', speedCameraData)
+  const fuelBrands = useFuelBrands()
+  const fuelData = useMemo(() => fuelFeatures(byBrand(fuelStations, fuelBrands)), [fuelStations, fuelBrands])
+  useSourceData(map, ready, 'fuel', fuelData)
   useSourceData(map, ready, 'council-centres', centreData)
   useSourceData(map, ready, 'outages', outageData)
   useSourceData(map, ready, 'air', airData)

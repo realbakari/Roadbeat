@@ -10,6 +10,9 @@ import type { MapLayers } from '../map/settings'
 import { SpeedCamerasNote } from '../SpeedCameraParts'
 import { InlineLink } from '../ui/Links'
 import { Badge, Group, LayerRow, type LayerGroupProps } from './LayerRow'
+import type { FuelStation } from '../../api/fuelAvailability'
+import { FuelNote } from '../FuelParts'
+import { byBrand, useFuelBrands } from '../../lib/fuelBrands'
 
 const TOGGLES: { key: keyof MapLayers; label: string; icon: string }[] = [
   { key: 'webcams', label: 'Traffic cameras', icon: 'camera-webcam' },
@@ -24,9 +27,11 @@ export function TrafficLayers({
   counts,
   set,
   speedCameras,
+  fuel,
   clearanceError,
   clearwaysError,
-}: LayerGroupProps & { speedCameras: Feed<SpeedCamera[]>; clearanceError: string | null; clearwaysError: string | null }) {
+}: LayerGroupProps & { speedCameras: Feed<SpeedCamera[]>; fuel: Feed<FuelStation[]>; clearanceError: string | null; clearwaysError: string | null }) {
+  const fuelBrands = useFuelBrands()
   return (
     <Group title="Traffic">
       {TOGGLES.map((t) => (
@@ -49,6 +54,16 @@ export function TrafficLayers({
         onChange={(v) => set('speedCameras', v)}
       >
         <SpeedCamerasNote feed={speedCameras} />
+      </LayerRow>
+      <LayerRow
+        icon={<img src={iconUrl('fuel-available')} alt="" className="size-5" />}
+        label="Fuel at service stations"
+        count={fuel.data ? byBrand(fuel.data, fuelBrands).length : undefined}
+        layer="fuel"
+        checked={layers.fuel}
+        onChange={(v) => set('fuel', v)}
+      >
+        <FuelNote feed={fuel} />
       </LayerRow>
       <LayerRow
         icon={<Badge color={LAYER_COLOR.clearance} className="ring ring-black/70" icon={<ArrowsVerticalIcon size={12} weight="bold" color="#111" />} />}

@@ -14,6 +14,7 @@ import type { MapLayers } from '../components/map/settings'
 import type { LngLat } from './geo'
 import { outagePosition } from './outages'
 import { findTruck, truckIconPoint } from './trucks'
+import type { FuelStation } from '../api/fuelAvailability'
 
 /** A map item that has its own detail page, reached by #place/<kind>/<id>. */
 export type Place =
@@ -37,6 +38,7 @@ export type Place =
   | { kind: 'cyclone'; data: Cyclone }
   | { kind: 'pastcyclone'; data: PastCyclone }
   | { kind: 'speedcamera'; data: SpeedCamera }
+  | { kind: 'fuel'; data: FuelStation }
 
 /** The loaded lists a place link can point into; null while a list has not loaded. */
 export interface PlaceSources {
@@ -60,6 +62,7 @@ export interface PlaceSources {
   cyclones: Cyclone[] | null
   pastCyclones: PastCyclone[] | null
   speedCameras: SpeedCamera[] | null
+  fuelStations: FuelStation[] | null
 }
 
 /** The map layer a shared link to a place turns on. */
@@ -84,6 +87,7 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   cyclone: 'cyclones',
   pastcyclone: 'pastCyclones',
   speedcamera: 'speedCameras',
+  fuel: 'fuel',
 }
 
 /** The place a #place/<kind>/<id> link names, or null when it is unknown or not loaded yet. */
@@ -165,6 +169,10 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.pastCyclones?.find((c) => c.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'fuel') {
+    const data = s.fuelStations?.find((f) => f.id === id)
+    return data ? { kind, data } : null
+  }
   if (kind === 'speedcamera') {
     const data = s.speedCameras?.find((c) => c.id === id)
     return data ? { kind, data } : null
@@ -210,6 +218,8 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
       const p = place.data.points[Math.floor(place.data.points.length / 2)]
       return { center: p.position, zoom: 5 }
     }
+    case 'fuel':
+      return { center: place.data.position, zoom: 15 }
     case 'speedcamera':
       return { center: place.data.position, zoom: 16 }
     case 'event':
