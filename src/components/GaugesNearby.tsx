@@ -2,10 +2,10 @@ import { Loader, Text } from '@cloudflare/kumo'
 import { CaretRightIcon } from '@phosphor-icons/react'
 import type { Gauge } from '../api/bccGauges'
 import { floodWarningArea } from '../api/floodWarnings'
-import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, nearbyGauges, rainfallTotal } from '../lib/gauges'
 import type { LngLat } from '../lib/geo'
 import { ExternalLink } from './ui/Links'
+import { RelativeTime } from './ui/RelativeTime'
 
 /** How far from a flooding event to look for gauges. */
 const RADIUS_KM = 5
@@ -51,7 +51,7 @@ export function GaugesNearby({
                   <span className="text-xs text-kumo-subtle">
                     {g.kind === 'stream' ? 'Stream height' : 'Rainfall'}
                     {g.source === 'qld' && ' · Qld Government'} · {km.toFixed(1)} km
-                    {latest && ` · ${timeAgo(latest.time, now)}`}
+                    {latest && <> · <RelativeTime at={latest.time} now={now} inline /></>}
                   </span>
                 </span>
                 <span className="grid shrink-0 justify-items-end text-sm tabular-nums">

@@ -2,8 +2,8 @@ import { Text } from '@cloudflare/kumo'
 import { CaretDownIcon, CaretUpIcon, FlameIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { FIRE_COLOR, FIRE_TEXT, fireKindLabel, type FireWarning } from '../api/bushfires'
-import { timeAgo } from '../lib/format'
 import { readableTextOn } from '../lib/routeColor'
+import { RelativeTime } from './ui/RelativeTime'
 
 /**
  * Queensland Fire Department warnings and fires, collapsed to one line above the
@@ -74,7 +74,7 @@ export function FireList({ fires, now, onOpen }: { fires: FireWarning[]; now: nu
                     </span>
                     {f.location && <span className="truncate">{f.location}</span>}
                     {f.status && <span>{f.status}</span>}
-                    {f.issued && <span>{timeAgo(f.issued, now)}</span>}
+                    {f.issued && <RelativeTime at={f.issued} now={now} inline />}
                   </span>
                 </div>
             </li>

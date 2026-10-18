@@ -29,6 +29,7 @@ import type { useNotifications } from '../hooks/useNotifications'
 import { DEFAULT_FILTERS, isClosure, isCurrent, type EventFilters } from '../lib/filters'
 import { feedAnnouncement } from '../lib/feedAge'
 import { timeAgo } from '../lib/format'
+import { timeDetail } from '../lib/relativeTime'
 import { InstallApp } from './InstallApp'
 import { NotificationCenter } from './NotificationCenter'
 import { VisitorCount } from './VisitorCount'
@@ -194,7 +195,7 @@ export function AppHeader({
         />
         <span
           className="mx-1 flex items-center gap-1.5 text-sm whitespace-nowrap text-kumo-subtle"
-          title={fetchedAt ? `Road events updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
+          title={fetchedAt ? `Road events updated ${timeDetail(fetchedAt, now)?.spoken ?? 'at an unknown time'}` : 'Connecting…'}
         >
           {/* A feed error swaps the dot for a warning shape, so it never rests on colour alone. */}
           {error ? (

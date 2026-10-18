@@ -1,5 +1,5 @@
-import { Banner, Button, Empty, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
-import { CheckCircleIcon, FlameIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
+import { Banner, Button, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
+import { FlameIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import type { FireBans } from '../api/fireBans'
@@ -15,6 +15,7 @@ import { distanceKm, eventAnchor, type LngLat } from '../lib/geo'
 import { EventCard } from './EventCard'
 import { useAnnouncement } from '../hooks/useAnnouncement'
 import { chipClass } from './chip'
+import { LoadFailed, NoResults } from './ui/StateMessage'
 
 interface Props {
   allEvents: TrafficEvent[]
@@ -23,6 +24,9 @@ interface Props {
   filters: EventFilters
   onFiltersChange: (f: EventFilters) => void
   loading: boolean
+  /** Why road events failed to load, while none has loaded yet; the list says so rather than "none reported". */
+  loadError: string | null
+  onRetry: () => unknown
   now: number
   userLocation: LngLat | null
   locating: boolean
@@ -48,6 +52,8 @@ export function EventList({
   filters,
   onFiltersChange,
   loading,
+  loadError,
+  onRetry,
   now,
   userLocation,
   locating,
@@ -293,23 +299,14 @@ export function EventList({
           <div className="flex justify-center py-16">
             <Loader />
           </div>
+        ) : loadError && allEvents.length === 0 ? (
+          <LoadFailed what="road events" source="QLDTraffic" cause={loadError} onRetry={onRetry} retriesItself />
+        ) : events.length === 0 && filtered ? (
+          <NoResults what="road events" query={filters.query} onClear={reset} hint="Search by road, suburb, town or postcode, or clear the filters." />
         ) : events.length === 0 ? (
-          <div className="px-4 py-12">
-            <Empty
-              size="sm"
-              icon={<CheckCircleIcon size={32} className="text-kumo-inactive" />}
-              title={filtered ? 'No matching events' : filters.when === 'upcoming' ? 'Nothing scheduled' : 'No events reported'}
-              description={
-                filtered ? 'Try a different search or clear the filters.' : 'Roads are clear across Queensland right now.'
-              }
-              contents={
-                filtered ? (
-                  <Button size="sm" onClick={reset}>
-                    Clear filters
-                  </Button>
-                ) : undefined
-              }
-            />
+          <div className="px-4 py-4">
+            <p className="m-0 font-semibold">{filters.when === 'upcoming' ? 'Nothing scheduled' : 'No road events reported'}</p>
+            <Text variant="secondary">{filters.when === 'upcoming' ? 'QLDTraffic lists no planned roadworks or events ahead.' : 'QLDTraffic lists no road events in Queensland right now.'}</Text>
           </div>
         ) : (
           <ul className="divide-y divide-kumo-line">

@@ -1,7 +1,7 @@
 import { Badge, Banner, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, CarProfileIcon, CoffeeIcon, DropIcon, ToiletIcon, TruckIcon, VanIcon, WarningIcon, WheelchairIcon, type Icon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
-import { stripHtml, timeAgo } from '../lib/format'
+import { stripHtml } from '../lib/format'
 import { LAYER_COLOR } from '../lib/mapIcons'
 import type { Place } from '../lib/places'
 import { truckSubtitle } from '../lib/trucks'
@@ -18,6 +18,7 @@ import { CentreBody, OutageBody } from './place/DashboardPlaces'
 import { Directions } from './place/Directions'
 import { AirBody, HotspotBody } from './place/EnvironmentPlaces'
 import { BayBody, ClearwayBody, MeterBody } from './place/ParkingPlaces'
+import { RelativeTime } from './ui/RelativeTime'
 
 // Codes used by the QLD_RA_LITE feed, labelled as on qldtraffic.qld.gov.au.
 const REST_TYPES: Record<string, string> = {
@@ -148,7 +149,7 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
           <Section title="Report">
             <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5 text-sm">
               <dt className="text-kumo-subtle">Reported</dt>
-              <dd>{timeAgo(w.pubMillis, now)}</dd>
+              <dd><RelativeTime at={w.pubMillis} now={now} /></dd>
               <dt className="text-kumo-subtle">Reliability</dt>
               <dd>{w.reliability}/10</dd>
               <dt className="text-kumo-subtle">Confirmations</dt>

@@ -557,6 +557,8 @@ export function App() {
                 filters={filters}
                 onFiltersChange={setFilters}
                 loading={loading}
+                loadError={fetchedAt ? null : error}
+                onRetry={refresh}
                 userLocation={userLocation}
                 locating={locating}
                 onLocate={locate}

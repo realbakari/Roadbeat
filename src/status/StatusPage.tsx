@@ -11,6 +11,7 @@ import { timeAgo } from '../lib/format'
 import { useFeedHealth } from './useFeedHealth'
 import { NewTabNote } from '../components/NewTabNote'
 import { brisbaneDayDateTime as clock } from '../lib/aest'
+import { RelativeTime } from '../components/ui/RelativeTime'
 
 const stamp = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
@@ -39,7 +40,7 @@ export function StatusPage() {
         </a>
         <h1 className="text-lg text-kumo-subtle">Feed status and provenance</h1>
         <span className="ml-auto flex flex-wrap items-center gap-3 text-sm text-kumo-subtle">
-          <span className="whitespace-nowrap">{checking ? 'Checking…' : lastRound ? `Checked ${timeAgo(lastRound, now)}` : 'Starting…'}</span>
+          <span className="whitespace-nowrap">{checking ? 'Checking…' : lastRound ? <>Checked <RelativeTime at={lastRound} now={now} /></> : 'Starting…'}</span>
           <span className="whitespace-nowrap text-base font-medium text-kumo-strong tabular-nums">{clock.format(now)}</span>
           <Button variant="secondary" size="sm" icon={<ArrowsClockwiseIcon />} loading={checking} onClick={() => void check()}>
             Check now
@@ -90,7 +91,7 @@ function FeedRow({ feed, outcome, now }: { feed: Feed; outcome: FeedOutcome; now
         <span className="text-sm font-medium text-kumo-strong">{feed.name}</span>
         <Outcome outcome={outcome} />
         <span className="ml-auto text-xs text-kumo-subtle tabular-nums">
-          {outcome.kind === 'unchecked' ? outcome.reason : `Checked ${timeAgo(outcome.checkedAt, now)}`}
+          {outcome.kind === 'unchecked' ? outcome.reason : <>Checked <RelativeTime at={outcome.checkedAt} now={now} /></>}
         </span>
       </div>
       {outcome.kind === 'failed' && <p className="text-sm text-kumo-danger">{outcome.error}</p>}

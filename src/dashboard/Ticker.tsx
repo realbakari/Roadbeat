@@ -1,6 +1,6 @@
 import type { TrafficEvent } from '../api/types'
 import { typeMeta } from '../lib/eventMeta'
-import { timeAgo } from '../lib/format'
+import { RelativeTime } from '../components/ui/RelativeTime'
 
 /** Rolling strip of the latest road events along the bottom of the dashboard. Pauses on hover. */
 export function Ticker({ events, now }: { events: TrafficEvent[]; now: number }) {
@@ -14,7 +14,8 @@ export function Ticker({ events, now }: { events: TrafficEvent[]; now: number })
         <span className="size-2 rounded-full" style={{ backgroundColor: meta.color }} aria-hidden />
         <span className="font-medium">{p.road_summary?.road_name ?? p.event_type}</span>
         <span className="text-kumo-subtle">
-          {[p.road_summary?.locality, p.event_subtype ?? p.event_type, updated ? timeAgo(updated, now) : null].filter(Boolean).join(' · ')}
+          {[p.road_summary?.locality, p.event_subtype ?? p.event_type].filter(Boolean).join(' · ')}
+          {updated && <> · <RelativeTime at={updated} now={now} inline /></>}
         </span>
       </a>
     )

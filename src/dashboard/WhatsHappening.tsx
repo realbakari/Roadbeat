@@ -1,6 +1,6 @@
 import { StoryMark } from '../components/NewsStoryRow'
-import { timeAgo } from '../lib/format'
 import { storySourceLine, type NewsStory } from '../lib/newsStories'
+import { RelativeTime } from '../components/ui/RelativeTime'
 
 /**
  * The dashboard's "What's happening" strip: the stories headlineStories() picks,
@@ -22,7 +22,7 @@ export function WhatsHappening({ stories, now }: { stories: NewsStory[] | null; 
               <span className="grid min-w-0 gap-0.5">
                 <span className="line-clamp-2 text-sm font-medium text-kumo-strong">{s.items[0].title}</span>
                 <span className="truncate text-xs text-kumo-subtle">
-                  {storySourceLine(s)} · {timeAgo(s.latest, now)}
+                  {storySourceLine(s)} · <RelativeTime at={s.latest} now={now} inline />
                 </span>
               </span>
             </a>

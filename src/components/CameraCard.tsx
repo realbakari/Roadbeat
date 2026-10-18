@@ -3,9 +3,10 @@ import { ArrowsInIcon, ArrowsOutIcon, CameraSlashIcon, XIcon } from '@phosphor-i
 import { useEffect, useState } from 'react'
 import { fetchCameraTime, isCameraImage } from '../api/cameraTime'
 import type { Camera } from '../api/types'
-import { clean, timeAgo } from '../lib/format'
+import { clean } from '../lib/format'
 import { cameraSrc, shortName } from '../lib/cameras'
 import { ClampedText } from './ClampedText'
+import { RelativeTime } from './ui/RelativeTime'
 
 interface Props {
   camera: Camera
@@ -96,7 +97,7 @@ export function CameraCard({ camera, now, large, onToggleSize, onClose, onOpenLo
             {camera.kind === 'floodcam' ? 'Flood camera' : 'Traffic camera'}
           </Badge>
           <span className="min-w-0 truncate text-xs text-kumo-subtle">
-            {publishedAt ? `Image dated ${timeAgo(publishedAt, now)} by its host` : loadedAt ? `Fetched ${timeAgo(loadedAt, now)}` : 'Loading…'}
+            {publishedAt ? <>Image dated <RelativeTime at={publishedAt} now={now} /> by its host</> : loadedAt ? <>Fetched <RelativeTime at={loadedAt} now={now} /></> : 'Loading…'}
             {clean(p.image_sourced_from) && ` · ${clean(p.image_sourced_from)}`}
           </span>
         </div>

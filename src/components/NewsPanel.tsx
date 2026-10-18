@@ -1,11 +1,12 @@
-import { Banner, Empty, InputGroup, Loader, Select, Text } from '@cloudflare/kumo'
-import { FunnelSimpleIcon, InfoIcon, MagnifyingGlassIcon, MapPinIcon, NewspaperIcon, WarningCircleIcon, XIcon } from '@phosphor-icons/react'
+import { Banner, InputGroup, Loader, Select, Text } from '@cloudflare/kumo'
+import { FunnelSimpleIcon, InfoIcon, MagnifyingGlassIcon, MapPinIcon, WarningCircleIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import type { NewsSnapshot } from '../api/newsTypes'
-import { timeAgo } from '../lib/format'
 import { filterStories, storyRegions, DEFAULT_STORY_FILTER, type NewsStory, type StoryFilter } from '../lib/newsStories'
 import { StoryRow } from './NewsStoryRow'
 import { chipClass } from './chip'
+import { RelativeTime } from './ui/RelativeTime'
+import { LoadFailed, NoResults } from './ui/StateMessage'
 
 interface Props {
   snapshot: NewsSnapshot | null
@@ -125,7 +126,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
       <div className="flex items-center justify-between gap-2 border-b border-kumo-line px-4 py-2">
         <Text variant="secondary" size="sm">
           <span className="tabular-nums">{shown.length}</span> {shown.length === 1 ? 'story' : 'stories'}
-          {snapshot && ` · feeds read ${timeAgo(snapshot.fetchedAt, now)}`}
+          {snapshot && <> · feeds read <RelativeTime at={snapshot.fetchedAt} now={now} /></>}
         </Text>
         {filtered && (
           <button type="button" className="text-sm text-kumo-link hover:underline" onClick={() => onFilterChange(DEFAULT_STORY_FILTER)}>
@@ -153,9 +154,14 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
           <div className="flex justify-center py-16">
             <Loader />
           </div>
+        ) : !snapshot && error ? (
+          <LoadFailed what="news" source="The news and notice feeds" cause={error} retriesItself />
+        ) : shown.length === 0 && filtered ? (
+          <NoResults what="stories" query={filter.query} onClear={() => onFilterChange(DEFAULT_STORY_FILTER)} hint="Search by headline or place, or widen the time and source filters." />
         ) : shown.length === 0 ? (
-          <div className="px-4 py-12">
-            <Empty size="sm" icon={<NewspaperIcon size={32} className="text-kumo-inactive" />} title={filtered ? 'No matching stories' : 'No reports in the last 48 hours'} />
+          <div className="px-4 py-4">
+            <p className="m-0 font-semibold">No reports in the last 48 hours</p>
+            <Text variant="secondary">None of the news and notice feeds Roadbeat reads has a Queensland report in that time.</Text>
           </div>
         ) : (
           <ul className="divide-y divide-kumo-line">

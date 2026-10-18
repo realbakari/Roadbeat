@@ -9,7 +9,6 @@ import {
   MapTrifoldIcon,
   TrainIcon,
   TramIcon,
-  WifiSlashIcon,
   XIcon,
   type Icon,
 } from '@phosphor-icons/react'
@@ -36,6 +35,7 @@ import { ExternalLink } from './ui/Links'
 import { alertsForCodes, lineMatcher, lineSlug, lineWatchKey, routeLabels, vehiclesForCodes } from '../lib/transitLines'
 import { NewTabNote } from './NewTabNote'
 import { brisbaneDayDateTime as when } from '../lib/aest'
+import { LoadFailed } from './ui/StateMessage'
 
 const MODES: { mode: TransitMode; label: string; icon: Icon }[] = [
   { mode: 'train', label: 'Trains', icon: TrainIcon },
@@ -76,7 +76,7 @@ export function TransitPanel(props: Props) {
 
   if (view.kind === 'line') {
     const line = data?.lines.find((l) => l.mode === view.mode && l.name === view.name)
-    if (!data) return <Centered>{error ? <Offline /> : <Loader />}</Centered>
+    if (!data) return error ? <Offline /> : <Centered><Loader /></Centered>
     if (!line) return <BackOnly onBack={() => props.onNavigate('transit')} />
     return <LinePage line={line} {...props} />
   }
@@ -92,7 +92,7 @@ export function TransitPanel(props: Props) {
   if (view.kind === 'alert') {
     const list = regional ? regionalAlerts.alerts : alerts
     const a = list?.find((x) => x.id === view.id)
-    if (!list) return <Centered>{(regional ? regionalAlerts.error : props.alertsError) ? <Offline /> : <Loader />}</Centered>
+    if (!list) return (regional ? regionalAlerts.error : props.alertsError) ? <Offline /> : <Centered><Loader /></Centered>
     if (!a) return <BackOnly onBack={() => props.onNavigate('transit')} />
     return <AlertPage alert={a} {...props} />
   }
@@ -169,7 +169,7 @@ function Home({
         ) : tab === 'lines' ? (
           <div className="grid gap-6 pb-6">
             {!data ? (
-              <Centered>{error ? <Offline /> : <Loader />}</Centered>
+              error ? <Offline /> : <Centered><Loader /></Centered>
             ) : (
               <Lines lines={data.lines} onOpen={(l) => onNavigate(`transit/line/${lineSlug(l)}`)} onShowOnMap={onShowOnMap} />
             )}
@@ -179,7 +179,7 @@ function Home({
           <AlertList alerts={alerts} onOpen={(a) => onNavigate(`transit/alert/${encodeURIComponent(a.id)}`)} />
         ) : alertsError ? (
           // Without the TransLink proxy (e.g. a plain static host), fall back to the RSS notices.
-          data ? <Notices notices={data.notices} /> : <Centered><Offline /></Centered>
+          data ? <Notices notices={data.notices} /> : <Offline />
         ) : (
           <Centered>
             <Loader />
@@ -613,14 +613,7 @@ function Centered({ children }: { children: ReactNode }) {
 }
 
 function Offline() {
-  return (
-    <Empty
-      size="sm"
-      icon={<WifiSlashIcon size={32} className="text-kumo-inactive" />}
-      title="Couldn't reach TransLink"
-      description="Trying again shortly."
-    />
-  )
+  return <LoadFailed what="Translink's information" source="Translink" retriesItself />
 }
 
 function BackOnly({ onBack }: { onBack: () => void }) {

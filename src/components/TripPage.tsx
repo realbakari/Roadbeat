@@ -8,13 +8,13 @@ import { useTripsOn } from '../hooks/useTimetable'
 import { useNow } from '../hooks/useNow'
 import { useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTransitFeeds'
 import { stopHref } from '../lib/departures'
-import { timeAgo } from '../lib/format'
 import { readableTextOn } from '../lib/routeColor'
 import { delayOf } from '../lib/timeFormat'
 import { liveTrip, pickRun, tripNumber, tripStops, type TripStopRow } from '../lib/trip'
 import { ClampedText } from './ClampedText'
 import { DelayChip } from './Realtime'
 import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
+import { RelativeTime } from './ui/RelativeTime'
 
 const dayLabel = new Intl.DateTimeFormat('en-AU', {
   timeZone: 'UTC',
@@ -134,7 +134,7 @@ export function TripPage({
                     {v.stopId
                       ? `${STATUS[v.status ?? 'moving']} ${stopName(stops, region, v.stopId)}`
                       : 'Position reported, with no stop given'}
-                    {v.timestamp ? ` · last reported ${timeAgo(v.timestamp, now)}` : ''}
+                    {v.timestamp ? <> · last reported <RelativeTime at={v.timestamp} now={now} /></> : ''}
                   </Text>
                   <Button
                     size="sm"

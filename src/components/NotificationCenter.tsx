@@ -13,7 +13,7 @@ import { FlameIcon,
 } from '@phosphor-icons/react'
 import { useState } from 'react'
 import type { AppNotification } from '../lib/alertNotices'
-import { timeAgo } from '../lib/format'
+import { RelativeTime } from './ui/RelativeTime'
 
 interface Props {
   items: AppNotification[]
@@ -132,7 +132,7 @@ export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, 
                         )}
                         <span className="text-xs text-kumo-subtle">
                           {n.away ? 'While you were away · ' : ''}
-                          {timeAgo(n.at, now)}
+                          <RelativeTime at={n.at} now={now} inline />
                         </span>
                       </span>
                     </button>

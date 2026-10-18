@@ -1,4 +1,4 @@
-import { Badge, Button, Empty, Loader, Tabs, Text } from '@cloudflare/kumo'
+import { Badge, Button, Loader, Tabs, Text } from '@cloudflare/kumo'
 import {
   ArrowLeftIcon,
   BroadcastIcon,
@@ -8,8 +8,7 @@ import {
   MonitorIcon,
   StarIcon,
   WarningIcon,
-  WifiSlashIcon,
-} from '@phosphor-icons/react'
+  } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
 import { alertActive, isAccessibilityAlert, routeInfo, routeLabel, type TransitAlert } from '../api/translink'
@@ -39,6 +38,7 @@ import { regionRead } from '../lib/tripFeed'
 import { readableTextOn } from '../lib/routeColor'
 import { NewTabNote } from './NewTabNote'
 import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
+import { LoadFailed } from './ui/StateMessage'
 
 function dueIn(t: number, now: number) {
   const m = Math.round((t - now) / 60_000)
@@ -110,14 +110,7 @@ function useDepartureContext(vehicles: LiveVehicle[]) {
 }
 
 function FeedError() {
-  return (
-    <Empty
-      size="sm"
-      icon={<WifiSlashIcon size={32} className="text-kumo-inactive" />}
-      title="Couldn't load real-time departures"
-      description="Trying again shortly."
-    />
-  )
+  return <LoadFailed what="real-time departures" source="Translink's real-time feed" retriesItself />
 }
 
 /** "Next departures" on a line page: one tab per direction, each stop with its next services. */

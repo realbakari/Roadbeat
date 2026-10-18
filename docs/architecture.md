@@ -55,6 +55,12 @@ Each layer has one job.
 - **`src/hooks/` owns polling.** Each hook fetches on an interval while something needs the data. `useTripUpdates` shares one poller between every component that shows departures, so a line page fetches the TripUpdates feed once, not once per section.
 - **`src/components/` renders.** Components call hooks and `lib/` functions. They do not parse feeds or compute schedules themselves.
 
+## Times and empty lists
+
+A relative time such as "3 hours ago" is `src/components/ui/RelativeTime.tsx`: a `<time datetime>` whose exact Brisbane time shows on hover, keyboard focus or tap, and which screen readers hear in full ("3 hours ago, Sun, 18 Oct, 2:12 pm AEST"). Inside a button or clickable card it can't take focus, so it gives the exact time as a hover title and to screen readers only. `useNow` stops its clock while the tab is hidden.
+
+A list with nothing to show uses `src/components/ui/StateMessage.tsx`, placed where its first row would be. `LoadFailed` says "Failed to load …", names the source and the error, and offers a retry, so a feed that didn't load never reads as "none reported". `NoResults` repeats the search that matched nothing and offers one action, clearing the search and filters. Road events and news show the failure until their first successful load, after which a failed refresh keeps the last data and the header says it's delayed.
+
 ## Search engines and AI agents read static pages
 
 The app itself needs JavaScript, so `site/plugin.ts` gives search engines and AI agents a static surface. Each page in `site/pages/` is written once in Markdown and becomes an HTML page (`/about/`) and a Markdown page (`/about.md`). The home page's Markdown is rendered inside `#root` in `index.html`, so a crawler without JavaScript still reads a real heading and description. The app replaces it when it starts. The plugin also writes `robots.txt`, `sitemap.xml`, `llms.txt`, the web app manifest, and the meta tags and JSON-LD in `index.html`. Its parts are small files beside it: `markdown.ts` (the Markdown subset), `head.ts` (meta tags and JSON-LD), `pageHtml.ts` (the HTML shell), `pageLayout.ts` and `pageStyle.ts` (the page layout and its stylesheet), `sitemap.ts` (robots and sitemap), `manifest.ts` and `settings.ts`. `SITE_URL` and `CONTACT_EMAIL` set the absolute links and contact details (see [Deploy the app](deploy.md)).

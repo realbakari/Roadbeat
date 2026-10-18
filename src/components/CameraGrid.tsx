@@ -1,10 +1,11 @@
-import { Empty, InputGroup, Select, Tabs, Text } from '@cloudflare/kumo'
+import { InputGroup, Select, Tabs, Text } from '@cloudflare/kumo'
 import { CameraSlashIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import type { Camera } from '../api/types'
 import { CAMERA_COLOR } from '../lib/eventMeta'
 import { cameraKey } from '../lib/geo'
 import { shortName } from '../lib/cameras'
+import { NoResults } from './ui/StateMessage'
 
 export type CameraKindFilter = 'all' | 'webcam' | 'floodcam'
 
@@ -145,12 +146,12 @@ export function CameraGrid({ cameras, selectedKey, onOpen }: Props) {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {visible.length === 0 ? (
-          <div className="py-12">
-            <Empty
-              size="sm"
-              icon={<CameraSlashIcon size={32} className="text-kumo-inactive" />}
-              title="No cameras found"
-              description="Try another road, suburb or district."
+          <div className="-mx-3 -my-3">
+            <NoResults
+              what="cameras"
+              query={query}
+              hint="Search by road, suburb or district, or show all camera kinds."
+              onClear={() => (setQuery(''), setKind('all'), setDistrict('all'))}
             />
           </div>
         ) : (

@@ -61,6 +61,9 @@ interface Props {
   filters: EventFilters
   onFiltersChange: (f: EventFilters) => void
   loading: boolean
+  /** Why road events failed to load, while none has loaded yet; null otherwise. */
+  loadError: string | null
+  onRetry: () => unknown
   userLocation: LngLat | null
   locating: boolean
   onLocate: () => void
@@ -228,6 +231,8 @@ export function SidePanel(p: Props) {
           filters={p.filters}
           onFiltersChange={p.onFiltersChange}
           loading={p.loading}
+          loadError={p.loadError}
+          onRetry={p.onRetry}
           now={now}
           userLocation={p.userLocation}
           locating={p.locating}

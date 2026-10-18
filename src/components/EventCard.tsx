@@ -2,10 +2,11 @@ import { Badge, Text } from '@cloudflare/kumo'
 import { ProhibitIcon } from '@phosphor-icons/react'
 import type { TrafficEvent } from '../api/types'
 import { priorityBadge, typeMeta } from '../lib/eventMeta'
-import { clean, timeAgo } from '../lib/format'
+import { clean } from '../lib/format'
 import { eventPlace, eventTitle } from '../lib/eventText'
 import { hasEnded, nextActiveDate } from '../lib/filters'
 import { isClosure } from '../lib/filters'
+import { RelativeTime } from './ui/RelativeTime'
 
 const startsFmt = new Intl.DateTimeFormat('en-AU', {
   timeZone: 'Australia/Brisbane',
@@ -51,7 +52,7 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
     ? `Ended ${startsFmt.format(new Date(p.duration!.end!))}`
     : next
       ? `Starts ${startsFmt.format(next)}`
-      : timeAgo(p.last_updated, now)
+      : <RelativeTime at={p.last_updated} now={now} inline />
   const place = eventPlace(event)
 
   // The title is a heading holding the button, and the button's ::after

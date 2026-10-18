@@ -12,7 +12,7 @@ import {
 import { useMemo } from 'react'
 import type { Camera, TrafficEvent } from '../api/types'
 import { priorityBadge, typeMeta } from '../lib/eventMeta'
-import { clean, formatDateTime, timeAgo, titleCase } from '../lib/format'
+import { clean, formatDateTime, titleCase } from '../lib/format'
 import { isClosure } from '../lib/filters'
 import { startLabel } from '../lib/eventStatus'
 import { distanceKm, eventAnchor } from '../lib/geo'
@@ -28,6 +28,7 @@ import { useCopied } from '../hooks/useCopied'
 import { ExternalLink } from './ui/Links'
 import { Section } from './ui/Section'
 import { Facts } from './ui/Facts'
+import { RelativeTime } from './ui/RelativeTime'
 
 interface Props {
   event: TrafficEvent
@@ -262,7 +263,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
 
           <div className="grid gap-1 border-t border-kumo-line pt-4">
             <Text variant="secondary" size="sm">
-              Updated {timeAgo(p.last_updated, now)} · Event #{p.id}
+              Updated <RelativeTime at={p.last_updated} now={now} /> · Event #{p.id}
               {clean(p.source?.provided_by) && ` · ${clean(p.source?.provided_by)}`}
             </Text>
             <div className="flex flex-wrap gap-x-4 gap-y-1">

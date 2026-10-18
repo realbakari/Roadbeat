@@ -5,10 +5,10 @@ import type { LiveVehicle, VehicleMode } from '../api/transitTypes'
 import { useStopIndex, useTripIndex } from '../hooks/useTransitFeeds'
 import { stopHref } from '../lib/departures'
 import { tripHref } from '../lib/trip'
-import { timeAgo } from '../lib/format'
 import { VEHICLE_COLOR } from '../lib/mapIcons'
 import { REGION_NAMES } from '../lib/transitRegions'
 import { NewTabNote } from './NewTabNote'
+import { RelativeTime } from './ui/RelativeTime'
 
 const MODE: Record<VehicleMode, { label: string; icon: Icon }> = {
   bus: { label: 'Bus', icon: BusIcon },
@@ -141,7 +141,7 @@ export function VehicleDetail({
               )}
             </dd>
             <dt className="text-kumo-subtle">Last reported</dt>
-            <dd>{v.timestamp ? timeAgo(v.timestamp, now) : 'Not reported'}</dd>
+            <dd>{v.timestamp ? <RelativeTime at={v.timestamp} now={now} /> : 'Not reported'}</dd>
           </dl>
 
           {v.tripId && (

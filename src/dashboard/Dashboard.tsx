@@ -12,7 +12,6 @@ import { useTrafficData } from '../hooks/useRoadFeeds'
 import { busiestSignals, closuresAndCrashesByDistrict, currentEvents, fastestRising, firesByLevel, corridorReport, footTraffic, latestEvents, punctuality, upcomingEvents } from '../lib/dashboard'
 import { initialLayout, LAYOUT_KEY, layoutQuery, panelsOf, type PanelId } from '../lib/dashboardLayout'
 import { feedAnnouncement } from '../lib/feedAge'
-import { timeAgo } from '../lib/format'
 import { groupStories, headlineStories } from '../lib/newsStories'
 import { CustomiseDialog } from './CustomiseDialog'
 import { PANEL_VIEWS, type DashboardData } from './panels'
@@ -22,6 +21,7 @@ import { TimelineStrip } from './TimelineStrip'
 import { useCouncilDashboard } from './useCouncilDashboard'
 import { WhatsHappening } from './WhatsHappening'
 import { brisbaneDayDateTime as clock, brisbaneDayKey as dayKey } from '../lib/aest'
+import { RelativeTime } from '../components/ui/RelativeTime'
 
 /** The layout, kept in this browser and in the page link as it changes. */
 function useLayout() {
@@ -116,7 +116,7 @@ export function Dashboard() {
           </span>
           <span className="flex items-center gap-1.5">
             <span className={`size-2 rounded-full ${error ? 'bg-kumo-danger' : 'bg-kumo-success'}`} aria-hidden />
-            {error ? 'Road events delayed' : fetchedAt ? `Updated ${timeAgo(fetchedAt, now)}` : 'Connecting…'}
+            {error ? 'Road events delayed' : fetchedAt ? <>Updated <RelativeTime at={fetchedAt} now={now} /></> : 'Connecting…'}
           </span>
           <span className="text-base font-medium text-kumo-strong tabular-nums">{clock.format(now)}</span>
           <a href="/status" className="hover:text-kumo-default hover:underline" title="Every feed the app reads, its health and where it comes from">

@@ -6,7 +6,6 @@ import { useMemo, type ReactNode } from 'react'
 import { AIR_COLOR, worstRating, AIR_RATINGS } from '../api/airQuality'
 import { FIRE_COLOR, fireKindLabel } from '../api/bushfires'
 import { CENTRE_COLOR, centreKind } from '../lib/councilCentres'
-import { timeAgo } from '../lib/format'
 import { latestReading } from '../lib/gauges'
 import type { LngLat } from '../lib/geo'
 import { atLocality, NEAR_KM, reportCount, type Locality, type LocalityReport, type LocalitySource, type LocalitySources } from '../lib/locality'
@@ -15,6 +14,7 @@ import type { MapLayers } from './map/settings'
 import { CameraThumb } from './CameraGrid'
 import { EventCard } from './EventCard'
 import { StoryRow } from './NewsStoryRow'
+import { RelativeTime } from './ui/RelativeTime'
 
 /** The map layer that shows each source a locality page lists, as the Layers panel names it. */
 const LAYER: Record<LocalitySource, { key: keyof MapLayers; label: string }> = {
@@ -141,7 +141,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
                 <span className="text-xs text-kumo-subtle">
                   {f.level === 'Information' ? fireKindLabel(f) : f.levelText}
                   {f.status && ` · ${f.status}`}
-                  {f.issued && ` · ${timeAgo(f.issued, now)}`}
+                  {f.issued && <> · <RelativeTime at={f.issued} now={now} inline /></>}
                 </span>
               </Row>
             ))}
@@ -172,7 +172,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
                 <Row key={s.id} onClick={() => onOpenHref(`place/air/${encodeURIComponent(s.id)}`)} icon={WindIcon} color={AIR_COLOR[worst ?? 0]}>
                   <span className="truncate text-sm">{s.name}</span>
                   <span className="text-xs text-kumo-subtle">
-                    {worst ? AIR_RATINGS[worst - 1] : 'No rated reading'} · {km.toFixed(1)} km · {timeAgo(s.measuredAt, now)}
+                    {worst ? AIR_RATINGS[worst - 1] : 'No rated reading'} · {km.toFixed(1)} km · <RelativeTime at={s.measuredAt} now={now} inline />
                   </span>
                 </Row>
               )
@@ -235,7 +235,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
                   <span className="truncate text-sm">{g.name}</span>
                   <span className="text-xs text-kumo-subtle">
                     {g.kind === 'stream' ? 'Stream height' : 'Rainfall'} · {km.toFixed(1)} km
-                    {latest && ` · ${latest.value} ${g.unit} · ${timeAgo(latest.time, now)}`}
+                    {latest && <> · {latest.value} {g.unit} · <RelativeTime at={latest.time} now={now} inline /></>}
                   </span>
                 </Row>
               )
