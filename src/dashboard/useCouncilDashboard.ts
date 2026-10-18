@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { fetchCorridors, fetchCouncilEvents, fetchPedestrianDay, type Corridor, type CorridorMonth, type CouncilEvent, type PedestrianHour } from '../api/bccDashboard'
 
 import { brisbaneMidnight } from '../lib/councilEvents'
+import { brisbaneDayKey as day } from '../lib/aest'
 
-const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 const HOUR = 3600_000
 
 /** Polls `load` every `every` ms while `enabled` and the page is visible, keeping the last good result. */

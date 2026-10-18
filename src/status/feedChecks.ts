@@ -1,5 +1,4 @@
 import { fetchAirQuality } from '../api/airQuality'
-import { brisbaneDate } from '../api/airHistory'
 import { fetchHotspots } from '../api/hotspots'
 import { latestImageryDate } from '../api/satelliteImagery'
 import { latestHimawariTime } from '../api/himawari'
@@ -32,6 +31,7 @@ import type { SourceStatus } from '../api/newsTypes'
 import type { PublisherTime } from '../lib/feedHealth'
 import type { FeedId } from '../lib/feedRegistry'
 import { MAIN_REGIONS, PROBED_REGIONS } from '../lib/transitRegions'
+import { brisbaneDate, brisbaneDayKey as dayKey } from '../lib/aest'
 
 // One check per feed in the registry, through the same fetch and parse
 // functions the app uses, so a feed counts as healthy only when its data
@@ -48,7 +48,6 @@ export interface CheckResult {
 export type FeedCheck = (signal: AbortSignal) => Promise<CheckResult>
 
 const REGIONS = [...MAIN_REGIONS]
-const dayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 /** Brisbane's GPO, for a crash summary that exercises the live query. */
 const BRISBANE: [number, number] = [153.0251, -27.4698]
 

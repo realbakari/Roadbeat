@@ -1,10 +1,11 @@
 import { z } from 'zod'
+import { bccExport } from './bccOpenData'
 
 // Brisbane City Council map layers for getting around (data.brisbane.qld.gov.au,
-// CC BY 4.0): clearways, public toilets and accessible parking. Each is a small
-// export the browser reads directly (the council's API sends CORS headers).
+// CC BY 4.0): clearways, public toilets, accessible parking bays, parking
+// meters, and bicycle racks with bike repair stations. Each is a small export
+// the browser reads directly (the council's API sends CORS headers).
 
-const BASE = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets'
 export const CLEARWAYS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/parking-clearways/information/'
 export const TOILETS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/public-toilets-in-brisbane/information/'
 export const ACCESSIBLE_PARKING_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/disability-permit-parking-locations/information/'
@@ -12,12 +13,6 @@ export const ACCESSIBLE_PARKING_URL = 'https://data.brisbane.qld.gov.au/explore/
 const text = z.string().nullish().transform((s) => (s && s.trim() && s.trim().toLowerCase() !== 'null' ? s.trim() : null))
 const flag = z.union([z.string(), z.boolean()]).nullish().transform((v) => v === true || v === 'True' || v === 'true')
 type LngLat = [number, number]
-
-async function exportJson(dataset: string, signal?: AbortSignal): Promise<unknown[]> {
-  const res = await fetch(`${BASE}/${dataset}/exports/json`, { signal })
-  if (!res.ok) throw new Error(`Brisbane City Council responded with ${res.status}`)
-  return z.array(z.unknown()).parse(await res.json())
-}
 
 /** Parses each row with `schema`, skipping rows that don't match rather than showing them half-filled. */
 function rows<S extends z.ZodType, T>(list: unknown[], schema: S, map: (r: z.infer<S>) => T | null): T[] {
@@ -50,7 +45,7 @@ export function parseClearways(list: unknown[]): Clearway[] {
   )
 }
 
-export const fetchClearways = (signal?: AbortSignal) => exportJson('parking-clearways', signal).then(parseClearways)
+export const fetchClearways = (signal?: AbortSignal) => bccExport('parking-clearways', signal).then(parseClearways)
 
 // Public toilets
 
@@ -125,7 +120,7 @@ export function parseToilets(list: unknown[]): Toilet[] {
   }))
 }
 
-export const fetchToilets = (signal?: AbortSignal) => exportJson('public-toilets-in-brisbane', signal).then(parseToilets)
+export const fetchToilets = (signal?: AbortSignal) => bccExport('public-toilets-in-brisbane', signal).then(parseToilets)
 
 // Accessible parking
 
@@ -173,7 +168,7 @@ export function parseAccessibleBays(list: unknown[]): AccessibleBay[] {
   )
 }
 
-export const fetchAccessibleBays = (signal?: AbortSignal) => exportJson('disability-permit-parking-locations', signal).then(parseAccessibleBays)
+export const fetchAccessibleBays = (signal?: AbortSignal) => bccExport('disability-permit-parking-locations', signal).then(parseAccessibleBays)
 
 // Parking meters
 
@@ -250,7 +245,7 @@ export function parseParkingMeters(list: unknown[]): ParkingMeter[] {
   }))
 }
 
-export const fetchParkingMeters = (signal?: AbortSignal) => exportJson('brisbane-parking-meters', signal).then(parseParkingMeters)
+export const fetchParkingMeters = (signal?: AbortSignal) => bccExport('brisbane-parking-meters', signal).then(parseParkingMeters)
 
 // Bike racks and repair stations
 
@@ -288,4 +283,4 @@ export function parseRepairStations(list: unknown[]): BikeStop[] {
 }
 
 export const fetchBikeStops = (signal?: AbortSignal) =>
-  Promise.all([exportJson('bicycle-racks', signal).then(parseBikeRacks), exportJson('bike-repair-stations', signal).then(parseRepairStations)]).then(([a, b]) => [...b, ...a])
+  Promise.all([bccExport('bicycle-racks', signal).then(parseBikeRacks), bccExport('bike-repair-stations', signal).then(parseRepairStations)]).then(([a, b]) => [...b, ...a])

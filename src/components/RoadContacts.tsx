@@ -44,7 +44,7 @@ export function RoadContacts({ at }: { at: LngLat }) {
               </a>
             )}
             {c.website && (
-              <a href={c.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
+              <a href={c.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
                 <GlobeIcon /> Report online
                 <NewTabNote />
               </a>

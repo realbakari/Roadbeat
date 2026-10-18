@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BCC_DATASETS, bccJson } from './bccOpenData'
 
 // Queensland Rail station facilities and access, published by Brisbane City
 // Council (data.brisbane.qld.gov.au "Railway station facilities", CC BY 4.0).
@@ -7,8 +8,7 @@ import { z } from 'zod'
 
 export const STATION_FACILITIES_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/railway-station-facilities/information/'
 /** The records endpoint, for a status check. */
-export const STATION_FACILITIES_API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/railway-station-facilities/records'
-const API = STATION_FACILITIES_API
+export const STATION_FACILITIES_API = `${BCC_DATASETS}/railway-station-facilities/records`
 const QR = 'https://www.queenslandrail.com.au'
 
 const text = z.string().nullish().transform((s) => (s && s.trim() ? s.trim() : null))
@@ -130,12 +130,10 @@ export function fetchStationFacilities(stopId: string): Promise<StationFacilitie
   let hit = cache.get(stopId)
   if (!hit) {
     const where = `stops="${stopId.replace(/"/g, '')}"`
-    hit = fetch(`${API}?limit=1&where=${encodeURIComponent(where)}`)
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`Brisbane City Council responded with ${res.status}`))))
-      .then((body: unknown) => {
-        const results = z.object({ results: z.array(z.unknown()) }).parse(body).results
-        return results.length ? parseStationFacilities(results[0]) : null
-      })
+    hit = bccJson(`railway-station-facilities/records?limit=1&where=${encodeURIComponent(where)}`).then((body: unknown) => {
+      const results = z.object({ results: z.array(z.unknown()) }).parse(body).results
+      return results.length ? parseStationFacilities(results[0]) : null
+    })
     hit.catch(() => cache.delete(stopId))
     cache.set(stopId, hit)
   }

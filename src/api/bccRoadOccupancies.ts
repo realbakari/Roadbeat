@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { bccJson } from './bccOpenData'
 
 // Brisbane City Council's planned temporary road occupancies: permits for lane
 // and road closures on council roads (data.brisbane.qld.gov.au "Planned temporary
@@ -6,7 +7,6 @@ import { z } from 'zod'
 // and phone number are left out. CORS is open, so the browser reads it directly.
 
 export const ROAD_OCCUPANCIES_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/planned-temporary-road-occupancies/information/'
-const EXPORT = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/planned-temporary-road-occupancies/exports/json'
 
 export interface RoadOccupancy {
   /** Permit certificate number, unique per occupancy. */
@@ -80,7 +80,5 @@ export function parseRoadOccupancies(json: unknown): RoadOccupancy[] {
 }
 
 export async function fetchRoadOccupancies(signal?: AbortSignal): Promise<RoadOccupancy[]> {
-  const res = await fetch(EXPORT, { signal })
-  if (!res.ok) throw new Error(`Brisbane City Council responded with ${res.status}`)
-  return parseRoadOccupancies(await res.json())
+  return parseRoadOccupancies(await bccJson('planned-temporary-road-occupancies/exports/json', { signal }))
 }

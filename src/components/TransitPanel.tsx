@@ -14,13 +14,15 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { useMemo, useState, type ReactNode } from 'react'
-import { alertActive, alertNextStart, allRouteCodes, routeInfo, routeLabel, type LiveVehicle, type TransitAlert } from '../api/translink'
+import { alertActive, alertNextStart, allRouteCodes, routeInfo, routeLabel, type TransitAlert } from '../api/translink'
 import { readableTextOn } from '../lib/routeColor'
 import type { TransitLine, TransitMode, TransitNotice } from '../api/types'
 import { planHash, routeHref, type TransitView } from '../lib/route'
-import { useNow, useTransit, useTransitAlerts } from '../hooks/useTrafficData'
-import { isTransitRegion } from '../api/transitTypes'
+import { useNow } from '../hooks/useNow'
+import { useTransit, useTransitAlerts } from '../hooks/useTransitFeeds'
+import { isTransitRegion, type LiveVehicle } from '../api/transitTypes'
 import { MAIN_REGIONS } from '../lib/transitRegions'
+import type { MapView } from '../lib/geo'
 import { RoutePage } from './RoutePage'
 import { RegionalRoutesDirectory } from './RegionalRoutes'
 import { LineDepartures, StopPage } from './Departures'
@@ -29,9 +31,11 @@ import { LineTimetable, TimetableLink } from './Timetable'
 import { DeparturesHome, ModeChips, TransitSearch } from './TransitHome'
 import { TransitMapsDirectory } from './TransitMaps'
 import { TripPage } from './TripPage'
-import { AlertCards, ExternalLink, Section } from './TransitParts'
+import { AlertCards, Section } from './TransitParts'
+import { ExternalLink } from './ui/Links'
 import { alertsForCodes, lineMatcher, lineSlug, lineWatchKey, routeLabels, vehiclesForCodes } from '../lib/transitLines'
 import { NewTabNote } from './NewTabNote'
+import { brisbaneDayDateTime as when } from '../lib/aest'
 
 const MODES: { mode: TransitMode; label: string; icon: Icon }[] = [
   { mode: 'train', label: 'Trains', icon: TrainIcon },
@@ -40,15 +44,6 @@ const MODES: { mode: TransitMode; label: string; icon: Icon }[] = [
   { mode: 'tram', label: 'Trams', icon: TramIcon },
 ]
 const MODE_ICON: Record<TransitMode, Icon> = { train: TrainIcon, bus: BusIcon, ferry: BoatIcon, tram: TramIcon }
-
-const when = new Intl.DateTimeFormat('en-AU', {
-  timeZone: 'Australia/Brisbane',
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-  hour: 'numeric',
-  minute: '2-digit',
-})
 
 function statusBadge(status: string): 'success' | 'warning' | 'error' | 'neutral' {
   const s = status.toLowerCase()
@@ -65,7 +60,7 @@ interface Props {
   onToggleWatch: (route: string) => void
   onShowOnMap: (title: string, match: (code: string) => boolean) => void
   /** The map's current centre and zoom, for "stops near the map centre". */
-  mapView: { center: [number, number]; zoom: number } | null
+  mapView: MapView | null
   /** Switches to the map on small screens. */
   onShowMap: () => void
 }
@@ -600,7 +595,7 @@ function Notices({ notices }: { notices: TransitNotice[] }) {
         .filter((n) => !n.upcoming)
         .map((n) => (
           <li key={n.link + n.title}>
-            <a href={n.link} target="_blank" rel="noreferrer" className="grid gap-1 px-4 py-3 hover:bg-kumo-tint">
+            <a href={n.link} target="_blank" rel="noopener noreferrer" className="grid gap-1 px-4 py-3 hover:bg-kumo-tint">
               <Text bold>{n.title}</Text>
               <Text size="sm" variant="secondary">
                 {n.description.replace(/,\s*$/, '')}

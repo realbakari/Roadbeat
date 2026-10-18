@@ -1,10 +1,8 @@
 import { z } from 'zod'
+import { bccJson } from './bccOpenData'
 
 // Vacant spaces at Brisbane City Council's two CBD car parks, King George Square
 // and Wickham Terrace (data.brisbane.qld.gov.au "Parking — Stations", CC BY 4.0).
-
-export const PARKING_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/brisbane-parking-stations/information/'
-const API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-parking-stations/records?limit=1'
 
 export interface CarParkSpaces {
   /** When the council published the counts (ms). */
@@ -24,7 +22,5 @@ export function parseCarParkSpaces(json: unknown): CarParkSpaces | null {
 }
 
 export async function fetchCarParkSpaces(signal?: AbortSignal): Promise<CarParkSpaces | null> {
-  const res = await fetch(API, { signal })
-  if (!res.ok) throw new Error(`Brisbane City Council responded with ${res.status}`)
-  return parseCarParkSpaces(await res.json())
+  return parseCarParkSpaces(await bccJson('brisbane-parking-stations/records?limit=1', { signal }))
 }

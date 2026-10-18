@@ -1,28 +1,14 @@
 import { Text } from '@cloudflare/kumo'
 import { FireSimpleIcon, HurricaneIcon, PathIcon } from '@phosphor-icons/react'
-import { Fragment } from 'react'
 import { BOM_CYCLONES, CYCLONE_COLOR, JTWC_PAGE, type Cyclone } from '../api/jtwc'
 import { NSW_ALERT_COLOR, NSW_FIRES_ATTRIBUTION, NSW_FIRES_PAGE, type NswFire } from '../api/nswFires'
 import { IBTRACS_CITATION, IBTRACS_PAGE, PAST_CYCLONE_COLOR, pastCycloneTitle, type PastCyclone } from '../api/pastCyclones'
 import { timeAgo } from '../lib/format'
-import { ExternalLink, Header, Section } from './PlaceParts'
-
-const aest = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
-const dayOnly = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', day: 'numeric', month: 'short', year: 'numeric' })
-
-/** A published label/value list. */
-function Facts({ rows }: { rows: [string, string][] }) {
-  return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-      {rows.map(([k, v]) => (
-        <Fragment key={k}>
-          <dt className="text-kumo-subtle">{k}</dt>
-          <dd>{v}</dd>
-        </Fragment>
-      ))}
-    </dl>
-  )
-}
+import { Header } from './PlaceParts'
+import { ExternalLink } from './ui/Links'
+import { Section } from './ui/Section'
+import { Facts } from './ui/Facts'
+import { brisbaneDayDateTime as aest, brisbaneDateOnly as dayOnly } from '../lib/aest'
 
 /** One NSW RFS incident near the border, with every field as the RFS publishes it. */
 export function NswFireBody({ f }: { f: NswFire }) {

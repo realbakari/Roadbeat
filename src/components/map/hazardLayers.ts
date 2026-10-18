@@ -3,14 +3,13 @@ import { NSW_ALERT_COLOR, type NswFire } from '../../api/nswFires'
 import { nswFireIcon } from '../../lib/mapIcons'
 import { CYCLONE_COLOR, type Cyclone } from '../../api/jtwc'
 import { PAST_CYCLONE_COLOR, pastCycloneTitle, type PastCyclone } from '../../api/pastCyclones'
+import { brisbaneDayClock as aest } from '../../lib/aest'
 
 // Map sources and layers for NSW border fires, JTWC's current cyclones and
 // past cyclone tracks. Every point drawn is one the publisher gives; the lines
 // only join a storm's own published positions in order.
 
 const empty: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
-
-const aest = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
 
 export function nswFireFeatures(fires: NswFire[]): GeoJSON.FeatureCollection {
   return {

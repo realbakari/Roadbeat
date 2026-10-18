@@ -3,11 +3,19 @@ import type { Camera, DumpPoint, RestArea, TrafficEvent, TruckRestriction, WazeR
 import { CAMERA_COLOR, priorityRank, typeMeta } from './eventMeta'
 import { isClosure, isUpcoming } from './filters'
 import { eventIconId } from './mapIcons'
-import { eventMarkerPoints, flatten, type LngLat } from './eventAnchor'
+import type { LiveVehicle } from '../api/transitTypes'
+import { eventMarkerPoints, flatten } from './eventAnchor'
 import { truckIconPoint, truckKey } from './trucks'
 import { wazeIcon, wazeLabel } from './waze'
+import type { LngLat } from './distance'
 
-export { eventAnchor, eventBounds, type Bounds, type LngLat } from './eventAnchor'
+export { eventAnchor, eventBounds, pointBounds, type Bounds } from './eventAnchor'
+// The distance helpers live in their own module so api/ can import them; the
+// map code keeps importing them from here.
+export { distanceKm, type LngLat } from './distance'
+
+/** The map's centre and zoom, as it reports them after each move. */
+export type MapView = { center: LngLat; zoom: number }
 
 interface EventFeatureProps {
   id: number
@@ -129,17 +137,7 @@ export function cameraKey(c: Camera): string {
   return c.council ? `${c.kind}-${c.council.toLowerCase().replace(/[^a-z]+/g, '-')}-${c.properties.id}` : `${c.kind}-${c.properties.id}`
 }
 
-/** Great-circle distance in km. */
-export function distanceKm(a: LngLat, b: LngLat): number {
-  const R = 6371
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const dLat = toRad(b[1] - a[1])
-  const dLng = toRad(b[0] - a[0])
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLng / 2) ** 2
-  return 2 * R * Math.asin(Math.sqrt(h))
-}
-
-export function vehicleMarkers(vehicles: import('../api/translink').LiveVehicle[]): GjCollection<Geometry, PlaceProps & { route: string; mode: string }> {
+export function vehicleMarkers(vehicles: LiveVehicle[]): GjCollection<Geometry, PlaceProps & { route: string; mode: string }> {
   return {
     type: 'FeatureCollection',
     features: vehicles.map((v) => ({

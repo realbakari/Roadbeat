@@ -1,21 +1,12 @@
 import { Badge, Text } from '@cloudflare/kumo'
-import { ArrowSquareOutIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
 import { alertActive, alertNextStart, type TransitAlert } from '../api/translink'
 import { routeLabels } from '../lib/transitLines'
-import { useNow } from '../hooks/useTrafficData'
-import { NewTabNote } from './NewTabNote'
+import { useNow } from '../hooks/useNow'
+import { Section as SharedSection } from './ui/Section'
+import { brisbaneDayDateTime as when } from '../lib/aest'
 
 // Pieces shared by the transit line, route and alert pages.
-
-const when = new Intl.DateTimeFormat('en-AU', {
-  timeZone: 'Australia/Brisbane',
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-  hour: 'numeric',
-  minute: '2-digit',
-})
 
 /** Service alert cards: header, effect, when it starts and the routes it names. */
 export function AlertCards({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen: (a: TransitAlert) => void }) {
@@ -48,23 +39,7 @@ export function AlertCards({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen:
   )
 }
 
-export function Section({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
-  return (
-    <section id={id} className="grid scroll-mt-4 gap-2">
-      <Text as="h3" variant="heading">
-        {title}
-      </Text>
-      {children}
-    </section>
-  )
-}
-
-export function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-      {children}
-      <ArrowSquareOutIcon size={14} />
-      <NewTabNote />
-    </a>
-  )
+/** Transit sections lay each child on the section's gap, and some carry an id to scroll to. */
+export function Section(props: { title: string; id?: string; children: ReactNode }) {
+  return <SharedSection {...props} spaced />
 }

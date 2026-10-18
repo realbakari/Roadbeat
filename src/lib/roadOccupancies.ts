@@ -1,7 +1,6 @@
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
+import { brisbaneDayKey as day, brisbaneWeekday as weekday } from './aest'
 
-const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
-const weekday = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short' })
 const clock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Australia/Brisbane', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
 /** Whether the permit's period includes this Brisbane date (YYYY-MM-DD) and weekday. */

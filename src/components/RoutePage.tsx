@@ -1,15 +1,18 @@
 import { Badge, Button, Loader, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, BoatIcon, BusIcon, MapTrifoldIcon, TrainIcon, TramIcon, type Icon } from '@phosphor-icons/react'
 import { useMemo } from 'react'
-import { alertActive, regionRouteInfo, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
-import { useNow, useTransitAlerts } from '../hooks/useTrafficData'
+import { alertActive, regionRouteInfo, type TransitAlert } from '../api/translink'
+import type { LiveVehicle, TransitRegion } from '../api/transitTypes'
+import { useNow } from '../hooks/useNow'
+import { useTransitAlerts } from '../hooks/useTransitFeeds'
 import { useRealtimeState } from '../hooks/useRegionFeeds'
 import { readableTextOn } from '../lib/routeColor'
 import { alertsForCodes, vehiclesForCodes } from '../lib/transitLines'
 import { MAIN_REGIONS, REGION_NAMES } from '../lib/transitRegions'
 import { LineDepartures, TimetableOnly } from './Departures'
 import { LineTimetable, TimetableLink } from './Timetable'
-import { AlertCards, ExternalLink, Section } from './TransitParts'
+import { AlertCards, Section } from './TransitParts'
+import { ExternalLink } from './ui/Links'
 
 const MODE_ICON: Record<string, Icon> = { train: TrainIcon, bus: BusIcon, ferry: BoatIcon, tram: TramIcon }
 

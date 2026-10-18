@@ -2,6 +2,7 @@ import type { CouncilNotice, PowerOutage } from '../api/councilDashboard.js'
 import type { Outage } from '../api/newsTypes.js'
 import { itemId, type CouncilDashboard } from './newsItems.js'
 import type { GazetteerRow, PlaceIndex } from './newsPlaces.js'
+import { brisbaneDayClock as clock } from './aest.js'
 
 type LngLat = NonNullable<Outage['place']>['position']
 
@@ -107,4 +108,3 @@ export function outageFacts(o: Outage): string[] {
   return facts
 }
 
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })

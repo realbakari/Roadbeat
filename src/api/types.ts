@@ -184,3 +184,6 @@ export interface TransitNotice {
   severity: 'Major' | 'Minor' | 'Informative'
   region: string | null
 }
+
+/** QLDTraffic's district boundaries, for the district filter's outline. */
+export type Districts = GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon, { district: string }>

@@ -4,14 +4,6 @@
 
 export type PanelKind = 'stat' | 'strip' | 'tile'
 
-export interface PanelMeta {
-  id: PanelId
-  title: string
-  kind: PanelKind
-  /** The source, for the customise list. */
-  source: string
-}
-
 export const PANELS = [
   { id: 'events', title: 'Road events happening now', kind: 'stat', source: 'QLDTraffic' },
   { id: 'closures', title: 'Road closures', kind: 'stat', source: 'QLDTraffic' },

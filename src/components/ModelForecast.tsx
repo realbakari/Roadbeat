@@ -3,12 +3,10 @@ import { BOM_FORECASTS, DWD_ICON_PAGE, OPEN_METEO_PAGE, upcoming } from '../api/
 import { useModelForecast } from '../hooks/useHazardFeeds'
 import type { LngLat } from '../lib/geo'
 import { distanceKm } from '../lib/geo'
-import { NewTabNote } from './NewTabNote'
+import { InlineLink } from './ui/Links'
+import { brisbaneDayDateTime as run } from '../lib/aest'
 
 const hour = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric' })
-const run = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
-const link = 'text-kumo-link underline decoration-1 underline-offset-2'
-
 /** How many hours to list, every third hour, so the table stays short: 24 hours. */
 const HOURS = 24
 const STEP = 3
@@ -28,10 +26,7 @@ export function ModelForecast({ at, now }: { at: LngLat; now: number }) {
         <Text size="sm">Computer model, not a Bureau of Meteorology forecast</Text>
         <Text size="xs" variant="secondary">
           Raw output from Germany's DWD ICON weather model, which can be wrong by hours or kilometres. For forecasts and warnings to act on, use the{' '}
-          <a href={BOM_FORECASTS} target="_blank" rel="noopener" className={link}>
-            Bureau of Meteorology
-            <NewTabNote />
-          </a>
+          <InlineLink href={BOM_FORECASTS}>Bureau of Meteorology</InlineLink>
           .
         </Text>
       </div>
@@ -70,15 +65,9 @@ export function ModelForecast({ at, now }: { at: LngLat; now: number }) {
           <Text size="xs" variant="secondary">
             {f.runAt ? `Model run ${run.format(f.runAt)} AEST. ` : 'Model run time not given. '}
             Rain is the model's total for each hour shown. Grid point {distanceKm(at, f.gridPoint).toFixed(0)} km from the place's centre.{' '}
-            <a href={DWD_ICON_PAGE} target="_blank" rel="noopener" className={link}>
-              DWD ICON
-              <NewTabNote />
-            </a>{' '}
+            <InlineLink href={DWD_ICON_PAGE}>DWD ICON</InlineLink>{' '}
             via{' '}
-            <a href={OPEN_METEO_PAGE} target="_blank" rel="noopener" className={link}>
-              Open-Meteo
-              <NewTabNote />
-            </a>{' '}
+            <InlineLink href={OPEN_METEO_PAGE}>Open-Meteo</InlineLink>{' '}
             (CC BY 4.0).
           </Text>
         </>

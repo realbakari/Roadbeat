@@ -1,6 +1,6 @@
-import { useSyncExternalStore } from 'react'
-import type { TransitRegion } from '../api/translink'
+import { isTransitRegion, type TransitRegion } from '../api/transitTypes'
 import { moveTrip, removeTrip, renameTrip, saveTrip, type SavedTrip } from './savedTrips'
+import { storedList } from './storedList'
 
 // Stops a rider has saved ("My stops") and recently opened, and their saved trips
 // ("My trips"), kept in this browser only.
@@ -10,41 +10,15 @@ export interface SavedStop {
   id: string
 }
 
-/** A small list kept in localStorage, shared live between components. */
-export function storedList<T>(key: string) {
-  const listeners = new Set<() => void>()
-  let cache: T[] | null = null
-  const read = (): T[] => {
-    if (cache) return cache
-    try {
-      const v = JSON.parse(localStorage.getItem(key) ?? '[]')
-      cache = Array.isArray(v) ? v : []
-    } catch {
-      cache = []
-    }
-    return cache!
-  }
-  const write = (list: T[]) => {
-    cache = list
-    try {
-      localStorage.setItem(key, JSON.stringify(list))
-    } catch {
-      // Private mode or blocked storage: keep it for this visit only.
-    }
-    listeners.forEach((l) => l())
-  }
-  const use = () =>
-    useSyncExternalStore(
-      (l) => (listeners.add(l), () => listeners.delete(l)),
-      read,
-      read,
-    )
-  return { read, write, use }
+/** A stored stop: a region the app knows and a stop id. */
+export function isSavedStop(x: unknown): x is SavedStop {
+  const s = x as Partial<SavedStop> | null
+  return !!s && typeof s.id === 'string' && typeof s.region === 'string' && isTransitRegion(s.region)
 }
 
 const same = (a: SavedStop, b: SavedStop) => a.region === b.region && a.id === b.id
 
-const saved = storedList<SavedStop>('qldt-saved-stops')
+const saved = storedList('qldt-saved-stops', isSavedStop)
 export function toggleSavedStop(s: SavedStop) {
   const list = saved.read()
   saved.write(list.some((x) => same(x, s)) ? list.filter((x) => !same(x, s)) : [...list, s])
@@ -52,7 +26,7 @@ export function toggleSavedStop(s: SavedStop) {
 export const useSavedStops = saved.use
 
 const RECENT_MAX = 6
-const recent = storedList<SavedStop>('qldt-recent-stops')
+const recent = storedList('qldt-recent-stops', isSavedStop)
 /** Remembers a stop page the rider opened, most recent first. */
 export function recordRecentStop(s: SavedStop) {
   const list = recent.read()

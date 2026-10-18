@@ -6,8 +6,7 @@ import { readableTextOn } from '../lib/routeColor'
 import { minutesUntil } from '../lib/timeFormat'
 import { tripHref } from '../lib/trip'
 import { DelayChip } from './Realtime'
-
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+import { brisbaneClock as clock } from '../lib/aest'
 
 /**
  * The next service from a stop, given a card of its own above the rest, as on

@@ -1,5 +1,5 @@
 import type { TruckRestriction } from '../api/types'
-import type { LngLat } from './eventAnchor'
+import type { LngLat } from './distance'
 
 // QLDTraffic's truck restrictions (restrictedtruck.geojson). The feed gives
 // every restriction properties.id 1 and no feature id, so its own id can't

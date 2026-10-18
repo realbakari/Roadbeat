@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { parseSimpleCsv } from '../lib/csv'
 import type { LngLat } from '../lib/geo'
+import { BCC_DATASETS } from './bccOpenData'
 
 // Brisbane City Council signalised intersections: live volumes
 // (data.brisbane.qld.gov.au "Traffic Management — Intersection volume") and
@@ -15,7 +16,7 @@ import type { LngLat } from '../lib/geo'
 // approach ("SA-230") belongs to.
 
 const VOLUMES =
-  'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/traffic-data-at-intersection/exports/csv?select=tsc,lane,recorded,ct,ds1,mf1,ds2,mf2,ds3,mf3,ds4,mf4&delimiter=,'
+  `${BCC_DATASETS}/traffic-data-at-intersection/exports/csv?select=tsc,lane,recorded,ct,ds1,mf1,ds2,mf2,ds3,mf3,ds4,mf4&delimiter=,`
 export const SIGNALS_DATASET_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/traffic-data-at-intersection/'
 
 export interface SignalSite {

@@ -2,10 +2,11 @@ import { Button, Loader, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, BroadcastIcon, CrosshairIcon, WarningIcon } from '@phosphor-icons/react'
 import { useMemo } from 'react'
 import type { StopIndex } from '../api/stops'
-import { brisbaneDate } from '../api/timetables'
-import { routeInfo, type LiveVehicle, type TransitRegion } from '../api/translink'
+import { routeInfo } from '../api/translink'
+import type { LiveVehicle, TransitRegion } from '../api/transitTypes'
 import { useTripsOn } from '../hooks/useTimetable'
-import { useNow, useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { useNow } from '../hooks/useNow'
+import { useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTransitFeeds'
 import { stopHref } from '../lib/departures'
 import { timeAgo } from '../lib/format'
 import { readableTextOn } from '../lib/routeColor'
@@ -13,12 +14,8 @@ import { delayOf } from '../lib/timeFormat'
 import { liveTrip, pickRun, tripNumber, tripStops, type TripStopRow } from '../lib/trip'
 import { ClampedText } from './ClampedText'
 import { DelayChip } from './Realtime'
+import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
 
-const clock = new Intl.DateTimeFormat('en-AU', {
-  timeZone: 'Australia/Brisbane',
-  hour: 'numeric',
-  minute: '2-digit',
-})
 const dayLabel = new Intl.DateTimeFormat('en-AU', {
   timeZone: 'UTC',
   weekday: 'short',

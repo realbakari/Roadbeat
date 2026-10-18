@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BCC_DATASETS, bccJson } from './bccOpenData'
 
 // Brisbane City Council's bus stop audit (data.brisbane.qld.gov.au "Brisbane bus
 // stops", CC BY 4.0): each council bus stop's type and the council's access
@@ -7,8 +8,7 @@ import { z } from 'zod'
 
 export const BUS_STOPS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/brisbane-bus-stops/information/'
 /** The records endpoint, for a status check. */
-export const BUS_STOPS_API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-bus-stops/records'
-const API = BUS_STOPS_API
+export const BUS_STOPS_API = `${BCC_DATASETS}/brisbane-bus-stops/records`
 
 /** The council's three-step ratings, as published. */
 export type Rating = 'Easy' | 'Medium' | 'Hard'
@@ -77,12 +77,10 @@ export function fetchBusStopAudit(stopId: string): Promise<BusStopAudit | null> 
   if (!/^\d+$/.test(stopId)) return Promise.resolve(null)
   let hit = cache.get(stopId)
   if (!hit) {
-    hit = fetch(`${API}?limit=1&where=${encodeURIComponent(`hastus="${stopId}"`)}`)
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`Brisbane City Council responded with ${res.status}`))))
-      .then((body: unknown) => {
-        const results = z.object({ results: z.array(z.unknown()) }).parse(body).results
-        return results.length ? parseBusStopAudit(results[0]) : null
-      })
+    hit = bccJson(`brisbane-bus-stops/records?limit=1&where=${encodeURIComponent(`hastus="${stopId}"`)}`).then((body: unknown) => {
+      const results = z.object({ results: z.array(z.unknown()) }).parse(body).results
+      return results.length ? parseBusStopAudit(results[0]) : null
+    })
     hit.catch(() => cache.delete(stopId))
     cache.set(stopId, hit)
   }

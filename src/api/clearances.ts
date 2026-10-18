@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { LngLat } from '../lib/geo'
+import { bccJson } from './bccOpenData'
 
 // Low clearance bridges and structures, from two Brisbane City Council
 // datasets (data.brisbane.qld.gov.au, CC BY 4.0):
@@ -13,11 +14,10 @@ import type { LngLat } from '../lib/geo'
 // The council's API sends CORS headers, so the browser reads it directly. The
 // app shows each clearance exactly as published and never rounds it.
 
-const BASE = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets'
 // The exports endpoint returns every row as a plain array (the records API stops at 100).
-const BCC_API = `${BASE}/road-restrictions/exports/json`
-const QR_API = `${BASE}/road-restrictions-qr/exports/json`
-const QR_META = `${BASE}/road-restrictions-qr`
+const BCC_API = 'road-restrictions/exports/json'
+const QR_API = 'road-restrictions-qr/exports/json'
+const QR_META = 'road-restrictions-qr'
 export const BCC_CLEARANCES_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/road-restrictions/information/'
 export const QR_CLEARANCES_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/road-restrictions-qr/information/'
 /** Queensland Rail's own page on rail bridge strikes and clearances. */
@@ -127,18 +127,12 @@ export function parseQrExtractDate(json: unknown): string | null {
   return p.success ? (p.data.metas.custom?.['data-temporal-coverage-from-custom'] ?? null) : null
 }
 
-async function getJson(url: string, signal?: AbortSignal): Promise<unknown> {
-  const res = await fetch(url, { signal })
-  if (!res.ok) throw new Error(`Brisbane City Council responded with ${res.status}`)
-  return res.json()
-}
-
 /** Both datasets; the extract date is optional, so its request failing doesn't hide the bridges. */
 export async function fetchClearances(signal?: AbortSignal): Promise<Clearance[]> {
   const [bcc, qr, meta] = await Promise.all([
-    getJson(BCC_API, signal),
-    getJson(QR_API, signal),
-    getJson(QR_META, signal).catch(() => null),
+    bccJson(BCC_API, { signal }),
+    bccJson(QR_API, { signal }),
+    bccJson(QR_META, { signal }).catch(() => null),
   ])
   return [...parseBccClearances(bcc), ...parseQrClearances(qr, parseQrExtractDate(meta))]
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { EventHistory, HistoryEvent } from '../api/historyTypes'
 import { gauge, newsItem } from '../test/fixtures'
-import { asTrafficEvent, clampTime, countEvents, replayAt, stepTime, TIMELINE_WINDOW_MS } from './timeline'
+import { asTrafficEvent, clampTime, countEvents, replayAt, replayLabel, stepTime, TIMELINE_WINDOW_MS } from './timeline'
 
 const T0 = Date.parse('2026-10-15T10:00:00+10:00')
 const min = (n: number) => T0 + n * 60_000
@@ -82,5 +82,11 @@ describe('counts, clamping and stepping', () => {
     expect(stepTime(min(0), 60_000, 500, min(60))).toBe(min(0) + 30_000)
     expect(stepTime(min(0), 15 * 60_000, 1000, min(60))).toBe(min(15))
     expect(stepTime(min(59), 5 * 60_000, 1000, min(60))).toBeNull()
+  })
+})
+
+describe('replayLabel', () => {
+  it('names the replayed moment in Brisbane time and says it is not live', () => {
+    expect(replayLabel(T0)).toBe('Showing Thu 10:00 am · as published then · not live')
   })
 })

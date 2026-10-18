@@ -1,6 +1,6 @@
 import { Loader } from '@cloudflare/kumo'
 import { lazy, Suspense } from 'react'
-import App from './App.tsx'
+import { App } from './App'
 import { parsePath } from './lib/route'
 
 // The dashboard, kiosk board and status page are separate screens, loaded only when opened.

@@ -1,19 +1,16 @@
 import { Button, Checkbox, Dialog, Text } from '@cloudflare/kumo'
 import { ArrowDownIcon, ArrowUpIcon, CheckIcon, LinkIcon, XIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useCopied } from '../hooks/useCopied'
 import { DEFAULT_LAYOUT, layoutQuery, movePanel, PANELS, panelsOf, togglePanel, type PanelId, type PanelKind } from '../lib/dashboardLayout'
 
 const KIND_TITLE: Record<PanelKind, string> = { stat: 'Headline numbers', strip: 'Strips', tile: 'Tiles' }
 
 /** Choose and order the dashboard's panels. The link at the bottom reopens this layout anywhere. */
 export function CustomiseDialog({ open, onOpenChange, layout, onChange }: { open: boolean; onOpenChange: (open: boolean) => void; layout: PanelId[]; onChange: (l: PanelId[]) => void }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, flashCopied] = useCopied(2000)
   const link = `${location.origin}/dashboard${layoutQuery(layout)}`
   const copy = () =>
-    navigator.clipboard?.writeText(link).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    navigator.clipboard?.writeText(link).then(flashCopied)
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

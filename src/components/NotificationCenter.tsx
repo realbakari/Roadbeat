@@ -12,7 +12,7 @@ import { FlameIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { useState } from 'react'
-import type { AppNotification } from '../hooks/useNotifications'
+import type { AppNotification } from '../lib/alertNotices'
 import { timeAgo } from '../lib/format'
 
 interface Props {

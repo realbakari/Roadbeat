@@ -12,10 +12,12 @@ import {
 } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
-import { alertActive, isAccessibilityAlert, routeInfo, routeLabel, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
-import { brisbaneDate, routesAtStops } from '../api/timetables'
+import { alertActive, isAccessibilityAlert, routeInfo, routeLabel, type TransitAlert } from '../api/translink'
+import type { LiveVehicle, TransitRegion } from '../api/transitTypes'
+import { routesAtStops } from '../api/timetables'
 import { useTripsOn } from '../hooks/useTimetable'
-import { useNow, useStopIndex, useTimetableIndex, useTransitAlerts, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { useNow } from '../hooks/useNow'
+import { useStopIndex, useTimetableIndex, useTransitAlerts, useTripIndex, useTripUpdates } from '../hooks/useTransitFeeds'
 import { useRealtimeState } from '../hooks/useRegionFeeds'
 import { MAIN_REGIONS, REGION_NAMES, type RealtimeState } from '../lib/transitRegions'
 import { regionRoutes } from '../lib/regionalRoutes'
@@ -31,12 +33,12 @@ import { StopTimetable, TimetableLink } from './Timetable'
 import { NextService } from './NextService'
 import { minutesUntil, useTimeFormat } from '../lib/timeFormat'
 import { kioskPath } from '../lib/route'
+import { shortName } from '../lib/planner'
 import { departuresAt, lineDirections, stopHref, type Departure, type DepartureContext } from '../lib/departures'
 import { regionRead } from '../lib/tripFeed'
 import { readableTextOn } from '../lib/routeColor'
 import { NewTabNote } from './NewTabNote'
-
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
 
 function dueIn(t: number, now: number) {
   const m = Math.round((t - now) / 60_000)
@@ -220,10 +222,6 @@ export function TimetableOnly({ region, state }: { region: TransitRegion; state:
 }
 
 /** "Caboolture station" → "Caboolture" for tab labels. */
-function shortName(headsign: string) {
-  return headsign.replace(/ station$/i, '')
-}
-
 /** A stop or station with its upcoming departures across every route. */
 export function StopPage({
   region,
@@ -316,7 +314,7 @@ export function StopPage({
                   <a
                     href={kioskPath(region, stop.id)}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     title="A large departure board for a screen in a lobby or café"
                     className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
                   >
@@ -403,7 +401,7 @@ export function StopPage({
             <a
               href={`https://translink.com.au/stop/${id.padStart(6, '0')}/gtfs/`}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
             >
               Full timetable on TransLink

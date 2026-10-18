@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { brisbaneDate, departmentChartUrl, historyRange, parseMeasurements, parseParameters } from './airHistory'
+import { departmentChartUrl, historyRange, parseMeasurements, parseParameters } from './airHistory'
 
 // As the API answered for the Brisbane CBD station on 16 October 2026.
 const PARAMETERS = [
@@ -57,10 +57,6 @@ describe('historyRange', () => {
     const r = historyRange('month', '2026-03-01', now)
     expect(new Date(r.end).toISOString()).toBe('2026-03-01T13:59:59.000Z')
     expect((r.end - r.start) / 3_600_000).toBe(24 * 30)
-  })
-
-  it('knows the Queensland date', () => {
-    expect(brisbaneDate(Date.parse('2026-10-16T15:00:00Z'))).toBe('2026-10-17')
   })
 })
 

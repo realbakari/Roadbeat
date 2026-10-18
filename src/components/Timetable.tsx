@@ -3,7 +3,6 @@ import { BoatIcon, BroadcastIcon, BusIcon, CalendarDotsIcon, TrainIcon, TramIcon
 import { useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { StopIndex } from '../api/stops'
 import {
-  brisbaneDate,
   dayStart,
   dayStart as calendarStart,
   routesAtStops,
@@ -12,25 +11,27 @@ import {
   type ScheduledTrip,
   type TimetableIndex,
 } from '../api/timetables'
-import { routeInfo, type LiveVehicle, type StopTime, type TransitRegion, type TripUpdates } from '../api/translink'
+import { routeInfo } from '../api/translink'
+import type { LiveVehicle, StopTime, TransitRegion, TripUpdates } from '../api/transitTypes'
 import { useTripsOn } from '../hooks/useTimetable'
 import { delayOf, minutesUntil, useTimeFormat, type TimeFormat } from '../lib/timeFormat'
 import { DelayChip } from './Realtime'
-import { useNow, useStopIndex, useTimetableIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { useNow } from '../hooks/useNow'
+import { useStopIndex, useTimetableIndex, useTripUpdates } from '../hooks/useTransitFeeds'
 import { stopHref } from '../lib/departures'
+import { shortName } from '../lib/planner'
 import { timetableCodes } from '../lib/transitLines'
 import { liveLookup, scheduledArrivals, scheduledDepartures, timetableGrid, type GridDirection, type LiveTrip, type ScheduledDeparture } from '../lib/timetable'
 import { readableTextOn } from '../lib/routeColor'
 import { timetableTripHref } from '../lib/trip'
 import { bandOf, lastServices, TIME_BANDS, type TimeBand } from '../lib/timeBands'
+import { brisbaneClock as clock, brisbaneDate, brisbaneWeekday as weekday } from '../lib/aest'
 
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
 const hourLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric' })
 
 /** "5:42am": compact enough for a grid cell. */
 const short = (t: number) => clock.format(t).replace(/\s/g, '')
-const weekday = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short' })
 
 function DayPicker({ dates, value, today, onChange }: { dates: string[]; value: string; today: string; onChange: (d: string) => void }) {
   const items = useMemo(() => {
@@ -368,10 +369,6 @@ function StopKindBadge({ kind }: { kind: 'arrival' | 'pickup' }) {
 function ModeIcon({ mode }: { mode: string | undefined }) {
   const I = mode === 'bus' ? BusIcon : mode === 'ferry' ? BoatIcon : mode === 'tram' ? TramIcon : TrainIcon
   return <I size={16} weight="fill" />
-}
-
-function shortName(headsign: string) {
-  return headsign.replace(/ station$/i, '')
 }
 
 /** A stop's full day of published departures across every route, with real-time where reported. */

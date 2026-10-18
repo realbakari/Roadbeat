@@ -1,7 +1,8 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, CrosshairIcon, BellIcon, BellRingingIcon, BoatIcon, BusIcon, TrainIcon, TramIcon, type Icon } from '@phosphor-icons/react'
-import { alertActive, routeInfo, type LiveVehicle, type TransitAlert, type VehicleMode } from '../api/translink'
-import { useStopIndex, useTripIndex } from '../hooks/useTrafficData'
+import { alertActive, routeInfo, type TransitAlert } from '../api/translink'
+import type { LiveVehicle, VehicleMode } from '../api/transitTypes'
+import { useStopIndex, useTripIndex } from '../hooks/useTransitFeeds'
 import { stopHref } from '../lib/departures'
 import { tripHref } from '../lib/trip'
 import { timeAgo } from '../lib/format'
@@ -177,7 +178,7 @@ export function VehicleDetail({
             <a
               href={routeInfo(v.route, v.region)!.url!}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
             >
               Timetable on TransLink

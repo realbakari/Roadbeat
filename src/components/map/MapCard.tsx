@@ -60,7 +60,7 @@ export function MapCard({ map, card, onDetails, onClose }: { map: maplibregl.Map
           icon={<NavigationArrowIcon weight="fill" />}
           href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
           Directions
           <NewTabNote />

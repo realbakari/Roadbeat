@@ -3,10 +3,8 @@ import { Timeline } from '../components/Timeline'
 import { useEventHistory, useTimeline } from '../hooks/useTimeline'
 import type { NewsSnapshot } from '../api/newsTypes'
 import { groupStories } from '../lib/newsStories'
-import { countEvents, replayAt } from '../lib/timeline'
-
-const dayTime = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
-const timeOnly = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+import { countEvents, replayAt, replayLabel } from '../lib/timeline'
+import { brisbaneClock as timeOnly } from '../lib/aest'
 
 /**
  * The dashboard's replay strip: the 48-hour scrubber, with the road events in
@@ -25,7 +23,7 @@ export function TimelineStrip({ now, news }: { now: number; news: NewsSnapshot |
       {replay && (
         <div className="grid gap-2 rounded-xl bg-kumo-base px-4 py-3 text-sm ring ring-kumo-line md:grid-cols-[auto_1fr] md:items-start md:gap-6">
           <div className="grid gap-0.5">
-            <span className="text-xs font-medium text-kumo-warning">Showing {dayTime.format(replay.at)} · as published then · not live</span>
+            <span className="text-xs font-medium text-kumo-warning">{replayLabel(replay.at)}</span>
             {counts && replay.run ? (
               <span className="flex flex-wrap gap-x-4 tabular-nums">
                 <span>

@@ -252,7 +252,7 @@ function clearanceSign(metres: number) {
     `<text x="${w / 2}" y="14.6" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="700" font-size="11" fill="#111">${label}</text></svg>`
 }
 
-export function clearanceIconUrl(metres: number) {
+function clearanceIconUrl(metres: number) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(clearanceSign(metres))}`
 }
 

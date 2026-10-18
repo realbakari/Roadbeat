@@ -6,12 +6,13 @@ import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import type { FireWarning } from '../api/bushfires'
 import type { FireBans } from '../api/fireBans'
 import type { NewsPlace, NewsRoad, NewsSnapshot } from '../api/newsTypes'
-import type { LiveVehicle, TransitAlert } from '../api/translink'
+import type { TransitAlert } from '../api/translink'
+import type { LiveVehicle } from '../api/transitTypes'
 import type { Camera, TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
 import type { AlertSettings } from '../lib/alertRules'
 import type { EventFilters } from '../lib/filters'
-import type { LngLat } from '../lib/geo'
+import type { LngLat, MapView } from '../lib/geo'
 import type { Locality, LocalitySources } from '../lib/locality'
 import type { NewsStory, StoryFilter } from '../lib/newsStories'
 import type { Place } from '../lib/places'
@@ -37,13 +38,13 @@ export type Panel = 'events' | 'cameras' | 'transit' | 'news'
 interface Props {
   sel: Selection
   /** Changes the URL hash selection; '' closes the open page. */
-  go: (hash: string) => void
+  onNavigate: (hash: string) => void
   /** Opens an app hash from a link, switching to the panel it belongs to. */
   onOpenHref: (href: string) => void
   /** Opens a camera on the map, by its camera key. */
   onOpenCamera: (key: string) => void
   onSelectEvent: (id: number) => void
-  revealMap: () => void
+  onRevealMap: () => void
   now: number
 
   panel: Panel
@@ -74,7 +75,7 @@ interface Props {
   transitAlerts: TransitAlert[] | null
   transitAlertsError: string | null
   onShowLineOnMap: (title: string, match: (code: string) => boolean) => void
-  mapView: { center: LngLat; zoom: number } | null
+  mapView: MapView | null
 
   selectedPlace: Place | null
   fires: FireWarning[] | null
@@ -111,8 +112,8 @@ interface Props {
 
 /** The side panel: the open detail page if there is one, else the Road events, Cameras, Transit or News tab. */
 export function SidePanel(p: Props) {
-  const { sel, go, now, alertSettings, notifications } = p
-  const back = () => go('')
+  const { sel, onNavigate, now, alertSettings, notifications } = p
+  const back = () => onNavigate('')
 
   if (p.selectedEvent) {
     const id = p.selectedEvent.properties.id
@@ -160,7 +161,7 @@ export function SidePanel(p: Props) {
         loading={p.locality.loading}
         sources={p.locality.sources}
         now={now}
-        onBack={() => (history.length > 1 ? history.back() : go(''))}
+        onBack={() => (history.length > 1 ? history.back() : onNavigate(''))}
         onOpenHref={p.onOpenHref}
         onOpenCamera={p.onOpenCamera}
         onShowOnMap={p.locality.onShowOnMap}
@@ -170,10 +171,10 @@ export function SidePanel(p: Props) {
   }
   if (p.selectedFire) return <FireDetail fire={p.selectedFire} now={now} onBack={back} />
   if (p.selectedGauge) {
-    return <GaugeDetail gauge={p.selectedGauge} now={now} onBack={() => (history.length > 1 ? history.back() : go(''))} />
+    return <GaugeDetail gauge={p.selectedGauge} now={now} onBack={() => (history.length > 1 ? history.back() : onNavigate(''))} />
   }
   if (p.selectedStory) {
-    return <NewsDetail story={p.selectedStory} now={now} onBack={() => go('news')} onShowPlace={p.onShowNewsPlace}
+    return <NewsDetail story={p.selectedStory} now={now} onBack={() => onNavigate('news')} onShowPlace={p.onShowNewsPlace}
         onShowRoad={p.onShowNewsRoad}
         events={p.events}
         fires={p.fires}
@@ -196,7 +197,7 @@ export function SidePanel(p: Props) {
           value={p.transitOpen ? 'transit' : p.panel}
           onValueChange={(v) => {
             p.onPanelChange(v as Panel)
-            if (sel.transit || sel.news != null) go('')
+            if (sel.transit || sel.news != null) onNavigate('')
           }}
           tabs={[
             { value: 'events', label: 'Road events' },
@@ -217,7 +218,7 @@ export function SidePanel(p: Props) {
           onToggleWatch={notifications.toggleWatchRoute}
           onShowOnMap={p.onShowLineOnMap}
           mapView={p.mapView}
-          onShowMap={() => p.revealMap()}
+          onShowMap={() => p.onRevealMap()}
         />
       ) : p.panel === 'events' ? (
         <EventList
@@ -254,7 +255,7 @@ export function SidePanel(p: Props) {
           filter={p.newsFilter}
           onFilterChange={p.onNewsFilterChange}
           now={now}
-          onOpen={(id) => go(`news/${encodeURIComponent(id)}`)}
+          onOpen={(id) => onNavigate(`news/${encodeURIComponent(id)}`)}
         />
       ) : null}
     </>

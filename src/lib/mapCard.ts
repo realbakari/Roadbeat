@@ -25,6 +25,7 @@ import { storyLocatedLine, storySourceLine, type NewsStory } from './newsStories
 import { dsColor, siteLoad } from './signals'
 import { truckKey } from './trucks'
 import { wazeLabel } from './waze'
+import { brisbaneDayClock as observed, brisbaneClock as clock } from './aest'
 
 /**
  * A short card for a selected map item, shown on the map itself when the side
@@ -47,8 +48,6 @@ export interface MapCard {
 }
 
 /** A detection's time, with the day, since the layer spans the last 24 hours. */
-const observed = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 
 export function eventCard(e: TrafficEvent): MapCard | null {
   const position = eventAnchor(e)

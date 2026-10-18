@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { FIRE_BADGE, FIRE_COLOR, FIRE_TEXT } from './bushfires'
+import { FIRE_BADGE, FIRE_COLOR } from './bushfires'
 
 // Queensland's Severe Weather, Flood and Cyclone warnings (and other hazards
 // issued under the Australian Warning System), as published on
@@ -32,12 +32,6 @@ export const WARNING_BADGE: Record<WarningLevel, string> = {
   'Watch and Act': FIRE_BADGE['Watch and Act'],
   Advice: FIRE_BADGE.Advice,
   Other: FIRE_BADGE.Information,
-}
-export const WARNING_TEXT: Record<WarningLevel, string> = {
-  'Emergency Warning': FIRE_TEXT['Emergency Warning'],
-  'Watch and Act': FIRE_TEXT['Watch and Act'],
-  Advice: FIRE_TEXT.Advice,
-  Other: FIRE_TEXT.Information,
 }
 
 export interface QldWarning {
@@ -135,7 +129,7 @@ export function parsePolygonCoords(raw: string | null): GeoJSON.MultiPolygon | n
   return { type: 'MultiPolygon', coordinates: rings.map((r) => [r]) }
 }
 
-export function warningRank(w: QldWarning) {
+function warningRank(w: QldWarning) {
   return WARNING_LEVELS.indexOf(w.level)
 }
 

@@ -1,38 +1,13 @@
 import { useKumoToastManager } from '@cloudflare/kumo'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { FIRE_LEVELS, type FireLevel, type FireWarning } from '../api/bushfires'
-import { alertActive, alertNextStart, type TransitAlert } from '../api/translink'
+import type { FireWarning } from '../api/bushfires'
+import type { TransitAlert } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
-import {
-  describeChange,
-  eventHeadline,
-  eventSignature,
-  fireMatches,
-  newsMatches,
-  loadSettings,
-  matchesRules,
-  saveSettings,
-  watchedRoutesIn,
-  type AlertSettings,
-} from '../lib/alertRules'
-import { eventTitle } from '../lib/eventText'
+import { eventNotices, eventSignatures, fireLevels, fireNotices, newsNotices, transitNotices, type AppNotification, type Notice } from '../lib/alertNotices'
+import { loadSettings, saveSettings, type AlertSettings } from '../lib/alertRules'
 import { systemAlertsOn } from '../lib/polling'
 import { setSystemAlerts } from './poll'
-import { publisherList, type NewsStory } from '../lib/newsStories'
-
-export interface AppNotification {
-  id: string
-  kind: 'event-new' | 'event-update' | 'event-cleared' | 'transit' | 'fire' | 'news'
-  title: string
-  body: string
-  at: number
-  /** Hash route to open, e.g. "event/123". */
-  href: string | null
-  tone: 'error' | 'warning' | 'info' | 'success'
-  read: boolean
-  /** Raised while the app was closed; shown in the centre but not toasted. */
-  away?: boolean
-}
+import type { NewsStory } from '../lib/newsStories'
 
 const LIST_KEY = 'qldt-notifications'
 const SEEN_KEY = 'qldt-seen'
@@ -116,7 +91,7 @@ export function useNotifications({
   useEffect(() => setSystemAlerts('Notification' in window && systemAlertsOn(settings, Notification.permission)), [settings])
 
   const raise = useCallback(
-    (list: Omit<AppNotification, 'read'>[]) => {
+    (list: Notice[]) => {
       if (!list.length) return
       const { settings: s, onOpen: open } = latest.current
       setItems((prev) => [...list.map((n) => ({ ...n, read: false })), ...prev].slice(0, MAX))
@@ -156,52 +131,13 @@ export function useNotifications({
     if (!eventsAt || !events.length) return
     const s = latest.current.settings
     const now = Date.now()
-    const sigs: Record<string, string> = {}
-    for (const e of events) sigs[e.properties.id] = eventSignature(e)
+    const sigs = eventSignatures(events)
 
     const prev = seen.current?.events
     const away = first.current.events
     first.current.events = false
     if (prev) {
-      const out: Omit<AppNotification, 'read'>[] = []
-      const watched = new Set(s.watchedEvents)
-      for (const e of events) {
-        const id = String(e.properties.id)
-        if (!(id in prev)) {
-          if (watched.has(e.properties.id) || matchesRules(e, s, now)) {
-            const h = eventHeadline(e)
-            const severe = e.properties.event_type === 'Crash' || e.properties.event_priority === 'Red Alert'
-            out.push({ id: `new-${id}-${now}`, kind: 'event-new', ...h, at: now, href: `event/${id}`, tone: severe ? 'error' : 'warning', away })
-          }
-        } else if (watched.has(e.properties.id) && prev[id] !== sigs[id]) {
-          out.push({
-            id: `upd-${id}-${now}`,
-            kind: 'event-update',
-            title: `${describeChange(prev[id], e)} · ${eventTitle(e)}`,
-            body: eventHeadline(e).body,
-            at: now,
-            href: `event/${id}`,
-            tone: e.properties.status === 'Reopened' ? 'success' : 'info',
-            away,
-          })
-        }
-      }
-      for (const id of s.watchedEvents) {
-        if (String(id) in prev && !(String(id) in sigs)) {
-          out.push({
-            id: `clr-${id}-${now}`,
-            kind: 'event-cleared',
-            title: 'Event cleared',
-            body: `A road event you were watching (#${id}) is no longer listed by QLDTraffic.`,
-            at: now,
-            href: null,
-            tone: 'success',
-            away,
-          })
-        }
-      }
-      // Away alerts are capped so a long absence doesn't flood the centre.
-      raise(away ? out.slice(0, 20) : out)
+      raise(eventNotices(prev, events, s, now, away))
       const stillListed = s.watchedEvents.filter((id) => String(id) in sigs)
       if (stillListed.length !== s.watchedEvents.length) setSettings((x) => ({ ...x, watchedEvents: stillListed }))
     }
@@ -217,31 +153,7 @@ export function useNotifications({
     const prev = seen.current?.transit
     const away = first.current.transit
     first.current.transit = false
-    if (prev && s.routes.length) {
-      const known = new Set(prev)
-      const now = Date.now()
-      raise(
-        transitAlerts
-          .filter((a) => !known.has(a.id))
-          .flatMap((a) => {
-            const hit = watchedRoutesIn(a, s.routes)
-            if (!hit.length) return []
-            const next = alertActive(a, now) ? null : alertNextStart(a, now)
-            return [
-              {
-                id: `tl-${a.id}`,
-                kind: 'transit' as const,
-                title: `${hit.join(', ')}: ${a.header}`,
-                body: next ? `Starts ${new Date(next).toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}. ${a.effect}.` : `${a.effect}. ${a.description}`,
-                at: now,
-                href: `transit/alert/${encodeURIComponent(a.id)}`,
-                tone: 'warning' as const,
-                away,
-              },
-            ]
-          }),
-      )
-    }
+    if (prev && s.routes.length) raise(transitNotices(prev, transitAlerts, s.routes, Date.now(), away))
     seen.current = { ...seen.current, events: seen.current?.events ?? {}, transit: ids }
     store(SEEN_KEY, seen.current)
   }, [transitAlerts, raise])
@@ -250,32 +162,11 @@ export function useNotifications({
   useEffect(() => {
     if (!fires) return
     const s = latest.current.settings
-    const levels: Record<string, string> = {}
-    for (const f of fires) levels[f.id] = f.level
+    const levels = fireLevels(fires)
     const prev = seen.current?.fires
     const away = first.current.fires
     first.current.fires = false
-    if (prev) {
-      const now = Date.now()
-      const out: Omit<AppNotification, 'read'>[] = []
-      for (const f of fires) {
-        if (!fireMatches(f, s)) continue
-        const was = prev[f.id]
-        const rose = was != null && FIRE_LEVELS.indexOf(f.level) < FIRE_LEVELS.indexOf(was as FireLevel)
-        if (was != null && !rose) continue
-        out.push({
-          id: `fire-${f.id}-${f.level}`,
-          kind: 'fire',
-          title: `${rose ? 'Now ' : ''}${f.levelText}: ${f.area ?? f.title}`,
-          body: [f.callToAction, f.header].filter(Boolean).join(' — ') || f.title,
-          at: now,
-          href: `fire/${encodeURIComponent(f.id)}`,
-          tone: f.level === 'Advice' ? 'warning' : 'error',
-          away,
-        })
-      }
-      raise(away ? out.slice(0, 10) : out)
-    }
+    if (prev) raise(fireNotices(prev, fires, s, Date.now(), away))
     seen.current = { ...seen.current, events: seen.current?.events ?? {}, transit: seen.current?.transit ?? [], fires: levels }
     store(SEEN_KEY, seen.current)
   }, [fires, raise])
@@ -287,25 +178,7 @@ export function useNotifications({
     const prev = seen.current?.news
     const away = first.current.news
     first.current.news = false
-    if (prev) {
-      const known = new Set(prev)
-      const now = Date.now()
-      raise(
-        stories
-          .filter((st) => !known.has(st.id) && newsMatches(st, s))
-          .slice(0, away ? 10 : 5)
-          .map((st) => ({
-            id: `news-${st.id}`,
-            kind: 'news' as const,
-            title: st.kind === 'official' ? `${st.publishers[0]}: ${st.items[0].title}` : st.items[0].title,
-            body: st.kind === 'official' ? (st.items[0].summary ?? 'Official notice.') : `News report. Reported by ${publisherList(st.publishers)}.`,
-            at: now,
-            href: `news/${encodeURIComponent(st.id)}`,
-            tone: st.kind === 'official' ? ('warning' as const) : ('info' as const),
-            away,
-          })),
-      )
-    }
+    if (prev) raise(newsNotices(prev, stories, s, Date.now(), away))
     seen.current = { events: seen.current?.events ?? {}, transit: seen.current?.transit ?? [], ...seen.current, news: stories.map((st) => st.id) }
     store(SEEN_KEY, seen.current)
   }, [stories, raise])
@@ -340,10 +213,4 @@ export function useNotifications({
     toggleWatchEvent,
     toggleWatchRoute,
   }
-}
-
-export async function requestBrowserPermission(): Promise<NotificationPermission | 'unsupported'> {
-  if (!('Notification' in window)) return 'unsupported'
-  if (Notification.permission !== 'default') return Notification.permission
-  return Notification.requestPermission()
 }

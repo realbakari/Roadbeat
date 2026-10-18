@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FireWarning } from '../api/bushfires'
-import { DEFAULT_SETTINGS, fireMatches, newsMatches, type AlertSettings } from './alertRules'
+import { DEFAULT_SETTINGS, fireMatches, newsMatches, parseSettings, type AlertSettings } from './alertRules'
 import { groupStories } from './newsStories'
 import { gazetteerPlace, newsItem } from '../test/fixtures'
 
@@ -79,5 +79,27 @@ describe('newsMatches', () => {
 
   it('never matches a districts-only filter', () => {
     expect(newsMatches(story, settings({ kinds: on, districts: ['Metropolitan'] }))).toBe(false)
+  })
+})
+
+describe('parseSettings', () => {
+  it('reads saved settings back unchanged', () => {
+    const saved: AlertSettings = { ...DEFAULT_SETTINGS, browser: true, districts: ['Metropolitan'], nearMe: { at: [153, -27.5], km: 10 }, watchedEvents: [42], routes: ['T1'] }
+    expect(parseSettings(JSON.parse(JSON.stringify(saved)))).toEqual(saved)
+  })
+
+  it('falls back field by field instead of crashing on a bad value', () => {
+    const s = parseSettings({ inApp: false, districts: 'Metropolitan', roads: ['Bruce Highway', 7], kinds: { crash: false, news: 'yes' }, nearMe: { at: [153], km: 5 }, watchedEvents: null })
+    expect(s.inApp).toBe(false)
+    expect(s.districts).toEqual([])
+    expect(s.roads).toEqual(['Bruce Highway'])
+    expect(s.kinds).toEqual({ ...DEFAULT_SETTINGS.kinds, crash: false })
+    expect(s.nearMe).toBeNull()
+    expect(s.watchedEvents).toEqual([])
+  })
+
+  it('gives the defaults for something that is not settings at all', () => {
+    expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS)
+    expect(parseSettings([1, 2])).toEqual(DEFAULT_SETTINGS)
   })
 })

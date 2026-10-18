@@ -615,7 +615,6 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   })
 }
 
-
 export function highlightRing() {
   const el = document.createElement('div')
   el.style.cssText =

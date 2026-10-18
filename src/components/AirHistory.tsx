@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import {
   AIR_API_DATASET,
   AIR_TIMEFRAMES,
-  brisbaneDate,
   departmentChartUrl,
   fetchAirParameters,
   fetchAirReadings,
@@ -14,6 +13,8 @@ import {
   type AirTimeframe,
 } from '../api/airHistory'
 import { AirHistoryChart } from './AirHistoryChart'
+import { NewTabNote } from './NewTabNote'
+import { brisbaneDate } from '../lib/aest'
 
 const when = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric' })
 
@@ -123,13 +124,15 @@ export function AirHistory({ stationId, now }: Props) {
           <Text size="xs" variant="secondary">
             Hourly values in {parameter.units}; the grey line is the department's running average where it publishes one. Hours it gives no reading for are left blank.
           </Text>
-          <a href={departmentChartUrl(stationId, parameter.id, timeframe, date)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+          <a href={departmentChartUrl(stationId, parameter.id, timeframe, date)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
             This chart on the department's site
             <ArrowSquareOutIcon size={14} />
+            <NewTabNote />
           </a>
-          <a href={AIR_API_DATASET} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
+          <a href={AIR_API_DATASET} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link hover:underline">
             Air Quality Monitoring Data API (open data)
             <ArrowSquareOutIcon size={14} />
+            <NewTabNote />
           </a>
         </div>
       )}

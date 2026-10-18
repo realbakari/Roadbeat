@@ -2,10 +2,11 @@ import { worstRating, type AirStation } from '../api/airQuality'
 import type { Gauge } from '../api/bccGauges'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import { FIRE_LEVELS, type FireLevel, type FireWarning } from '../api/bushfires'
-import type { LiveVehicle, TripUpdate, TripUpdates, VehicleMode } from '../api/translink'
+import type { LiveVehicle, TripUpdate, TripUpdates, VehicleMode } from '../api/transitTypes'
 import type { TrafficEvent } from '../api/types'
 import { isClosure, isCurrent } from './filters'
 import { siteLoad } from './signals'
+import { BRISBANE_OFFSET_MS } from './aest'
 
 /** Events in effect now: published, not future roadworks or events, and not past their end date. */
 export function currentEvents(events: TrafficEvent[], now: number) {
@@ -199,7 +200,10 @@ export function corridorReport(
   return { year: latest.year, month: latest.month, rows }
 }
 
-const brisbaneHour = (t: number) => new Date(t + 10 * 3600_000).getUTCHours() + new Date(t + 10 * 3600_000).getUTCMinutes() / 60
+const brisbaneHour = (t: number) => {
+  const local = new Date(t + BRISBANE_OFFSET_MS)
+  return local.getUTCHours() + local.getUTCMinutes() / 60
+}
 
 /**
  * Council events still to start, or started in the last hour, soonest first.

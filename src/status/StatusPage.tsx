@@ -4,14 +4,14 @@ import { useEffect, useMemo, type ReactNode } from 'react'
 import type { SourceStatus } from '../api/newsTypes'
 import { Stat, Tile } from '../dashboard/Tile'
 import { useColorMode } from '../hooks/useColorMode'
-import { useNow } from '../hooks/useTrafficData'
+import { useNow } from '../hooks/useNow'
 import { cadenceLabel, groupByPublisher, readLabel, summarise, type FeedOutcome } from '../lib/feedHealth'
 import { FEEDS, type Feed } from '../lib/feedRegistry'
 import { timeAgo } from '../lib/format'
 import { useFeedHealth } from './useFeedHealth'
 import { NewTabNote } from '../components/NewTabNote'
+import { brisbaneDayDateTime as clock } from '../lib/aest'
 
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 const stamp = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
 /**
@@ -117,7 +117,7 @@ function FeedRow({ feed, outcome, now }: { feed: Feed; outcome: FeedOutcome; now
           {feed.datasetUrl && (
             <>
               {' · '}
-              <a href={feed.datasetUrl} target="_blank" rel="noreferrer" className="underline decoration-1 underline-offset-2">
+              <a href={feed.datasetUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-1 underline-offset-2">
                 Dataset page
                 <NewTabNote />
               </a>

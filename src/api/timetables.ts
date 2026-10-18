@@ -1,4 +1,4 @@
-import type { TransitRegion } from './translink'
+import type { TransitRegion } from './transitTypes'
 
 // TransLink's published timetables (GTFS stop_times), one file per route under
 // /timetables (see scripts/build-timetables.mjs). Every time here is exactly as
@@ -89,11 +89,6 @@ function loadRoute(region: TransitRegion, code: string) {
   return p
 }
 
-/** Brisbane calendar date ("2026-10-15") of an instant. Queensland has no daylight saving. */
-export function brisbaneDate(t: number) {
-  return new Date(t + 10 * 3_600_000).toISOString().slice(0, 10)
-}
-
 /** Midnight in Brisbane at the start of `date`, the reference for that service day's times. */
 export function dayStart(date: string) {
   return Date.parse(`${date}T00:00:00+10:00`)
@@ -122,7 +117,7 @@ export function routesAtStops(idx: TimetableIndex, region: TransitRegion, stopId
 }
 
 /** The Brisbane date before `date`. */
-export function previousDate(date: string) {
+function previousDate(date: string) {
   return new Date(Date.parse(date) - DAY).toISOString().slice(0, 10)
 }
 

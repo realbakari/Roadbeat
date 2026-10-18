@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { fetchAirQuality, type AirStation } from '../api/airQuality'
+import { fetchBushfires, type FireWarning } from '../api/bushfires'
 import { fetchFireBans, type FireBans } from '../api/fireBans'
 import { fetchCyclones, type Cyclone } from '../api/jtwc'
 import { fetchModelForecast, type ModelForecast } from '../api/modelForecast'
@@ -70,4 +72,49 @@ export function useModelForecast(at: LngLat | null): Feed<ModelForecast> {
     return () => c.abort()
   }, [key])
   return state.key === key ? state : { data: null, error: null, fetchedAt: null }
+}
+
+/** Queensland Fire Department bushfire warnings and incidents, polled every 2 minutes while `enabled`. */
+export function useBushfires(enabled: boolean) {
+  const [fires, setFires] = useState<FireWarning[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    const c = new AbortController()
+    const load = () =>
+      fetchBushfires(c.signal).then(
+        (f) => (setFires(f), setError(null), setFetchedAt(Date.now())),
+        (e: Error) => !c.signal.aborted && setError(e.message),
+      )
+    load()
+    const stop = poll(load, 120_000, true)
+    return () => {
+      c.abort()
+      stop()
+    }
+  }, [enabled])
+  return { fires: enabled ? fires : null, error: enabled ? error : null, fetchedAt: enabled ? fetchedAt : null }
+}
+
+/** The state's hourly air quality readings, polled every 10 minutes while `enabled`. */
+export function useAirQuality(enabled: boolean) {
+  const [stations, setStations] = useState<AirStation[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    const c = new AbortController()
+    const load = () =>
+      fetchAirQuality(c.signal).then(
+        (s) => (setStations(s), setError(null)),
+        (e: Error) => !c.signal.aborted && setError(e.message),
+      )
+    load()
+    const stop = poll(load, 10 * 60_000)
+    return () => {
+      c.abort()
+      stop()
+    }
+  }, [enabled])
+  return { stations: enabled ? stations : null, error: enabled ? error : null }
 }

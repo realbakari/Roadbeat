@@ -1,8 +1,8 @@
 import { Badge, Text } from '@cloudflare/kumo'
-import { ArrowSquareOutIcon, WarningIcon } from '@phosphor-icons/react'
+import { WarningIcon } from '@phosphor-icons/react'
 import { QLD_WARNINGS_PAGE, WARNING_BADGE, WARNING_COLOR, type QldWarning } from '../api/qldWarnings'
 import { readableTextOn } from '../lib/routeColor'
-import { NewTabNote } from './NewTabNote'
+import { ExternalLink } from './ui/Links'
 import { PublishedText, TextPart } from './PublishedText'
 
 /**
@@ -60,10 +60,7 @@ export function WarningBody({ w }: { w: QldWarning }) {
       <TextPart title="More information">{w.moreInformation}</TextPart>
 
       <div className="grid gap-1">
-        <a href={QLD_WARNINGS_PAGE} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-          Current warnings on disaster.qld.gov.au <ArrowSquareOutIcon size={14} />
-          <NewTabNote />
-        </a>
+        <ExternalLink href={QLD_WARNINGS_PAGE}>Current warnings on disaster.qld.gov.au</ExternalLink>
         <Text size="xs" variant="secondary">
           {w.from ? `Warning from ${w.from}, via` : 'Source:'} Queensland Disaster Management, disaster.qld.gov.au (CC BY 4.0). The map shows the area as
           published. If you are in danger, call Triple Zero (000).

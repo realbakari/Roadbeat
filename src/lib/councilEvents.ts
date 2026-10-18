@@ -1,6 +1,6 @@
 import type { CouncilEvent } from '../api/bccDashboard'
+import { brisbaneDayKey as day } from './aest'
 
-const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 const DAY = 86_400_000
 
 /** Brisbane midnight that starts the day containing `t`. */

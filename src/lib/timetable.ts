@@ -1,7 +1,7 @@
 import type { StopIndex } from '../api/stops'
 import type { ScheduledStop, ScheduledTrip } from '../api/timetables'
 import { alignStops } from './stopAlign'
-import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/translink'
+import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/transitTypes'
 
 /** What TransLink's real-time feed currently reports for one timetabled trip. */
 export interface LiveTrip {

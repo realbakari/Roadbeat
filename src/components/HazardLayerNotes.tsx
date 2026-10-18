@@ -5,19 +5,8 @@ import { NSW_ALERT_COLOR, NSW_FIRES_ATTRIBUTION, NSW_FIRES_PAGE, type NswFire } 
 import { IBTRACS_PAGE, type PastCyclone } from '../api/pastCyclones'
 import type { Feed } from '../hooks/useHazardFeeds'
 import { feedNotice } from '../lib/feedNotice'
-import { NewTabNote } from './NewTabNote'
-
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
-const link = 'text-kumo-link underline decoration-1 underline-offset-2'
-
-function Out({ href, children }: { href: string; children: string }) {
-  return (
-    <a href={href} target="_blank" rel="noopener" className={link}>
-      {children}
-      <NewTabNote />
-    </a>
-  )
-}
+import { InlineLink } from './ui/Links'
+import { brisbaneClock as clock } from '../lib/aest'
 
 /** Fire ban status under the bushfire warnings switch: QFD's own words, or why it couldn't be read. */
 export function FireBansLine({ feed }: { feed: Feed<FireBans> }) {
@@ -28,7 +17,7 @@ export function FireBansLine({ feed }: { feed: Feed<FireBans> }) {
   return (
     <Text size="xs" variant="secondary">
       {feed.data.none ? 'No current fire bans' : `${feed.data.bans.length} fire ${feed.data.bans.length === 1 ? 'ban' : 'bans'} listed above the road events`}, Queensland Fire
-      Department{at ? `, updated ${clock.format(at)} AEST` : ''}. <Out href={FIRE_BANS_PAGE}>Fire bans and restrictions</Out>
+      Department{at ? `, updated ${clock.format(at)} AEST` : ''}. <InlineLink href={FIRE_BANS_PAGE}>Fire bans and restrictions</InlineLink>
     </Text>
   )
 }
@@ -48,7 +37,7 @@ export function NswFiresNote({ feed }: { feed: Feed<NswFire[]> }) {
       {notice && <Text size="xs" variant="error">{notice}</Text>}
       <Text size="xs" variant="secondary">
         NSW Rural Fire Service major incidents north of 29.6° S, within about 150 km of the border, read every 2 minutes. {NSW_FIRES_ATTRIBUTION}, CC BY 4.0.{' '}
-        <Out href={NSW_FIRES_PAGE}>Fires Near Me</Out>
+        <InlineLink href={NSW_FIRES_PAGE}>Fires Near Me</InlineLink>
       </Text>
     </div>
   )
@@ -67,7 +56,7 @@ export function CyclonesNote({ feed }: { feed: Feed<Cyclone[]> }) {
       ) : null}
       <Text size="xs" variant="secondary">
         The US Joint Typhoon Warning Center's warning position and forecast track, every 30 minutes. Not the official Australian warning: follow the{' '}
-        <Out href={BOM_CYCLONES}>Bureau of Meteorology</Out>. From <Out href={JTWC_PAGE}>JTWC</Out>.
+        <InlineLink href={BOM_CYCLONES}>Bureau of Meteorology</InlineLink>. From <InlineLink href={JTWC_PAGE}>JTWC</InlineLink>.
       </Text>
     </div>
   )
@@ -80,7 +69,7 @@ export function PastCyclonesNote({ feed }: { feed: Feed<PastCyclone[]> }) {
       {notice && <Text size="xs" variant="error">{notice}</Text>}
       <Text size="xs" variant="secondary">
         Tracks of tropical cyclones that came near Queensland since 1980, from positions agencies reported. History for context, not a warning; recent
-        seasons are provisional. From NOAA NCEI's <Out href={IBTRACS_PAGE}>IBTrACS</Out>.
+        seasons are provisional. From NOAA NCEI's <InlineLink href={IBTRACS_PAGE}>IBTrACS</InlineLink>.
       </Text>
     </div>
   )

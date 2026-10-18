@@ -1,4 +1,4 @@
-import type { TransitRegion } from '../api/translink'
+import type { TransitRegion } from '../api/transitTypes'
 import type { Journey } from './planner'
 
 // "My trips", as in TripView: saved from → to pairs, each shown with its next

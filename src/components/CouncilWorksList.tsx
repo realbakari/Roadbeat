@@ -2,7 +2,7 @@ import { CaretDownIcon, CaretUpIcon, TrafficConeIcon } from '@phosphor-icons/rea
 import { useMemo, useState } from 'react'
 import { ROAD_OCCUPANCIES_URL, type RoadOccupancy } from '../api/bccRoadOccupancies'
 import { inHoursNow, occupanciesToday, occupancyMatches, sortOccupancies } from '../lib/roadOccupancies'
-import { NewTabNote } from './NewTabNote'
+import { InlineLink } from './ui/Links'
 
 const fmt = (t: string) => {
   const [h, m] = t.split(':').map(Number)
@@ -85,10 +85,7 @@ export function CouncilWorksList({ occupancies, query, now }: { occupancies: Roa
           )}
           <li className="px-3 py-1.5 text-xs text-kumo-subtle">
             Permits for planned occupancies; works may not run every day of a permit. Source:{' '}
-            <a href={ROAD_OCCUPANCIES_URL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
-              Brisbane City Council
-              <NewTabNote />
-            </a>{' '}
+            <InlineLink href={ROAD_OCCUPANCIES_URL}>Brisbane City Council</InlineLink>{' '}
             (CC BY 4.0)
           </li>
         </ul>

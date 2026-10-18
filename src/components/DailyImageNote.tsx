@@ -1,11 +1,9 @@
 import { Text } from '@cloudflare/kumo'
 import { DAILY_PASSES, dailyLabel, GIBS_ABOUT, type DailyPass } from '../api/satelliteImagery'
 import { LayerFacts } from './LayerFacts'
-import { NewTabNote } from './NewTabNote'
+import { InlineLink } from './ui/Links'
 
 const day = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-const link = 'text-kumo-link underline decoration-1 underline-offset-2'
-
 /** The first day each pass's image can be asked for: NOAA-20 from 2018, Terra from its first images in 2000. */
 const FIRST_DAY: Record<DailyPass, string> = { noaa20: '2018-01-01', terra: '2000-02-24' }
 const PASS_TEXT: Record<DailyPass, { satellite: string; when: string }> = {
@@ -55,10 +53,7 @@ export function DailyImageNote({ pass, date, latest, checking, error, today, onP
       <Text size="xs" variant="secondary">
         One day's true-colour picture from {t.satellite}'s {t.when} pass, not a live view. Cloud hides the ground, and strips the satellite didn't
         cover that day are blank. Sharpest at regional zoom. From{' '}
-        <a href={GIBS_ABOUT} target="_blank" rel="noopener" className={link}>
-          NASA's Global Imagery Browse Services
-          <NewTabNote />
-        </a>
+        <InlineLink href={GIBS_ABOUT}>NASA's Global Imagery Browse Services</InlineLink>
         .
       </Text>
     </>

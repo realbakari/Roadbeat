@@ -12,6 +12,7 @@ import { ON_TIME } from '../lib/dashboard'
 import type { PanelId } from '../lib/dashboardLayout'
 import { EmptyNote, Row, Stat, Tile } from './Tile'
 import { NewTabNote } from '../components/NewTabNote'
+import { brisbaneClock as timeOnly } from '../lib/aest'
 
 // The dashboard's panels, each rendered from the data Dashboard.tsx gathers.
 // A panel shows only what its source published; the source line says which.
@@ -35,7 +36,6 @@ export interface DashboardData {
   parking: CarParkSpaces | null
 }
 
-const timeOnly = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const MODE_LABEL = { train: 'Trains', bus: 'Buses', tram: 'Trams', ferry: 'Ferries' } as const
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0)
@@ -48,7 +48,7 @@ function mmss(sec: number | null) {
 }
 
 const sourceLink = (href: string, children: ReactNode) => (
-  <a href={href} target="_blank" rel="noreferrer" className="underline decoration-1 underline-offset-2">
+  <a href={href} target="_blank" rel="noopener noreferrer" className="underline decoration-1 underline-offset-2">
     {children}
     <NewTabNote />
   </a>

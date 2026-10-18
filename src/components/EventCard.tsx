@@ -29,7 +29,6 @@ export function TypeIcon({ type, size = 'md' }: { type: string; size?: 'md' | 'l
   )
 }
 
-
 interface Props {
   event: TrafficEvent
   now: number

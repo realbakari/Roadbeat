@@ -1,19 +1,11 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
-import { ArrowLeftIcon, ArrowSquareOutIcon, FlameIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, FlameIcon } from '@phosphor-icons/react'
 import { FIRE_BADGE, FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
 import { timeAgo } from '../lib/format'
 import { readableTextOn } from '../lib/routeColor'
-import { NewTabNote } from './NewTabNote'
+import { ExternalLink } from './ui/Links'
 import { PublishedText, TextPart } from './PublishedText'
-
-const when = new Intl.DateTimeFormat('en-AU', {
-  timeZone: 'Australia/Brisbane',
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-  hour: 'numeric',
-  minute: '2-digit',
-})
+import { brisbaneDayDateTime as when } from '../lib/aest'
 
 /** QFD's own pages for current warnings and incidents. */
 const QFD_WARNINGS = 'https://www.fire.qld.gov.au/Current-Incidents'
@@ -99,10 +91,7 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
           )}
 
           <div className="grid gap-1">
-            <a href={QFD_WARNINGS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-              Current incidents on the Queensland Fire Department site <ArrowSquareOutIcon size={14} />
-              <NewTabNote />
-            </a>
+            <ExternalLink href={QFD_WARNINGS}>Current incidents on the Queensland Fire Department site</ExternalLink>
             <Text size="xs" variant="secondary">
               Source: Queensland Fire Department, data.qld.gov.au (CC BY 4.0). If you are in danger, call Triple Zero (000).
             </Text>

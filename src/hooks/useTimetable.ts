@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadTripsAround, loadTripsOn, type ScheduledTrip } from '../api/timetables'
-import type { TransitRegion } from '../api/translink'
+import type { TransitRegion } from '../api/transitTypes'
 
 /** Published trips on `codes` for one service day (with `calendarDay`, everything that can depart that calendar day); null while loading. */
 export function useTripsOn(region: TransitRegion, codes: string[] | null, date: string | null, calendarDay = false) {

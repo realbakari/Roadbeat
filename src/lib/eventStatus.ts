@@ -1,4 +1,5 @@
 import type { TrafficEvent } from '../api/types.js'
+import { brisbaneDayKey as brisbaneDay } from './aest.js'
 
 // Whether a QLDTraffic event is in effect. Free of browser-only code, so the app
 // and the server functions in api/ share it.
@@ -7,7 +8,6 @@ export function isClosure(e: TrafficEvent): boolean {
   return e.properties.impact?.impact_type === 'Closures'
 }
 
-const brisbaneDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 const brisbaneWeekday = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'long' })
 
 /**

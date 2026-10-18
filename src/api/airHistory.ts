@@ -1,3 +1,5 @@
+import { brisbaneDate } from '../lib/aest'
+
 // Hourly history for one air quality station, from the Department of
 // Environment, Tourism, Science and Innovation's Air Quality Query API
 // (data.qld.gov.au "Air Quality Monitoring Data API", CC BY 4.0). The API is
@@ -100,11 +102,6 @@ export function parseMeasurements(rows: unknown): AirReading[] {
 }
 
 const HOUR = 3_600_000
-
-/** Today's date in Queensland (AEST, no daylight saving), as yyyy-mm-dd. */
-export function brisbaneDate(now: number): string {
-  return new Date(now + 10 * HOUR).toISOString().slice(0, 10)
-}
 
 /**
  * The hours a chart covers: a timeframe ending at the end of `date` in

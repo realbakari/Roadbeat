@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { brisbaneDate } from '../api/airHistory'
 import { himawariFrames, type HimawariBand } from '../api/himawari'
 import { mergeFrames } from '../lib/frames'
 import { fetchJmaFrames, type JmaFrame } from '../api/jmaHimawari'
 import { latestImageryDate, type DailyPass } from '../api/satelliteImagery'
 import { dailyPass, isGibsLive, jmaProduct, type SatelliteSource } from '../lib/satelliteImage'
 import { poll } from './poll'
+import { brisbaneDate } from '../lib/aest'
 
 /**
  * The Himawari-9 image times GIBS lists for `band`, read when the band is
@@ -14,7 +14,7 @@ import { poll } from './poll'
  * kept (`mergeFrames`) and the map never steps back to an older image. Null
  * `band` stops reading.
  */
-export function useHimawari(band: HimawariBand | null) {
+function useHimawari(band: HimawariBand | null) {
   const [state, setState] = useState<{ band: HimawariBand; frames: string[]; error: string | null } | null>(null)
   useEffect(() => {
     if (!band) return
@@ -37,7 +37,7 @@ export function useHimawari(band: HimawariBand | null) {
 }
 
 /** Every Himawari-9 image JMA lists, oldest first, read while `enabled` and every 2 minutes after (JMA lists each a few minutes after it's taken). */
-export function useJmaFrames(enabled: boolean) {
+function useJmaFrames(enabled: boolean) {
   const [state, setState] = useState<{ frames: JmaFrame[]; error: string | null } | null>(null)
   useEffect(() => {
     if (!enabled) return

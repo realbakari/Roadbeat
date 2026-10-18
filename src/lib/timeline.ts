@@ -2,6 +2,7 @@ import type { Gauge } from '../api/gaugeTypes'
 import type { EventHistory, HistoryEvent, HistoryRun } from '../api/historyTypes'
 import type { NewsItem } from '../api/newsTypes'
 import type { TrafficEvent } from '../api/types'
+import { brisbaneDayClock } from './aest'
 import { HISTORY_WINDOW_MS, inEffectAt, runAtOrBefore } from './eventHistory'
 
 // Replays what the official sources had published by a chosen time. The rule
@@ -96,4 +97,9 @@ export function clampTime(t: number, now: number): number {
 export function stepTime(t: number, speed: Speed, elapsedMs: number, now: number): number | null {
   const next = t + (speed * elapsedMs) / 1000
   return next >= now ? null : next
+}
+
+/** What a replay says it shows, the same on the map's banner and the dashboard's strip. */
+export function replayLabel(at: number): string {
+  return `Showing ${brisbaneDayClock.format(at)} · as published then · not live`
 }

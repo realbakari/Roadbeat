@@ -2,8 +2,6 @@ import ROUTE_DATA from '../data/translink-routes.json'
 import { decodeFeed, num, parseTripUpdates, parseVehicles, routeCode, rt } from './gtfsrt'
 import type { LiveVehicle, TransitRegion, TripUpdates, VehicleMode } from './transitTypes'
 
-export type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates, VehicleMode } from './transitTypes'
-
 // TransLink GTFS-RT (data.qld.gov.au "Translink real time data"). The feeds are
 // protobuf and send no CORS headers, so they're read through /translink-rt
 // (see vite.config.ts and functions/translink-rt).

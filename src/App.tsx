@@ -12,7 +12,8 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_CRASH_FILTER, type CrashFilter } from './api/crashes'
 import { loadTracks, trackBounds } from './api/tracks'
-import { allRouteCodes, type VehicleMode } from './api/translink'
+import { allRouteCodes } from './api/translink'
+import type { VehicleMode } from './api/transitTypes'
 import { AlertSettingsDialog } from './components/AlertSettingsDialog'
 import { FeedbackDialog } from './components/FeedbackDialog'
 import { AppHeader } from './components/AppHeader'
@@ -36,34 +37,38 @@ import { usePanelLayout, VIEW_IDS } from './hooks/usePanelLayout'
 import { useEventHistory, useTimeline } from './hooks/useTimeline'
 import { useLocality } from './hooks/useLocality'
 import { useHashSelection, useSelectedPlace, type MapFocus } from './hooks/useSelection'
-import { useBushfires, useClearances, useCouncilPlaces, useRoadOccupancies, useGauges, useLiveVehicles, useNews, useSignals, useNow, useReferenceData, useTrafficData, useTransitAlerts } from './hooks/useTrafficData'
-import { useAirQuality } from './hooks/useTrafficData'
+import { useClearances, useReferenceData, useTrafficData } from './hooks/useRoadFeeds'
+import { useCouncilPlaces, useGauges, useRoadOccupancies, useSignals } from './hooks/useCouncilFeeds'
+import { useLiveVehicles, useTransitAlerts } from './hooks/useTransitFeeds'
+import { useNews } from './hooks/useNews'
+import { useNow } from './hooks/useNow'
 import { useHotspots } from './hooks/useSatellite'
 import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
-import { isGibsLive, jmaProduct, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
+import { isGibsLive, jmaProduct, SATELLITE_SOURCES, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
 import { frameAt, recentFrames } from './lib/frames'
-import { brisbaneDate } from './api/airHistory'
-import { aestTime } from './lib/aest'
-import { SATELLITE_SOURCES } from './lib/satelliteImage'
-import { layerTimes } from './lib/layerInfo'
+import { brisbaneDate } from './lib/aest'
+import { layerCounts as countLayers, layerTimes } from './lib/layerInfo'
+import { imageSources as sourceLines, satelliteImageTime } from './lib/mapImage'
 import { SatelliteTimeline } from './components/map/SatelliteTimeline'
-import { parseBase, parseSatelliteSource, type MapBase } from './lib/mapBase'
+import { parseBase, parseBasemap, parseSatelliteSource, type MapBase } from './lib/mapBase'
 import { useStoredChoice } from './hooks/useStoredChoice'
 import { searchWithView, viewFromSearch } from './lib/viewUrl'
-import { parseDismissed, satelliteSuggestion } from './lib/satelliteSuggestion'
+import { satelliteSuggestion } from './lib/satelliteSuggestion'
+import { useSatelliteDismissals } from './hooks/useSatelliteDismissals'
+import { useFocusOnce } from './hooks/useFocusOnce'
 import { SatelliteSuggestion } from './components/map/SatelliteSuggestion'
-import { useCyclones, useFireBans, useNswFires, usePastCyclones, useSpeedCameras } from './hooks/useHazardFeeds'
+import { useAirQuality, useBushfires, useCyclones, useFireBans, useNswFires, usePastCyclones, useSpeedCameras } from './hooks/useHazardFeeds'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
 import { applyFilters, DEFAULT_FILTERS, districtsOf, type EventFilters } from './lib/filters'
 import { asTrafficEvent, replayAt } from './lib/timeline'
-import { cameraKey, type Bounds, type LngLat } from './lib/geo'
+import { cameraKey, pointBounds, type Bounds, type LngLat, type MapView } from './lib/geo'
 import { feedNotice } from './lib/feedNotice'
 import type { LocalitySources } from './lib/locality'
 
-export default function App() {
+export function App() {
   const { mode, toggle } = useColorMode()
   const { events, cameras: tmrCameras, waze, loading, refreshing, error, fetchedAt, refresh } = useTrafficData()
   // Bushfire warnings are always fetched: they're on the map and list by default and feed notifications.
@@ -80,29 +85,14 @@ export default function App() {
   const panel: Panel = sel.news != null ? 'news' : panelChoice
   const occupancies = useRoadOccupancies(panel === 'events')
   const { mobileView, panelMode, setPanelMode, revealMap, revealList } = usePanelLayout()
-  const [mapView, setMapView] = useState<{ center: LngLat; zoom: number } | null>(null)
+  const [mapView, setMapView] = useState<MapView | null>(null)
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS)
   // A link to the News tab or a story (#news/…) opens with the news pins on.
   // A shared link's base, image and layers (?base=satellite&layers=…) open that view; see src/lib/viewUrl.ts.
   const [linked] = useState(() => viewFromSearch(location.search))
   const [layers, setLayers] = useState<MapLayers>(() => linked.layers ?? (location.hash.startsWith('#news') ? { ...DEFAULT_LAYERS, news: true } : DEFAULT_LAYERS))
-  // Base map style and 3D buildings are remembered in this browser.
-  const [basemap, setBasemapState] = useState<Basemap>(() => {
-    try {
-      const v = localStorage.getItem('qldt-basemap')
-      return v === 'detailed' || v === 'bright' || v === 'night' ? v : 'standard'
-    } catch {
-      return 'standard'
-    }
-  })
-  const setBasemap = (b: Basemap) => {
-    setBasemapState(b)
-    try {
-      localStorage.setItem('qldt-basemap', b)
-    } catch {
-      // Storage blocked: the choice lasts for this visit.
-    }
-  }
+  // The street map's style is remembered in this browser; 3D buildings travel in the URL with the other layers.
+  const [basemap, setBasemap] = useStoredChoice<Basemap>('qldt-basemap', parseBasemap, 'standard')
   // The base (street map or satellite) and the satellite image chosen are remembered too.
   const [base, setBase] = useStoredChoice<MapBase>('qldt-base', parseBase, 'map', linked.base)
   const [satelliteSource, setSatelliteSource] = useStoredChoice<SatelliteSource>('qldt-satellite', parseSatelliteSource, 'infrared', linked.image)
@@ -150,20 +140,21 @@ export default function App() {
   // The map shows the stories the News tab's filters leave, and only those that name a place.
   const mapStories = useMemo(() => (stories ? filterStories(stories, newsFilter, now).filter((s) => s.places.length) : []), [stories, newsFilter, now])
   const selectedStory = useMemo(() => (sel.news ? (stories?.find((s) => s.id === sel.news) ?? null) : null), [stories, sel.news])
-  // Opening the News tab turns its map pins on.
-  const choosePanel = useCallback((p: Panel) => {
-    setPanel(p)
-    if (p === 'news') setLayers((l) => (l.news ? l : { ...l, news: true }))
+  const turnOnLayers = useCallback((keys: (keyof MapLayers)[]) => {
+    setLayers((l) => (keys.every((k) => l[k]) ? l : { ...l, ...Object.fromEntries(keys.map((k) => [k, true])) }))
   }, [])
+  // Opening the News tab turns its map pins on.
+  const choosePanel = useCallback(
+    (p: Panel) => {
+      setPanel(p)
+      if (p === 'news') turnOnLayers(['news'])
+    },
+    [turnOnLayers],
+  )
   // Opening a story fits the map to the first road it is placed on, else its first place, once per story.
   // The map's own halo marks the story, so no focus ring is needed.
-  const focusedStory = useRef<string | null>(null)
-  useEffect(() => {
-    const bounds = storyBounds(selectedStory)
-    if (!selectedStory || !bounds || focusedStory.current === selectedStory.id) return
-    focusedStory.current = selectedStory.id
-    setFit({ bounds, id: Date.now() })
-  }, [selectedStory])
+  const storyFit = useMemo(() => storyBounds(selectedStory), [selectedStory])
+  useFocusOnce(storyFit, storyFit && selectedStory ? selectedStory.id : null, (bounds) => setFit({ bounds, id: Date.now() }))
 
   const openHref = useCallback(
     (href: string) => {
@@ -203,37 +194,32 @@ export default function App() {
     return null
   }, [selectedVehicle, vehicleFilter, layers.vehicles])
 
-  // Centre on a vehicle once when it's picked (not on every position update).
-  const focusedVehicle = useRef<string | null>(null)
-  useEffect(() => {
-    if (!selectedVehicle) {
-      focusedVehicle.current = null
-      return
-    }
-    if (focusedVehicle.current === selectedVehicle.id) return
-    focusedVehicle.current = selectedVehicle.id
-    setLayers((l) => (l.vehicles ? l : { ...l, vehicles: true }))
-    setFollowVehicle(false)
-    setFocus({ center: selectedVehicle.position, zoom: 14, ring: false })
-  }, [selectedVehicle])
+  // Centre on a vehicle once when it's picked (not on every position update), and again if it's closed and picked later.
+  useFocusOnce(
+    selectedVehicle,
+    selectedVehicle?.id ?? null,
+    (v) => {
+      turnOnLayers(['vehicles'])
+      setFollowVehicle(false)
+      setFocus({ center: v.position, zoom: 14, ring: false })
+    },
+    true,
+  )
 
   const showLineOnMap = useCallback(
     (title: string, match: (code: string) => boolean) => {
       setVehicleFilter({ title, match })
-      setLayers((l) => (l.vehicles ? l : { ...l, vehicles: true }))
+      turnOnLayers(['vehicles'])
       revealMap()
       // Fit the line's track when TransLink publishes one, else its live vehicles.
       loadTracks().then((t) => {
         const track = t && trackBounds(t, match)
         if (track) return setFit({ bounds: track, id: Date.now() })
-        const pts = allVehicles.filter((v) => match(v.route)).map((v) => v.position)
-        if (!pts.length) return
-        const xs = pts.map((p) => p[0])
-        const ys = pts.map((p) => p[1])
-        setFit({ bounds: [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], id: Date.now() })
+        const live = pointBounds(allVehicles.filter((v) => match(v.route)).map((v) => v.position))
+        if (live) setFit({ bounds: live, id: Date.now() })
       })
     },
-    [allVehicles, revealMap],
+    [allVehicles, revealMap, turnOnLayers],
   )
 
   const districts = useMemo(() => districtsOf(events), [events])
@@ -264,14 +250,14 @@ export default function App() {
   const imagery = useSatelliteImagery(base === 'satellite', satelliteSource, now)
   // The live image's frames from the last 3 hours, for the satellite timeline; `frame` is the one picked there, or null to follow the newest.
   const [frame, setFrame] = useState<string | null>(null)
-  const liveFrames = useMemo(
-    () => recentFrames(isGibsLive(satelliteSource) ? imagery.live.frames : jmaProduct(satelliteSource) ? imagery.jma.frames.map((f) => f.time) : [], 3),
+  const allLiveFrames = useMemo(
+    () => (isGibsLive(satelliteSource) ? imagery.live.frames : jmaProduct(satelliteSource) ? imagery.jma.frames.map((f) => f.time) : []),
     [satelliteSource, imagery.live.frames, imagery.jma.frames],
   )
+  const liveFrames = useMemo(() => recentFrames(allLiveFrames, 3), [allLiveFrames])
   const pickedFrame = frame && liveFrames.includes(frame) ? frame : null
   // One timeline: while Replay runs, the live image follows the replayed moment, using the
   // published frame at or just before it, or none at all, never today's clouds under past events.
-  const allLiveFrames = isGibsLive(satelliteSource) ? imagery.live.frames : jmaProduct(satelliteSource) ? imagery.jma.frames.map((f) => f.time) : []
   const replayFrame = replayTime != null && allLiveFrames.length ? frameAt(allLiveFrames, replayTime) : undefined
   const shownFrame = replayFrame !== undefined ? replayFrame : pickedFrame
   const replayDate = replayTime != null ? brisbaneDate(replayTime) : null
@@ -287,35 +273,26 @@ export default function App() {
     [base, satelliteSource, replayFrame, shownFrame, replayDate, imagery.live.time, imagery.jma.frames, imagery.jma.latest, imagery.date],
   )
   /** What the saved image's footer says about each shown source and its data time. */
-  const imageSources = [
-    replayTime != null ? `Road events: QLDTraffic, replay of ${aestTime(replayTime, now)}` : fetchedAt != null ? `Road events: QLDTraffic, read ${aestTime(fetchedAt, now)}` : 'Road events: QLDTraffic',
-    ...(layers.fires && firesAt != null ? [`Bushfires: Queensland Fire Department, read ${aestTime(firesAt, now)}`] : []),
-    ...(satelliteImage ? [`Satellite: ${SATELLITE_SOURCES.find((s) => s.value === satelliteSource)?.label ?? satelliteSource}, image ${satelliteImageTime()}`] : []),
-  ]
-  /** The shown satellite image's own time (live frames) or date (daily images), as published. */
-  function satelliteImageTime(): string {
-    const t = shownFrame ?? (isGibsLive(satelliteSource) ? imagery.live.time : imagery.jma.latest?.time) ?? null
-    if (allLiveFrames.length && t && Number.isFinite(Date.parse(t))) return aestTime(Date.parse(t), now)
-    return replayDate ?? imagery.date ?? 'date not known'
-  }
+  const imageSources = sourceLines({
+    now,
+    replayAt: replayTime,
+    eventsReadAt: fetchedAt,
+    firesReadAt: layers.fires ? firesAt : null,
+    satellite: satelliteImage
+      ? {
+          label: SATELLITE_SOURCES.find((s) => s.value === satelliteSource)?.label ?? satelliteSource,
+          time: satelliteImageTime({
+            frameTime: shownFrame ?? (isGibsLive(satelliteSource) ? imagery.live.time : imagery.jma.latest?.time) ?? null,
+            live: allLiveFrames.length > 0,
+            date: replayDate ?? imagery.date,
+            now,
+          }),
+        }
+      : null,
+  })
   const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
   const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
-  const [dismissed, setDismissed] = useState<string[]>(() => {
-    try {
-      return parseDismissed(localStorage.getItem('qldt-satellite-dismissed'))
-    } catch {
-      return []
-    }
-  })
-  const dismissSuggestion = (key: string) => {
-    const next = [...dismissed, key]
-    setDismissed(next)
-    try {
-      localStorage.setItem('qldt-satellite-dismissed', JSON.stringify(next.slice(-50)))
-    } catch {
-      // Storage blocked: the dismissal lasts for this visit.
-    }
-  }
+  const [dismissed, dismissSuggestion] = useSatelliteDismissals()
   const suggestion = useMemo(
     () => (base === 'map' ? satelliteSuggestion(cyclones.data ?? [], qw.warnings ?? [], dismissed) : null),
     [base, cyclones.data, qw.warnings, dismissed],
@@ -331,25 +308,17 @@ export default function App() {
     [signalSites, sel.signal],
   )
   // Opening a gauge or a signal flies the map to it once.
-  const focusedPoint = useRef<string | null>(null)
-  useEffect(() => {
-    const target = selectedGauge ?? selectedSignal
-    const key = selectedGauge ? `g${selectedGauge.id}` : selectedSignal ? `s${selectedSignal.tsc}` : null
-    if (!target || !key || focusedPoint.current === key) return
-    focusedPoint.current = key
-    setFocus({ center: target.position, zoom: 15 })
-  }, [selectedGauge, selectedSignal])
+  useFocusOnce(
+    selectedGauge ?? selectedSignal,
+    selectedGauge ? `g${selectedGauge.id}` : selectedSignal ? `s${selectedSignal.tsc}` : null,
+    (target) => setFocus({ center: target.position, zoom: 15 }),
+  )
 
   const selectedFire = useMemo(() => (sel.fire ? (fires?.find((f) => f.id === sel.fire) ?? null) : null), [fires, sel.fire])
 
   // A locality page loads the gazetteer on demand and flies the map to the locality once.
   const locality = useLocality(sel.locality)
-  const focusedLocality = useRef<string | null>(null)
-  useEffect(() => {
-    if (!locality.found || focusedLocality.current === locality.found.name) return
-    focusedLocality.current = locality.found.name
-    setFocus({ center: locality.found.position, zoom: 13, ring: false })
-  }, [locality.found])
+  useFocusOnce(locality.found, locality.found?.name ?? null, (found) => setFocus({ center: found.position, zoom: 13, ring: false }))
   const localitySources = useMemo(
     (): LocalitySources => ({
       events,
@@ -364,16 +333,8 @@ export default function App() {
     }),
     [events, fires, fireError, cameras, air.stations, air.error, news.snapshot, stories, gauges, gaugeNotice],
   )
-  const turnOnLayers = useCallback((keys: (keyof MapLayers)[]) => {
-    setLayers((l) => (keys.every((k) => l[k]) ? l : { ...l, ...Object.fromEntries(keys.map((k) => [k, true])) }))
-  }, [])
   // Opening a fire flies the map to it (once per fire, not on every refresh).
-  const focusedFire = useRef<string | null>(null)
-  useEffect(() => {
-    if (!selectedFire || focusedFire.current === selectedFire.id) return
-    focusedFire.current = selectedFire.id
-    setFocus({ center: selectedFire.position, zoom: selectedFire.areaShape ? 10 : 11 })
-  }, [selectedFire])
+  useFocusOnce(selectedFire, selectedFire?.id ?? null, (f) => setFocus({ center: f.position, zoom: f.areaShape ? 10 : 11 }))
 
   // The tab title names the open view, for history, bookmarks, shared links and screen readers.
   const baseTitle = useRef(document.title)
@@ -423,29 +384,30 @@ export default function App() {
   }
 
   const layerCounts = useMemo(
-    () => ({
-      webcams: cameras.filter((c) => c.kind === 'webcam').length,
-      floodcams: cameras.filter((c) => c.kind === 'floodcam').length,
-      restAreas: ref.restAreas.length,
-      dumpPoints: ref.dumpPoints.length,
-      trucks: ref.truckRestrictions.length,
-      waze: waze.length,
-      ...(fires ? { fires: fires.length } : {}),
-      ...(qw.warnings ? { warnings: qw.warnings.length } : {}),
-      ...(gauges ? { gauges: gauges.length } : {}),
-      ...(signalVolumes ? { signals: signalVolumes.size } : {}),
-      ...(clearances ? { clearances: clearances.length } : {}),
-      ...(council.clearways ? { clearways: council.clearways.length } : {}),
-      ...(council.toilets ? { toilets: council.toilets.length } : {}),
-      ...(council.bays ? { accessibleParking: council.bays.length } : {}),
-      ...(council.meters ? { parkingMeters: council.meters.length } : {}),
-      ...(council.bikeStops ? { cycling: council.bikeStops.length } : {}),
-      ...(council.events ? { councilEvents: council.events.length } : {}),
-      ...(news.snapshot ? { councilCentres: news.snapshot.centres.length, outages: news.snapshot.outages.filter((o) => !isUnplaced(o)).length } : {}),
-      ...(air.stations ? { airQuality: air.stations.length } : {}),
-      ...(hot.hotspots ? { hotspots: hot.hotspots.length } : {}),
-      ...(stories ? { news: mapStories.length } : {}),
-    }),
+    () =>
+      countLayers({
+        cameras,
+        restAreas: ref.restAreas,
+        dumpPoints: ref.dumpPoints,
+        trucks: ref.truckRestrictions,
+        waze,
+        fires,
+        warnings: qw.warnings,
+        gauges,
+        signalVolumes,
+        clearances,
+        clearways: council.clearways,
+        toilets: council.toilets,
+        accessibleParking: council.bays,
+        parkingMeters: council.meters,
+        cycling: council.bikeStops,
+        councilEvents: council.events,
+        news: news.snapshot,
+        airQuality: air.stations,
+        hotspots: hot.hotspots,
+        stories,
+        mapStories,
+      }),
     [cameras, ref, waze, fires, gauges, signalVolumes, clearances, council.clearways, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, mapStories, news.snapshot, air.stations, hot.hotspots, qw.warnings],
   )
 
@@ -488,7 +450,7 @@ export default function App() {
         if (!location.hash.startsWith('#camera/')) cameraReturn.current = location.hash.replace(/^#/, '')
         revealMap()
         const cam = cameras.find((c) => `camera/${cameraKey(c)}` === hashKey)
-        if (cam) setLayers((l) => (cam.kind === 'webcam' ? (l.webcams ? l : { ...l, webcams: true }) : l.floodcams ? l : { ...l, floodcams: true }))
+        if (cam) turnOnLayers([cam.kind === 'webcam' ? 'webcams' : 'floodcams'])
       } else if (hashKey.startsWith('newsplace/')) {
         // A pin several stories share opens the News list for that place.
         setNewsFilter({ ...DEFAULT_STORY_FILTER, place: decodeURIComponent(hashKey.slice('newsplace/'.length)) })
@@ -501,7 +463,7 @@ export default function App() {
       }
       go(hashKey)
     },
-    [go, cameras, revealMap, revealList, choosePanel],
+    [go, cameras, revealMap, revealList, choosePanel, turnOnLayers],
   )
   const closeCamera = useCallback(() => go(cameraReturn.current), [go])
 
@@ -577,11 +539,11 @@ export default function App() {
             <div className={`flex min-h-0 w-full flex-1 flex-col ${panelMode === 'expanded' ? 'md:mx-auto md:max-w-5xl' : ''}`}>
               <SidePanel
                 sel={sel}
-                go={go}
+                onNavigate={go}
                 onOpenHref={openHref}
                 onOpenCamera={(k) => openKey(`camera/${k}`)}
                 onSelectEvent={selectEvent}
-                revealMap={revealMap}
+                onRevealMap={revealMap}
                 now={now}
                 panel={panel}
                 onPanelChange={choosePanel}

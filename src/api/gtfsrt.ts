@@ -53,7 +53,9 @@ export function parseVehicles(region: TransitRegion, f: FeedMessage, routeInfo: 
       label: v.vehicle?.label || null,
       position: [p.longitude, p.latitude],
       bearing: p.bearing ?? null,
-      status: v.currentStatus != null ? (STATUS[v.currentStatus] ?? null) : null,
+      // Decoded messages carry the proto default (IN_TRANSIT_TO) when the feed sends no
+      // status, so only a status the vehicle actually reported counts.
+      status: Object.hasOwn(v, 'currentStatus') ? (STATUS[v.currentStatus ?? -1] ?? null) : null,
       stopId: v.stopId || null,
       timestamp: (num(v.timestamp) ?? 0) * 1000,
     })
@@ -91,12 +93,14 @@ export function parseTripUpdates(region: TransitRegion, f: FeedMessage): TripUpd
         .map((s) => {
           const ev = s.departure?.time != null ? s.departure : s.arrival
           const t = num(ev?.time)
+          // As with a vehicle's status, an unsent sequence or delay decodes as 0, which
+          // would read as "on time"; only values the feed carries are kept.
           return {
             stopId: s.stopId!,
-            sequence: s.stopSequence ?? null,
+            sequence: Object.hasOwn(s, 'stopSequence') ? (s.stopSequence ?? null) : null,
             time: t ? t * 1000 : null,
             arrivalOnly: s.departure?.time == null,
-            delay: ev?.delay ?? null,
+            delay: ev && Object.hasOwn(ev, 'delay') ? (ev.delay ?? null) : null,
             skipped: s.scheduleRelationship === rt.TripUpdate.StopTimeUpdate.ScheduleRelationship.SKIPPED,
           }
         }),

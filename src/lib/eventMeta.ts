@@ -1,5 +1,5 @@
 import { CalendarDotsIcon, WarningIcon, WavesIcon, type Icon } from '@phosphor-icons/react'
-import { CrashIcon, QueueIcon, WorkerIcon } from './roadGlyphs'
+import { CrashIcon, QueueIcon, WorkerIcon } from '../components/icons/roadGlyphs'
 import type { EventPriority, EventType } from '../api/types'
 
 type BadgeVariant = 'red' | 'orange' | 'warning' | 'blue' | 'purple' | 'teal'

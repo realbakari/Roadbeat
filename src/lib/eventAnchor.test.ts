@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TrafficEvent } from '../api/types'
-import { eventMarkerPoints } from './eventAnchor'
+import { eventMarkerPoints, pointBounds } from './eventAnchor'
 import { eventMarkers } from './geo'
 
 const event = (id: number, geometry: TrafficEvent['geometry']) =>
@@ -56,5 +56,19 @@ describe('eventMarkers', () => {
       { type: 'Point', coordinates: [146.883129452, -24.490091094] },
     ])
     expect(features.map((f) => f.properties.id)).toEqual([834662, 834662])
+  })
+})
+
+describe('pointBounds', () => {
+  it('boxes the points from their south-west to north-east corners', () => {
+    expect(pointBounds([[153.1, -27.5], [152.9, -27.4], [153.0, -27.6]])).toEqual([[152.9, -27.6], [153.1, -27.4]])
+  })
+
+  it('boxes a single point to itself', () => {
+    expect(pointBounds([[153, -27.5]])).toEqual([[153, -27.5], [153, -27.5]])
+  })
+
+  it('gives null for no points', () => {
+    expect(pointBounds([])).toBeNull()
   })
 })

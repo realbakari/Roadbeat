@@ -63,12 +63,38 @@ export const DEFAULT_SETTINGS: AlertSettings = {
 
 const KEY = 'qldt-alert-settings'
 
+const isString = (x: unknown) => typeof x === 'string'
+const isNumber = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x)
+const listOf = <T>(v: unknown, ok: (x: unknown) => boolean, fallback: T[]): T[] => (Array.isArray(v) ? (v.filter(ok) as T[]) : fallback)
+const flag = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback)
+
+/**
+ * Settings as stored by an earlier visit, read field by field: anything
+ * missing or of the wrong shape (an older version, or a hand-edited value)
+ * takes its default, and the rest of the rider's choices are kept.
+ */
+export function parseSettings(json: unknown): AlertSettings {
+  const s = json && typeof json === 'object' ? (json as Record<string, unknown>) : {}
+  const kinds = s.kinds && typeof s.kinds === 'object' ? (s.kinds as Record<string, unknown>) : {}
+  const near = s.nearMe && typeof s.nearMe === 'object' ? (s.nearMe as Record<string, unknown>) : null
+  const at = near && Array.isArray(near.at) && near.at.length === 2 && near.at.every(isNumber) ? (near.at as LngLat) : null
+  const D = DEFAULT_SETTINGS
+  return {
+    inApp: flag(s.inApp, D.inApp),
+    browser: flag(s.browser, D.browser),
+    kinds: Object.fromEntries(Object.entries(D.kinds).map(([k, on]) => [k, flag(kinds[k], on)])) as AlertSettings['kinds'],
+    districts: listOf(s.districts, isString, D.districts),
+    roads: listOf(s.roads, isString, D.roads),
+    nearMe: at && isNumber(near?.km) && near.km > 0 ? { at, km: near.km } : null,
+    watchedEvents: listOf(s.watchedEvents, isNumber, D.watchedEvents),
+    routes: listOf(s.routes, isString, D.routes),
+  }
+}
+
 export function loadSettings(): AlertSettings {
   try {
     const raw = localStorage.getItem(KEY)
-    if (!raw) return DEFAULT_SETTINGS
-    const s = JSON.parse(raw) as Partial<AlertSettings>
-    return { ...DEFAULT_SETTINGS, ...s, kinds: { ...DEFAULT_SETTINGS.kinds, ...s.kinds } }
+    return raw ? parseSettings(JSON.parse(raw)) : DEFAULT_SETTINGS
   } catch {
     return DEFAULT_SETTINGS
   }

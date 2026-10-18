@@ -5,9 +5,7 @@ import { aestWithAge } from '../lib/aest'
 import { dailyPass, jmaProduct, SATELLITE_SOURCES, type SatelliteSource } from '../lib/satelliteImage'
 import { DailyImageNote, type DailyState } from './DailyImageNote'
 import { LayerFacts } from './LayerFacts'
-import { NewTabNote } from './NewTabNote'
-
-const link = 'text-kumo-link underline decoration-1 underline-offset-2'
+import { InlineLink } from './ui/Links'
 
 interface Props extends DailyState {
   source: SatelliteSource
@@ -68,10 +66,7 @@ function LiveNote({ band, live, now }: Props & { band: 'infrared' | 'visible' })
           : "Sunlight reflected off cloud, so it is dark at night in Queensland. Switch to infrared after sunset."}{' '}
         Coarse, about {band === 'visible' ? '1' : '2'} km a pixel, so it blurs when you zoom in. The time shown is the image's own,
         as NASA lists it. Imagery: Japan Meteorological Agency (
-        <a href={JMA_COPYRIGHT} target="_blank" rel="noopener" className={link}>
-          terms
-          <NewTabNote />
-        </a>
+        <InlineLink href={JMA_COPYRIGHT}>terms</InlineLink>
         ), made into map tiles by NASA. {GIBS_ACKNOWLEDGEMENT}
       </Text>
     </>
@@ -103,10 +98,7 @@ function JmaNote({ jma, now, truecolour }: Props & { truecolour: boolean }) {
           : 'Infrared sees cloud day and night. Its shades show the temperature of cloud tops, not rain: for rain, use the rain radar.'}{' '}
         The whole Earth disc, so it only goes to state-wide zoom and blurs closer in. The time shown is the image's own, as JMA lists it. These are
         the images behind JMA's own weather map, which JMA can change without notice; NASA's live image is the fallback. {JMA_CREDIT}, under its{' '}
-        <a href={JMA_COPYRIGHT} target="_blank" rel="noopener" className={link}>
-          Public Data License
-          <NewTabNote />
-        </a>
+        <InlineLink href={JMA_COPYRIGHT}>Public Data License</InlineLink>
         .
       </Text>
     </>

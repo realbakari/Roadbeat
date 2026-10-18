@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchTripUpdates, type TransitRegion } from '../api/translink'
+import { fetchTripUpdates } from '../api/translink'
+import type { TransitRegion } from '../api/transitTypes'
 import { MAIN_REGIONS, PROBED_REGIONS, realtimeState, type FeedCounts, type RealtimeState } from '../lib/transitRegions'
 
 // TransLink answers a GTFS-RT endpoint for every regional network, but most

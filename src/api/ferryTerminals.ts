@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BCC_DATASETS, bccJson } from './bccOpenData'
 import type { Feature } from './stationFacilities'
 
 // Brisbane City Council's ferry terminals, with each terminal's access features
@@ -7,8 +8,7 @@ import type { Feature } from './stationFacilities'
 
 export const FERRY_TERMINALS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/ferry-terminals/information/'
 /** The records endpoint, for a status check. */
-export const FERRY_TERMINALS_API = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/ferry-terminals/records'
-const API = FERRY_TERMINALS_API
+export const FERRY_TERMINALS_API = `${BCC_DATASETS}/ferry-terminals/records`
 
 const text = z.string().nullish().transform((s) => (s && s.trim() ? s.trim() : null))
 const yes = z.string().nullish().transform((s) => s?.trim().toLowerCase() === 'yes')
@@ -101,12 +101,10 @@ export function fetchFerryTerminal(stopId: string): Promise<FerryTerminal | null
   if (!/^\d+$/.test(stopId)) return Promise.resolve(null)
   let hit = cache.get(stopId)
   if (!hit) {
-    hit = fetch(`${API}?limit=1&where=${encodeURIComponent(`hastus="${stopId}"`)}`)
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`Brisbane City Council responded with ${res.status}`))))
-      .then((body: unknown) => {
-        const results = z.object({ results: z.array(z.unknown()) }).parse(body).results
-        return results.length ? parseFerryTerminal(results[0]) : null
-      })
+    hit = bccJson(`ferry-terminals/records?limit=1&where=${encodeURIComponent(`hastus="${stopId}"`)}`).then((body: unknown) => {
+      const results = z.object({ results: z.array(z.unknown()) }).parse(body).results
+      return results.length ? parseFerryTerminal(results[0]) : null
+    })
     hit.catch(() => cache.delete(stopId))
     cache.set(stopId, hit)
   }

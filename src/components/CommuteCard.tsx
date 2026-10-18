@@ -3,9 +3,10 @@ import { BriefcaseIcon, CheckCircleIcon, FireIcon, PencilSimpleIcon, ProhibitIco
 import { useEffect, useMemo, useState } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import { disablePush, enablePush, pushAvailable, pushSupported, updatePush } from '../api/push'
-import { alertActive, routeInfo, type LiveVehicle, type TransitAlert } from '../api/translink'
+import { alertActive, routeInfo, type TransitAlert } from '../api/translink'
+import type { LiveVehicle } from '../api/transitTypes'
 import type { TrafficEvent } from '../api/types'
-import { useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTransitFeeds'
 import { commuteWindow, firesNear, onRoute, roadsBriefing, type Commute } from '../lib/commute'
 import { saveCommute, useCommute } from '../lib/commuteStore'
 import { departuresAt } from '../lib/departures'
@@ -13,9 +14,8 @@ import { isClosure } from '../lib/filters'
 import { stopAndChildren } from '../lib/planner'
 import { CommuteDialog } from './CommuteDialog'
 import { DelayChip } from './Realtime'
+import { brisbaneClock as clock, brisbaneWeekday as weekday } from '../lib/aest'
 
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
-const weekday = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short' })
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 function daysText(days: number[]) {

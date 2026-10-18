@@ -2,7 +2,9 @@ import type { FireWarning } from '../api/bushfireFeed.js'
 import type { TransitRegion } from '../api/transitTypes.js'
 import type { TrafficEvent } from '../api/types.js'
 import type { Departure } from './departures.js'
+import { distanceKm } from './distance.js'
 import { hasEnded, isClosure, isUpcoming } from './eventStatus.js'
+import { BRISBANE_OFFSET_MS, brisbaneClock } from './aest.js'
 
 // "My commute": the roads, stop and route a rider travels at a set time. Pure and
 // free of browser-only code, so the in-app briefing card and the push alert
@@ -33,17 +35,16 @@ export const ALERT_DELAY = 5 * 60
 /** Bushfire warnings within this distance of the stop are part of the briefing. */
 export const FIRE_KM = 25
 
-const BRISBANE = 10 * 3600_000
 const DAY = 24 * 3600_000
 
 /** When the commute next departs at or after `now - WINDOW_AFTER`, and whether `now` is inside its window. */
 export function commuteWindow(c: Commute, now: number): { departs: number; active: boolean } | null {
   if (!c.days.length) return null
-  const local = now + BRISBANE
-  const midnight = local - (local % DAY) - BRISBANE
+  const local = now + BRISBANE_OFFSET_MS
+  const midnight = local - (local % DAY) - BRISBANE_OFFSET_MS
   for (let d = 0; d < 8; d++) {
     const day = midnight + d * DAY
-    const weekday = new Date(day + BRISBANE).getUTCDay()
+    const weekday = new Date(day + BRISBANE_OFFSET_MS).getUTCDay()
     if (!c.days.includes(weekday)) continue
     const departs = day + c.minutes * 60_000
     if (departs + WINDOW_AFTER < now) continue
@@ -93,14 +94,6 @@ export function onRoute(c: Commute, d: Departure, names: RouteNames) {
   return [d.trip.route, info?.short, info?.line, info?.line?.split(' ')[0]].some((x) => x?.toLowerCase() === q)
 }
 
-function distanceKm(a: [number, number], b: [number, number]) {
-  const rad = Math.PI / 180
-  const dLat = (b[1] - a[1]) * rad
-  const dLng = (b[0] - a[0]) * rad
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.sin(dLng / 2) ** 2
-  return 2 * 6371 * Math.asin(Math.sqrt(h))
-}
-
 /** Bushfire warnings (not plain incidents) within FIRE_KM of the stop, highest level first. */
 export function firesNear(at: [number, number] | null, fires: FireWarning[]): FireWarning[] {
   if (!at) return []
@@ -145,7 +138,7 @@ export function commuteAlerts(
     if (!onRoute(c, d, names) || d.time > now + WINDOW_BEFORE) continue
     const info = names(d.trip.route, d.trip.region)
     const label = info?.line?.split(' ')[0] ?? info?.short ?? d.trip.route
-    const at = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(d.scheduled ?? d.time)
+    const at = brisbaneClock.format(d.scheduled ?? d.time)
     const what = `${at} ${label}${d.headsign ? ` to ${d.headsign}` : ''}${data.stopName ? ` from ${data.stopName}` : ''}`
     if (d.trip.relationship === 'cancelled') {
       out.push({ key: `trip:${d.key}:cancelled`, title: `Cancelled: ${what}`, body: 'TransLink reports this service is cancelled.', href: `transit/stop/${c.region}/${encodeURIComponent(c.stopId ?? '')}` })

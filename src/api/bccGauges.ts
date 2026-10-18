@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { parseSimpleCsv } from '../lib/csv'
+import { bccFetch, bccJson } from './bccOpenData'
 import type { Gauge, GaugeReading } from './gaugeTypes'
 
 // Brisbane City Council rainfall and stream height gauges
@@ -9,7 +10,6 @@ import type { Gauge, GaugeReading } from './gaugeTypes'
 // 72 hours, one column per gauge; "-" means the gauge sent nothing for that
 // interval. Some gauges report only every few hours.
 
-const BASE = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets'
 export const GAUGES_DATASET_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/telemetry-sensors-rainfall-and-stream-heights/'
 /** 24 hours of 5-minute rows. */
 const ROWS = 288
@@ -58,22 +58,13 @@ export function parseGauges(sensors: unknown, readingsCsv: string): Gauge[] {
 let sensors: Promise<unknown> | null = null
 
 export async function fetchGauges(signal?: AbortSignal): Promise<Gauge[]> {
-  sensors ??= fetch(`${BASE}/telemetry-sensors-rainfall-and-stream-heights-metadata/exports/json`).then((r) => {
-    if (!r.ok) throw new Error(`Gauge list responded with ${r.status}`)
-    return r.json()
-  })
+  sensors ??= bccJson('telemetry-sensors-rainfall-and-stream-heights-metadata/exports/json', {}, 'Gauge list')
   const [list, csv] = await Promise.all([
     sensors.catch((e) => {
       sensors = null
       throw e
     }),
-    fetch(`${BASE}/telemetry-sensors-rainfall-and-stream-heights/exports/csv?order_by=measured%20desc&limit=${ROWS}&delimiter=,`, {
-      signal,
-      cache: 'no-cache',
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Gauge readings responded with ${r.status}`)
-      return r.text()
-    }),
+    bccFetch(`telemetry-sensors-rainfall-and-stream-heights/exports/csv?order_by=measured%20desc&limit=${ROWS}&delimiter=,`, { signal, cache: 'no-cache' }, 'Gauge readings').then((r) => r.text()),
   ])
   return parseGauges(list, csv)
 }

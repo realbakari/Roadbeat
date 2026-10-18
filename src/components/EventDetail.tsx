@@ -1,7 +1,6 @@
 import { Badge, Banner, Button, Text } from '@cloudflare/kumo'
 import {
   ArrowLeftIcon,
-  ArrowSquareOutIcon,
   BellIcon,
   BellRingingIcon,
   CheckIcon,
@@ -10,7 +9,7 @@ import {
   SirenIcon,
   WarningIcon,
 } from '@phosphor-icons/react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo } from 'react'
 import type { Camera, TrafficEvent } from '../api/types'
 import { priorityBadge, typeMeta } from '../lib/eventMeta'
 import { clean, formatDateTime, timeAgo, titleCase } from '../lib/format'
@@ -25,7 +24,10 @@ import { RoadContacts } from './RoadContacts'
 import { TypeIcon } from './EventCard'
 import { eventPlace, eventTitle } from '../lib/eventText'
 import { shareUrl } from '../lib/sharePage'
-import { NewTabNote } from './NewTabNote'
+import { useCopied } from '../hooks/useCopied'
+import { ExternalLink } from './ui/Links'
+import { Section } from './ui/Section'
+import { Facts } from './ui/Facts'
 
 interface Props {
   event: TrafficEvent
@@ -63,12 +65,11 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
       .slice(0, 4)
   }, [anchor, cameras])
 
-  const [copied, setCopied] = useState(false)
+  const [copied, flashCopied] = useCopied(1500)
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl(location.origin, location.hash) ?? location.href)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
+      flashCopied()
     } catch {
       // Clipboard can be blocked; the URL bar still holds the link.
     }
@@ -153,7 +154,8 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
           )}
 
           <Section title="Impact">
-            <Rows
+            <Facts
+              labelWidth="wide"
               rows={[
                 ['Effect', [clean(impact?.impact_type), clean(impact?.impact_subtype)].filter(Boolean).join(' — ')],
                 ['Direction', direction],
@@ -163,7 +165,8 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
           </Section>
 
           <Section title="When">
-            <Rows
+            <Facts
+              labelWidth="wide"
               rows={[
                 [startLabel(d?.start, now), formatDateTime(d?.start)],
                 ['Expected end', formatDateTime(d?.end) ?? 'Until further notice'],
@@ -207,7 +210,8 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
           </Section>
 
           <Section title="Location">
-            <Rows
+            <Facts
+              labelWidth="wide"
               rows={[
                 ['Road', clean(r?.road_name)],
                 ['Locality', [clean(r?.locality), clean(r?.postcode)].filter(Boolean).join(' ')],
@@ -271,46 +275,5 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
         </div>
       </div>
     </div>
-  )
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-2">
-      <Text as="h3" variant="heading">
-        {title}
-      </Text>
-      <div>{children}</div>
-    </section>
-  )
-}
-
-function Rows({ rows }: { rows: [string, string | null | undefined][] }) {
-  const visible = rows.filter(([, v]) => v)
-  if (!visible.length) return <Text variant="secondary">Not provided</Text>
-  return (
-    <dl className="grid grid-cols-[minmax(7rem,auto)_1fr] gap-x-4 gap-y-1.5 text-sm">
-      {visible.map(([k, v]) => (
-        <div key={k} className="contents">
-          <dt className="text-kumo-subtle">{k}</dt>
-          <dd className="text-kumo-default">{v}</dd>
-        </div>
-      ))}
-    </dl>
-  )
-}
-
-function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
-    >
-      {children}
-      <ArrowSquareOutIcon size={14} />
-      <NewTabNote />
-    </a>
   )
 }

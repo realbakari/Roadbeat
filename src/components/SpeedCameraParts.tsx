@@ -5,16 +5,12 @@ import { feedNotice } from '../lib/feedNotice'
 import { formatPosition } from '../lib/crosshair'
 import { LAYER_COLOR } from '../lib/mapIcons'
 import type { Feed } from '../hooks/useHazardFeeds'
-import { ExternalLink, Header, Section } from './PlaceParts'
+import { Header } from './PlaceParts'
+import { ExternalLink, InlineLink } from './ui/Links'
+import { Section } from './ui/Section'
 
 // The speed camera layer's note and a camera site's page, both from the
 // Queensland Government's camera map.
-
-const Out = ({ href, children }: { href: string; children: string }) => (
-  <a href={href} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
-    {children}
-  </a>
-)
 
 const COLOR: Record<SpeedCamera['type'], string> = {
   fixed: LAYER_COLOR.speedCamera,
@@ -30,8 +26,8 @@ export function SpeedCamerasNote({ feed }: { feed: Feed<SpeedCamera[]> }) {
     <div className="grid gap-1">
       {notice && <Text size="xs" variant="error">{notice}</Text>}
       <Text size="xs" variant="secondary">
-        Fixed speed, red light and point-to-point camera sites, from the <Out href={SPEED_CAMERAS_PAGE}>Queensland Government's camera map</Out>. Mobile
-        cameras aren't shown: the state lists <Out href={MOBILE_CAMERA_SITES}>their sites</Out> by road and suburb only.
+        Fixed speed, red light and point-to-point camera sites, from the <InlineLink href={SPEED_CAMERAS_PAGE}>Queensland Government's camera map</InlineLink>. Mobile
+        cameras aren't shown: the state lists <InlineLink href={MOBILE_CAMERA_SITES}>their sites</InlineLink> by road and suburb only.
       </Text>
     </div>
   )

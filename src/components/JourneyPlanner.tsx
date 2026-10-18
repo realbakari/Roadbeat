@@ -1,6 +1,5 @@
 import { Button, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
 import {
-  ArrowSquareOutIcon,
   ArrowsDownUpIcon,
   CaretDownIcon,
   CaretRightIcon,
@@ -13,23 +12,26 @@ import {
 } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
-import { brisbaneDate, dayStart, routesAtStops, timetableDates } from '../api/timetables'
-import { alertActive, routeInfo, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
+import { dayStart, routesAtStops, timetableDates } from '../api/timetables'
+import { alertActive, routeInfo, type TransitAlert } from '../api/translink'
+import type { LiveVehicle, TransitRegion } from '../api/transitTypes'
 import { keepSavedTrip, removeSavedTrip, useSavedTrips } from '../lib/savedStops'
 import { planHash, type PlanQuery } from '../lib/route'
 import { filterJourneys, sameTrip, TRIP_MODES, tripFilter, type SavedTrip } from '../lib/savedTrips'
 import { SavedTrips } from './SavedTrips'
 import { useTripsOn } from '../hooks/useTimetable'
-import { useNow, useStopIndex, useTimetableIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { useNow } from '../hooks/useNow'
+import { useStopIndex, useTimetableIndex, useTripUpdates } from '../hooks/useTransitFeeds'
 import { stopHref } from '../lib/departures'
-import { changeTime, planJourneys, searchStops, stopAndChildren, translinkPlannerUrl, type Journey, type Leg } from '../lib/planner'
+import { changeTime, legMode, planJourneys, searchStops, shortName, stopAndChildren, translinkPlannerUrl, type Journey, type Leg } from '../lib/planner'
 import { liveLookup, type LiveLookup } from '../lib/timetable'
 import { RouteBadges } from './TransitHome'
 import { REGION_NAMES } from '../lib/transitRegions'
-import { NewTabNote } from './NewTabNote'
+import { useCopied } from '../hooks/useCopied'
+import { ExternalLink } from './ui/Links'
 import { chipClass } from './chip'
+import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
 
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const dayLabel = new Intl.DateTimeFormat('en-AU', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' })
 
 const TIMES = Object.fromEntries(
@@ -167,7 +169,7 @@ export function JourneyPlanner({
   const [modes, setModes] = useState<Set<string>>(() => new Set(initial?.modes?.length ? initial.modes : TRIP_MODES))
   const [directOnly, setDirectOnly] = useState(initial?.direct ?? false)
   const savedTrips = useSavedTrips()
-  const [shared, setShared] = useState(false)
+  const [shared, flashShared] = useCopied(2500)
   // Opens a saved trip here, from now, rather than through the URL, which may already name it.
   const openTrip = (t: SavedTrip) => {
     setFromRef({ region: t.region, id: t.from })
@@ -199,7 +201,7 @@ export function JourneyPlanner({
     () => (trips && stops && fromIds && toIds ? planJourneys(trips, stops, fromIds, toIds) : null),
     [trips, stops, fromIds, toIds],
   )
-  const allowed = useMemo(() => (all ? filterJourneys(all, { modes: [...modes], direct: directOnly }, modeOf) : null), [all, directOnly, modes])
+  const allowed = useMemo(() => (all ? filterJourneys(all, { modes: [...modes], direct: directOnly }, legMode) : null), [all, directOnly, modes])
   const [more, setMore] = useState(0)
   const options = useMemo(() => {
     const all = allowed
@@ -232,8 +234,7 @@ export function JourneyPlanner({
       if (navigator.share) await navigator.share({ title, url })
       else {
         await navigator.clipboard.writeText(url)
-        setShared(true)
-        setTimeout(() => setShared(false), 2500)
+        flashShared()
       }
     } catch {
       // Share sheet dismissed.
@@ -426,16 +427,11 @@ export function JourneyPlanner({
           TransLink's journey planner plans door-to-door trips with walking, any number of changes and fares.
           {from || to ? ' Your search is filled in.' : ''}
         </Text>
-        <a href={plannerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-          Open in TransLink journey planner <ArrowSquareOutIcon size={14} />
-          <NewTabNote />
-        </a>
+        <ExternalLink href={plannerUrl}>Open in TransLink journey planner</ExternalLink>
       </div>
     </div>
   )
 }
-
-const modeOf = (l: Leg) => routeInfo(l.trip.route, l.trip.region)?.mode ?? 'bus'
 
 function minutesText(ms: number) {
   const m = Math.round(ms / 60_000)
@@ -623,6 +619,3 @@ function LegStops({ leg, stops, onNavigate }: { leg: Leg; stops: StopIndex | nul
   )
 }
 
-function shortName(name: string) {
-  return name.replace(/ station$/i, '')
-}

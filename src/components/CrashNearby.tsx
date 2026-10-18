@@ -45,7 +45,7 @@ export function CrashNearby({ at }: { at: LngLat }) {
         <a
           href={CRASH_DATASET_URL}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-0.5 text-kumo-link underline decoration-1 underline-offset-2"
         >
           TMR, CC BY 4.0

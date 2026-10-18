@@ -16,7 +16,7 @@ import { clearwayInEffect, parseClearwayTimes } from '../../lib/clearways'
 import type { TrafficEvent } from '../../api/types'
 import { latestReading, rainfallSince } from '../../lib/gauges'
 import { dsBand, loadChanged, siteLoad } from '../../lib/signals'
-import type { Bounds } from '../../lib/geo'
+import { pointBounds, type Bounds } from '../../lib/geo'
 import { clearanceIcon, fireIcon, signalIcon } from '../../lib/mapIcons'
 
 /** Warning areas and fire markers; markers carry the hash key their detail page opens at. */
@@ -265,14 +265,7 @@ export function setData(map: maplibregl.Map, id: string, data: GeoJSON.FeatureCo
 }
 
 export function boundsOf(g: GeoJSON.Polygon | GeoJSON.MultiPolygon): Bounds | null {
-  const pts = g.type === 'Polygon' ? g.coordinates.flat() : g.coordinates.flat(2)
-  if (!pts.length) return null
-  const xs = pts.map((p) => p[0])
-  const ys = pts.map((p) => p[1])
-  return [
-    [Math.min(...xs), Math.min(...ys)],
-    [Math.max(...xs), Math.max(...ys)],
-  ]
+  return pointBounds(g.type === 'Polygon' ? g.coordinates.flat() : g.coordinates.flat(2))
 }
 
 export function withLabels<T extends GeoJSON.FeatureCollection>(fc: T, events: TrafficEvent[]): T {
@@ -290,7 +283,6 @@ export function withLabels<T extends GeoJSON.FeatureCollection>(fc: T, events: T
     })),
   }
 }
-
 
 /** A gauge's reading this old or older is drawn faded. */
 const STALE_MS = 60 * 60_000

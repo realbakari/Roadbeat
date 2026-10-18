@@ -8,6 +8,10 @@ describe('stripHtml', () => {
     )
   })
 
+  it('leaves a character reference outside Unicode as written rather than throwing', () => {
+    expect(stripHtml('Lane &#99999999; closed &#x110000;')).toBe('Lane &#99999999; closed &#x110000;')
+  })
+
   it('leaves plain text alone apart from trimming', () => {
     expect(stripHtml('  No bookings required.  ')).toBe('No bookings required.')
   })

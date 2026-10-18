@@ -2,13 +2,12 @@ import { Button } from '@cloudflare/kumo'
 import { BroadcastIcon, ClockCounterClockwiseIcon, PauseIcon, PlayIcon, XIcon } from '@phosphor-icons/react'
 import type { HistoryResponse, HistoryRun } from '../api/historyTypes'
 import type { TimelineState } from '../hooks/useTimeline'
-import { TIMELINE_WINDOW_MS } from '../lib/timeline'
+import { replayLabel, TIMELINE_WINDOW_MS } from '../lib/timeline'
+import { brisbaneDayClock as dayTime, brisbaneClock as timeOnly } from '../lib/aest'
 
 // The 48-hour scrubber. It chooses a time; what shows at that time is decided
 // by src/lib/timeline.ts, and only from what was published by then.
 
-const dayTime = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
-const timeOnly = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const speedLabel = (speed: number) => `${speed / 60_000} min/s`
 /** Whether a read and the chosen time fall in different minutes, so naming both says something. */
 const earlierMinute = (run: HistoryRun, at: number) => timeOnly.format(run.at) !== timeOnly.format(at)
@@ -101,7 +100,7 @@ export function Timeline({
 export function ReplayBanner({ at, run, className = '' }: { at: number; run: HistoryRun | null; className?: string }) {
   return (
     <div role="status" className={`rounded-full bg-kumo-warning px-3 py-1 text-sm font-medium text-white shadow-md ${className}`}>
-      Showing {dayTime.format(at)} · as published then · not live
+      {replayLabel(at)}
       {run && earlierMinute(run, at) && <span className="font-normal"> · events as of {timeOnly.format(run.at)}</span>}
     </div>
   )

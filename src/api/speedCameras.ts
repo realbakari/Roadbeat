@@ -1,4 +1,5 @@
 import type { LngLat } from '../lib/geo'
+import { xmlText } from '../lib/xml'
 
 // Fixed speed, red light, combined and point-to-point camera sites, from the
 // Queensland Government's own map of them, linked from qld.gov.au's "Locations
@@ -39,10 +40,7 @@ function cameraType(name: string): SpeedCameraType | null {
   return null
 }
 
-const text = (block: string, tag: string) => {
-  const m = block.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`))
-  return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').trim() : ''
-}
+const text = (block: string, tag: string) => xmlText(block, tag) ?? ''
 
 /** Each placemark with a type it names and a point; anything else is left out. */
 export function parseSpeedCameras(kml: string): SpeedCamera[] {

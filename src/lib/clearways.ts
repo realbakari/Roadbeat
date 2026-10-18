@@ -1,3 +1,5 @@
+import { BRISBANE_OFFSET_MS } from './aest'
+
 // Reads the times on Brisbane City Council's clearway records, such as
 // "7AM-9AM  4PM-7PM MON-FRI", "7-9AM, 4-7PM MON-SAT", "9AM-6PM M-F, 7AM-NOON SAT"
 // or "AT ALL TIMES". The council types them freely, so anything this can't read
@@ -92,13 +94,11 @@ export function parseClearwayTimes(raw: string | null | undefined): ClearwaySche
   return windows.length ? { kind: 'windows', windows } : { kind: 'unknown' }
 }
 
-const BRISBANE = 10 * 3600_000
-
 /** Whether the signed times cover `now` (Brisbane time). Null when the times couldn't be read. */
 export function clearwayInEffect(schedule: ClearwaySchedule, now: number): boolean | null {
   if (schedule.kind === 'always') return true
   if (schedule.kind === 'unknown') return null
-  const local = new Date(now + BRISBANE)
+  const local = new Date(now + BRISBANE_OFFSET_MS)
   const day = local.getUTCDay()
   const minute = local.getUTCHours() * 60 + local.getUTCMinutes()
   return schedule.windows.some((w) => w.days.includes(day) && minute >= w.start && minute < w.end)

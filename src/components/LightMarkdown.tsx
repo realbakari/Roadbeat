@@ -44,7 +44,7 @@ function inline(s: string, base: string): ReactNode[] {
       }
       out.push(
         url && /^https?:$/.test(url.protocol) ? (
-          <a key={m.index} href={url.href} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
+          <a key={m.index} href={url.href} target="_blank" rel="noopener noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
             {label.replace(/\*\*/g, '')}
             <NewTabNote />
           </a>

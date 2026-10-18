@@ -69,7 +69,6 @@ export function CameraThumb({
   )
 }
 
-
 interface Props {
   cameras: Camera[]
   selectedKey: string | null

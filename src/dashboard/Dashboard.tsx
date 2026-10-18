@@ -3,7 +3,12 @@ import { ArrowLeftIcon, ArrowsOutIcon, MoonIcon, SlidersHorizontalIcon, SunIcon 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { alertActive, isAccessibilityAlert, modeOf } from '../api/translink'
 import { useColorMode } from '../hooks/useColorMode'
-import { useAirQuality, useBushfires, useCarParkSpaces, useGauges, useLiveVehicles, useNews, useNow, useSignals, useTrafficData, useTransitAlerts, useTripUpdates } from '../hooks/useTrafficData'
+import { useAirQuality, useBushfires } from '../hooks/useHazardFeeds'
+import { useCarParkSpaces, useGauges, useSignals } from '../hooks/useCouncilFeeds'
+import { useLiveVehicles, useTransitAlerts, useTripUpdates } from '../hooks/useTransitFeeds'
+import { useNews } from '../hooks/useNews'
+import { useNow } from '../hooks/useNow'
+import { useTrafficData } from '../hooks/useRoadFeeds'
 import { busiestSignals, closuresAndCrashesByDistrict, currentEvents, fastestRising, firesByLevel, corridorReport, footTraffic, latestEvents, punctuality, upcomingEvents } from '../lib/dashboard'
 import { initialLayout, LAYOUT_KEY, layoutQuery, panelsOf, type PanelId } from '../lib/dashboardLayout'
 import { feedAnnouncement } from '../lib/feedAge'
@@ -16,9 +21,7 @@ import { Ticker } from './Ticker'
 import { TimelineStrip } from './TimelineStrip'
 import { useCouncilDashboard } from './useCouncilDashboard'
 import { WhatsHappening } from './WhatsHappening'
-
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
-const dayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
+import { brisbaneDayDateTime as clock, brisbaneDayKey as dayKey } from '../lib/aest'
 
 /** The layout, kept in this browser and in the page link as it changes. */
 function useLayout() {

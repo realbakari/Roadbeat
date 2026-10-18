@@ -1,6 +1,5 @@
 import { Button, Empty, InputGroup, Loader, Text } from '@cloudflare/kumo'
 import {
-  ArrowSquareOutIcon,
   BoatIcon,
   BusIcon,
   CaretRightIcon,
@@ -17,10 +16,12 @@ import {
 import { useMemo, useState } from 'react'
 import type { Stop, StopIndex } from '../api/stops'
 import { routesAtStops, type TimetableIndex } from '../api/timetables'
-import { routeInfo, routeLabel, type LiveVehicle, type TransitAlert, type TransitRegion } from '../api/translink'
+import { routeInfo, routeLabel, type TransitAlert } from '../api/translink'
+import type { LiveVehicle, TransitRegion } from '../api/transitTypes'
 import type { TransitLine, TransitMode } from '../api/types'
-import { useNow, useStopIndex, useTimetableIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
-import { distanceKm } from '../lib/geo'
+import { useNow } from '../hooks/useNow'
+import { useStopIndex, useTimetableIndex, useTripIndex, useTripUpdates } from '../hooks/useTransitFeeds'
+import { distanceKm, type MapView } from '../lib/geo'
 import { searchStops } from '../lib/planner'
 import { clearRecentStops, useRecentStops, useSavedStops } from '../lib/savedStops'
 import { departuresAt, stopHref, type Departure } from '../lib/departures'
@@ -32,9 +33,8 @@ import { readableTextOn } from '../lib/routeColor'
 import { REGION_NAMES } from '../lib/transitRegions'
 import { regionalRoutes, searchRoutes } from '../lib/regionalRoutes'
 import { RouteRows } from './RegionalRoutes'
-import { NewTabNote } from './NewTabNote'
-
-const clockTime = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+import { ExternalLink } from './ui/Links'
+import { brisbaneClock as clockTime } from '../lib/aest'
 
 const MODE_ICON: Record<string, Icon> = { train: TrainIcon, bus: BusIcon, ferry: BoatIcon, tram: TramIcon }
 
@@ -270,7 +270,7 @@ export function DeparturesHome({
   onShowMap,
   onNavigate,
 }: {
-  mapView: { center: [number, number]; zoom: number } | null
+  mapView: MapView | null
   vehicles: LiveVehicle[]
   alerts: TransitAlert[] | null
   onShowMap: () => void
@@ -436,15 +436,7 @@ export function DeparturesHome({
         <Text size="sm" variant="secondary">
           Open a stop for its next departures and full timetable, or plan a door-to-door trip in TransLink's journey planner.
         </Text>
-        <a
-          href="https://jp.translink.com.au/plan-your-journey/journey-planner"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
-        >
-          Plan a journey on TransLink <ArrowSquareOutIcon size={14} />
-          <NewTabNote />
-        </a>
+        <ExternalLink href="https://jp.translink.com.au/plan-your-journey/journey-planner">Plan a journey on TransLink</ExternalLink>
       </section>
     </div>
   )

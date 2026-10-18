@@ -1,10 +1,9 @@
 import type { Point } from 'geojson'
+import { parseCameras, parseEvents } from './qldtrafficFeed'
 import type {
   Camera,
   CameraKind,
-  CameraProperties,
   DumpPoint,
-  EventProperties,
   FeatureCollection,
   RestArea,
   RoadContact,
@@ -49,20 +48,14 @@ export interface EventsResponse {
 }
 
 export async function fetchEvents(signal?: AbortSignal): Promise<EventsResponse> {
-  const data = await get<FeatureCollection<TrafficEvent['geometry'], EventProperties> | null>(
-    `${DATA}/events_v2.geojson`,
-    signal,
-  )
-  if (!data) throw new ApiError(503, 'The events feed is being updated. Trying again shortly.')
-  return { events: data.features, published: data.published ?? null }
+  const data = await get<unknown>(`${DATA}/events_v2.geojson`, signal)
+  if (data == null) throw new ApiError(503, 'The events feed is being updated. Trying again shortly.')
+  return parseEvents(data)
 }
 
 async function fetchCameraKind(kind: CameraKind, signal?: AbortSignal): Promise<Camera[]> {
   const file = kind === 'webcam' ? 'webcameras.geojson' : 'floodcameras.geojson'
-  const data = await get<FeatureCollection<Point, CameraProperties> | null>(`${DATA}/${file}`, signal)
-  return (data?.features ?? [])
-    .filter((f) => f.geometry?.coordinates?.length === 2)
-    .map((f) => ({ ...f, kind }))
+  return parseCameras(await get<unknown>(`${DATA}/${file}`, signal), kind)
 }
 
 export async function fetchCameras(signal?: AbortSignal): Promise<Camera[]> {

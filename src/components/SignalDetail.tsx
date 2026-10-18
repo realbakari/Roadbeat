@@ -1,11 +1,10 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
-import { ArrowLeftIcon, ArrowSquareOutIcon, TrafficSignalIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, TrafficSignalIcon } from '@phosphor-icons/react'
 import { SIGNALS_DATASET_URL, type ApproachReading, type SignalSite } from '../api/bccSignals'
 import { timeAgo } from '../lib/format'
 import { dsColor, siteLoad } from '../lib/signals'
-import { NewTabNote } from './NewTabNote'
-
-const time = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+import { ExternalLink } from './ui/Links'
+import { brisbaneClock as time } from '../lib/aest'
 
 /**
  * A Brisbane City Council signalised intersection with its latest measured
@@ -102,10 +101,7 @@ export function SignalDetail({
           )}
 
           <div className="grid gap-1">
-            <a href={SIGNALS_DATASET_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-              Brisbane City Council intersection volumes <ArrowSquareOutIcon size={14} />
-              <NewTabNote />
-            </a>
+            <ExternalLink href={SIGNALS_DATASET_URL}>Brisbane City Council intersection volumes</ExternalLink>
             <Text size="xs" variant="secondary">
               Measured by the council's SCATS signal system. Only council-operated signals are included. CC BY 4.0.
             </Text>

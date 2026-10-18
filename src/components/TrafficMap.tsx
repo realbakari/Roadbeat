@@ -13,10 +13,10 @@ import { warningFeatures, type QldWarning } from '../api/qldWarnings'
 import type { SatelliteTiles } from '../lib/satelliteImage'
 import { loadTracks } from '../api/tracks'
 import { loadStopFeatures } from '../lib/stopFeatures'
-import type { LiveVehicle } from '../api/translink'
-import type { Camera, DumpPoint, RestArea, TrafficEvent, TruckRestriction, WazeReport } from '../api/types'
+import type { LiveVehicle } from '../api/transitTypes'
+import type { Camera, Districts, DumpPoint, RestArea, TrafficEvent, TruckRestriction, WazeReport } from '../api/types'
 import type { ColorMode } from '../hooks/useColorMode'
-import type { Districts } from '../hooks/useTrafficData'
+import { loadStatic } from '../api/staticGeo'
 import {
   cameraKey,
   cameraMarkers,
@@ -26,6 +26,7 @@ import {
   truckLines,
   type Bounds,
   type LngLat,
+  type MapView,
 } from '../lib/geo'
 import { ensureClearanceIcons, ensureIcons } from '../lib/mapIcons'
 import { pickTap, pickTop, tapBox, tapTolerance } from '../lib/mapPick'
@@ -50,6 +51,7 @@ import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
 import { useAnimatedVehicles } from './map/useAnimatedVehicles'
+import { useSourceData } from './map/useSourceData'
 import { useFitEvent } from './map/useFitEvent'
 import { prefersReducedMotion, useSignalAnimation } from './map/useSignalAnimation'
 
@@ -83,8 +85,6 @@ const MAX_BOUNDS: [LngLat, LngLat] = [
   [100, -50],
   [185, 5],
 ]
-
-
 
 interface Props {
   mode: ColorMode
@@ -159,7 +159,7 @@ interface Props {
   /** Opens the locality page named on the pinned camera's card. */
   onOpenLocality: (name: string) => void
   /** Reports the map's centre and zoom after each move. */
-  onViewChange?: (view: { center: LngLat; zoom: number }) => void
+  onViewChange?: (view: MapView) => void
 }
 
 // Which map layers each toggle controls.
@@ -201,22 +201,6 @@ const CLICKABLE_PLACES = ['speed-cameras', 'air-quality', 'hotspots', 'nsw-fires
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 /** What the crosshair reads under the centre: everything a tap can open. */
 const READABLE = [...EVENT_LAYERS, ...CLICKABLE_PLACES]
-
-const staticFiles = new Map<string, Promise<GeoJSON.FeatureCollection | null>>()
-/** A GeoJSON file built into public/ (scripts/build-flood-2022.mjs, build-bikeways.mjs), fetched once per visit. */
-function loadStatic(path: string) {
-  let hit = staticFiles.get(path)
-  if (!hit) {
-    hit = fetch(path)
-      .then((r) => (r.ok ? (r.json() as Promise<GeoJSON.FeatureCollection>) : null))
-      .catch(() => {
-        staticFiles.delete(path)
-        return null
-      })
-    staticFiles.set(path, hit)
-  }
-  return hit
-}
 
 export function TrafficMap(props: Props) {
   const {
@@ -376,20 +360,11 @@ export function TrafficMap(props: Props) {
   }, [map, tilted])
 
   // Push data into sources (also re-runs after every style reload via `ready`).
-  useEffect(() => {
-    if (!ready || !map) return
-    setData(map, 'event-shapes', shapes)
-    setData(map, 'event-markers', markers)
-  }, [map, ready, shapes, markers])
-  useEffect(() => {
-    if (ready && map) setData(map, 'cameras', cams)
-  }, [map, ready, cams])
-  useEffect(() => {
-    if (ready && map) setData(map, 'places', places)
-  }, [map, ready, places])
-  useEffect(() => {
-    if (ready && map) setData(map, 'trucks', truckData)
-  }, [map, ready, truckData])
+  useSourceData(map, ready, 'event-shapes', shapes)
+  useSourceData(map, ready, 'event-markers', markers)
+  useSourceData(map, ready, 'cameras', cams)
+  useSourceData(map, ready, 'places', places)
+  useSourceData(map, ready, 'trucks', truckData)
   // Each height's sign is drawn once its image is registered on the current style.
   useEffect(() => {
     if (!ready || !map) return
@@ -401,16 +376,12 @@ export function TrafficMap(props: Props) {
   }, [map, ready, clearances])
   // Clearways recolour as their signed times start and end; `now` ticks every 30 s.
   const clearwayData = useMemo(() => clearwayFeatures(clearways, now), [clearways, now])
-  useEffect(() => {
-    if (ready && map) setData(map, 'clearways', clearwayData)
-  }, [map, ready, clearwayData])
+  useSourceData(map, ready, 'clearways', clearwayData)
   const councilPlaces = useMemo(
     () => councilPlaceFeatures({ toilets, bays: accessibleBays, meters: parkingMeters, bikeStops }),
     [toilets, accessibleBays, parkingMeters, bikeStops],
   )
-  useEffect(() => {
-    if (ready && map) setData(map, 'council-places', councilPlaces)
-  }, [map, ready, councilPlaces])
+  useSourceData(map, ready, 'council-places', councilPlaces)
   const newsData = useMemo(() => newsFeatures(newsStories), [newsStories])
   const centreData = useMemo(() => councilCentreFeatures(councilCentres), [councilCentres])
   const outageData = useMemo(() => outageFeatures(outages), [outages])
@@ -418,43 +389,28 @@ export function TrafficMap(props: Props) {
   // Recoloured once a minute as detections age, not on every render.
   const minute = Math.floor(now / 60_000)
   const hotspotData = useMemo(() => hotspotFeatures(hotspots, minute * 60_000), [hotspots, minute])
-  useEffect(() => {
-    if (ready && map) setData(map, 'hotspots', hotspotData)
-  }, [map, ready, hotspotData])
+  useSourceData(map, ready, 'hotspots', hotspotData)
   const nswFireData = useMemo(() => nswFireFeatures(nswFires), [nswFires])
   const cycloneData = useMemo(() => cycloneFeatures(cyclones), [cyclones])
   const pastCycloneData = useMemo(() => pastCycloneFeatures(pastCyclones), [pastCyclones])
-  useEffect(() => {
-    if (!ready || !map) return
-    setData(map, 'nsw-fires', nswFireData)
-    setData(map, 'cyclones', cycloneData)
-    setData(map, 'past-cyclones', pastCycloneData)
-  }, [map, ready, nswFireData, cycloneData, pastCycloneData])
+  useSourceData(map, ready, 'nsw-fires', nswFireData)
+  useSourceData(map, ready, 'cyclones', cycloneData)
+  useSourceData(map, ready, 'past-cyclones', pastCycloneData)
   const speedCameraData = useMemo(() => speedCameraFeatures(speedCameras), [speedCameras])
-  useEffect(() => {
-    if (ready && map) setData(map, 'speed-cameras', speedCameraData)
-  }, [map, ready, speedCameraData])
-  useEffect(() => {
-    if (!ready || !map) return
-    setData(map, 'council-centres', centreData)
-    setData(map, 'outages', outageData)
-    setData(map, 'air', airData)
-  }, [map, ready, centreData, outageData, airData])
+  useSourceData(map, ready, 'speed-cameras', speedCameraData)
+  useSourceData(map, ready, 'council-centres', centreData)
+  useSourceData(map, ready, 'outages', outageData)
+  useSourceData(map, ready, 'air', airData)
   const newsRoadData = useMemo(() => newsRoadFeatures(newsStories), [newsStories])
-  useEffect(() => {
-    if (!ready || !map) return
-    setData(map, 'news', newsData)
-    setData(map, 'news-roads', newsRoadData)
-  }, [map, ready, newsData, newsRoadData])
+  useSourceData(map, ready, 'news', newsData)
+  useSourceData(map, ready, 'news-roads', newsRoadData)
   useEffect(() => {
     if (!ready || !map) return
     map.setFilter('news-selected', ['in', ['get', 'name'], ['literal', selectedStory?.places.map((p) => p.name) ?? []]])
     map.setFilter('news-roads-selected', ['==', ['get', 'story'], selectedStory?.id ?? ''])
   }, [map, ready, selectedStory])
   const councilEventData = useMemo(() => councilEventFeatures(councilEvents), [councilEvents])
-  useEffect(() => {
-    if (ready && map) setData(map, 'council-events', councilEventData)
-  }, [map, ready, councilEventData])
+  useSourceData(map, ready, 'council-events', councilEventData)
   // The February 2022 flood extent (0.5 MB) and the bikeway network (0.25 MB) load the first time their layer is turned on.
   const showFlood = layers.flood2022
   useEffect(() => {
@@ -474,14 +430,10 @@ export function TrafficMap(props: Props) {
       live = false
     }
   }, [map, ready, showCycling])
-  useEffect(() => {
-    if (ready && map) setData(map, 'districts', districts)
-  }, [map, ready, districts])
+  useSourceData(map, ready, 'districts', districts)
   const fireData = useMemo(() => fireFeatures(fires), [fires])
   const gaugeData = useMemo(() => gaugeFeatures(gauges, replayAt ?? now), [gauges, replayAt, now])
-  useEffect(() => {
-    if (ready && map) setData(map, 'gauges', gaugeData)
-  }, [map, ready, gaugeData])
+  useSourceData(map, ready, 'gauges', gaugeData)
   // Each new batch of volumes is compared with the last one, so changed sites can ring.
   const previousVolumes = useRef<SignalVolumes | null>(null)
   const [signalBatch, setSignalBatch] = useState(0)
@@ -495,13 +447,9 @@ export function TrafficMap(props: Props) {
     previousVolumes.current = signalVolumes
   }, [map, ready, signalSites, signalVolumes])
   useSignalAnimation(map, ready, layers.signals && !prefersReducedMotion(), signalBatch)
-  useEffect(() => {
-    if (ready && map) setData(map, 'fires', fireData)
-  }, [map, ready, fireData])
+  useSourceData(map, ready, 'fires', fireData)
   const warningData = useMemo(() => warningFeatures(warnings), [warnings])
-  useEffect(() => {
-    if (ready && map) setData(map, 'qld-warnings', warningData)
-  }, [map, ready, warningData])
+  useSourceData(map, ready, 'qld-warnings', warningData)
   useAnimatedVehicles(map, ready, vehicles, followVehicle ? selectedVehicleId : null)
   useEffect(() => {
     if (ready && map) map.setFilter('vehicles-selected', ['==', ['get', 'key'], `vehicle/${selectedVehicleId ?? ''}`])

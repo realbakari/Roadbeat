@@ -2,23 +2,19 @@ import { z } from 'zod'
 import { councilEventId, eventsOn } from '../lib/councilEvents'
 import { stripHtml } from '../lib/format'
 import type { LngLat } from '../lib/geo'
+import { bccExport } from './bccOpenData'
 
 // Brisbane City Council datasets for the dashboard (data.brisbane.qld.gov.au,
 // CC BY 4.0): key corridor monthly performance, council events and pedestrian
 // movement counts. The council's API sends CORS headers, so the browser reads
 // them directly.
 
-const BASE = 'https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets'
 export const CORRIDORS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/traffic-management-key-corridor-monthly-performance-report/information/'
 export const EVENTS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/brisbane-city-council-events/information/'
 export const PEDESTRIANS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/pedestrian-movement-counts/information/'
 
 /** Every row matching `params`, from the dataset's JSON export (no 100-row page limit). */
-async function rows(dataset: string, params: Record<string, string>, signal?: AbortSignal): Promise<unknown[]> {
-  const res = await fetch(`${BASE}/${dataset}/exports/json?${new URLSearchParams(params)}`, { signal })
-  if (!res.ok) throw new Error(`Brisbane City Council responded with ${res.status}`)
-  return z.array(z.unknown()).parse(await res.json())
-}
+const rows = (dataset: string, params: Record<string, string>, signal?: AbortSignal) => bccExport(dataset, signal, params)
 
 const parse = <T>(list: unknown[], schema: z.ZodType<T>): T[] => list.flatMap((r) => {
   const p = schema.safeParse(r)

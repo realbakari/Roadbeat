@@ -1,4 +1,5 @@
-import { allRouteCodes, routeInfo, routeLabel, type LiveVehicle, type TransitAlert } from '../api/translink'
+import { allRouteCodes, routeInfo, routeLabel, type TransitAlert } from '../api/translink'
+import type { LiveVehicle } from '../api/transitTypes'
 import { routesAtStops, type TimetableIndex } from '../api/timetables'
 import type { TransitLine } from '../api/types'
 

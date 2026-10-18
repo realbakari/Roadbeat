@@ -1,5 +1,6 @@
 import type { Stop, StopIndex } from '../api/stops'
 import type { ScheduledStop, ScheduledTrip } from '../api/timetables'
+import { modeOf } from '../api/translink'
 
 /** A published service that runs from one stop to the other without a change. */
 export interface DirectOption {
@@ -187,4 +188,14 @@ export function translinkPlannerUrl(from: Stop | null, to: Stop | null, date: st
     if (s.id.startsWith('place_')) p.set(`${k}LocationId`, `ST:${s.id}`)
   }
   return `https://jp.translink.com.au/plan-your-journey/journey-planner?${p}`
+}
+
+/** A stop or headsign without its trailing " station", which the line and mode already say. */
+export function shortName(name: string) {
+  return name.replace(/ station$/i, '')
+}
+
+/** The mode a leg rides, from the published route; buses where the route isn't listed. */
+export function legMode(l: Leg) {
+  return modeOf(l.trip.route, l.trip.region)
 }

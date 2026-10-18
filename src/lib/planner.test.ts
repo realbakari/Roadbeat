@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { at, stopIndex, trip } from '../test/fixtures'
-import { changeTime, planJourneys, searchStops, stopAndChildren } from './planner'
+import { changeTime, legMode, planJourneys, searchStops, shortName, stopAndChildren } from './planner'
 
 const stops = stopIndex()
 const ids = (id: string) => stopAndChildren(stops, stops.get('SEQ', id)!)
@@ -61,5 +61,29 @@ describe('searchStops', () => {
   })
   it('needs at least two characters', () => {
     expect(searchStops(stops, 'a')).toEqual([])
+  })
+})
+
+describe('shortName', () => {
+  it('drops a trailing "station" in any case', () => {
+    expect(shortName('Central station')).toBe('Central')
+    expect(shortName('Roma Street Station')).toBe('Roma Street')
+  })
+
+  it('leaves other names alone', () => {
+    expect(shortName('Station Road')).toBe('Station Road')
+    expect(shortName('Cultural Centre, platform 1')).toBe('Cultural Centre, platform 1')
+  })
+})
+
+describe('legMode', () => {
+  const leg = (route: string) => planJourneys([trip(1, route, [['a1', 480], ['b2', 490]])], stops, ids('place_a'), ids('place_b'))[0].legs[0]
+
+  it('reads the mode from the published route', () => {
+    expect(legMode(leg('BDBN'))).toBe('train')
+  })
+
+  it('falls back to bus for a route the data does not list', () => {
+    expect(legMode(leg('NOT-A-ROUTE'))).toBe('bus')
   })
 })

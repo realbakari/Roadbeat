@@ -1,4 +1,4 @@
-import { decodeEntities } from '../lib/newsText'
+import { xmlText as tag } from '../lib/xml'
 
 // The Queensland Fire Department's fire ban feed (an Atom feed made by FME,
 // published to the same public bucket as its bushfire incidents). It sends no
@@ -23,11 +23,6 @@ export interface FireBans {
   none: boolean
   /** When QFD generated the feed, ms since the epoch. */
   feedUpdatedAt: number | null
-}
-
-const tag = (xml: string, name: string) => {
-  const m = new RegExp(`<${name}\\b[^>]*>([\\s\\S]*?)</${name}>`).exec(xml)
-  return m ? decodeEntities(m[1].replace(/<!\[CDATA\[|\]\]>/g, '')).trim() : null
 }
 
 const time = (s: string | null) => {

@@ -1,13 +1,14 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
-import { ArrowLeftIcon, ArrowSquareOutIcon, CloudRainIcon, WavesIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, CloudRainIcon, WavesIcon } from '@phosphor-icons/react'
 import { GAUGES_DATASET_URL, type Gauge, type GaugeReading } from '../api/bccGauges'
 import { BOM_QLD_WARNINGS, floodWarningArea } from '../api/floodWarnings'
 import { qldGaugeUrl, WMIP_PORTAL } from '../api/qldGauges'
 import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, rainfallTotal } from '../lib/gauges'
-import { NewTabNote } from './NewTabNote'
+import { InlineLink } from './ui/Links'
+import { ExternalLink } from './ui/Links'
+import { brisbaneDayClock as time } from '../lib/aest'
 
-const time = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', hour: 'numeric', minute: '2-digit' })
 const HOUR = 60 * 60_000
 
 /** One gauge: its latest reading, recent change or rainfall, and the last 24 hours. State gauges publish the latest reading only. */
@@ -103,25 +104,16 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
               </Text>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {warningArea && (
-                  <a href={warningArea.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-                    Flood warning for this area (BoM) <ArrowSquareOutIcon size={14} />
-                    <NewTabNote />
-                  </a>
+                  <ExternalLink href={warningArea.url}>Flood warning for this area (BoM)</ExternalLink>
                 )}
-                <a href={BOM_QLD_WARNINGS} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-                  All Queensland warnings (BoM) <ArrowSquareOutIcon size={14} />
-                  <NewTabNote />
-                </a>
+                <ExternalLink href={BOM_QLD_WARNINGS}>All Queensland warnings (BoM)</ExternalLink>
               </div>
             </section>
           )}
 
           {council ? (
             <div className="grid gap-1">
-              <a href={GAUGES_DATASET_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-                Brisbane City Council telemetry data <ArrowSquareOutIcon size={14} />
-                <NewTabNote />
-              </a>
+              <ExternalLink href={GAUGES_DATASET_URL}>Brisbane City Council telemetry data</ExternalLink>
               <Text size="xs" variant="secondary">
                 Raw readings from Brisbane City Council's gauges, which also feed the Bureau of Meteorology's flood warnings. CC BY 4.0.
                 Warning areas: Bureau of Meteorology, National Flood Gauge Network, CC BY 4.0.
@@ -129,16 +121,10 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
             </div>
           ) : (
             <div className="grid gap-1">
-              <a href={qldGaugeUrl(gauge.id)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-                This station on the Water Monitoring Information Portal <ArrowSquareOutIcon size={14} />
-                <NewTabNote />
-              </a>
+              <ExternalLink href={qldGaugeUrl(gauge.id)}>This station on the Water Monitoring Information Portal</ExternalLink>
               <Text size="xs" variant="secondary">
                 Latest telemetered stream water level from the Queensland Government's{' '}
-                <a href={WMIP_PORTAL} target="_blank" rel="noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
-                  Water Monitoring Information Portal
-                  <NewTabNote />
-                </a>
+                <InlineLink href={WMIP_PORTAL}>Water Monitoring Information Portal</InlineLink>
                 , Department of Local Government, Water and Volunteers. CC BY 4.0.
               </Text>
             </div>

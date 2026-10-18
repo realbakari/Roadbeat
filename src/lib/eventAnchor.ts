@@ -1,10 +1,11 @@
 import type { Geometry, Position } from 'geojson'
 import type { TrafficEvent } from '../api/types.js'
+import type { LngLat } from './distance.js'
 
 // Where a QLDTraffic event sits on the map, from its published geometry alone.
 // Free of browser-only code, so the server's event history (api/) shares it.
 
-export type LngLat = [number, number]
+export type { LngLat }
 export type Bounds = [LngLat, LngLat]
 
 /** Splits GeometryCollections so MapLibre gets plain geometries. */
@@ -31,8 +32,8 @@ export function positions(g: Geometry): Position[] {
   }
 }
 
-export function eventBounds(e: TrafficEvent): Bounds | null {
-  const pts = flatten(e.geometry).flatMap(positions)
+/** The box around a set of points, or null for none. A loop, not Math.min(...xs), so a long track can't overflow the stack. */
+export function pointBounds(pts: Position[]): Bounds | null {
   if (!pts.length) return null
   let [minX, minY] = pts[0]
   let [maxX, maxY] = pts[0]
@@ -46,6 +47,10 @@ export function eventBounds(e: TrafficEvent): Bounds | null {
     [minX, minY],
     [maxX, maxY],
   ]
+}
+
+export function eventBounds(e: TrafficEvent): Bounds | null {
+  return pointBounds(flatten(e.geometry).flatMap(positions))
 }
 
 /** A point to pin the event marker on: the first point, or the middle of the first line. */

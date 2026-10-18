@@ -3,6 +3,8 @@
 // shown layer's latest data time where Roadbeat knows it, the map credits, and
 // what couldn't be drawn into the picture.
 
+import { aestTime } from './aest'
+
 const aest = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
@@ -63,4 +65,34 @@ export function wrapText(text: string, max: number, measure: (s: string) => numb
   }
   if (line) out.push(line)
   return out
+}
+
+export interface SourceLines {
+  now: number
+  /** The replayed moment, or null when the map is live. */
+  replayAt: number | null
+  eventsReadAt: number | null
+  /** When bushfire warnings were read, or null when the layer is off or unread. */
+  firesReadAt: number | null
+  /** The satellite image shown, by its label and published time, or null for none. */
+  satellite: { label: string; time: string } | null
+}
+
+/** The footer's line for each shown source and its data time. */
+export function imageSources(d: SourceLines): string[] {
+  return [
+    d.replayAt != null ? `Road events: QLDTraffic, replay of ${aestTime(d.replayAt, d.now)}` : d.eventsReadAt != null ? `Road events: QLDTraffic, read ${aestTime(d.eventsReadAt, d.now)}` : 'Road events: QLDTraffic',
+    ...(d.firesReadAt != null ? [`Bushfires: Queensland Fire Department, read ${aestTime(d.firesReadAt, d.now)}`] : []),
+    ...(d.satellite ? [`Satellite: ${d.satellite.label}, image ${d.satellite.time}`] : []),
+  ]
+}
+
+/**
+ * The shown satellite image's own time (live frames, as an ISO time) or date
+ * (daily images), as published. `frameTime` is the frame shown, or the newest;
+ * a live image whose time won't parse falls back to its date.
+ */
+export function satelliteImageTime(d: { frameTime: string | null; live: boolean; date: string | null; now: number }): string {
+  if (d.live && d.frameTime && Number.isFinite(Date.parse(d.frameTime))) return aestTime(Date.parse(d.frameTime), d.now)
+  return d.date ?? 'date not known'
 }

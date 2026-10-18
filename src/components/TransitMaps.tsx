@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import MAPS from '../data/translink-maps.json'
 import { findStationMap } from '../lib/transitMaps'
 import { NewTabNote } from './NewTabNote'
+import { ExternalLink } from './ui/Links'
 
 type Region = (typeof MAPS)['regions'][number]
 
@@ -59,7 +60,7 @@ export function TransitMapsDirectory() {
                           <a
                             href={m.href}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm ring ring-kumo-line hover:bg-kumo-tint"
                           >
                             <FilePdfIcon size={14} className="text-kumo-subtle" />
@@ -80,15 +81,7 @@ export function TransitMapsDirectory() {
           No map matches “{q.trim()}”.
         </Text>
       )}
-      <a
-        href={MAPS.source}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
-      >
-        TransLink maps page <ArrowSquareOutIcon size={14} />
-        <NewTabNote />
-      </a>
+      <ExternalLink href={MAPS.source}>TransLink maps page</ExternalLink>
     </div>
   )
 }
@@ -98,7 +91,7 @@ export function StationMapLink({ name, stopId }: { name: string; stopId: string 
   const map = findStationMap(name, stopId)
   if (!map) return null
   return (
-    <a href={map.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
+    <a href={map.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
       <FilePdfIcon size={14} /> Station map (PDF) <ArrowSquareOutIcon size={14} />
       <NewTabNote />
     </a>

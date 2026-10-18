@@ -1,5 +1,7 @@
 import type { MapLayers } from '../components/map/settings'
+import type { Outage } from '../api/newsTypes'
 import { FEEDS, type FeedId } from './feedRegistry'
+import { isUnplaced } from './outages'
 
 // Each map layer's info line: who publishes it and how often the app reads it,
 // taken from the feed registry (the same list /status and the data sources
@@ -93,5 +95,58 @@ export function layerTimes(d: LayerData): Partial<Record<keyof MapLayers, DataTi
   if (storm) out.cyclones = { at: storm, label: 'Latest warning' }
   if (d.newsReadAt) for (const k of ['news', 'councilCentres', 'outages'] as const) out[k] = { at: d.newsReadAt, label: 'Feeds read' }
   if (d.nswReadAt) out.nswFires = { at: d.nswReadAt, label: 'Feed read' }
+  return out
+}
+
+/** A feed's list, or null or undefined while it hasn't loaded. */
+type Loaded = readonly unknown[] | null | undefined
+
+export interface LayerCountData {
+  cameras: readonly { kind: string }[]
+  restAreas: readonly unknown[]
+  dumpPoints: readonly unknown[]
+  trucks: readonly unknown[]
+  waze: readonly unknown[]
+  fires: Loaded
+  warnings: Loaded
+  gauges: Loaded
+  signalVolumes: { size: number } | null | undefined
+  clearances: Loaded
+  clearways: Loaded
+  toilets: Loaded
+  accessibleParking: Loaded
+  parkingMeters: Loaded
+  cycling: Loaded
+  councilEvents: Loaded
+  /** The news snapshot, which also carries council centres and outages. */
+  news: { centres: readonly unknown[]; outages: readonly Outage[] } | null | undefined
+  airQuality: Loaded
+  hotspots: Loaded
+  /** All grouped stories (null until read) and the ones the map shows. */
+  stories: Loaded
+  mapStories: readonly unknown[]
+}
+
+/**
+ * How many items each layer has, for the counts beside its switch. A feed not
+ * yet loaded gets no count rather than 0, as it hasn't been read.
+ */
+export function layerCounts(d: LayerCountData): Partial<Record<keyof MapLayers, number>> {
+  const out: Partial<Record<keyof MapLayers, number>> = {
+    webcams: d.cameras.filter((c) => c.kind === 'webcam').length,
+    floodcams: d.cameras.filter((c) => c.kind === 'floodcam').length,
+    restAreas: d.restAreas.length,
+    dumpPoints: d.dumpPoints.length,
+    trucks: d.trucks.length,
+    waze: d.waze.length,
+  }
+  const loaded = { fires: d.fires, warnings: d.warnings, gauges: d.gauges, clearances: d.clearances, clearways: d.clearways, toilets: d.toilets, accessibleParking: d.accessibleParking, parkingMeters: d.parkingMeters, cycling: d.cycling, councilEvents: d.councilEvents, airQuality: d.airQuality, hotspots: d.hotspots }
+  for (const [k, list] of Object.entries(loaded) as [keyof MapLayers, Loaded][]) if (list) out[k] = list.length
+  if (d.signalVolumes) out.signals = d.signalVolumes.size
+  if (d.news) {
+    out.councilCentres = d.news.centres.length
+    out.outages = d.news.outages.filter((o) => !isUnplaced(o)).length
+  }
+  if (d.stories) out.news = d.mapStories.length
   return out
 }

@@ -1,7 +1,7 @@
 import type { AirStation } from '../api/airQuality'
 import { describe, expect, it } from 'vitest'
 import type { Gauge } from '../api/bccGauges'
-import type { LiveVehicle, TripUpdate } from '../api/translink'
+import type { LiveVehicle, TripUpdate } from '../api/transitTypes'
 import type { TrafficEvent } from '../api/types'
 import { busiestSignals, closuresAndCrashesByDistrict, corridorReport, fastestRising, footTraffic, latestEvents, punctuality, upcomingEvents, worstStations } from './dashboard'
 

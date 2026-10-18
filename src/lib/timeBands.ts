@@ -1,3 +1,5 @@
+import { BRISBANE_OFFSET_MS } from './aest'
+
 // Parts of a stop's day, for scanning its published timetable, and the last
 // service of the day on each route. Both come straight from published times.
 
@@ -10,11 +12,9 @@ export const TIME_BANDS: { band: TimeBand; label: string; hours: string }[] = [
   { band: 'night', label: 'Night', hours: '7pm to 4am' },
 ]
 
-const BRISBANE = 10 * 3_600_000
-
 /** The band a time falls in, by its Brisbane clock hour (Queensland has no daylight saving). */
 export function bandOf(t: number): TimeBand {
-  const h = Math.floor((t + BRISBANE) / 3_600_000) % 24
+  const h = Math.floor((t + BRISBANE_OFFSET_MS) / 3_600_000) % 24
   return h >= 4 && h < 12 ? 'am' : h >= 12 && h < 19 ? 'pm' : 'night'
 }
 

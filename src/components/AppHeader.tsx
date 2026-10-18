@@ -273,7 +273,7 @@ export function AppHeader({
               Contact
             </DropdownMenu.LinkItem>
             <DropdownMenu.Separator />
-            <DropdownMenu.LinkItem href={SUPPORT_URL} target="_blank" rel="noopener" icon={CoffeeIcon}>
+            <DropdownMenu.LinkItem href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" icon={CoffeeIcon}>
               Buy me a coffee
               <NewTabNote />
             </DropdownMenu.LinkItem>

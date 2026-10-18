@@ -11,8 +11,6 @@ export const DAILY_PASSES: Record<DailyPass, { layer: string; credit: string; la
   noaa20: { layer: 'VIIRS_NOAA20_CorrectedReflectance_TrueColor', credit: 'Imagery: NASA GIBS, NOAA-20 VIIRS', label: 'NOAA-20 VIIRS true colour, afternoon pass' },
   terra: { layer: 'MODIS_Terra_CorrectedReflectance_TrueColor', credit: 'Imagery: NASA GIBS, Terra MODIS', label: 'Terra MODIS true colour, morning pass' },
 }
-export const GIBS_LAYER = DAILY_PASSES.noaa20.layer
-export const GIBS_CREDIT = DAILY_PASSES.noaa20.credit
 export const GIBS_ABOUT = 'https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api'
 /** GIBS serves both layers down to zoom level 9 (about 250 m a pixel). */
 export const GIBS_MAX_ZOOM = 9

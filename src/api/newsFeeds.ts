@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { decodeEntities, plainText } from '../lib/newsText.js'
+import { cdata, xmlTag as tag } from '../lib/xml.js'
 import type { NewsPlace } from './newsTypes.js'
 
 type LngLat = NewsPlace['position']
@@ -16,13 +17,6 @@ export interface RssItem {
   /** The item's description as published: markup, to be cut down with firstSentence(). */
   description: string
   categories: string[]
-}
-
-const cdata = (s: string) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-
-function tag(block: string, name: string): string | null {
-  const m = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`).exec(block)
-  return m ? cdata(m[1]).trim() : null
 }
 
 /** Items from an RSS 2.0 feed. Items without a title or an http(s) link are dropped. */

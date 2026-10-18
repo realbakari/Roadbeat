@@ -2,7 +2,6 @@ import { Banner, Button, Checkbox, Dialog, Select, Switch, TagInput, Text } from
 import { InfoIcon, NavigationArrowIcon, XIcon } from '@phosphor-icons/react'
 import { useState, type ReactNode } from 'react'
 import type { TrafficEvent } from '../api/types'
-import { requestBrowserPermission } from '../hooks/useNotifications'
 import { ALERT_KINDS, hasAreaFilter, type AlertSettings } from '../lib/alertRules'
 import { eventTitle } from '../lib/eventText'
 
@@ -16,6 +15,13 @@ interface Props {
 }
 
 const RADII = { '5': 'Within 5 km', '10': 'Within 10 km', '25': 'Within 25 km', '50': 'Within 50 km', '100': 'Within 100 km' }
+
+/** Asks for the browser's permission to show system notifications, unless it has already been given or refused. */
+async function requestBrowserPermission(): Promise<NotificationPermission | 'unsupported'> {
+  if (!('Notification' in window)) return 'unsupported'
+  if (Notification.permission !== 'default') return Notification.permission
+  return Notification.requestPermission()
+}
 
 export function AlertSettingsDialog({ open, onOpenChange, settings: s, onChange, districts, events }: Props) {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(() =>

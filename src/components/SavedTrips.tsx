@@ -2,27 +2,26 @@ import { Button, InputGroup, Loader, Text } from '@cloudflare/kumo'
 import { ArrowDownIcon, ArrowUpIcon, CaretRightIcon, PathIcon, TrashIcon, WarningIcon } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import type { StopIndex } from '../api/stops'
-import { brisbaneDate, routesAtStops, type TimetableIndex } from '../api/timetables'
-import { alertActive, routeInfo, type LiveVehicle, type TransitAlert, type TripUpdates } from '../api/translink'
+import { routesAtStops, type TimetableIndex } from '../api/timetables'
+import { alertActive, routeInfo, type TransitAlert } from '../api/translink'
+import type { LiveVehicle, TripUpdates } from '../api/transitTypes'
 import { useTripsOn } from '../hooks/useTimetable'
-import { useNow, useStopIndex, useTimetableIndex, useTripUpdates } from '../hooks/useTrafficData'
-import { planJourneys, stopAndChildren, type Journey } from '../lib/planner'
+import { useNow } from '../hooks/useNow'
+import { useStopIndex, useTimetableIndex, useTripUpdates } from '../hooks/useTransitFeeds'
+import { legMode, planJourneys, shortName, stopAndChildren, type Journey } from '../lib/planner'
 import { planHash } from '../lib/route'
 import { moveSavedTrip, removeSavedTrip, renameSavedTrip, useSavedTrips } from '../lib/savedStops'
 import { filterJourneys, nextJourneys, type SavedTrip } from '../lib/savedTrips'
 import { delayOf, minutesUntil } from '../lib/timeFormat'
 import { liveLookup, type LiveLookup } from '../lib/timetable'
 import { readableTextOn } from '../lib/routeColor'
+import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
 
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
 const seconds = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit', second: '2-digit' })
 const short = (t: number) => clock.format(t).replace(/\s/g, '')
 
 /** How many departures each card lists, as TripView's home screen does. */
 const SHOWN = 4
-
-const shortName = (name: string) => name.replace(/ station$/i, '')
-const modeOf = (l: Journey['legs'][number]) => routeInfo(l.trip.route, l.trip.region)?.mode ?? 'bus'
 
 /** The planner search a saved trip opens: from now, with its saved filters. */
 const savedTripHash = (t: SavedTrip) =>
@@ -149,7 +148,7 @@ function TripCard({
   const trips = useTripsOn(t.region, codes, today, true)
   const live = useMemo(() => liveLookup(updates, vehicles), [updates, vehicles])
   const journeys = useMemo(
-    () => (trips && fromIds && toIds ? filterJourneys(planJourneys(trips, stops, fromIds, toIds), t, modeOf) : null),
+    () => (trips && fromIds && toIds ? filterJourneys(planJourneys(trips, stops, fromIds, toIds), t, legMode) : null),
     [trips, stops, fromIds, toIds, t],
   )
   const reportedDep = (j: Journey) => live.get(j.legs[0].trip)?.stopTime(j.legs[0].from)?.time ?? null

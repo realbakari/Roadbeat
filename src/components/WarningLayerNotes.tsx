@@ -4,9 +4,7 @@ import { QLD_WARNINGS_PAGE, WARNING_COLOR, WARNING_LEVELS } from '../api/qldWarn
 import { aestTime, aestWithAge } from '../lib/aest'
 import { fireIcon, iconUrl } from '../lib/mapIcons'
 import { LayerFacts } from './LayerFacts'
-import { NewTabNote } from './NewTabNote'
-
-const link = 'text-kumo-link underline decoration-1 underline-offset-2'
+import { InlineLink } from './ui/Links'
 
 function Key({ items }: { items: { label: string; color: string }[] }) {
   return (
@@ -36,10 +34,7 @@ export function WarningsNote({ count, notice, fetchedAt, now }: FeedState & { co
       <Key items={WARNING_LEVELS.map((l) => ({ label: l === 'Other' ? 'Other level' : l, color: WARNING_COLOR[l] }))} />
       <LayerFacts
         publisher={
-          <a href={QLD_WARNINGS_PAGE} target="_blank" rel="noopener" className={link}>
-            Queensland Disaster Management
-            <NewTabNote />
-          </a>
+          <InlineLink href={QLD_WARNINGS_PAGE}>Queensland Disaster Management</InlineLink>
         }
         cadence="Read every 2 minutes; the publisher says its map can be up to 5 minutes behind"
         latest={fetchedAt != null ? aestTime(fetchedAt, now) : null}

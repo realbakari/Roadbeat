@@ -3,9 +3,7 @@ import { HOTSPOT_AGES, HOTSPOT_HOURS, HOTSPOTS_ATTRIBUTION, HOTSPOTS_PORTAL } fr
 import { aestWithAge } from '../lib/aest'
 import { feedNotice } from '../lib/feedNotice'
 import { LayerFacts } from './LayerFacts'
-import { NewTabNote } from './NewTabNote'
-
-const link = 'text-kumo-link underline decoration-1 underline-offset-2'
+import { InlineLink } from './ui/Links'
 
 /** The hotspot layer's key and caveats, under its switch. */
 export function HotspotsNote({ hasData, error, fetchedAt, newest, now }: { hasData: boolean; error: string | null; fetchedAt: number | null; newest: number | null; now: number }) {
@@ -33,10 +31,7 @@ export function HotspotsNote({ hasData, error, fetchedAt, newest, now }: { hasDa
       )}
       <Text size="xs" variant="secondary">
         Heat a satellite detected in the last {HOTSPOT_HOURS} hours, from Geoscience Australia's{' '}
-        <a href={HOTSPOTS_PORTAL} target="_blank" rel="noopener" className={link}>
-          DEA Hotspots
-          <NewTabNote />
-        </a>
+        <InlineLink href={HOTSPOTS_PORTAL}>DEA Hotspots</InlineLink>
         . A hotspot isn't a confirmed fire: it can be a bushfire, a planned burn or another heat source. Positions are within 375 m to 2 km, depending
         on the satellite. For warnings, follow the Queensland Fire Department. {HOTSPOTS_ATTRIBUTION}, CC BY 4.0.
       </Text>

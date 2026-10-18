@@ -1,4 +1,4 @@
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+import { brisbaneClock as clock } from './aest'
 
 /**
  * What to say when a feed's latest read failed: that it is unavailable when

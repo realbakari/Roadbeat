@@ -1,6 +1,6 @@
 import type * as maplibregl from 'maplibre-gl'
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import type { LiveVehicle } from '../../api/translink'
+import type { LiveVehicle } from '../../api/transitTypes'
 import { vehicleMarkers, type LngLat } from '../../lib/geo'
 import { setData } from './features'
 

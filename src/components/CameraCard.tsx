@@ -7,7 +7,6 @@ import { clean, timeAgo } from '../lib/format'
 import { cameraSrc, shortName } from '../lib/cameras'
 import { ClampedText } from './ClampedText'
 
-
 interface Props {
   camera: Camera
   now: number

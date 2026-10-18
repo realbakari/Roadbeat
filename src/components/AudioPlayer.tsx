@@ -52,7 +52,7 @@ export function AudioPlayer({ src, label }: { src: string; label: string }) {
         onClick={toggle}
       />
       {failed ? (
-        <a href={src} target="_blank" rel="noreferrer" className="text-sm text-kumo-link underline decoration-1 underline-offset-2">
+        <a href={src} target="_blank" rel="noopener noreferrer" className="text-sm text-kumo-link underline decoration-1 underline-offset-2">
           Couldn't play here. Open the recording
           <NewTabNote />
         </a>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_LAYERS } from '../components/map/settings'
-import { layerInfo, layerTimes } from './layerInfo'
+import type { Outage } from '../api/newsTypes'
+import { layerCounts, layerInfo, layerTimes, type LayerCountData } from './layerInfo'
 
 describe('layerInfo', () => {
   it("gives a layer its feed's publisher and read cadence from the registry", () => {
@@ -40,5 +41,62 @@ describe('layerTimes', () => {
       councilCentres: { at: 400, label: 'Feeds read' },
       outages: { at: 400, label: 'Feeds read' },
     })
+  })
+})
+
+describe('layerCounts', () => {
+  const none: LayerCountData = {
+    cameras: [],
+    restAreas: [],
+    dumpPoints: [],
+    trucks: [],
+    waze: [],
+    fires: null,
+    warnings: null,
+    gauges: null,
+    signalVolumes: null,
+    clearances: null,
+    clearways: null,
+    toilets: null,
+    accessibleParking: null,
+    parkingMeters: null,
+    cycling: null,
+    councilEvents: null,
+    news: null,
+    airQuality: null,
+    hotspots: null,
+    stories: null,
+    mapStories: [],
+  }
+
+  it('counts the always-loaded layers, splitting cameras by kind', () => {
+    expect(layerCounts({ ...none, cameras: [{ kind: 'webcam' }, { kind: 'floodcam' }, { kind: 'webcam' }], waze: [1, 2] })).toEqual({
+      webcams: 2,
+      floodcams: 1,
+      restAreas: 0,
+      dumpPoints: 0,
+      trucks: 0,
+      waze: 2,
+    })
+  })
+
+  it('gives no count for a feed not yet loaded, and 0 for one that loaded empty', () => {
+    const c = layerCounts({ ...none, fires: [], toilets: [1, 2, 3] })
+    expect(c.fires).toBe(0)
+    expect(c.toilets).toBe(3)
+    expect(c).not.toHaveProperty('gauges')
+    expect(c).not.toHaveProperty('signals')
+  })
+
+  it('counts signals by their volume sites and outages only where they are placed', () => {
+    const placed = { place: { name: 'Chuwar', position: [152.8, -27.5] }, geometry: null } as unknown as Outage
+    const unplaced = { place: null, geometry: null } as unknown as Outage
+    const c = layerCounts({ ...none, signalVolumes: { size: 4 }, news: { centres: [1], outages: [placed, unplaced] } })
+    expect(c).toMatchObject({ signals: 4, councilCentres: 1, outages: 1 })
+  })
+
+  it('counts the stories on the map once the news has loaded', () => {
+    expect(layerCounts({ ...none, stories: [1, 2, 3], mapStories: [1] }).news).toBe(1)
+    expect(layerCounts({ ...none, mapStories: [1] })).not.toHaveProperty('news')
   })
 })

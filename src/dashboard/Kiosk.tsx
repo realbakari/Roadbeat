@@ -1,12 +1,13 @@
 import { BroadcastIcon, CalendarBlankIcon, WarningIcon } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
-import { routeInfo, routeLabel, type TransitRegion } from '../api/translink'
-import { useLiveVehicles, useNow, useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTrafficData'
+import { routeInfo, routeLabel } from '../api/translink'
+import type { TransitRegion } from '../api/transitTypes'
+import { useLiveVehicles, useStopIndex, useTripIndex, useTripUpdates } from '../hooks/useTransitFeeds'
+import { useNow } from '../hooks/useNow'
 import { departuresAt, type Departure } from '../lib/departures'
 import { isStale } from '../lib/feedAge'
 import { readableTextOn } from '../lib/routeColor'
-
-const clock = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' })
+import { brisbaneClock as clock } from '../lib/aest'
 
 function dueLabel(d: Departure, now: number) {
   const m = Math.round((d.time - now) / 60_000)

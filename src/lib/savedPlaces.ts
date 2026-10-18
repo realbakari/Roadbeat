@@ -2,7 +2,7 @@ import type { TrafficEvent } from '../api/types'
 import { eventAnchor } from './eventAnchor'
 import { isClosure, isCurrent } from './eventStatus'
 import { distanceKm, type LngLat } from './geo'
-import { storedList } from './savedStops'
+import { storedList } from './storedList'
 
 // "My places": localities a rider saves with their own nickname ("Home",
 // "Mum's", "Work"), kept in this browser only. Each is listed above the road

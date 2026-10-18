@@ -1,11 +1,11 @@
 import { Loader, Text } from '@cloudflare/kumo'
-import { ArrowSquareOutIcon, CaretRightIcon } from '@phosphor-icons/react'
+import { CaretRightIcon } from '@phosphor-icons/react'
 import type { Gauge } from '../api/bccGauges'
 import { floodWarningArea } from '../api/floodWarnings'
 import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, nearbyGauges, rainfallTotal } from '../lib/gauges'
 import type { LngLat } from '../lib/geo'
-import { NewTabNote } from './NewTabNote'
+import { ExternalLink } from './ui/Links'
 
 /** How far from a flooding event to look for gauges. */
 const RADIUS_KM = 5
@@ -82,10 +82,7 @@ export function GaugesNearby({
         readings in metres, not flood levels.
       </Text>
       {area && (
-        <a href={area.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-          BoM flood warning for {area.catchment} <ArrowSquareOutIcon size={14} />
-          <NewTabNote />
-        </a>
+        <ExternalLink href={area.url}>BoM flood warning for {area.catchment}</ExternalLink>
       )}
     </div>
   )
