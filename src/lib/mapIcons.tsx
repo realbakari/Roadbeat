@@ -37,6 +37,7 @@ import type { Map as MapLibreMap } from 'maplibre-gl'
 import { CAMERA_COLOR, EVENT_TYPES } from './eventMeta'
 import { FIRE_COLOR, FIRE_LEVELS } from '../api/bushfires'
 import { DS_BANDS } from './signals'
+import { GVM_LIMITS, typeSlug } from './impactIcons'
 import { CENTRE_COLOR } from './councilCentres'
 import { OUTAGE_COLOR } from './outages'
 import { AIR_COLOR } from '../api/airQuality'
@@ -47,6 +48,9 @@ import { NSW_ALERT_COLOR } from '../api/nswFires'
 
 const SIZE = 30 // logical px; registered at 2x for crisp rendering
 const CLOSURE_RED = '#dc2626'
+/** QLDTraffic's lane closure and Red Alert pins are a deep crimson, apart from the red of a full closure. */
+const LANE_CRIMSON = '#be123c'
+const RESTRICTION_AMBER = '#f59e0b'
 
 export const LAYER_COLOR = {
   restArea: '#15803d',
@@ -134,8 +138,24 @@ function closure(label: string) {
   )
 }
 
-export function typeSlug(type: string) {
-  return type.toLowerCase().replace(/\s+/g, '-')
+const FONT = 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif'
+
+/** A lane closure: two lanes, one carrying on and one ending, like QLDTraffic's lane closure pin. */
+function laneClosure() {
+  return wrap(
+    `${shadow}<circle cx="15" cy="15" r="13" fill="${LANE_CRIMSON}" stroke="#fff" stroke-width="2"/>` +
+      `<g stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M11 22V11"/><path d="M19 22v-9M15.5 13h7"/></g>` +
+      `<path d="M11 6.5 7.5 11.5h7z" fill="#fff"/>`,
+  )
+}
+
+/** A warning triangle with a few words or a figure, like QLDTraffic's vehicle and mass restriction pins. */
+function warningSign(fill: string, ink: string, label: string) {
+  const fs = label.length > 4 ? 5.6 : label.length > 3 ? 6.6 : label.length > 1 ? 8 : 11
+  return wrap(
+    `<path d="M15 3.8 28.3 26.8H1.7z" fill="rgba(0,0,0,.25)"/><path d="M15 2.5 28 25.5H2z" fill="${fill}" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>` +
+      `<text x="15" y="22.6" text-anchor="middle" font-family="${FONT}" font-weight="800" font-size="${fs}" fill="${ink}">${label}</text>`,
+  )
 }
 
 function buildIcons(): Record<string, string> {
@@ -148,6 +168,13 @@ function buildIcons(): Record<string, string> {
   }
   icons['closure-all'] = closure('ALL')
   icons['closure-thru'] = closure('THRU')
+  // QLDTraffic's impact pins, drawn Roadbeat's way: a lane closure, vehicle and mass restrictions, and Red Alert.
+  icons['impact-lane'] = laneClosure()
+  icons['impact-4wd'] = warningSign(RESTRICTION_AMBER, '#111', '4WD')
+  icons['impact-hcv'] = warningSign(RESTRICTION_AMBER, '#111', 'HCV')
+  icons['impact-axle'] = warningSign(RESTRICTION_AMBER, '#111', 'AXLE')
+  for (const t of GVM_LIMITS) icons[`impact-gvm-${t}`] = warningSign(RESTRICTION_AMBER, '#111', `${t} t`)
+  icons['event-red-alert'] = warningSign(LANE_CRIMSON, '#fff', '!')
   icons['camera-webcam'] = disc(CAMERA_COLOR.webcam, VideoCameraIcon)
   icons['camera-floodcam'] = disc(CAMERA_COLOR.floodcam, CameraIcon)
   icons['rest-area'] = square(LAYER_COLOR.restArea, PicnicTableIcon)
@@ -214,6 +241,8 @@ export function fireIcon(level: string, kind: string | null = null) {
   const base = `fire-${level.toLowerCase().replace(/[^a-z]+/g, '-')}`
   return kind?.toUpperCase().includes('PERMITTED BURN') ? `${base}-burn` : base
 }
+
+export { eventIconId, typeSlug } from './impactIcons'
 
 const SVGS = buildIcons()
 
@@ -291,8 +320,3 @@ export async function ensureClearanceIcons(map: MapLibreMap, heights: number[]) 
 }
 
 /** Icon id for a road event marker. */
-export function eventIconId(type: string, closureSubtype: string | null | undefined, upcoming: boolean) {
-  if (upcoming) return `event-${typeSlug(type)}-future`
-  if (closureSubtype) return /through/i.test(closureSubtype) ? 'closure-thru' : 'closure-all'
-  return `event-${typeSlug(type)}`
-}

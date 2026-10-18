@@ -4,8 +4,23 @@ import { brisbaneDayKey as brisbaneDay } from './aest.js'
 // Whether a QLDTraffic event is in effect. Free of browser-only code, so the app
 // and the server functions in api/ share it.
 
+/**
+ * Closures QLDTraffic files that close only part of the road. Its feed puts
+ * them under the impact type "Closures", but its map gives them a lane
+ * closure pin, not a road closed one, and so does Roadbeat.
+ */
+const LANE_CLOSURES = new Set(['One lane closed', 'Partial lane closures'])
+
+/** Whether the road itself is closed: to all traffic, to through traffic, or a closure QLDTraffic doesn't narrow to lanes. */
 export function isClosure(e: TrafficEvent): boolean {
-  return e.properties.impact?.impact_type === 'Closures'
+  const i = e.properties.impact
+  return i?.impact_type === 'Closures' && !LANE_CLOSURES.has(i.impact_subtype ?? '')
+}
+
+/** Whether part of the road is closed and the rest stays open, such as one lane closed northbound. */
+export function isLaneClosure(e: TrafficEvent): boolean {
+  const i = e.properties.impact
+  return i?.impact_type === 'Closures' && LANE_CLOSURES.has(i.impact_subtype ?? '')
 }
 
 const brisbaneWeekday = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'long' })

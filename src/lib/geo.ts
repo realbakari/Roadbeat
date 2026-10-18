@@ -1,8 +1,8 @@
 import type { Feature as GjFeature, FeatureCollection as GjCollection, Geometry, Position } from 'geojson'
 import type { Camera, DumpPoint, RestArea, TrafficEvent, TruckRestriction, WazeReport } from '../api/types'
 import { CAMERA_COLOR, priorityRank, typeMeta } from './eventMeta'
-import { isClosure, isUpcoming } from './filters'
-import { eventIconId } from './mapIcons'
+import { isUpcoming } from './filters'
+import { eventIconId } from './impactIcons'
 import type { LiveVehicle } from '../api/transitTypes'
 import { eventMarkerPoints, flatten } from './eventAnchor'
 import { truckIconPoint, truckKey } from './trucks'
@@ -55,7 +55,7 @@ export function eventMarkers(events: TrafficEvent[]): GjCollection<Geometry, Eve
       rank: priorityRank(p.event_priority),
       area: false,
       future,
-      icon: eventIconId(p.event_type, isClosure(e) ? (p.impact?.impact_subtype ?? 'closed') : null, future),
+      icon: eventIconId(p.event_type, p.impact?.impact_subtype, future, p.event_priority),
     }
     for (const at of eventMarkerPoints(e)) features.push({ type: 'Feature', id: p.id, geometry: { type: 'Point', coordinates: at }, properties })
   }
