@@ -14,8 +14,18 @@ export function json(body: unknown, status = 200, maxAge = 30): Response {
   })
 }
 
+/** A JSON response no cache keeps: one browser's own answer, or an operator's report. */
+export function noStore(body: unknown, status = 200): Response {
+  return Response.json(body, { status, headers: { ...CORS, 'cache-control': 'no-store' } })
+}
+
 export function preflight(): Response {
   return new Response(null, { status: 204, headers: CORS })
+}
+
+/** A preflight handler for an endpoint that takes methods beyond GET and POST. */
+export function preflightFor(methods: string): () => Response {
+  return () => new Response(null, { status: 204, headers: { ...CORS, 'access-control-allow-methods': methods } })
 }
 
 /** Parses a request's query string with a zod schema, or returns a 400 response that says what's wrong. */

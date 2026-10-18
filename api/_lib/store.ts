@@ -11,6 +11,13 @@ const KEY = 'push:subs'
 
 export const storeConfigured = !!URL_ && !!TOKEN
 
+/**
+ * A stored record (the news snapshot or the event history) older than this means
+ * the 5-minute scheduler (api/news-ingest.ts) has stopped, so a request reads
+ * the feed itself.
+ */
+export const STALE_MS = 15 * 60_000
+
 /** Runs one Redis command, such as ['GET', key]. */
 export async function redis<T>(command: (string | number)[]): Promise<T> {
   const res = await fetch(URL_!, {

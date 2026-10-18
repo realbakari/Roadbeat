@@ -4,7 +4,7 @@ import { z } from 'zod'
 // No address, browser or account is stored: only what they typed, which page
 // they were on and when. Contact details are optional and only kept if given.
 
-export const FEEDBACK_KINDS = ['bug', 'idea', 'data', 'other'] as const
+const FEEDBACK_KINDS = ['bug', 'idea', 'data', 'other'] as const
 
 /** At most this many messages a day from one browser and address (hashed, as for visits). */
 export const PER_DAY = 5

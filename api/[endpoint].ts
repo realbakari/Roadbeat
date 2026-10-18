@@ -42,6 +42,12 @@ function endpointFor(request: Request): Endpoint | null {
   return Object.hasOwn(ENDPOINTS, name) ? ENDPOINTS[name] : null
 }
 
+/** A 405 whose Allow header lists the methods this endpoint does take. */
+function notAllowed(endpoint: Endpoint): Response {
+  const methods = (['GET', 'POST', 'OPTIONS'] as const).filter((m) => endpoint[m])
+  return new Response(null, { status: 405, headers: { allow: methods.join(', ') } })
+}
+
 export function GET(request: Request) {
   const endpoint = endpointFor(request)
   return endpoint ? endpoint.GET(request) : json({ error: 'No such endpoint. See /openapi.json.' }, 404)
@@ -50,11 +56,11 @@ export function GET(request: Request) {
 export function POST(request: Request) {
   const endpoint = endpointFor(request)
   if (!endpoint) return json({ error: 'No such endpoint. See /openapi.json.' }, 404)
-  return endpoint.POST ? endpoint.POST(request) : new Response(null, { status: 405, headers: { allow: 'GET' } })
+  return endpoint.POST ? endpoint.POST(request) : notAllowed(endpoint)
 }
 
 export function OPTIONS(request: Request) {
   const endpoint = endpointFor(request)
   if (!endpoint) return json({ error: 'No such endpoint. See /openapi.json.' }, 404)
-  return endpoint.OPTIONS ? endpoint.OPTIONS(request) : new Response(null, { status: 405, headers: { allow: 'GET' } })
+  return endpoint.OPTIONS ? endpoint.OPTIONS(request) : notAllowed(endpoint)
 }

@@ -1,5 +1,5 @@
 import { ingestHistory } from './_lib/eventHistoryStore.js'
-import { json } from './_lib/http.js'
+import { json, noStore } from './_lib/http.js'
 import { ingest, loadSnapshot, saveSnapshot } from './_lib/newsIngest.js'
 import { storeConfigured } from './_lib/store.js'
 
@@ -18,7 +18,7 @@ async function ingestNews() {
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) return json({ error: 'Unauthorised' }, 401)
-  if (!storeConfigured) return json({ skipped: 'No Redis store is connected, so /api/news reads the feeds on demand.' }, 200, 0)
+  if (!storeConfigured) return noStore({ skipped: 'No Redis store is connected, so /api/news reads the feeds on demand.' })
   // The two records are independent: a feed that fails leaves the other's run stored.
   const [news, history] = await Promise.allSettled([ingestNews(), ingestHistory()])
   if (news.status === 'rejected') throw news.reason
@@ -26,5 +26,5 @@ export async function GET(request: Request) {
     history.status === 'fulfilled'
       ? { runs: history.value?.runs.length ?? 0, inEffect: history.value?.runs.at(-1)?.count ?? 0 }
       : { error: history.reason instanceof Error ? history.reason.message : String(history.reason) }
-  return json({ items: news.value.items.length, sources: news.value.sources, events }, 200, 0)
+  return noStore({ items: news.value.items.length, sources: news.value.sources, events })
 }

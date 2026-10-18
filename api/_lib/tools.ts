@@ -2,6 +2,7 @@ import type { FireWarning } from '../../src/api/bushfireFeed.js'
 import type { Stop, StopIndex, TripIndex } from '../../src/api/stops.js'
 import type { LiveVehicle, TransitRegion, TripUpdates } from '../../src/api/transitTypes.js'
 import type { TrafficEvent } from '../../src/api/types.js'
+import { BRISBANE_OFFSET_MS } from '../../src/lib/aest.js'
 import { departuresAt } from '../../src/lib/departures.js'
 import { hasEnded, isClosure, isUpcoming } from '../../src/lib/eventStatus.js'
 
@@ -14,7 +15,7 @@ export const SITE = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTI
 /** A time as an ISO 8601 string in Brisbane time (UTC+10, no daylight saving). */
 export function brisbaneIso(ms: number | null | undefined): string | null {
   if (ms == null || !Number.isFinite(ms)) return null
-  return new Date(ms + 10 * 3600_000).toISOString().replace(/\.\d{3}Z$/, '+10:00')
+  return new Date(ms + BRISBANE_OFFSET_MS).toISOString().replace(/\.\d{3}Z$/, '+10:00')
 }
 
 const words = (q: string | undefined) =>

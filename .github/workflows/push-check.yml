@@ -10,6 +10,8 @@ on:
 
 jobs:
   check:
+    # Forks don't call production.
+    if: github.repository == 'realbakari/Roadbeat'
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:

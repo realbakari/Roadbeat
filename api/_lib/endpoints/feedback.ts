@@ -1,5 +1,5 @@
 import { FeedbackInput, feedbackRecord, KEEP, PER_DAY } from '../feedback.js'
-import { json, preflight } from '../http.js'
+import { json, noStore, preflight } from '../http.js'
 import { redis, redisPipeline, storeConfigured } from '../store.js'
 import { brisbaneDay, clientIp, visitorId } from '../visits.js'
 
@@ -14,8 +14,6 @@ import { brisbaneDay, clientIp, visitorId } from '../visits.js'
 
 const LIST = 'feedback'
 const SALT = process.env.VISITS_SALT ?? process.env.CRON_SECRET ?? ''
-
-const noStore = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'cache-control': 'no-store' } })
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET

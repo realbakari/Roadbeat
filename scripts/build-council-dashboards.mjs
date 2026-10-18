@@ -94,7 +94,7 @@ async function iconOf(...sites) {
     for (const url of await declaredIcons(site)) {
       try {
         const res = await fetch(url, { headers: { 'user-agent': UA }, redirect: 'follow', signal: AbortSignal.timeout(15_000) })
-        if (!res.ok || !/^image\//.test(res.headers.get('content-type') ?? '')) continue
+        if (!res.ok || !(res.headers.get('content-type') ?? '').startsWith('image/')) continue
         const bytes = new Uint8Array(await res.arrayBuffer())
         if (bytes.length < 100) continue
         return { url, hash: createHash('sha1').update(bytes).digest('hex') }
@@ -108,7 +108,7 @@ async function iconOf(...sites) {
 
 const checked = await Promise.all(links.map(async (l) => ({ ...l, feed: await feedAddress(l.root), icon: await iconOf(l.website, l.root) })))
 // An icon file that two councils serve is their web platform's default, not either council's mark.
-const shared = new Set([...checked.map((l) => l.icon?.hash).filter(Boolean)].filter((h, i, all) => all.indexOf(h) !== i))
+const shared = new Set(checked.map((l) => l.icon?.hash).filter(Boolean).filter((h, i, all) => all.indexOf(h) !== i))
 const dashboards = checked
   .filter((l) => l.feed)
   .map((l) => [l.council, areaOf(l.council), l.root, l.feed, l.icon && !shared.has(l.icon.hash) ? l.icon.url : null])

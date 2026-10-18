@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto'
 /** A window of "online now": browsers that pinged within this long count. */
 export const WINDOW_MS = 5 * 60_000
 /** "Online now" spans this many windows (the current one and the one before). */
-export const ONLINE_WINDOWS = 2
+const ONLINE_WINDOWS = 2
 
 const brisbane = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Brisbane' })
 

@@ -3,7 +3,7 @@ import type { TransitRegion } from '../src/api/transitTypes.js'
 import { commuteAlerts, commuteWindow } from '../src/lib/commute.js'
 import { departuresAt } from '../src/lib/departures.js'
 import { bushfires, roadEvents, routeInfo, stops, transitRealtime, trips } from './_lib/feeds.js'
-import { json } from './_lib/http.js'
+import { json, noStore } from './_lib/http.js'
 import { PushRecord } from './_lib/pushRecord.js'
 import { allSubscriptions, deleteSubscription, saveSubscription, storeConfigured } from './_lib/store.js'
 import { SITE } from './_lib/tools.js'
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) return json({ error: 'Unauthorised' }, 401)
   const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY } = process.env
-  if (!storeConfigured || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return json({ skipped: 'Push alerts are not set up on this server.' }, 200, 0)
+  if (!storeConfigured || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return noStore({ skipped: 'Push alerts are not set up on this server.' })
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || SITE, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
   const now = Date.now()
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     return r.success ? [[id, r.data] as const] : []
   })
   const active = records.filter(([, r]) => commuteWindow(r.commute, now)?.active)
-  if (!active.length) return json({ subscriptions: records.length, active: 0, sent: 0 }, 200, 0)
+  if (!active.length) return noStore({ subscriptions: records.length, active: 0, sent: 0 })
 
   // Fetch each official feed once for every active commute.
   const regions = [...new Set(active.flatMap(([, r]) => (r.commute.stopId ? [r.commute.region] : [])))] as TransitRegion[]
@@ -73,5 +73,5 @@ export async function GET(request: Request) {
     const done = [...delivered, ...fresh.slice(MAX_PER_RUN).map((a) => a.key)]
     if (done.length) await saveSubscription(id, { ...record, sent: [...record.sent, ...done].slice(-KEEP_SENT) })
   }
-  return json({ subscriptions: records.length, active: active.length, sent, removed }, 200, 0)
+  return noStore({ subscriptions: records.length, active: active.length, sent, removed })
 }

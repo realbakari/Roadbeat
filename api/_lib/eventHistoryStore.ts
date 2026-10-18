@@ -1,7 +1,7 @@
 import { EventHistory, type HistoryResponse } from '../../src/api/historyTypes.js'
 import { EMPTY_HISTORY, recordRun } from '../../src/lib/eventHistory.js'
 import { roadEvents } from './feeds.js'
-import { redis, storeConfigured } from './store.js'
+import { redis, STALE_MS, storeConfigured } from './store.js'
 
 // The road event history: which QLDTraffic events were in effect at each read
 // of the feed over the last 48 hours. The news monitor's 5-minute run records
@@ -12,11 +12,9 @@ import { redis, storeConfigured } from './store.js'
 const KEY = 'events:history'
 /** A run is recorded at most this often, so a burst of requests adds one read, not many. */
 const RUN_INTERVAL_MS = 5 * 60_000
-/** A stored record older than this means the scheduler has stopped, so a request records a run itself. */
-export const STALE_MS = 15 * 60_000
 
 /** The stored history, or null if there is none (or it no longer parses). */
-export async function loadHistory(): Promise<EventHistory | null> {
+async function loadHistory(): Promise<EventHistory | null> {
   if (!storeConfigured) return null
   const raw = await redis<string | null>(['GET', KEY])
   if (!raw) return null
@@ -28,12 +26,12 @@ export async function loadHistory(): Promise<EventHistory | null> {
   }
 }
 
-export async function saveHistory(history: EventHistory) {
+async function saveHistory(history: EventHistory) {
   if (storeConfigured) await redis(['SET', KEY, JSON.stringify(history)])
 }
 
 /** Reads the events feed now and adds the run to `previous`. */
-export async function recordRead(previous: EventHistory | null, now = Date.now()): Promise<EventHistory> {
+async function recordRead(previous: EventHistory | null, now = Date.now()): Promise<EventHistory> {
   const { events, published } = await roadEvents()
   return recordRun(previous ?? EMPTY_HISTORY, events, now, published)
 }

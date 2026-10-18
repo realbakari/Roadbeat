@@ -6,34 +6,37 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { latestHeightsRequest, WMIP_SERVICE } from './src/api/qldGaugesFeed.ts'
 import { sitePages } from './site/plugin.ts'
 
-// TransLink's GTFS-RT feeds send no CORS headers, so the app reads them through
-// /translink-rt. In dev/preview Vite proxies it; in production a Cloudflare Pages
-// Function (functions/translink-rt) or the vercel.json rewrite does the same.
-const translinkProxy = {
+// Six official feeds send no CORS headers, so the app reads them through its own
+// paths: /translink-rt (TransLink's GTFS-RT), /qfd-bushfires, /qld-warnings,
+// /qfd-firebans, /air-quality and /qld-gauges. In dev and preview Vite proxies the
+// first five here (and qldGaugesProxy below serves /qld-gauges). In production on
+// Vercel, rewrites in vercel.json do the same (and api/qld-gauges.ts for the
+// gauges); on Cloudflare Pages, the functions of the same names in functions/.
+const feedProxies = {
   '/translink-rt': {
     target: 'https://gtfsrt.api.translink.com.au',
     changeOrigin: true,
     rewrite: (path: string) => path.replace(/^\/translink-rt/, '/api/realtime'),
   },
-  // Queensland Fire Department bushfire warnings (no CORS headers either); functions/qfd-bushfires in production.
+  // Queensland Fire Department bushfire warnings.
   '/qfd-bushfires': {
     target: 'https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com',
     changeOrigin: true,
     rewrite: () => '/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json',
   },
-  // Queensland's severe weather, flood and cyclone warnings (no CORS headers either); functions/qld-warnings in production.
+  // Queensland's severe weather, flood and cyclone warnings.
   '/qld-warnings': {
     target: 'https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com',
     changeOrigin: true,
     rewrite: () => '/content/Feeds/StormFloodCycloneWarnings/StormWarnings.json',
   },
-  // Queensland Fire Department fire bans (no CORS headers); functions/qfd-firebans in production on Cloudflare.
+  // Queensland Fire Department fire bans.
   '/qfd-firebans': {
     target: 'https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com',
     changeOrigin: true,
     rewrite: () => '/content/Feeds/QLDFireban/FIREBAN.xml',
   },
-  // The state's live air quality feed (no CORS headers either); functions/air-quality in production.
+  // The state's live air quality feed.
   '/air-quality': {
     target: 'https://apps.des.qld.gov.au',
     changeOrigin: true,
@@ -69,16 +72,26 @@ function qldGaugesProxy(): Plugin {
   }
 }
 
-// A Vercel function from api/ served in development: the module's handler for
-// the request's method gets a Request for the same path and its Response is written back.
-function devApi(path: string, module: string): Plugin {
+// The Vercel functions from api/ served in development: /api/push from
+// api/push.ts, and every other /api/<name> from the router in api/[endpoint].ts
+// (an unknown name gets its 404). /api/news has its own plugin below, which runs
+// first. The module's handler for the request's method gets a Request for the
+// same path and its Response is written back. `vite preview` has no module
+// loader, so these answer only under `vite`.
+function devApi(): Plugin {
+  const moduleFor = (path: string) => {
+    const name = /^\/api\/([a-z-]+)\/?$/.exec(path)?.[1]
+    if (!name || name === 'news') return null
+    return name === 'push' ? '/api/push.ts' : '/api/[endpoint].ts'
+  }
   return {
-    name: `dev-api:${path}`,
+    name: 'dev-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (req.url?.split('?')[0] !== path) return next()
+        const module = moduleFor(req.url?.split('?')[0] ?? '')
+        if (!module) return next()
         const method = req.method ?? 'GET'
-        // POST bodies (visits, feedback) are passed on as the deployed function would get them.
+        // POST and DELETE bodies (visits, feedback, push) are passed on as the deployed function would get them.
         const chunks: Buffer[] = []
         req.on('data', (c: Buffer) => chunks.push(c))
         req.on('end', () =>
@@ -132,8 +145,8 @@ export default defineConfig(({ mode, command }) => {
   // Analytics only in built sites, so local development doesn't count as visits.
   const gaMeasurementId = command === 'build' ? (env.GA_MEASUREMENT_ID ?? '') : ''
   return {
-    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi('/api/camera-time', '/api/[endpoint].ts'), devApi('/api/history', '/api/[endpoint].ts'), devApi('/api/share', '/api/[endpoint].ts'), devApi('/api/visits', '/api/[endpoint].ts'), devApi('/api/feedback', '/api/[endpoint].ts'), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
-    server: { proxy: translinkProxy },
-    preview: { proxy: translinkProxy },
+    plugins: [react(), tailwindcss(), qldGaugesProxy(), newsDevApi(), devApi(), sitePages({ siteUrl, contactEmail: env.CONTACT_EMAIL ?? '', gaMeasurementId })],
+    server: { proxy: feedProxies },
+    preview: { proxy: feedProxies },
   }
 })

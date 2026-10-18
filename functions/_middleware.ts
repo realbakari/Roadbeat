@@ -9,9 +9,10 @@ interface Context {
   env: { ASSETS: { fetch: (input: Request | URL | string) => Promise<Response> } }
 }
 
-const MARKDOWN = { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept', 'cache-control': 'public, max-age=300' }
+// Markdown copies of pages are for agents, so search engines are told not to index them (as vercel.json and public/_headers do).
+const MARKDOWN = { 'content-type': 'text/markdown; charset=utf-8', vary: 'Accept', 'cache-control': 'public, max-age=300', 'x-robots-tag': 'noindex' }
 
-/** "/" → "/index.md", "/about/" → "/about.md". Mirrors markdownPathFor in site/plugin.ts. */
+/** "/" → "/index.md", "/about/" → "/about.md". Mirrors markdownPathFor in site/markdown.ts. */
 function markdownPathFor(path: string) {
   const clean = path.replace(/\/+$/, '') || '/'
   return clean === '/' ? '/index.md' : `${clean}.md`
@@ -19,7 +20,7 @@ function markdownPathFor(path: string) {
 
 export async function onRequest({ request, next, env }: Context): Promise<Response> {
   const url = new URL(request.url)
-  const isPage = request.method === 'GET' && !url.pathname.includes('.') && !url.pathname.startsWith('/translink-rt') && url.pathname !== '/qfd-bushfires' && url.pathname !== '/qld-warnings' && url.pathname !== '/qfd-firebans' && url.pathname !== '/qld-gauges' && url.pathname !== '/air-quality'
+  const isPage = request.method === 'GET' && !url.pathname.includes('.') && !url.pathname.startsWith('/translink-rt') && !url.pathname.startsWith('/api/') && url.pathname !== '/qfd-bushfires' && url.pathname !== '/qld-warnings' && url.pathname !== '/qfd-firebans' && url.pathname !== '/qld-gauges' && url.pathname !== '/air-quality'
 
   if (url.pathname.endsWith('.md')) {
     const res = await env.ASSETS.fetch(url)

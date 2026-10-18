@@ -15,7 +15,7 @@ export async function onRequestGet({ params, request, waitUntil }: Context): Pro
   const path = (params.path ?? []).join('/')
   if (!ALLOWED.test(path)) return new Response('Not found', { status: 404 })
 
-  const cache = (caches as unknown as { default: Cache }).default
+  const cache = caches.default
   const key = new Request(new URL(request.url).toString())
   const hit = await cache.match(key)
   if (hit) return hit

@@ -2,7 +2,8 @@ import { parseBushfires, type FireWarning } from '../../src/api/bushfireFeed.js'
 import { decodeFeed, parseTripUpdates, parseVehicles, type RouteLookup } from '../../src/api/gtfsrt.js'
 import { StopIndex, TripIndex, type StopFile, type TripFile } from '../../src/api/stops.js'
 import type { LiveVehicle, TransitRegion, TripUpdates } from '../../src/api/transitTypes.js'
-import type { EventProperties, FeatureCollection, TrafficEvent } from '../../src/api/types.js'
+import { parseEvents } from '../../src/api/qldtrafficFeed.js'
+import type { TrafficEvent } from '../../src/api/types.js'
 import routeData from '../../src/data/translink-routes.json' with { type: 'json' }
 import stopsCore from '../../src/data/translink-stops.json' with { type: 'json' }
 import stopsBus from '../../src/data/translink-stops-bus.json' with { type: 'json' }
@@ -41,8 +42,8 @@ async function get(url: string): Promise<Response> {
 /** QLDTraffic road events, as published, with the feed's own `published` stamp. */
 export function roadEvents(): Promise<{ events: TrafficEvent[]; fetchedAt: number; published: string | null }> {
   return cached('events', 60_000, async () => {
-    const data = (await (await get(SOURCES.events)).json()) as FeatureCollection<TrafficEvent['geometry'], EventProperties>
-    return { events: data.features ?? [], fetchedAt: Date.now(), published: data.published ?? null }
+    const { events, published } = parseEvents(await (await get(SOURCES.events)).json())
+    return { events, fetchedAt: Date.now(), published }
   })
 }
 

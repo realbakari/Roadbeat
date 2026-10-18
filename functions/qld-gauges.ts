@@ -4,25 +4,14 @@
 // at the edge for 5 minutes.
 import stationFile from '../public/qld-gauges.json'
 import { latestHeightsRequest, WMIP_SERVICE } from '../src/api/qldGaugesFeed'
+import { proxy, type ProxyContext } from './_lib/proxy'
 
 const SITES = stationFile.stations.map(([id]) => String(id))
 
-interface Context {
-  request: Request
-  waitUntil: (p: Promise<unknown>) => void
-}
-
-export async function onRequestGet({ request, waitUntil }: Context): Promise<Response> {
-  const cache = (caches as unknown as { default: Cache }).default
-  const key = new Request(new URL(request.url).toString())
-  const hit = await cache.match(key)
-  if (hit) return hit
-
-  const upstream = await fetch(WMIP_SERVICE, { method: 'POST', body: latestHeightsRequest(SITES) })
-  const res = new Response(upstream.body, {
-    status: upstream.status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=300' },
+export const onRequestGet = (context: ProxyContext) =>
+  proxy(context, {
+    url: WMIP_SERVICE,
+    init: { method: 'POST', body: latestHeightsRequest(SITES) },
+    contentType: 'application/json',
+    maxAge: 300,
   })
-  if (upstream.ok) waitUntil(cache.put(key, res.clone()))
-  return res
-}

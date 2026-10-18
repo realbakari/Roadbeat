@@ -2,11 +2,22 @@
   "name": "roadbeat",
   "private": true,
   "version": "0.0.0",
+  "description": "Queensland live road conditions and public transport on one map, from official data only.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/realbakari/Roadbeat.git"
+  },
+  "homepage": "https://www.roadbeat.app",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "typecheck": "tsc -b tsconfig.json api/tsconfig.test.json functions/tsconfig.json",
     "preview": "vite preview",
     "data:routes": "node scripts/build-routes.mjs",
     "data:stops": "node scripts/build-stops.mjs",
@@ -29,19 +40,18 @@
     "@cloudflare/kumo": "^2.14.0",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@phosphor-icons/react": "^2.1.10",
-    "@tailwindcss/vite": "^4.3.3",
     "@vercel/analytics": "^2.0.1",
     "basic-ftp": "^6.2.3",
-    "echarts": "^6.1.0",
     "gtfs-realtime-bindings": "^2.2.0",
     "maplibre-gl": "^6.14.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "tailwindcss": "^4.3.3",
     "web-push": "^3.6.7",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
@@ -50,6 +60,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^30.1.3",
     "oxlint": "^1.81.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.2"

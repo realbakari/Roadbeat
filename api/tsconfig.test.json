@@ -1,0 +1,13 @@
+{
+  /* The api tests, type-checked by `npm run typecheck`. They stay out of api/tsconfig.json so `npm run build` (Vercel's build) checks only the code that ships. */
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.api-test.tsbuildinfo",
+    /* Vitest bundles the tests, and they share fixtures with src/ that import without extensions and read import.meta.env. */
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node", "vite/client"]
+  },
+  "include": ["**/*.test.ts"],
+  "exclude": []
+}

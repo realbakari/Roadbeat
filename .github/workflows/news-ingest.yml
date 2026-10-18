@@ -10,13 +10,15 @@ on:
 
 jobs:
   ingest:
+    # Forks don't call production.
+    if: github.repository == 'realbakari/Roadbeat'
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: Read the news feeds
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          SITE_URL: ${{ vars.SITE_URL || 'https://roadbeat.vercel.app' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://www.roadbeat.app' }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "CRON_SECRET is not set, so /api/news reads the feeds on demand instead. Skipping."
