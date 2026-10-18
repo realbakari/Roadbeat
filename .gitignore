@@ -31,3 +31,6 @@ dist-ssr
 # Local tool settings
 .claude/
 .vercel
+
+# Local working notes, kept out of the repo
+/notes/
