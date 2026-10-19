@@ -1,31 +1,11 @@
 import { Button, Dialog } from '@cloudflare/kumo'
 import { DeviceMobileIcon, DotsThreeIcon, ExportIcon, PlusSquareIcon, XIcon } from '@phosphor-icons/react'
-import { useState, type ReactNode } from 'react'
-import { useInstallApp } from '../hooks/useInstallApp'
+import type { ReactNode } from 'react'
 
-/**
- * Header button to install Roadbeat on a phone or computer. Uses the browser's own install
- * prompt where there is one (Android, Chrome and Edge) and shows Add to Home Screen steps on
- * iPhone and iPad. Renders nothing once installed, or where the browser can't install it.
- */
-export function InstallApp() {
-  const { mode, install } = useInstallApp()
-  const [stepsOpen, setStepsOpen] = useState(false)
-
+/** The Add to Home Screen steps for iPhone and iPad. */
+export function InstallSteps({ open: stepsOpen, onOpenChange: setStepsOpen }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
     <>
-      {mode !== 'none' && (
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<DeviceMobileIcon />}
-          title="Install Roadbeat as an app"
-          onClick={() => (mode === 'prompt' ? void install() : setStepsOpen(true))}
-        >
-          {/* Below 360px the header has no room for the word, so the button keeps its name for screen readers only. */}
-          <span className="max-[359px]:sr-only">Install</span>
-        </Button>
-      )}
       <Dialog.Root open={stepsOpen} onOpenChange={setStepsOpen}>
         <Dialog size="sm" className="grid gap-4 px-5 py-4">
           <div className="flex items-start justify-between gap-4">

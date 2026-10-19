@@ -24,10 +24,9 @@ export function useInstallApp() {
   const [installed, setInstalled] = useState(isStandalone)
 
   useEffect(() => {
+    // The event is kept for the menu's Install item, but not held back: the browser still shows its own install prompt.
     const onPrompt = (e: Event) => {
-      if (!isPromptEvent(e)) return
-      e.preventDefault()
-      setPromptEvent(e)
+      if (isPromptEvent(e)) setPromptEvent(e)
     }
     const onInstalled = () => {
       setInstalled(true)

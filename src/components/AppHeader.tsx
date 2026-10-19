@@ -30,7 +30,7 @@ import { DEFAULT_FILTERS, isClosure, isCurrent, type EventFilters } from '../lib
 import { feedAnnouncement } from '../lib/feedAge'
 import { timeAgo } from '../lib/format'
 import { timeDetail } from '../lib/relativeTime'
-import { InstallApp } from './InstallApp'
+import { useInstallMenu } from '../hooks/useInstallMenu'
 import { NotificationCenter } from './NotificationCenter'
 import { VisitorCount } from './VisitorCount'
 import type { Visitors } from '../api/visits'
@@ -102,6 +102,7 @@ export function AppHeader({
   onTogglePanelExpanded,
   visitors,
 }: Props) {
+  const install = useInstallMenu()
   const stats = useMemo(() => {
     const current = events.filter((e) => isCurrent(e, now))
     return {
@@ -188,7 +189,6 @@ export function AppHeader({
         <GlobalSearch sources={searchSources} onOpen={onOpenSearch} />
         {/* From 2xl only: below that the quick-filter chips need the room, so the More menu lists it instead. */}
         <VisitorCount visitors={visitors} className="mr-2 hidden 2xl:flex" />
-        <InstallApp />
         <NotificationCenter
           items={notifications.items}
           unread={notifications.unread}
@@ -275,6 +275,7 @@ export function AppHeader({
             <DropdownMenu.LinkItem href="/privacy/" icon={ShieldCheckIcon}>
               Privacy
             </DropdownMenu.LinkItem>
+            {install.item}
             <DropdownMenu.Item icon={ChatCircleTextIcon} onClick={onFeedback}>
               Send feedback
             </DropdownMenu.Item>
@@ -288,6 +289,7 @@ export function AppHeader({
             </DropdownMenu.LinkItem>
           </DropdownMenu.Content>
         </DropdownMenu>
+        {install.steps}
       </div>
     </header>
   )
