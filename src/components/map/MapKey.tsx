@@ -53,7 +53,11 @@ export function MapKey({ layers }: { layers: MapLayers }) {
             </section>
           ))}
           <Text size="xs" variant="secondary">
-            Bigger road event icons are higher priority. Turn layers on and off under Layers.
+            Bigger road event icons are higher priority. Turn layers on and off under Layers. What the terms mean, from the agencies that publish them:{' '}
+            <a href="/glossary/" className="underline">
+              Glossary
+            </a>
+            .
           </Text>
         </div>
       )}

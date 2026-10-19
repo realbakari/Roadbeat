@@ -179,6 +179,9 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
                 ['Delay', clean(impact?.delay)],
               ]}
             />
+            <a href="/glossary/#road-closures-and-restrictions" className="mt-2 inline-block text-sm text-kumo-link underline">
+              What these terms mean
+            </a>
           </Section>
 
           <Section title="When">

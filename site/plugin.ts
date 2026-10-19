@@ -24,7 +24,7 @@ import { pageHtml } from './pageHtml.ts'
 import { NOT_FOUND_PATH, SITE, type SiteSettings } from './settings.ts'
 import { robots, sitemapFiles } from './sitemap.ts'
 
-const PAGES = ['index', 'about', 'privacy', 'contact', '404'] as const
+const PAGES = ['index', 'about', 'glossary', 'privacy', 'contact', '404'] as const
 type PageName = (typeof PAGES)[number]
 
 type Page = StaticPage
@@ -32,6 +32,7 @@ type Page = StaticPage
 const CRUMBS: Record<PageName, Crumb[]> = {
   index: [{ name: SITE.name, path: '/' }],
   about: [{ name: SITE.name, path: '/' }, { name: 'About', path: '/about/' }],
+  glossary: [{ name: SITE.name, path: '/' }, { name: 'Glossary', path: '/glossary/' }],
   privacy: [{ name: SITE.name, path: '/' }, { name: 'Privacy', path: '/privacy/' }],
   contact: [{ name: SITE.name, path: '/' }, { name: 'Contact', path: '/contact/' }],
   '404': [{ name: SITE.name, path: '/' }],

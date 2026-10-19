@@ -24,6 +24,7 @@
 
 - [Home](%SITE_URL%/): the live map and lists.
 - [About](%SITE_URL%/about/): what Roadbeat is, its data sources and its accuracy rule.
+- [Glossary](%SITE_URL%/glossary/): what warning levels, road closures and restrictions mean, quoted from the agencies that publish them, and which terms have no official definition.
 <!--if:GA_MEASUREMENT_ID-->
 - [Privacy](%SITE_URL%/privacy/): no accounts or advertising; Google Analytics counts visits; settings stay in the browser.
 <!--endif-->

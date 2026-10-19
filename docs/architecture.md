@@ -40,7 +40,7 @@ src/
 api/            Vercel functions: the public API, the MCP server, news, push alerts and the feed proxy for /qld-gauges
   _lib/         code the functions share, and the handlers behind api/[endpoint].ts (not deployed on its own)
 site/           the Vite plugin that writes the static pages, llms.txt, openapi.json and the directory pages
-  pages/        the home page's description (index.md) and the About, Privacy, Contact and 404 pages
+  pages/        the home page's description (index.md) and the About, Glossary, Privacy, Contact and 404 pages
 middleware.ts   Vercel middleware: serves the Markdown twin of a page to agents that ask for it
 functions/      Cloudflare Pages Functions: the six feed proxies, /api/camera-time and the Markdown middleware
 scripts/        Node scripts that build src/data and public/ from published data
@@ -67,7 +67,7 @@ The event list opens with Queensland Disaster Management's warnings (`src/compon
 
 A row and the event's page also say when QLDTraffic has gone quiet on an event (`updateGap()` in `src/lib/eventAge.ts`): an unplanned event (crash, hazard, congestion or flooding) it hasn't updated for 7 days or more, or any event whose published next inspection has passed with no update since. Both come from QLDTraffic's own `last_updated` and `next_inspection`. The wording states the gap only and never says the event has cleared; the page points to Transport and Main Roads on 13 19 40. Planned roadworks and special events aren't flagged for age, as they run to a published schedule. The list's first chip is **Closures only**, with its count, ahead of the event types.
 
-Each event's places link to their place pages (`EventPlace`, `eventLocalities()` in `src/lib/locality.ts`). The gazetteer loads once the browser is idle (`useLocalityIndex()`), and until then places show as text. A name the gazetteer has once links whatever council spelling QLDTraffic uses; same-named places are told apart by the event's council, and places QLDTraffic files under NSW aren't linked.
+Each event's places link to their place pages (`EventPlace`, `eventLocalities()` in `src/lib/locality.ts`). The gazetteer loads once the browser is idle (`useLocalityIndex()`), and until then places show as text. A name the gazetteer has once links whatever council spelling QLDTraffic uses; same-named places are told apart by the event's council, and places QLDTraffic files under NSW aren't linked. The map key, the event page's Impact section and the More menu link to the Glossary (`site/pages/glossary.md`).
 
 ## Times and empty lists
 

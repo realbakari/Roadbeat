@@ -77,7 +77,7 @@ Report a bug or suggest a feature in [GitHub Issues](https://github.com/realbaka
 - [Deploy the app](docs/deploy.md) covers static hosting and the feed proxies.
 - [Contributing](docs/contributing.md) sets out the code conventions, the accuracy rule and how to test a change.
 
-Roadbeat also publishes [About](site/pages/about.md), [Privacy](site/pages/privacy.md) and [Contact](site/pages/contact.md) pages, and an [`llms.txt`](site/llms.txt) for AI agents.
+Roadbeat also publishes [About](site/pages/about.md), [Glossary](site/pages/glossary.md), [Privacy](site/pages/privacy.md) and [Contact](site/pages/contact.md) pages, and an [`llms.txt`](site/llms.txt) for AI agents.
 
 ## Licence
 

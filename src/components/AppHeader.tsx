@@ -2,6 +2,7 @@ import { Button, DropdownMenu, Text, Tooltip } from '@cloudflare/kumo'
 import {
   ArrowClockwiseIcon,
   ArrowsInSimpleIcon,
+  BookOpenTextIcon,
   CoffeeIcon,
   ArrowsOutSimpleIcon,
   ChatCircleTextIcon,
@@ -277,6 +278,9 @@ export function AppHeader({
             <DropdownMenu.Separator />
             <DropdownMenu.LinkItem href="/about/" icon={InfoIcon}>
               About
+            </DropdownMenu.LinkItem>
+            <DropdownMenu.LinkItem href="/glossary/" icon={BookOpenTextIcon}>
+              Glossary
             </DropdownMenu.LinkItem>
             <DropdownMenu.LinkItem href="/privacy/" icon={ShieldCheckIcon}>
               Privacy

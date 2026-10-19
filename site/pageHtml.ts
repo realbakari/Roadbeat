@@ -30,7 +30,7 @@ const column = (title: string, links: [string, string, string?][]) =>
 const FOOTER = `<footer><div class="wrap">
       <div class="cols">
         ${column('Browse', [['Queensland places', '/places/'], ['Stations and stops', '/stations/'], ['Lines and routes', '/lines/']])}
-        ${column('Roadbeat', [['Open the app', '/'], ['About', '/about/'], ['Privacy', '/privacy/'], ['Contact', '/contact/']])}
+        ${column('Roadbeat', [['Open the app', '/'], ['About', '/about/'], ['Glossary', '/glossary/'], ['Privacy', '/privacy/'], ['Contact', '/contact/']])}
         ${column('Open source', [['Source code on GitHub', REPO, 'noopener'], ['For AI agents', '/llms.txt'], ['Buy me a coffee', SUPPORT_URL, 'noopener']])}
       </div>
       <p class="fine">Roadbeat is independent and not affiliated with the Queensland Government. Data from official publishers, most under CC BY 4.0: see <a href="/about/#where-the-data-comes-from">About</a> for every source and its terms. Map data © OpenStreetMap contributors. In an emergency, call Triple Zero (000).</p>
