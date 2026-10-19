@@ -45,6 +45,9 @@ import { useNow } from './hooks/useNow'
 import { useHotspots } from './hooks/useSatellite'
 import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
+import { MajorStrip } from './components/MajorStrip'
+import { majorIncidents } from './lib/majorIncidents'
+import { feedStatus } from './lib/feedAge'
 import { isGibsLive, jmaProduct, SATELLITE_SOURCES, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
 import { frameAt, recentFrames } from './lib/frames'
 import { brisbaneDate } from './lib/aest'
@@ -75,6 +78,9 @@ export function App() {
   // Bushfire warnings are always fetched: they're on the map and list by default and feed notifications.
   const { fires, error: fireError, fetchedAt: firesAt } = useBushfires(true)
   const fireNotice = feedNotice('Bushfire warnings', fires != null, fireError, firesAt)
+  // Always read, like the bushfires: the list, the strip under the header and alerts all show them.
+  const qw = useQldWarnings()
+  const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
   const firstLoad = loading && fetchedAt == null
   const ref = useReferenceData()
   const now = useNow()
@@ -174,6 +180,7 @@ export function App() {
     eventsAt: fetchedAt,
     transitAlerts,
     fires,
+    warnings: qw.warnings,
     stories,
     onOpen: openHref,
   })
@@ -292,8 +299,6 @@ export function App() {
         }
       : null,
   })
-  const qw = useQldWarnings(layers.warnings || sel.place?.kind === 'warning')
-  const warningNotice = feedNotice('Queensland warnings', qw.warnings != null, qw.error, qw.fetchedAt)
   const [dismissed, dismissSuggestion] = useSatelliteDismissals()
   const suggestion = useMemo(
     () => (base === 'map' ? satelliteSuggestion(cyclones.data ?? [], qw.warnings ?? [], dismissed) : null),
@@ -384,6 +389,12 @@ export function App() {
     revealList()
     if (sel.transit || sel.event || sel.camera || sel.place || sel.locality || sel.vehicle || sel.fire || sel.gauge || sel.signal || sel.news != null) go('')
   }
+
+  const major = useMemo(
+    // Until road events have loaded once, their counts are unknown, not zero.
+    () => majorIncidents({ events: fetchedAt == null ? null : events, fires, warnings: qw.warnings, now }),
+    [fetchedAt, events, fires, qw.warnings, now],
+  )
 
   const layerCounts = useMemo(
     () =>
@@ -540,6 +551,7 @@ export function App() {
           onTogglePanelExpanded={() => setPanelMode((m) => (m === 'expanded' ? 'normal' : 'expanded'))}
           visitors={visitors}
         />
+        <MajorStrip summary={major} onOpen={openHref} onShowEvents={showEvents} feedStatus={feedStatus(error, fetchedAt, now)} />
 
         {(error || locateError) && (
           <div className="grid gap-2 border-b border-kumo-line bg-kumo-base px-4 py-2">
@@ -619,6 +631,8 @@ export function App() {
                 fires={fires}
                 fireBans={fireBans.data}
                 fireNotice={fireNotice}
+                warnings={qw.warnings}
+                warningNotice={warningNotice}
                 selectedFire={selectedFire}
                 gauges={gauges}
                 gaugeNotice={gaugeNotice}

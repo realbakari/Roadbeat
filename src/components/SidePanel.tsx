@@ -4,6 +4,7 @@ import type { Gauge } from '../api/bccGauges'
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import type { SignalSite, SignalVolumes } from '../api/bccSignals'
 import type { FireWarning } from '../api/bushfires'
+import type { QldWarning } from '../api/qldWarnings'
 import type { FireBans } from '../api/fireBans'
 import type { NewsPlace, NewsRoad, NewsSnapshot } from '../api/newsTypes'
 import type { TransitAlert } from '../api/translink'
@@ -85,6 +86,10 @@ interface Props {
   fireBans: FireBans | null
   /** Why the bushfire list is missing or stale, or null while the feed is fine. */
   fireNotice: string | null
+  /** Queensland Disaster Management warnings, or null until read. */
+  warnings: QldWarning[] | null
+  /** Why the warnings are missing or stale, or null while the feed is fine. */
+  warningNotice: string | null
   selectedFire: FireWarning | null
   gauges: Gauge[] | null
   /** Why gauges are missing or stale, or null while the feeds are fine. */
@@ -241,6 +246,8 @@ export function SidePanel(p: Props) {
           fires={p.fires}
           fireBans={p.fireBans}
           fireNotice={p.fireNotice}
+          warnings={p.warnings}
+          warningNotice={p.warningNotice}
           onOpenHref={p.onOpenHref}
           occupancies={p.occupancies}
           top={

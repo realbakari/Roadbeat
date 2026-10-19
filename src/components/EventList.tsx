@@ -1,11 +1,13 @@
 import { Banner, Button, InputGroup, Loader, Select, Tabs, Text } from '@cloudflare/kumo'
-import { FlameIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
+import { FlameIcon, FunnelSimpleIcon, MagnifyingGlassIcon, NavigationArrowIcon, ProhibitIcon, WarningIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import type { FireBans } from '../api/fireBans'
 import { FireBansCard } from './FireBansCard'
 import type { EventType, TrafficEvent } from '../api/types'
 import { FireList } from './FireList'
+import { WarningList } from './WarningList'
+import type { QldWarning } from '../api/qldWarnings'
 import { CouncilWorksList } from './CouncilWorksList'
 import type { RoadOccupancy } from '../api/bccRoadOccupancies'
 import { EVENT_TYPES, PRIORITIES } from '../lib/eventMeta'
@@ -38,6 +40,10 @@ interface Props {
   fireBans: FireBans | null
   /** Why the bushfire list is missing or stale, or null while the feed is fine. */
   fireNotice?: string | null
+  /** Queensland Disaster Management's storm, flood, cyclone and other hazard warnings, shown first. */
+  warnings: QldWarning[] | null
+  /** Why the warnings are missing or stale, or null while the feed is fine. */
+  warningNotice?: string | null
   onOpenHref: (hash: string) => void
   /** Shown above the list, e.g. the My commute card. */
   top?: ReactNode
@@ -62,6 +68,8 @@ export function EventList({
   fires,
   fireBans,
   fireNotice,
+  warnings,
+  warningNotice,
   onOpenHref,
   top,
   occupancies,
@@ -287,6 +295,12 @@ export function EventList({
 
       <div className="min-h-0 flex-1 overflow-y-auto" onScroll={onListScroll}>
         {filters.when === 'now' && top}
+        {filters.when === 'now' && warningNotice && (
+          <div className="border-b border-kumo-line px-4 py-3">
+            <Banner variant="alert" size="sm" icon={<WarningIcon weight="fill" />} description={warningNotice} />
+          </div>
+        )}
+        {filters.when === 'now' && warnings && <WarningList warnings={warnings} onOpen={onOpenHref} />}
         {filters.when === 'now' && fireNotice && (
           <div className="border-b border-kumo-line px-4 py-3">
             <Banner variant="alert" size="sm" icon={<FlameIcon weight="fill" />} description={fireNotice} />

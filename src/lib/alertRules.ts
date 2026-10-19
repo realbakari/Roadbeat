@@ -1,4 +1,5 @@
 import type { FireWarning } from '../api/bushfires'
+import type { QldWarning } from '../api/qldWarnings'
 import type { TrafficEvent } from '../api/types'
 import type { NewsStory } from './newsStories'
 import { routeInfo, type TransitAlert } from '../api/translink'
@@ -7,7 +8,7 @@ import { isClosure, isUpcoming } from './filters'
 import { distanceKm, eventAnchor, type LngLat } from './geo'
 import { eventPlace, eventTitle } from './eventText'
 
-export type AlertKind = 'crash' | 'closure' | 'redAlert' | 'high' | 'flooding' | 'hazard' | 'congestion' | 'roadworks' | 'bushfire' | 'newsOfficial' | 'news'
+export type AlertKind = 'crash' | 'closure' | 'redAlert' | 'high' | 'flooding' | 'hazard' | 'congestion' | 'roadworks' | 'bushfire' | 'warning' | 'newsOfficial' | 'news'
 
 export const ALERT_KINDS: { key: AlertKind; label: string }[] = [
   { key: 'crash', label: 'Crashes' },
@@ -19,6 +20,7 @@ export const ALERT_KINDS: { key: AlertKind; label: string }[] = [
   { key: 'congestion', label: 'Congestion' },
   { key: 'roadworks', label: 'Roadworks starting' },
   { key: 'bushfire', label: 'Bushfire warnings' },
+  { key: 'warning', label: 'Storm, flood and cyclone warnings' },
   { key: 'newsOfficial', label: 'Police, BoM and earthquake notices' },
   { key: 'news', label: 'News reports' },
 ]
@@ -51,6 +53,7 @@ export const DEFAULT_SETTINGS: AlertSettings = {
     congestion: false,
     roadworks: false,
     bushfire: true,
+    warning: true,
     newsOfficial: false,
     news: false,
   },
@@ -212,6 +215,37 @@ export function fireMatches(f: FireWarning, s: AlertSettings) {
   if (s.nearMe && distanceKm(s.nearMe.at, f.position) <= s.nearMe.km) return true
   if (s.roads.length) {
     const hay = [f.area, f.title, f.location].filter(Boolean).join(' ').toLowerCase()
+    if (s.roads.some((q) => hay.includes(q.toLowerCase()))) return true
+  }
+  return false
+}
+
+/** Whether a point lies inside any ring of a warning's published area (even-odd rule). */
+function inShape(p: LngLat, shape: GeoJSON.MultiPolygon): boolean {
+  return shape.coordinates.some(([ring]) => {
+    let inside = false
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i]
+      const [xj, yj] = ring[j]
+      if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside
+    }
+    return inside
+  })
+}
+
+/**
+ * Should a Queensland Disaster Management warning (Advice or higher) alert the
+ * user? Area rules use the warning's published area or distance from its
+ * marker, or the user's listed roads and places in its area, title and issuer.
+ * Like bushfires, warnings aren't filed under TMR districts, so a
+ * districts-only filter never matches one rather than guessing.
+ */
+export function warningMatches(w: QldWarning, s: AlertSettings) {
+  if (!s.kinds.warning || w.level === 'Other') return false
+  if (!hasAreaFilter(s)) return true
+  if (s.nearMe && (distanceKm(s.nearMe.at, w.position) <= s.nearMe.km || (w.areaShape != null && inShape(s.nearMe.at, w.areaShape)))) return true
+  if (s.roads.length) {
+    const hay = [w.area, w.title, w.from].filter(Boolean).join(' ').toLowerCase()
     if (s.roads.some((q) => hay.includes(q.toLowerCase()))) return true
   }
   return false

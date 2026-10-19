@@ -1,6 +1,7 @@
 import type { AirStation } from '../api/airQuality'
 import type { FireWarning } from '../api/bushfireFeed'
 import type { Gauge } from '../api/gaugeTypes'
+import type { QldWarning, WarningLevel } from '../api/qldWarnings'
 import type { CouncilCentre, NewsItem, NewsPlace, Outage } from '../api/newsTypes'
 import type { Camera, TrafficEvent } from '../api/types'
 import { StopIndex } from '../api/stops'
@@ -126,6 +127,28 @@ export function fireWarning(id: string, area: string | null, title = 'Bushfire')
     issued: null,
     published: null,
     expires: null,
+  }
+}
+
+/** A Queensland Disaster Management flood warning at a level, with a marker and no area. */
+export function qldWarning(id: string, level: WarningLevel, area: string, position: [number, number] = [150, -25]): QldWarning {
+  return {
+    id,
+    level,
+    levelText: level,
+    title: `${level} - ${area}`,
+    issued: null,
+    type: 'Flood',
+    area,
+    from: null,
+    callToAction: null,
+    header: null,
+    impacts: null,
+    shouldDo: null,
+    moreInformation: null,
+    nextUpdate: null,
+    position,
+    areaShape: null,
   }
 }
 

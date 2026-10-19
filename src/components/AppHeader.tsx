@@ -27,8 +27,7 @@ import { NewTabNote } from './NewTabNote'
 import type { TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
 import { DEFAULT_FILTERS, isClosure, isCurrent, type EventFilters } from '../lib/filters'
-import { feedAnnouncement } from '../lib/feedAge'
-import { timeAgo } from '../lib/format'
+import { feedAnnouncement, feedStatus } from '../lib/feedAge'
 import { timeDetail } from '../lib/relativeTime'
 import { useInstallMenu } from '../hooks/useInstallMenu'
 import { NotificationCenter } from './NotificationCenter'
@@ -293,12 +292,6 @@ export function AppHeader({
       </div>
     </header>
   )
-}
-
-/** The header's feed status, in words, so a delay is shown and not only coloured. */
-function feedStatus(error: string | null, fetchedAt: number | null, now: number) {
-  if (!fetchedAt) return error ? 'Road events delayed' : 'Connecting…'
-  return `${error ? 'Delayed, updated' : 'Updated'} ${timeAgo(fetchedAt, now)}`
 }
 
 interface StatChipProps {

@@ -1,3 +1,5 @@
+import { timeAgo } from './format'
+
 /** A feed polled every 30 s is overdue once its last good read is older than this. */
 export const STALE_AFTER_MS = 90_000
 
@@ -18,4 +20,10 @@ export function isStale(fetchedAt: number | null, failing: boolean, now: number)
  */
 export function feedAnnouncement(error: string | null, fetchedAt: number | null): string {
   return error ? 'Road events delayed' : fetchedAt != null ? 'Road events live' : ''
+}
+
+/** The road events feed's status in words, so a delay is shown and not only coloured. */
+export function feedStatus(error: string | null, fetchedAt: number | null, now: number): string {
+  if (!fetchedAt) return error ? 'Road events delayed' : 'Connecting…'
+  return `${error ? 'Delayed, updated' : 'Updated'} ${timeAgo(fetchedAt, now)}`
 }

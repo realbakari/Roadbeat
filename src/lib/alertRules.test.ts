@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { FireWarning } from '../api/bushfires'
-import { DEFAULT_SETTINGS, fireMatches, newsMatches, parseSettings, type AlertSettings } from './alertRules'
+import { DEFAULT_SETTINGS, fireMatches, newsMatches, parseSettings, warningMatches, type AlertSettings } from './alertRules'
 import { groupStories } from './newsStories'
-import { gazetteerPlace, newsItem } from '../test/fixtures'
+import { gazetteerPlace, newsItem, qldWarning } from '../test/fixtures'
 
 const fire = (over: Partial<FireWarning> = {}): FireWarning => ({
   id: 'WARN-1',
@@ -101,5 +101,27 @@ describe('parseSettings', () => {
   it('gives the defaults for something that is not settings at all', () => {
     expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS)
     expect(parseSettings([1, 2])).toEqual(DEFAULT_SETTINGS)
+  })
+})
+
+describe('warningMatches', () => {
+  const s = (over: Partial<AlertSettings> = {}): AlertSettings => ({ ...DEFAULT_SETTINGS, ...over })
+  // A square around Condamine, its marker well away at one corner.
+  const square: GeoJSON.MultiPolygon = { type: 'MultiPolygon', coordinates: [[[[150, -27], [151, -27], [151, -26], [150, -26], [150, -27]]]] }
+  const w = { ...qldWarning('Q1', 'Watch and Act', 'Condamine', [150, -27]), areaShape: square }
+
+  it('matches anywhere without an area filter, and never a level outside the warning system', () => {
+    expect(warningMatches(w, s())).toBe(true)
+    expect(warningMatches({ ...w, level: 'Other' }, s())).toBe(false)
+  })
+
+  it('matches a nearby point inside the published area, or the user’s listed places', () => {
+    expect(warningMatches(w, s({ nearMe: { at: [150.9, -26.1], km: 5 } }))).toBe(true)
+    expect(warningMatches(w, s({ nearMe: { at: [152, -26.1], km: 5 } }))).toBe(false)
+    expect(warningMatches(w, s({ roads: ['condamine'] }))).toBe(true)
+  })
+
+  it('never matches a districts-only filter, as warnings aren’t filed under TMR districts', () => {
+    expect(warningMatches(w, s({ districts: ['Darling Downs'] }))).toBe(false)
   })
 })

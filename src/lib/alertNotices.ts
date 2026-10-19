@@ -1,8 +1,9 @@
 import { FIRE_LEVELS, type FireLevel, type FireWarning } from '../api/bushfires'
+import { WARNING_LEVELS, type QldWarning, type WarningLevel } from '../api/qldWarnings'
 import { alertActive, alertNextStart, type TransitAlert } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
 import { brisbaneDayDateTime } from './aest'
-import { describeChange, eventHeadline, eventSignature, fireMatches, matchesRules, newsMatches, watchedRoutesIn, type AlertSettings } from './alertRules'
+import { describeChange, eventHeadline, eventSignature, fireMatches, matchesRules, newsMatches, warningMatches, watchedRoutesIn, type AlertSettings } from './alertRules'
 import { eventTitle } from './eventText'
 import { publisherList, type NewsStory } from './newsStories'
 
@@ -13,7 +14,7 @@ import { publisherList, type NewsStory } from './newsStories'
 
 export interface AppNotification {
   id: string
-  kind: 'event-new' | 'event-update' | 'event-cleared' | 'transit' | 'fire' | 'news'
+  kind: 'event-new' | 'event-update' | 'event-cleared' | 'transit' | 'fire' | 'warning' | 'news'
   title: string
   body: string
   at: number
@@ -124,6 +125,35 @@ export function fireNotices(prev: Record<string, string>, fires: FireWarning[], 
       at: now,
       href: `fire/${encodeURIComponent(f.id)}`,
       tone: f.level === 'Advice' ? 'warning' : 'error',
+      away,
+    })
+  }
+  return away ? out.slice(0, 10) : out
+}
+
+/** Each Queensland warning's id and level, for telling next time whether it rose. */
+export function warningLevels(warnings: QldWarning[]): Record<string, string> {
+  const levels: Record<string, string> = {}
+  for (const w of warnings) levels[w.id] = w.level
+  return levels
+}
+
+/** Queensland Disaster Management warnings the rules match: new ones, and ones whose level went up. */
+export function warningNotices(prev: Record<string, string>, warnings: QldWarning[], s: AlertSettings, now: number, away: boolean): Notice[] {
+  const out: Notice[] = []
+  for (const w of warnings) {
+    if (!warningMatches(w, s)) continue
+    const was = prev[w.id]
+    const rose = was != null && WARNING_LEVELS.indexOf(w.level) < WARNING_LEVELS.indexOf(was as WarningLevel)
+    if (was != null && !rose) continue
+    out.push({
+      id: `warning-${w.id}-${w.level}`,
+      kind: 'warning',
+      title: `${rose ? 'Now ' : ''}${w.levelText}: ${w.area ?? w.title}`,
+      body: [w.callToAction, w.header].filter(Boolean).join(' — ') || w.title,
+      at: now,
+      href: `place/warning/${encodeURIComponent(w.id)}`,
+      tone: w.level === 'Advice' ? 'warning' : 'error',
       away,
     })
   }

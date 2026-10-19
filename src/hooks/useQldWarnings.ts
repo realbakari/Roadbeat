@@ -4,10 +4,11 @@ import { poll } from './poll'
 
 /**
  * Queensland's severe weather, flood and cyclone warnings, read every 2
- * minutes while `enabled`. The publisher says its map data can be up to 5
- * minutes behind. An empty list is a real state: no current warnings.
+ * minutes, and in a hidden tab too while system notifications are on, as they
+ * raise alerts. The publisher says its map data can be up to 5 minutes behind.
+ * An empty list is a real state: no current warnings.
  */
-export function useQldWarnings(enabled: boolean) {
+export function useQldWarnings(enabled = true) {
   const [warnings, setWarnings] = useState<QldWarning[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [fetchedAt, setFetchedAt] = useState<number | null>(null)
@@ -20,7 +21,7 @@ export function useQldWarnings(enabled: boolean) {
         (e: Error) => !c.signal.aborted && setError(e.message),
       )
     load()
-    const stop = poll(load, 120_000)
+    const stop = poll(load, 120_000, true)
     return () => {
       c.abort()
       stop()

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { FireWarning } from '../api/bushfires'
 import type { TransitAlert } from '../api/translink'
-import { eventNotices, eventSignatures, fireLevels, fireNotices, newsNotices, transitNotices } from './alertNotices'
+import { eventNotices, eventSignatures, fireLevels, fireNotices, newsNotices, transitNotices, warningLevels, warningNotices } from './alertNotices'
 import { DEFAULT_SETTINGS, type AlertSettings } from './alertRules'
 import { groupStories } from './newsStories'
-import { fireWarning, gazetteerPlace, newsItem, roadEvent } from '../test/fixtures'
+import { fireWarning, gazetteerPlace, newsItem, qldWarning, roadEvent } from '../test/fixtures'
 
 const now = Date.parse('2026-10-18T00:00:00Z')
 const settings = (over: Partial<AlertSettings> = {}): AlertSettings => ({ ...DEFAULT_SETTINGS, ...over })
@@ -83,6 +83,22 @@ describe('fireNotices', () => {
 
   it('skips warnings the rules exclude', () => {
     expect(fireNotices({}, [watch], settings({ kinds: { ...DEFAULT_SETTINGS.kinds, bushfire: false } }), now, false)).toEqual([])
+  })
+})
+
+describe('warningNotices', () => {
+  it('raises a new warning, and one whose level rose, but not one that held or fell', () => {
+    const advice = qldWarning('Q1', 'Advice', 'Condamine')
+    const watch = qldWarning('Q1', 'Watch and Act', 'Condamine')
+    expect(warningNotices({}, [advice], settings(), now, false).map((n) => [n.kind, n.title, n.href])).toEqual([['warning', 'Advice: Condamine', 'place/warning/Q1']])
+    expect(warningNotices(warningLevels([advice]), [watch], settings(), now, false).map((n) => [n.title, n.tone])).toEqual([['Now Watch and Act: Condamine', 'error']])
+    expect(warningNotices(warningLevels([advice]), [advice], settings(), now, false)).toEqual([])
+    expect(warningNotices(warningLevels([watch]), [advice], settings(), now, false)).toEqual([])
+  })
+
+  it('skips levels outside the warning system and warnings the rules exclude', () => {
+    expect(warningNotices({}, [qldWarning('Q2', 'Other', 'Isisford')], settings(), now, false)).toEqual([])
+    expect(warningNotices({}, [qldWarning('Q1', 'Advice', 'Condamine')], settings({ kinds: { ...DEFAULT_SETTINGS.kinds, warning: false } }), now, false)).toEqual([])
   })
 })
 

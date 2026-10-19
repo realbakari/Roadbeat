@@ -1,9 +1,10 @@
 import { useKumoToastManager } from '@cloudflare/kumo'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FireWarning } from '../api/bushfires'
+import type { QldWarning } from '../api/qldWarnings'
 import type { TransitAlert } from '../api/translink'
 import type { TrafficEvent } from '../api/types'
-import { eventNotices, eventSignatures, fireLevels, fireNotices, newsNotices, transitNotices, type AppNotification, type Notice } from '../lib/alertNotices'
+import { eventNotices, eventSignatures, fireLevels, fireNotices, newsNotices, transitNotices, warningLevels, warningNotices, type AppNotification, type Notice } from '../lib/alertNotices'
 import { loadSettings, saveSettings, type AlertSettings } from '../lib/alertRules'
 import { systemAlertsOn } from '../lib/polling'
 import { setSystemAlerts } from './poll'
@@ -34,6 +35,8 @@ interface Seen {
   transit: string[]
   /** Bushfire warning id → level. */
   fires?: Record<string, string>
+  /** Queensland warning id → level. */
+  warnings?: Record<string, string>
   /** News monitor story ids. */
   news?: string[]
 }
@@ -64,6 +67,7 @@ export function useNotifications({
   eventsAt,
   transitAlerts,
   fires,
+  warnings,
   stories,
   onOpen,
 }: {
@@ -73,6 +77,8 @@ export function useNotifications({
   eventsAt: number | null
   transitAlerts: TransitAlert[] | null
   fires: FireWarning[] | null
+  /** Queensland Disaster Management warnings, or null while they aren't loaded. */
+  warnings: QldWarning[] | null
   /** News monitor stories, or null while they aren't loaded. */
   stories: NewsStory[] | null
   onOpen: (href: string) => void
@@ -80,7 +86,7 @@ export function useNotifications({
   const toasts = useKumoToastManager()
   const [items, setItems] = useState<AppNotification[]>(() => load(LIST_KEY, []))
   const seen = useRef<Seen | null>(load<Seen | null>(SEEN_KEY, null))
-  const first = useRef({ events: true, transit: true, fires: true, news: true })
+  const first = useRef({ events: true, transit: true, fires: true, warnings: true, news: true })
   const latest = useRef({ settings, onOpen })
   useLayoutEffect(() => {
     latest.current = { settings, onOpen }
@@ -170,6 +176,18 @@ export function useNotifications({
     seen.current = { ...seen.current, events: seen.current?.events ?? {}, transit: seen.current?.transit ?? [], fires: levels }
     store(SEEN_KEY, seen.current)
   }, [fires, raise])
+
+  // Queensland Disaster Management warnings: new ones, and warnings whose level goes up.
+  useEffect(() => {
+    if (!warnings) return
+    const s = latest.current.settings
+    const prev = seen.current?.warnings
+    const away = first.current.warnings
+    first.current.warnings = false
+    if (prev) raise(warningNotices(prev, warnings, s, Date.now(), away))
+    seen.current = { events: seen.current?.events ?? {}, transit: seen.current?.transit ?? [], ...seen.current, warnings: warningLevels(warnings) }
+    store(SEEN_KEY, seen.current)
+  }, [warnings, raise])
 
   // News monitor stories: new ones only. A report joining a known story isn't news to the user.
   useEffect(() => {
