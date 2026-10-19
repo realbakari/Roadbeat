@@ -9,8 +9,8 @@ import { findLocality, type Locality } from '../lib/locality'
 
 let loaded: Promise<Locality[]> | null = null
 
-/** Every locality in the gazetteer, loaded once on first use. */
-function loadLocalities(): Promise<Locality[]> {
+/** Every locality in the gazetteer, loaded once on first use (a locality page, or the header search). */
+export function loadLocalities(): Promise<Locality[]> {
   loaded ??= import('../data/qld-places.json').then((m) =>
     (m.default.places as GazetteerRow[]).map(([name, lng, lat, council]) => ({ name, council, position: [lng, lat] })),
   )

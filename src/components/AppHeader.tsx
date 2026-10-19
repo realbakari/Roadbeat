@@ -35,6 +35,7 @@ import { NotificationCenter } from './NotificationCenter'
 import { VisitorCount } from './VisitorCount'
 import type { Visitors } from '../api/visits'
 import type { Panel } from './SidePanel'
+import { GlobalSearch, type LoadedSources } from './GlobalSearch'
 
 interface Props {
   mode: 'light' | 'dark'
@@ -56,6 +57,10 @@ interface Props {
   onAlertSettings: () => void
   /** Opens the feedback form. */
   onFeedback: () => void
+  /** Everything loaded so far, for the search. */
+  searchSources: LoadedSources
+  /** Opens a search result's hash. */
+  onOpenSearch: (href: string) => void
   error: string | null
   fetchedAt: number | null
   loading: boolean
@@ -86,6 +91,8 @@ export function AppHeader({
   onOpenHref,
   onAlertSettings,
   onFeedback,
+  searchSources,
+  onOpenSearch,
   error,
   fetchedAt,
   loading,
@@ -178,6 +185,7 @@ export function AppHeader({
       </nav>
 
       <div className="flex shrink-0 items-center gap-1">
+        <GlobalSearch sources={searchSources} onOpen={onOpenSearch} />
         {/* From 2xl only: below that the quick-filter chips need the room, so the More menu lists it instead. */}
         <VisitorCount visitors={visitors} className="mr-2 hidden 2xl:flex" />
         <InstallApp />

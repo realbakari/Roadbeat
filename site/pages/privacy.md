@@ -16,7 +16,7 @@ Roadbeat is built to need as little information about you as possible. There are
 
 ## What stays in your browser
 
-Roadbeat saves your preferences in your browser's local storage, on your device only. That includes your notification settings and notification list, your saved stops, recent stops and saved trips, your saved places and their nicknames, your commute (roads, stop, line, time and days), and display choices such as the colour theme, base map, panel size, time format and which dashboard panels show. Roadbeat never sends this information to a server, except your commute if you turn on [push alerts](#push-alerts-for-your-commute). Clearing your browser's site data for Roadbeat deletes it.
+Roadbeat saves your preferences in your browser's local storage, on your device only. That includes your notification settings and notification list, your saved stops, recent stops and saved trips, your saved places and their nicknames, the last few results you opened from the search, your commute (roads, stop, line, time and days), and display choices such as the colour theme, base map, panel size, time format and which dashboard panels show. Roadbeat never sends this information to a server, except your commute if you turn on [push alerts](#push-alerts-for-your-commute). Clearing your browser's site data for Roadbeat deletes it.
 
 Saved trips, with the names, order and travel modes you give them, stay in this browser too: Roadbeat plans their next departures on your device and never sends them anywhere. So do saved places: Roadbeat counts the road events near them on your device. A map image you save is made on your device and downloaded or shared by you; Roadbeat never receives it.
 

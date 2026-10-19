@@ -67,6 +67,7 @@ import { asTrafficEvent, replayAt } from './lib/timeline'
 import { cameraKey, pointBounds, type Bounds, type LngLat, type MapView } from './lib/geo'
 import { feedNotice } from './lib/feedNotice'
 import type { LocalitySources } from './lib/locality'
+import type { LoadedSources } from './components/GlobalSearch'
 
 export function App() {
   const { mode, toggle } = useColorMode()
@@ -468,6 +469,41 @@ export function App() {
   )
   const closeCamera = useCallback(() => go(cameraReturn.current), [go])
 
+  // The header search looks through whatever is loaded; it reads the towns, stops and lines itself.
+  const searchSources = useMemo<LoadedSources>(
+    () => ({
+      events,
+      cameras,
+      restAreas: ref.restAreas,
+      dumpPoints: ref.dumpPoints,
+      truckRestrictions: ref.truckRestrictions,
+      clearances,
+      toilets: council.toilets,
+      bays: council.bays,
+      meters: council.meters,
+      bikeStops: council.bikeStops,
+      councilEvents: council.events,
+      stories,
+      centres: news.snapshot?.centres ?? null,
+      outages: news.snapshot?.outages ?? null,
+      airStations: air.stations,
+      gauges,
+      fires,
+      warnings: qw.warnings,
+      fuel: fuelStations.data,
+      speedCameras: speedCameras.data,
+    }),
+    [events, cameras, ref, clearances, council.toilets, council.bays, council.meters, council.bikeStops, council.events, stories, news.snapshot, air.stations, gauges, fires, qw.warnings, fuelStations.data, speedCameras.data],
+  )
+  // A search result opens like a tap on the map; a road event also brings back the events list.
+  const openSearchHit = useCallback(
+    (href: string) => {
+      if (href.startsWith('event/')) choosePanel('events')
+      openKey(href)
+    },
+    [openKey, choosePanel],
+  )
+
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col bg-kumo-canvas">
@@ -493,6 +529,8 @@ export function App() {
           onOpenHref={openHref}
           onAlertSettings={() => setSettingsOpen(true)}
           onFeedback={() => setFeedbackOpen(true)}
+          searchSources={searchSources}
+          onOpenSearch={openSearchHit}
           error={error}
           fetchedAt={fetchedAt}
           loading={loading}

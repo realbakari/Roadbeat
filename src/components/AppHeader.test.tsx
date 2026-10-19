@@ -35,6 +35,8 @@ function header(visitors: Props['visitors']) {
     onOpenHref: () => {},
     onAlertSettings: () => {},
     onFeedback: () => {},
+    searchSources: { events: [], cameras: [], restAreas: [], dumpPoints: [], truckRestrictions: [], clearances: null, toilets: null, bays: null, meters: null, bikeStops: null, councilEvents: null, stories: null, centres: null, outages: null, airStations: null, gauges: null, fires: null, warnings: null, fuel: null, speedCameras: null },
+    onOpenSearch: () => {},
     error: null,
     fetchedAt: Date.now(),
     loading: false,
