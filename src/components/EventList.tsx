@@ -350,6 +350,9 @@ export function EventList({
             <Text variant="secondary">{filters.when === 'upcoming' ? 'QLDTraffic lists no planned roadworks or events ahead.' : 'QLDTraffic lists no road events in Queensland right now.'}</Text>
           </div>
         ) : (
+          <>
+          {/* A heading for the list, so screen readers reach events as their own section, not under My places. */}
+          <h2 className="sr-only">Road events</h2>
           <ul className="divide-y divide-kumo-line">
             {events.map((e) => {
               const a = userLocation ? eventAnchor(e) : null
@@ -371,6 +374,7 @@ export function EventList({
               )
             })}
           </ul>
+          </>
         )}
       </div>
     </div>

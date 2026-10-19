@@ -3,7 +3,7 @@ import { BCC_DATASETS, bccJson } from './bccOpenData'
 
 // Brisbane City Council's bus stop audit (data.brisbane.qld.gov.au "Brisbane bus
 // stops", CC BY 4.0): each council bus stop's type and the council's access
-// ratings. `hastus` is TransLink's stop id, so a stop page can look itself up.
+// ratings. `hastus` is Translink's stop id, so a stop page can look itself up.
 // The council's API sends CORS headers, so the browser reads it directly.
 
 export const BUS_STOPS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/brisbane-bus-stops/information/'
@@ -72,7 +72,7 @@ export function parseBusStopAudit(raw: unknown): BusStopAudit | null {
 
 const cache = new Map<string, Promise<BusStopAudit | null>>()
 
-/** The council's audit for a TransLink stop id, or null when the stop isn't a council bus stop. */
+/** The council's audit for a Translink stop id, or null when the stop isn't a council bus stop. */
 export function fetchBusStopAudit(stopId: string): Promise<BusStopAudit | null> {
   if (!/^\d+$/.test(stopId)) return Promise.resolve(null)
   let hit = cache.get(stopId)

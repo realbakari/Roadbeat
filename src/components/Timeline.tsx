@@ -69,7 +69,7 @@ export function Timeline({
           <Button size="xs" variant={state.at == null ? 'ghost' : 'primary'} icon={<BroadcastIcon />} onClick={state.live} disabled={state.at == null}>
             Live
           </Button>
-          {onClose && <Button size="xs" variant="ghost" shape="square" aria-label="Close the timeline" icon={<XIcon />} onClick={onClose} />}
+          {onClose && <Button size="sm" variant="ghost" shape="square" aria-label="Close the timeline" icon={<XIcon />} onClick={onClose} />}
         </span>
       </div>
       <div className="relative">
@@ -99,7 +99,7 @@ export function Timeline({
 /** The notice shown over replayed content: what time it is, and that it is not live. */
 export function ReplayBanner({ at, run, className = '' }: { at: number; run: HistoryRun | null; className?: string }) {
   return (
-    <div role="status" className={`rounded-full bg-kumo-warning px-3 py-1 text-sm font-medium text-white shadow-md ${className}`}>
+    <div role="status" className={`rounded-full bg-kumo-warning-tint px-3 py-1 text-sm font-medium text-kumo-default shadow-md ring ring-kumo-warning ${className}`}>
       {replayLabel(at)}
       {run && earlierMinute(run, at) && <span className="font-normal"> · events as of {timeOnly.format(run.at)}</span>}
     </div>

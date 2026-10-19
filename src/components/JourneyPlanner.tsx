@@ -42,7 +42,7 @@ const TIMES = Object.fromEntries(
   }),
 )
 
-/** A "From" or "To" field that searches TransLink's stations and stops. */
+/** A "From" or "To" field that searches Translink's stations and stops. */
 export function StopField({
   label,
   value,
@@ -126,11 +126,11 @@ export function StopField({
 }
 
 /**
- * Journey planner, laid out like TransLink's, Transport Victoria's and
+ * Journey planner, laid out like Translink's, Transport Victoria's and
  * transportnsw.info's: from, to, day, leave after / arrive before. It plans
- * from TransLink's published timetable (exact times, with real-time today):
+ * from Translink's published timetable (exact times, with real-time today):
  * direct services and trips with one change at the same station or stop.
- * Trips that need a walk between stops go to TransLink's own planner with the
+ * Trips that need a walk between stops go to Translink's own planner with the
  * same search filled in.
  */
 export function JourneyPlanner({
@@ -140,7 +140,7 @@ export function JourneyPlanner({
   onNavigate,
 }: {
   vehicles: LiveVehicle[]
-  /** TransLink service alerts, to flag disruptions on each option. */
+  /** Translink service alerts, to flag disruptions on each option. */
   alerts: TransitAlert[] | null
   /** A search from the URL (a shared or saved trip). */
   initial?: PlanQuery
@@ -165,7 +165,7 @@ export function JourneyPlanner({
   const [date, setDate] = useState<string | null>(initial?.date ?? null)
   const [arrive, setArrive] = useState(initial?.arrive ?? false)
   const [minutes, setMinutes] = useState<number | null>(initial?.minutes ?? null)
-  // As in the TransLink app: which modes to use and how many changes.
+  // As in the Translink app: which modes to use and how many changes.
   const [modes, setModes] = useState<Set<string>>(() => new Set(initial?.modes?.length ? initial.modes : TRIP_MODES))
   const [directOnly, setDirectOnly] = useState(initial?.direct ?? false)
   const savedTrips = useSavedTrips()
@@ -345,7 +345,7 @@ export function JourneyPlanner({
 
       {!from || !to ? (
         <Text size="sm" variant="secondary">
-          Choose where you're leaving from and going to. Trips from TransLink's published timetable appear here, direct or
+          Choose where you're leaving from and going to. Trips from Translink's published timetable appear here, direct or
           with one change at the same station or stop, with real-time for today's services.
         </Text>
       ) : from.region === to.region && from.id === to.id ? (
@@ -397,7 +397,7 @@ export function JourneyPlanner({
             <Text variant="secondary">
               {all?.length
                 ? `No trips ${arrive ? 'arriving before' : 'leaving after'} ${clock.format(dayStart(day) + at * 60_000)} on ${dayLabel.format(Date.parse(day))}.`
-                : "No trip on that day with at most one change at the same station or stop. It may need a walk between stops or more changes: TransLink's journey planner below can plan it."}
+                : "No trip on that day with at most one change at the same station or stop. It may need a walk between stops or more changes: Translink's journey planner below can plan it."}
             </Text>
           )}
           {!options.length && !arrive && dates.indexOf(day) >= 0 && dates.indexOf(day) < dates.length - 1 && (
@@ -424,10 +424,10 @@ export function JourneyPlanner({
       <div className="grid gap-1 rounded-lg p-3 ring ring-kumo-line">
         <Text bold>Need a walk between stops, more changes or fares?</Text>
         <Text size="sm" variant="secondary">
-          TransLink's journey planner plans door-to-door trips with walking, any number of changes and fares.
+          Translink's journey planner plans door-to-door trips with walking, any number of changes and fares.
           {from || to ? ' Your search is filled in.' : ''}
         </Text>
-        <ExternalLink href={plannerUrl}>Open in TransLink journey planner</ExternalLink>
+        <ExternalLink href={plannerUrl}>Open in Translink journey planner</ExternalLink>
       </div>
     </div>
   )
@@ -479,15 +479,21 @@ function JourneyCard({
   const changePlace = at ? stops!.station(at).name : null
   const platform = (id: string) => stops?.get(first.trip.region, id)?.platform ?? null
   const late = (rt: number | null, t: number) => rt != null && Math.abs(rt - t) >= 60_000
+  /** "(3 min late)" or "(1 min early)": the reported difference in words, not colour alone. */
+  const offBy = (rt: number, t: number) => {
+    const m = Math.round((rt - t) / 60_000)
+    return m > 0 ? ` (${m} min late)` : ` (${-m} min early)`
+  }
 
   return (
-    <li className={`overflow-hidden rounded-lg ring ring-kumo-line ${cancelled ? 'opacity-70' : ''}`}>
-      <button type="button" onClick={() => setOpen((v) => !v)} className="grid w-full gap-1.5 px-3 py-2.5 text-left hover:bg-kumo-tint">
+    <li className="overflow-hidden rounded-lg ring ring-kumo-line">
+      <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} className="grid w-full gap-1.5 px-3 py-2.5 text-left hover:bg-kumo-tint">
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-sm tabular-nums">
-            <span className={`font-semibold ${cancelled ? 'line-through' : ''}`}>{clock.format(j.dep)}</span>
+            {/* A cancelled trip's times are struck through and dimmed; the rest of the row stays readable. */}
+            <span className={`font-semibold ${cancelled ? 'text-kumo-subtle line-through' : ''}`}>{clock.format(j.dep)}</span>
             <span className="text-kumo-subtle"> → </span>
-            <span className={`font-semibold ${cancelled ? 'line-through' : ''}`}>{clock.format(j.arr)}</span>
+            <span className={`font-semibold ${cancelled ? 'text-kumo-subtle line-through' : ''}`}>{clock.format(j.arr)}</span>
             {j.arr >= nextDay && <span className="ml-1.5 text-xs text-kumo-subtle">next day</span>}
           </span>
           <span className="flex items-center gap-2 text-sm text-kumo-subtle tabular-nums">
@@ -529,11 +535,13 @@ function JourneyCard({
               {late(reported[0].dep, first.from.time) && (
                 <span className={reported[0].dep! > first.from.time ? 'text-kumo-warning' : 'text-kumo-info'}>
                   Departs {clock.format(reported[0].dep!)}
+                  {offBy(reported[0].dep!, first.from.time)}
                 </span>
               )}
               {late(reported[j.legs.length - 1].arr, last.to.time) && (
                 <span className={reported[j.legs.length - 1].arr! > last.to.time ? 'text-kumo-warning' : 'text-kumo-info'}>
                   Arrives {clock.format(reported[j.legs.length - 1].arr!)}
+                  {offBy(reported[j.legs.length - 1].arr!, last.to.time)}
                 </span>
               )}
               {connection != null && connection < 60_000 && (
@@ -575,7 +583,7 @@ function JourneyCard({
             </button>
           ))}
           <p className="text-xs text-kumo-subtle">
-            Times are TransLink's published timetable{j.legs.length > 1 ? '; the change time is the gap between them' : ''}.
+            Times are Translink's published timetable{j.legs.length > 1 ? '; the change time is the gap between them' : ''}.
           </p>
         </div>
       )}

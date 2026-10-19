@@ -40,7 +40,7 @@ const CURRENT = 2 * 3_600_000
 
 /**
  * One trip's stops in order, like the trip view in TripView and TransitPulse:
- * published times, plus whatever TransLink's real-time feeds report for it.
+ * published times, plus whatever Translink's real-time feeds report for it.
  */
 export function TripPage({
   region,
@@ -118,7 +118,7 @@ export function TripPage({
                   .filter(Boolean)
                   .join(' · ')}
               </Text>
-              {cancelled && <p className="text-sm font-semibold text-kumo-danger">TransLink's real-time feed marks this trip cancelled.</p>}
+              {cancelled && <p className="text-sm font-semibold text-kumo-danger">Translink's real-time feed marks this trip cancelled.</p>}
               {live.update?.relationship === 'added' && <Text variant="secondary">An extra service, not in the published timetable.</Text>}
             </div>
           </header>
@@ -150,11 +150,11 @@ export function TripPage({
                 <Text size="sm" variant="secondary">
                   {!updates
                     ? error
-                      ? "Couldn't load TransLink's real-time feed."
+                      ? "Couldn't load Translink's real-time feed."
                       : 'Checking the real-time feed…'
                     : live.update
-                      ? "TransLink's real-time feed lists this trip, but no vehicle is reporting its position."
-                      : "No vehicle is reporting its position for this trip, and it isn't in TransLink's real-time feed."}
+                      ? "Translink's real-time feed lists this trip, but no vehicle is reporting its position."
+                      : "No vehicle is reporting its position for this trip, and it isn't in Translink's real-time feed."}
                 </Text>
               )}
             </section>
@@ -165,8 +165,8 @@ export function TripPage({
           ) : !rows.length ? (
             <Text variant="secondary">
               {route
-                ? `TransLink's published timetable has no run of this trip${date ? ` on ${dayLabel.format(Date.parse(date))}` : ' today'}.`
-                : "This trip isn't in TransLink's real-time feed right now, and the link doesn't say which route it's on."}
+                ? `Translink's published timetable has no run of this trip${date ? ` on ${dayLabel.format(Date.parse(date))}` : ' today'}.`
+                : "This trip isn't in Translink's real-time feed right now, and the link doesn't say which route it's on."}
             </Text>
           ) : (
             <>
@@ -191,7 +191,7 @@ export function TripPage({
           <ClampedText
             lines={3}
             className="text-xs text-kumo-subtle"
-            text="Times are TransLink's published timetable. Where TransLink's real-time feed reports a stop, its time and delay are shown under the timetabled time, marked real-time; stops the feed doesn't list show the timetable only, and nothing is filled in between. A stop is marked passed only when the vehicle reports a later stop as its current one. A stop on a dashed stretch is one the real-time feed lists that the timetable doesn't; a struck-out stop is one the feed says the trip won't stop at. A stop the feed simply leaves out isn't marked: the feed often omits a trip's last stops. Updates every 15 seconds."
+            text="Times are Translink's published timetable. Where Translink's real-time feed reports a stop, its time and delay are shown under the timetabled time, marked real-time; stops the feed doesn't list show the timetable only, and nothing is filled in between. A stop is marked passed only when the vehicle reports a later stop as its current one. A stop on a dashed stretch is one the real-time feed lists that the timetable doesn't; a struck-out stop is one the feed says the trip won't stop at. A stop the feed simply leaves out isn't marked: the feed often omits a trip's last stops. Updates every 15 seconds."
           />
         </div>
       </div>
@@ -257,7 +257,7 @@ function StopRow({
           <span className="flex flex-wrap gap-x-2 text-xs text-kumo-subtle">
             {stop?.platform &&
               (row.movedFrom ? (
-                <span className="text-kumo-warning" title="TransLink's real-time feed reports a different platform from the timetable">
+                <span className="text-kumo-warning" title="Translink's real-time feed reports a different platform from the timetable">
                   Platform {stop.platform}
                   {was ? ` (timetabled ${was})` : ' (platform changed)'}
                 </span>
@@ -275,7 +275,7 @@ function StopRow({
         <span className="grid shrink-0 justify-items-end tabular-nums">
           {s && <span className={`text-sm ${row.passed ? 'text-kumo-subtle' : 'font-medium'}`}>{clock.format(s.time)}</span>}
           {rt?.time != null && !rt.skipped && (
-            <span className="inline-flex items-center gap-1 text-xs text-kumo-success" title="TransLink's real-time feed">
+            <span className="inline-flex items-center gap-1 text-xs text-kumo-success" title="Translink's real-time feed">
               <BroadcastIcon size={11} weight="bold" />
               {clock.format(rt.time)}
               {s && <DelayChip delay={delay} />}
@@ -302,7 +302,7 @@ function PatternChanges({ rows }: { rows: TripStopRow[] }) {
   return (
     <div className="flex items-start gap-2 rounded-lg bg-kumo-warning/10 px-3 py-2 text-sm">
       <WarningIcon size={16} weight="fill" className="mt-0.5 shrink-0 text-kumo-warning" />
-      <span>TransLink's real-time feed differs from the timetable for this trip: {parts.join(', ')}.</span>
+      <span>Translink's real-time feed differs from the timetable for this trip: {parts.join(', ')}.</span>
     </div>
   )
 }

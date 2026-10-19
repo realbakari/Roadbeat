@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { decodeFeed, parseTripUpdates, parseVehicles, routeCode, rt, type RouteLookup } from './gtfsrt'
 
 // Feeds are built with the GTFS-RT bindings and round-tripped through protobuf,
-// so the parsers see what TransLink's feed decodes to.
+// so the parsers see what Translink's feed decodes to.
 const feed = (entity: object[], timestamp = 1_792_000_000) =>
   decodeFeed(rt.FeedMessage.encode(rt.FeedMessage.fromObject({ header: { gtfsRealtimeVersion: '2.0', timestamp }, entity })).finish())
 

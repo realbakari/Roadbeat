@@ -53,7 +53,7 @@ function useDay(index: TimetableIndex | null, region: TransitRegion, now: number
 }
 
 function Unavailable() {
-  return <Text variant="secondary">TransLink's published timetable isn't available here right now.</Text>
+  return <Text variant="secondary">Translink's published timetable isn't available here right now.</Text>
 }
 
 /** Reported state of one timetabled stop: delay, skip or cancellation. */
@@ -93,7 +93,7 @@ export function LineTimetable({
 
   if (failed) return <Unavailable />
   if (!index || !date) return index ? <Unavailable /> : <Loader size="sm" />
-  if (codes && !codes.length) return <Text variant="secondary">This line isn't in TransLink's published timetable.</Text>
+  if (codes && !codes.length) return <Text variant="secondary">This line isn't in Translink's published timetable.</Text>
 
   const dir = grid?.length ? grid[Math.min(tab, grid.length - 1)] : null
   return (
@@ -152,7 +152,7 @@ function Grid({
   const manyHeads = dir.headsigns.length > 1
   const liveTrips = useMemo(() => dir.trips.map((t) => live.get(t)), [dir, live])
 
-  // Jump to the first service at or after `t` at the reference stop (today opens at "now", as TransLink's does).
+  // Jump to the first service at or after `t` at the reference stop (today opens at "now", as Translink's does).
   const jump = (t: number) => {
     const el = scroller.current
     if (!el) return
@@ -228,7 +228,7 @@ function Grid({
           {dir.rows.map((row, r) => (
             <tr key={row.region + row.id}>
               <th className="sticky left-0 z-10 max-w-60 border-r border-kumo-line bg-kumo-base py-1 pr-3 pl-2 text-left font-normal">
-                {/* The line and a circle per stop, as TransLink draws them; the stop the services are sorted by is filled. The sticky cell positions the line, so it runs the cell's full height. */}
+                {/* The line and a circle per stop, as Translink draws them; the stop the services are sorted by is filled. The sticky cell positions the line, so it runs the cell's full height. */}
                 <span
                   className={`absolute left-[21px] w-1 bg-current text-kumo-inactive ${r === 0 ? 'top-1/2 bottom-0' : r === dir.rows.length - 1 ? 'top-0 bottom-1/2' : 'top-0 bottom-0'}`}
                   aria-hidden
@@ -253,8 +253,9 @@ function Grid({
                 const s = col[r]
                 if (!s)
                   return (
-                    <td key={c} className="h-9 px-2 text-center text-kumo-inactive">
-                      —
+                    <td key={c} className="h-9 px-2 text-center text-kumo-subtle">
+                      <span aria-hidden>—</span>
+                      <span className="sr-only">Doesn't stop</span>
                     </td>
                   )
                 const l = liveTrips[c]
@@ -269,7 +270,7 @@ function Grid({
                     onClick={() => onNavigate(timetableTripHref(dir.trips[c]))}
                   >
                     <span className={gone || late ? 'line-through decoration-1' : ''}>{short(s.time)}</span>
-                    {/* After midnight, the day, as TransLink shows it ("12:30 am Friday"). */}
+                    {/* After midnight, the day, as Translink shows it ("12:30 am Friday"). */}
                     {brisbaneDate(s.time) !== serviceDay && <span className="ml-1 text-xs text-kumo-subtle">{weekday.format(s.time)}</span>}
                     {s.kind !== 'normal' && (
                       <span className="block pt-0.5">
@@ -320,7 +321,8 @@ function LiveTag({ live }: { live: LiveTrip | null }) {
   const m = d != null && Math.abs(d) >= 60 ? `${d > 0 ? '+' : '−'}${Math.round(Math.abs(d) / 60)} min` : live.vehicle ? 'On time' : ''
   return (
     <div className={`flex items-center gap-1 text-xs ${d != null && d >= 60 ? 'text-kumo-warning' : 'text-kumo-subtle'}`}>
-      <span className={`size-1.5 rounded-full ${live.vehicle ? 'bg-kumo-success' : 'ring-1 ring-kumo-line ring-inset'}`} />
+      <span className={`size-1.5 rounded-full ${live.vehicle ? 'bg-kumo-success' : 'ring-1 ring-kumo-line ring-inset'}`} aria-hidden />
+      <span className="sr-only">{live.vehicle ? 'Real-time' : 'Scheduled'}</span>
       {m}
     </div>
   )
@@ -329,12 +331,12 @@ function LiveTag({ live }: { live: LiveTrip | null }) {
 function GridLegend({ today }: { today: boolean }) {
   return (
     <Text size="xs" variant="secondary">
-      Times are TransLink's published timetable. Drop-off only: the service only lets passengers off there, usually where it ends. — doesn't
+      Times are Translink's published timetable. Drop-off only: the service only lets passengers off there, usually where it ends. — doesn't
       stop. Times after midnight show the day. Tap a time or column to see that service's stops.
       {today && (
         <>
           {' '}
-          For services in TransLink's real-time feed, a{' '}
+          For services in Translink's real-time feed, a{' '}
           <span className="inline-flex items-center gap-1">
             <span className="size-1.5 rounded-full bg-kumo-success" /> green dot
           </span>{' '}
@@ -357,7 +359,7 @@ function directionLabel(d: GridDirection) {
 }
 
 /** "Caboolture station" → "Caboolture" for labels. */
-/** "Drop-off only" or "Pick-up only", in a tag as TransLink's timetables show it. */
+/** "Drop-off only" or "Pick-up only", in a tag as Translink's timetables show it. */
 function StopKindBadge({ kind }: { kind: 'arrival' | 'pickup' }) {
   return (
     <Badge variant="blue" className="whitespace-nowrap">
@@ -392,13 +394,13 @@ export function StopTimetable({
   const { index, failed } = useTimetableIndex(true)
   const { today, dates, date, setDate } = useDay(index, region, now)
   const codes = useMemo(() => (index ? routesAtStops(index, region, stopIds).sort(byRoute) : null), [index, region, stopIds])
-  // A stop's day is the calendar day, as on TransLink's stop pages: midnight to midnight,
+  // A stop's day is the calendar day, as on Translink's stop pages: midnight to midnight,
   // including the previous service day's trips after midnight.
   const trips = useTripsOn(region, codes, date, true)
   const [route, setRoute] = useState('all')
   // As on Transit Pulse: today from now on, or one part of the day. Other days start with the whole day.
   const [band, setBand] = useState<'now' | 'all' | TimeBand>('now')
-  // As in the TransLink app: departures or drop-off-only arrivals, ordered by time or grouped by route.
+  // As in the Translink app: departures or drop-off-only arrivals, ordered by time or grouped by route.
   const [kind, setKind] = useState<'departures' | 'arrivals'>('departures')
   const [order, setOrder] = useState<'time' | 'route'>('time')
   const [format] = useTimeFormat()
@@ -427,7 +429,7 @@ export function StopTimetable({
 
   if (failed) return <Unavailable />
   if (!index || !date) return index ? <Unavailable /> : <Loader size="sm" />
-  if (codes && !codes.length) return <Text variant="secondary">No services from this stop in TransLink's published timetable.</Text>
+  if (codes && !codes.length) return <Text variant="secondary">No services from this stop in Translink's published timetable.</Text>
 
   const isToday = date === today
   const timeOf = (d: ScheduledDeparture) => (kind === 'arrivals' ? d.stop.arrival : d.stop.time)
@@ -538,8 +540,8 @@ export function StopTimetable({
           )}
           <Text size="xs" variant="secondary">
             {kind === 'arrivals'
-              ? "Arrivals are services that finish here or only set down here, at TransLink's published arrival times."
-              : "Times are TransLink's published timetable."}
+              ? "Arrivals are services that finish here or only set down here, at Translink's published arrival times."
+              : "Times are Translink's published timetable."}
             {` ${TIME_BANDS.map((b) => `${b.label} is ${b.hours}`).join(', ')}.`}
             {isToday && ' Where the real-time feed reports a service, its delay (+/− minutes) or cancellation is shown.'}
           </Text>
@@ -594,7 +596,7 @@ function TimetableRow({
   const reported = rt?.time ?? null
   const past = now != null && (reported ?? scheduled) < now - 60_000
   const delay = delayOf(reported, scheduled)
-  // As in the TransLink app: "+0" only for a tracked vehicle; an untracked trip shows a delay only if one is reported.
+  // As in the Translink app: "+0" only for a tracked vehicle; an untracked trip shows a delay only if one is reported.
   const showDelay = !gone && delay != null && (!!live?.vehicle || Math.abs(delay) >= 60)
   const countdown = format === 'minutes' && now != null && !past ? minutesUntil(reported ?? scheduled, now) : null
   const body = (

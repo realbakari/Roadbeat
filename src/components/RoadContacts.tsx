@@ -1,4 +1,4 @@
-import { Loader, Text } from '@cloudflare/kumo'
+import { Button, Loader, Text } from '@cloudflare/kumo'
 import { EnvelopeIcon, GlobeIcon, PhoneIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { fetchRoadContacts } from '../api/client'
@@ -11,19 +11,31 @@ const ORDER: Record<string, number> = { local: 0, district: 1, state: 2 }
 /** Who to contact about the road at a point (council, TMR district, statewide line). */
 export function RoadContacts({ at }: { at: LngLat }) {
   const [contacts, setContacts] = useState<RoadContact[] | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
   const [lng, lat] = at
 
   useEffect(() => {
     const c = new AbortController()
     fetchRoadContacts(lng, lat, c.signal).then(
-      (list) => setContacts([...list].sort((a, b) => (ORDER[a.contact_type] ?? 9) - (ORDER[b.contact_type] ?? 9))),
-      () => !c.signal.aborted && setContacts([]),
+      (list) => (setFailed(false), setContacts([...list].sort((a, b) => (ORDER[a.contact_type] ?? 9) - (ORDER[b.contact_type] ?? 9)))),
+      () => !c.signal.aborted && setFailed(true),
     )
     return () => c.abort()
-  }, [lng, lat])
+  }, [lng, lat, attempt])
 
+  // A lookup that failed says so; it never reads as "no contacts".
+  if (failed && !contacts)
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <Text variant="error">Couldn't load who manages this road: QLDTraffic's road lookup didn't answer.</Text>
+        <Button size="xs" variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
+          Try again
+        </Button>
+      </div>
+    )
   if (!contacts) return <Loader size="sm" />
-  if (!contacts.length) return <Text variant="secondary">No contacts found for this location.</Text>
+  if (!contacts.length) return <Text variant="secondary">QLDTraffic lists no contacts for this location.</Text>
 
   return (
     <ul className="grid gap-2">

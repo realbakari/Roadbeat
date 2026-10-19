@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readableTextOn } from './routeColor'
 
 describe('readableTextOn', () => {
-  it('uses dark text on TransLink yellow (T5, G:link)', () => {
+  it('uses dark text on Translink yellow (T5, G:link)', () => {
     expect(readableTextOn('#FFC425')).toBe('#1d1d1d')
   })
 

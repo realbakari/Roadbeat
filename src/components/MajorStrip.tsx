@@ -53,7 +53,7 @@ export function MajorStrip({ summary, onOpen, onShowEvents, feedStatus }: Props)
           )}
         </>
       )}
-      <div className={`${top ? 'hidden sm:flex' : 'flex'} min-w-0 items-center gap-3 overflow-x-auto py-1.5 [scrollbar-width:none] lg:hidden`}>
+      <div className={`${top ? 'hidden sm:flex' : 'flex'} min-w-0 items-center gap-3 overflow-x-auto [scrollbar-width:none] lg:hidden`}>
         <Count icon={WarningIcon} value={summary.warnings} one="warning" many="warnings" onClick={showList} />
         <Count
           icon={ProhibitIcon}
@@ -82,7 +82,7 @@ export function MajorStrip({ summary, onOpen, onShowEvents, feedStatus }: Props)
 function Count({ icon: I, value, one, many, danger, onClick }: { icon: Icon; value: number | null; one: string; many: string; danger?: boolean; onClick: () => void }) {
   const alert = danger && value != null && value > 0
   return (
-    <button type="button" onClick={onClick} className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap hover:underline">
+    <button type="button" onClick={onClick} className="inline-flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap hover:underline">
       <I size={14} weight="bold" className={alert ? 'text-kumo-danger' : 'text-kumo-subtle'} aria-hidden />
       {/* "…" while the feed hasn't loaded, never a 0 that hasn't been read. */}
       <span className={`font-semibold tabular-nums ${alert ? 'text-kumo-danger' : 'text-kumo-strong'}`}>{value ?? '…'}</span>

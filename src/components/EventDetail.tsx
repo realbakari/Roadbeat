@@ -82,6 +82,11 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
   }
 
   const gap = updateGap(event, now)
+  // Brisbane time, labelled as every other detail page labels it.
+  const aest = (iso: string | null | undefined) => {
+    const t = formatDateTime(iso)
+    return t ? `${t} AEST` : null
+  }
   const localities = useLocalityIndex()
   const direction = [clean(impact?.direction), clean(impact?.towards) && `towards ${clean(impact?.towards)}`]
     .filter(Boolean)
@@ -187,7 +192,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
             <Facts
               labelWidth="wide"
               rows={[
-                ['Effect', [clean(impact?.impact_type), clean(impact?.impact_subtype)].filter(Boolean).join(' — ')],
+                ['Effect', [clean(impact?.impact_type), clean(impact?.impact_subtype)].filter(Boolean).join(' · ')],
                 ['Direction', direction],
                 ['Delay', clean(impact?.delay)],
               ]}
@@ -201,9 +206,9 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
             <Facts
               labelWidth="wide"
               rows={[
-                [startLabel(d?.start, now), formatDateTime(d?.start)],
-                ['Expected end', formatDateTime(d?.end) ?? 'Until further notice'],
-                ['Next inspection', formatDateTime(p.next_inspection)],
+                [startLabel(d?.start, now), aest(d?.start)],
+                ['Expected end', aest(d?.end) ?? 'Until further notice'],
+                ['Next inspection', aest(p.next_inspection)],
               ]}
             />
             {!!d?.active_days?.length && (
@@ -301,7 +306,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {clean(p.web_link) && <ExternalLink href={clean(p.web_link)!}>More details</ExternalLink>}
               {clean(p.source?.provided_by_url)?.startsWith('http') && (
-                <ExternalLink href={clean(p.source?.provided_by_url)!}>Data provider</ExternalLink>
+                <ExternalLink href={clean(p.source?.provided_by_url)!}>{clean(p.source?.provided_by) ?? 'Data provider'}</ExternalLink>
               )}
             </div>
           </div>

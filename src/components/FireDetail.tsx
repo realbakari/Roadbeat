@@ -1,11 +1,11 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, FlameIcon } from '@phosphor-icons/react'
 import { FIRE_BADGE, FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
-import { timeAgo } from '../lib/format'
 import { readableTextOn } from '../lib/routeColor'
 import { ExternalLink } from './ui/Links'
 import { PublishedText, TextPart } from './PublishedText'
 import { brisbaneDayDateTime as when } from '../lib/aest'
+import { RelativeTime } from './ui/RelativeTime'
 
 /** QFD's own pages for current warnings and incidents. */
 const QFD_WARNINGS = 'https://www.fire.qld.gov.au/Current-Incidents'
@@ -63,7 +63,7 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
               <>
                 <dt className="text-kumo-subtle">Issued</dt>
                 <dd>
-                  {when.format(fire.issued)} <span className="text-kumo-subtle">· {timeAgo(fire.issued, now)}</span>
+                  {when.format(fire.issued)} AEST <span className="text-kumo-subtle">· <RelativeTime at={fire.issued} now={now} inline /></span>
                 </dd>
               </>
             )}

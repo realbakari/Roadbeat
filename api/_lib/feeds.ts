@@ -54,7 +54,7 @@ export function bushfires(): Promise<{ fires: FireWarning[]; fetchedAt: number }
 
 const ROUTES = (routeData as { routes: Record<string, { short: string; long: string; mode: LiveVehicle['mode']; color: string | null; line?: string }> }).routes
 
-/** Official route details from TransLink's published GTFS. Mirrors routeInfo() in src/api/translink.ts. */
+/** Official route details from Translink's published GTFS. Mirrors routeInfo() in src/api/translink.ts. */
 export const routeInfo: RouteLookup & ((code: string, region: TransitRegion) => (typeof ROUTES)[string] | null) = (code, region) =>
   ROUTES[`${region}:${code}`] ?? (region === 'SEQ' ? null : (ROUTES[`SEQ:${code}`] ?? null))
 
@@ -62,7 +62,7 @@ async function translinkFeed(region: TransitRegion, name: 'TripUpdates' | 'Vehic
   return decodeFeed(new Uint8Array(await (await get(`${SOURCES.translink}/${region}/${name}`)).arrayBuffer()))
 }
 
-/** TransLink real-time trip updates and vehicle positions for one region. */
+/** Translink real-time trip updates and vehicle positions for one region. */
 export function transitRealtime(region: TransitRegion): Promise<{ updates: TripUpdates; vehicles: LiveVehicle[] }> {
   return cached(`rt-${region}`, 30_000, async () => {
     const [trips, vehicles] = await Promise.all([translinkFeed(region, 'TripUpdates'), translinkFeed(region, 'VehiclePositions')])

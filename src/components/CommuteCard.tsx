@@ -181,7 +181,7 @@ function Briefing({
             </Text>
           ) : !departures ? (
             <Text size="sm" variant="secondary">
-              Loading TransLink real-time…
+              Loading Translink real-time…
             </Text>
           ) : departures.length ? (
             <ul className="grid gap-1">
@@ -205,7 +205,7 @@ function Briefing({
             </ul>
           ) : (
             <Text size="sm" variant="secondary">
-              No matching services in TransLink's real-time feed yet. It lists services running now or starting soon.
+              No matching services in Translink's real-time feed yet. It lists services running now or starting soon.
             </Text>
           )}
           {routeAlerts.length > 0 && (
@@ -213,7 +213,7 @@ function Briefing({
               <span className="flex h-lh items-center">
                 <WarningIcon size={14} />
               </span>
-              {routeAlerts.length === 1 ? routeAlerts[0].header : `${routeAlerts.length} TransLink service alerts on ${c.route}`}
+              {routeAlerts.length === 1 ? routeAlerts[0].header : `${routeAlerts.length} Translink service alerts on ${c.route}`}
             </button>
           )}
         </div>

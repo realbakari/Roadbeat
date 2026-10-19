@@ -83,7 +83,7 @@ export interface TripStopRow {
   stopId: string
   /** The published stop, or null for a stop only the real-time feed lists. */
   scheduled: ScheduledStop | null
-  /** What TransLink's real-time feed reports for this stop, or null where it says nothing. */
+  /** What Translink's real-time feed reports for this stop, or null where it says nothing. */
   rt: StopTime | null
   /** The feed lists this stop but the trip's published timetable doesn't call there. */
   added: boolean
@@ -151,7 +151,7 @@ export function tripStops(
 }
 
 /**
- * What this session has seen of TransLink's TripUpdates feed. TransLink often
+ * What this session has seen of Translink's TripUpdates feed. Translink often
  * drops a trip's last stops (some by two hours), so a trip missing from one
  * snapshot may simply have passed its last listed stop. Only a trip the feed
  * never listed, while it was polled without a break since before the trip's
@@ -202,12 +202,12 @@ export function watchFeed(prev: FeedWatch | null, region: TransitRegion, part: T
 const OVERDUE_WINDOW = 30 * 60_000
 
 /**
- * Minutes since a published departure was due, when TransLink's real-time
+ * Minutes since a published departure was due, when Translink's real-time
  * feeds have shown nothing for its trip: the time has passed, the TripUpdates
  * feed was watched without a break from before the trip's timetabled start
  * until after the due time and never listed it, and no vehicle reports it now.
  * Otherwise null. This states what the feeds show; it doesn't say the service
- * is cancelled, which only TransLink's feed can.
+ * is cancelled, which only Translink's feed can.
  */
 export function overdueMinutes(d: ScheduledDeparture, watch: FeedWatch | null, reporting: Set<string>, now: number): number | null {
   const due = d.stop.time

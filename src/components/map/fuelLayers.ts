@@ -54,7 +54,7 @@ export function fuelFeatures(stations: FuelStation[], labelFuel = '', cheapest: 
 }
 
 /** Each pin's colours in each theme: fill, rim and its width, whether the rim is dashed. */
-const PINS: Record<Pin, Record<ColorMode, { fill: string; rim: string; width: number; dashed?: boolean }>> = {
+export const PINS: Record<Pin, Record<ColorMode, { fill: string; rim: string; width: number; dashed?: boolean }>> = {
   'fuel-pin': { light: { fill: '#ffffff', rim: '#475569', width: 1.5 }, dark: { fill: '#1e293b', rim: '#94a3b8', width: 1.5 } },
   'fuel-pin-cheap': { light: { fill: '#15803d', rim: '#14532d', width: 2.5 }, dark: { fill: '#16a34a', rim: '#dcfce7', width: 2.5 } },
   'fuel-pin-out': { light: { fill: '#f8fafc', rim: '#b91c1c', width: 1.5, dashed: true }, dark: { fill: '#1e293b', rim: '#f87171', width: 1.5, dashed: true } },

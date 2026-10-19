@@ -23,7 +23,7 @@ export function InstallSteps({ open: stepsOpen, onOpenChange: setStepsOpen }: { 
           <ol className="grid gap-3 text-sm text-kumo-default">
             <Step n={1} icon={<ExportIcon size={18} />}>
               Tap the <strong className="font-medium text-kumo-strong">Share</strong> button. In Safari it may be inside the{' '}
-              <DotsThreeIcon size={16} className="inline align-text-bottom" aria-label="More" /> menu.
+              <DotsThreeIcon size={16} className="inline align-text-bottom" aria-label="More" aria-hidden={false} role="img" /> menu.
             </Step>
             <Step n={2} icon={<PlusSquareIcon size={18} />}>
               Scroll down and tap <strong className="font-medium text-kumo-strong">Add to Home Screen</strong>.

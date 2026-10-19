@@ -18,7 +18,7 @@ export function MyPlaces({ events, now, onOpen }: { events: TrafficEvent[]; now:
           return (
             <li key={p.name}>
               <button type="button" onClick={() => onOpen(`place/locality/${encodeURIComponent(p.name)}`)} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-kumo-tint">
-                <MapPinSimpleIcon size={16} weight="fill" className="shrink-0 text-kumo-brand" aria-hidden />
+                <MapPinSimpleIcon size={16} weight="fill" className="shrink-0 text-kumo-link" aria-hidden />
                 <span className="grid min-w-0 flex-1">
                   <span className="truncate text-sm">
                     {p.nickname}
@@ -46,7 +46,7 @@ export function SavePlace({ locality }: { locality: Locality }) {
   if (saved && !editing) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <BookmarkSimpleIcon size={16} weight="fill" className="text-kumo-brand" aria-hidden />
+        <BookmarkSimpleIcon size={16} weight="fill" className="text-kumo-link" aria-hidden />
         <span>Saved as {saved.nickname}</span>
         <Button size="sm" variant="ghost" onClick={() => (setNickname(saved.nickname), setEditing(true))}>
           Rename

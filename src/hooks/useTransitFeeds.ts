@@ -11,7 +11,7 @@ import { liveRegions, MAIN_REGIONS } from '../lib/transitRegions'
 import { poll } from './poll'
 import { feedCounts, recordFeedCount, subscribeFeedCounts, useFeedCounts } from './useRegionFeeds'
 
-/** TransLink network status; only polls while `enabled` (the Transit tab is open). */
+/** Translink network status; only polls while `enabled` (the Transit tab is open). */
 export function useTransit(enabled: boolean) {
   const [data, setData] = useState<{ lines: TransitLine[]; notices: TransitNotice[] } | null>(null)
   const [error, setError] = useState(false)
@@ -33,7 +33,7 @@ export function useTransit(enabled: boolean) {
   return { data, error }
 }
 
-/** Live TransLink vehicle positions, polled every 15 s while `enabled`, for SEQ, Cairns and any region whose feed lists trips. */
+/** Live Translink vehicle positions, polled every 15 s while `enabled`, for SEQ, Cairns and any region whose feed lists trips. */
 export function useLiveVehicles(enabled: boolean) {
   const [vehicles, setVehicles] = useState<LiveVehicle[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +57,7 @@ export function useLiveVehicles(enabled: boolean) {
   return { vehicles: enabled ? vehicles : [], error: enabled ? error : null }
 }
 
-/** TransLink GTFS-RT service alerts, polled every minute while `enabled`; SEQ and Cairns unless `region` names another. */
+/** Translink GTFS-RT service alerts, polled every minute while `enabled`; SEQ and Cairns unless `region` names another. */
 export function useTransitAlerts(enabled: boolean, region?: TransitRegion) {
   const [alerts, setAlerts] = useState<TransitAlert[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -153,7 +153,7 @@ function subscribeTripUpdates(listener: () => void) {
 }
 
 /**
- * TransLink GTFS-RT trip updates (real-time departures), polled every 30 s while `enabled`.
+ * Translink GTFS-RT trip updates (real-time departures), polled every 30 s while `enabled`.
  * `error` is set only while nothing has loaded; after that a failed read keeps the last
  * updates and shows in `failing` and `fetchedAt` for that region.
  */

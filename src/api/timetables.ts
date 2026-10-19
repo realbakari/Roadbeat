@@ -1,8 +1,8 @@
 import type { TransitRegion } from './transitTypes'
 
-// TransLink's published timetables (GTFS stop_times), one file per route under
+// Translink's published timetables (GTFS stop_times), one file per route under
 // /timetables (see scripts/build-timetables.mjs). Every time here is exactly as
-// TransLink publishes it, to the minute; nothing is interpolated.
+// Translink publishes it, to the minute; nothing is interpolated.
 
 type Pattern = [direction: 0 | 1, stops: number[], offsets: number[], flags: string, dwell?: number[]]
 type TripRow = [pattern: number, first: number, service: number, headsign: number, number: number]

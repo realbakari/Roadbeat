@@ -151,6 +151,7 @@ export function SidePanel(p: Props) {
       <VehicleDetail
         vehicle={p.selectedVehicle}
         alerts={p.transitAlerts}
+        alertsError={p.transitAlertsError}
         watchedRoutes={alertSettings.routes}
         now={now}
         onBack={back}

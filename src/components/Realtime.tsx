@@ -2,7 +2,7 @@ import { Tabs } from '@cloudflare/kumo'
 import { useTimeFormat, type TimeFormat } from '../lib/timeFormat'
 
 /**
- * A reported delay the way the TransLink app shows it: whole minutes next to
+ * A reported delay the way the Translink app shows it: whole minutes next to
  * the scheduled time, "+0" when running to schedule, red when early or late.
  */
 export function DelayChip({ delay, className = '' }: { delay: number | null | undefined; className?: string }) {

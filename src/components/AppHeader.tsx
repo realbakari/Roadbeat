@@ -153,7 +153,7 @@ export function AppHeader({
     },
     {
       key: 'red',
-      label: 'Red alerts',
+      label: 'Red Alerts',
       value: firstLoad ? null : stats.redAlerts,
       icon: SirenIcon,
       tone: 'danger',
@@ -325,12 +325,14 @@ interface StatChipProps {
  */
 function StatChip({ label, value, icon: I, tone, active, apply }: StatChipProps) {
   const alert = tone === 'danger' && value != null && value > 0
+  // QLDTraffic's priority keeps its capitals; other labels read as plain nouns.
+  const term = label.startsWith('Red Alert') ? label : label.toLowerCase()
   return (
     <button
       type="button"
       onClick={apply}
       aria-pressed={active}
-      title={active ? `Showing ${label.toLowerCase()} — click to clear` : `Show ${label.toLowerCase()}`}
+      title={active ? `Showing ${term} — click to clear` : `Show ${term}`}
       className={`inline-flex shrink-0 items-center gap-2 rounded-md py-1 pr-3 pl-1 text-left ring ${
         active ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'
       }`}

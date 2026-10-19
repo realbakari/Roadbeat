@@ -35,7 +35,7 @@ describe('realtimeState', () => {
     expect(realtimeState('TSV', { TSV: 0 })).toBe('timetable')
   })
 
-  it('is timetable only where TransLink publishes no real-time feed', () => {
+  it('is timetable only where Translink publishes no real-time feed', () => {
     expect(realtimeState('MIF', { MIF: 5 })).toBe('timetable')
   })
 })

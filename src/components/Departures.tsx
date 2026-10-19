@@ -46,9 +46,19 @@ function dueIn(t: number, now: number) {
 }
 
 /**
- * A departure time the way the TransLink app shows it: the scheduled time with
+ * A departure time the way the Translink app shows it: the scheduled time with
  * the reported delay beside it ("+3", "+0"). In compact rows, minutes to go.
  */
+/** A compact late or early mark: "+3" late, "−1" early, said in words to screen readers. */
+function CompactDelay({ minutes }: { minutes: number }) {
+  return (
+    <span className={`text-xs font-semibold ${minutes > 0 ? 'text-kumo-danger' : 'text-kumo-info'}`}>
+      <span aria-hidden>{minutes > 0 ? `+${minutes}` : `−${-minutes}`}</span>
+      <span className="sr-only">{minutes > 0 ? `${minutes} min late` : `${-minutes} min early`}</span>
+    </span>
+  )
+}
+
 function Time({ d, now, compact }: { d: Departure; now: number; compact?: boolean }) {
   const [format] = useTimeFormat()
   const due = dueIn(d.time, now)
@@ -59,12 +69,15 @@ function Time({ d, now, compact }: { d: Departure; now: number; compact?: boolea
       <span
         className={`size-2 shrink-0 self-center rounded-full ${d.vehicle ? 'bg-kumo-success' : 'ring-2 ring-kumo-line ring-inset'}`}
         title={d.vehicle ? 'Real-time: vehicle is reporting its position' : 'Scheduled: vehicle not tracked yet'}
-        aria-label={d.vehicle ? 'Real-time' : 'Scheduled'}
+        aria-hidden
       />
+      <span className="sr-only">{d.vehicle ? 'Real-time' : 'Scheduled'}</span>
       {compact ? (
-        <span className={`font-medium ${showDelay && Math.round(d.delay! / 60) !== 0 ? 'text-kumo-danger' : ''}`}>
-          {due ?? clock.format(d.time)}
-        </span>
+        <>
+          <span className="font-medium">{due ?? clock.format(d.time)}</span>
+          {/* Late or early in figures as well as colour: "+3" late, "−1" early. */}
+          {showDelay && Math.round(d.delay! / 60) !== 0 && <CompactDelay minutes={Math.round(d.delay! / 60)} />}
+        </>
       ) : (
         <>
           <span className="font-medium">{(format === 'minutes' && minutesUntil(d.time, now)) || clock.format(d.scheduled ?? d.time)}</span>
@@ -86,13 +99,13 @@ function Legend() {
         <span className="size-2 rounded-full ring-2 ring-kumo-line ring-inset" /> Scheduled
       </span>{' '}
       — not tracked yet. Countdowns run to the reported time. Clock times are scheduled, with the reported delay beside them as in the
-      TransLink app:{' '}
+      Translink app:{' '}
       <span className="rounded bg-kumo-success/15 px-1 font-semibold text-kumo-success">+0</span> on time,{' '}
       <span className="rounded bg-kumo-danger/10 px-1 font-semibold text-kumo-danger">+3</span> minutes late or early.
-      TransLink's real-time feed covers services running now or starting soon; the published timetable is below.
+      Translink's real-time feed covers services running now or starting soon; the published timetable is below.
       “Due … min past, no vehicle reporting” means a timetabled departure has passed, no vehicle reports that trip, and
-      TransLink's real-time feed hasn't listed it at any point while this page has been checking since before the trip
-      started. It isn't a cancellation: only TransLink's feed marks a trip cancelled.
+      Translink's real-time feed hasn't listed it at any point while this page has been checking since before the trip
+      started. It isn't a cancellation: only Translink's feed marks a trip cancelled.
       Tap a service to see its stops.
     </Text>
   )
@@ -145,7 +158,7 @@ export function LineDepartures({
   const [tab, setTab] = useState(0)
 
   if (!dirs) return error ? <FeedError /> : <Loader size="sm" />
-  if (!dirs.length) return <Text variant="secondary">No services on this line in TransLink's real-time feed right now.</Text>
+  if (!dirs.length) return <Text variant="secondary">No services on this line in Translink's real-time feed right now.</Text>
   const dir = dirs[Math.min(tab, dirs.length - 1)]
 
   return (
@@ -161,7 +174,7 @@ export function LineDepartures({
       <Text size="sm" variant="secondary">
         {dir.headsigns.length
           ? `Services to ${dir.headsigns.map(shortName).join(', ')}`
-          : "Services that aren't in TransLink's published timetable (such as extra trips), so no destination is listed."}
+          : "Services that aren't in Translink's published timetable (such as extra trips), so no destination is listed."}
       </Text>
       <ol className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
         {dir.stops.map((s) => (
@@ -198,7 +211,7 @@ export function LineDepartures({
   )
 }
 
-/** In place of next departures where TransLink's real-time feed has nothing for the region. */
+/** In place of next departures where Translink's real-time feed has nothing for the region. */
 export function TimetableOnly({ region, state }: { region: TransitRegion; state: Exclude<RealtimeState, 'live'> }) {
   if (state === 'checking') return <Loader size="sm" />
   return (
@@ -207,7 +220,7 @@ export function TimetableOnly({ region, state }: { region: TransitRegion; state:
         Timetable only
       </Badge>
       <Text variant="secondary">
-        TransLink isn't publishing real-time information for {REGION_NAMES[region]} right now, so there are no live times here. The
+        Translink isn't publishing real-time information for {REGION_NAMES[region]} right now, so there are no live times here. The
         published timetable is below.
       </Text>
     </div>
@@ -226,7 +239,7 @@ export function StopPage({
   region: TransitRegion
   id: string
   vehicles: LiveVehicle[]
-  /** TransLink service alerts for SEQ and Cairns, or null while loading. */
+  /** Translink service alerts for SEQ and Cairns, or null while loading. */
   alerts: TransitAlert[] | null
   onNavigate: (hash: string) => void
 }) {
@@ -248,7 +261,7 @@ export function StopPage({
   }, [region, stop])
   const { index } = useTimetableIndex(true)
   const routes = useMemo(() => (index ? routesAtStops(index, region, ids) : null), [index, region, ids])
-  // Lift and escalator outages TransLink reports for this stop or its platforms.
+  // Lift and escalator outages Translink reports for this stop or its platforms.
   const accessAlerts = useMemo(
     () => (alerts ?? []).filter((a) => a.region === region && alertActive(a, now) && isAccessibilityAlert(a) && a.stopIds.some((s) => ids.has(s))),
     [alerts, region, now, ids],
@@ -279,7 +292,7 @@ export function StopPage({
           {!stops ? (
             <Loader />
           ) : !stop ? (
-            <Text variant="secondary">This stop isn't in TransLink's published stop list.</Text>
+            <Text variant="secondary">This stop isn't in Translink's published stop list.</Text>
           ) : (
             <header className="grid gap-1">
               <Text as="h2" variant="heading" size="lg">
@@ -357,11 +370,11 @@ export function StopPage({
                 )}
               </>
             ) : (
-              <Text variant="secondary">No departures from here in TransLink's real-time feed right now.</Text>
+              <Text variant="secondary">No departures from here in Translink's real-time feed right now.</Text>
             )}
           </section>
           {realtime === 'live' && <Legend />}
-          {/* SEQ lines have pages from TransLink's network status; elsewhere each route has its own. */}
+          {/* SEQ lines have pages from Translink's network status; elsewhere each route has its own. */}
           {region !== 'SEQ' && routes && routes.length > 0 && (
             <section className="grid gap-2">
               <Text as="h3" variant="heading">
@@ -370,7 +383,7 @@ export function StopPage({
               <RouteRows routes={regionRoutes(region, routes, routeInfo)} onNavigate={onNavigate} />
             </section>
           )}
-          {/* Facilities, terminal and bus stop records are SEQ datasets, keyed by TransLink's SEQ stop ids. */}
+          {/* Facilities, terminal and bus stop records are SEQ datasets, keyed by Translink's SEQ stop ids. */}
           {stop && region === 'SEQ' && <StationFacilitiesSection stopId={stops?.station(stop).id ?? stop.id} />}
           {stop && region === 'SEQ' && <FerryTerminalSection stopId={stop.id} />}
           {stop && region === 'SEQ' && <BusStopSection stopId={stop.id} />}
@@ -397,7 +410,7 @@ export function StopPage({
               rel="noopener noreferrer"
               className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
             >
-              Full timetable on TransLink
+              Full timetable on Translink
               <NewTabNote />
             </a>
           )}
@@ -423,7 +436,7 @@ function SaveStopButton({ region, id }: { region: TransitRegion; id: string }) {
 
 /**
  * Alerts on this stop's routes, collapsed to one line so the departures stay at
- * the top (TransLink's stop pages lead with departures too).
+ * the top (Translink's stop pages lead with departures too).
  */
 function StopAlerts({
   alerts,
@@ -485,7 +498,7 @@ function scrollToSection(id: string) {
 
 /**
  * The stop at a glance, in the style of the header's counts: each number is
- * live from TransLink's feeds and jumps to the section it summarises.
+ * live from Translink's feeds and jumps to the section it summarises.
  */
 function StopStats({
   list,
@@ -523,7 +536,7 @@ function StopStats({
       value: alerts == null ? '…' : String(alerts.length),
       tone: alerts?.length ? 'danger' : undefined,
       target: alerts?.length ? 'stop-alerts' : 'stop-next',
-      title: 'TransLink service alerts in effect on routes that call here',
+      title: 'Translink service alerts in effect on routes that call here',
     },
     {
       label: 'Routes',
@@ -630,7 +643,7 @@ function DepartureRow({
 
 /**
  * Published departures from these stops that are past due with nothing in
- * TransLink's real-time feeds for them, latest first (see `overdueMinutes`).
+ * Translink's real-time feeds for them, latest first (see `overdueMinutes`).
  * Needs vehicle positions loaded, so an outage on our side never reads as a
  * missing vehicle.
  */
@@ -672,7 +685,7 @@ function OverdueRow({
     <li>
       <button
         type="button"
-        title={`TransLink's real-time feed hasn't listed this trip since Roadbeat began checking at ${clock.format(since)}. Tap for its stops.`}
+        title={`Translink's real-time feed hasn't listed this trip since Roadbeat began checking at ${clock.format(since)}. Tap for its stops.`}
         onClick={() => onNavigate(timetableTripHref(d.trip))}
         className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-kumo-tint"
       >

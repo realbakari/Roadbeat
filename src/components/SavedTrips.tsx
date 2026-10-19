@@ -29,7 +29,7 @@ const savedTripHash = (t: SavedTrip) =>
 
 /**
  * "My trips", as on TripView's home screen: each saved trip with its next
- * departures from TransLink's published timetable and the real-time delay
+ * departures from Translink's published timetable and the real-time delay
  * where the feed reports one. Tapping a trip opens it in the planner.
  */
 export function SavedTrips({
@@ -40,7 +40,7 @@ export function SavedTrips({
   hint,
 }: {
   vehicles: LiveVehicle[]
-  /** TransLink service alerts, shown on the trips whose routes they affect. */
+  /** Translink service alerts, shown on the trips whose routes they affect. */
   alerts: TransitAlert[] | null
   onNavigate: (hash: string) => void
   /** Opens a trip's full planner result; by default through its planner link. */
@@ -101,7 +101,7 @@ export function SavedTrips({
       )}
       {any && updates && (
         <Text size="xs" variant="secondary">
-          Published timetable, with TransLink real-time
+          Published timetable, with Translink real-time
           {[...new Set(saved.map((t) => t.region))].map((r) => updates.at[r] && ` updated at ${seconds.format(updates.at[r])}`)}.
         </Text>
       )}
@@ -206,7 +206,7 @@ function TripCard({
           <CaretRightIcon size={14} className="shrink-0 text-kumo-inactive" />
         </span>
         {!from || !to ? (
-          <span className="px-4 pb-2.5 text-sm text-kumo-subtle">This stop is no longer in TransLink's published stop list.</span>
+          <span className="px-4 pb-2.5 text-sm text-kumo-subtle">This stop is no longer in Translink's published stop list.</span>
         ) : !next ? (
           <span className="px-4 pb-2.5">
             <Loader size="sm" />
@@ -232,7 +232,7 @@ function TripCard({
           <WarningIcon size={16} weight="fill" className="mt-0.5 shrink-0 text-kumo-warning" />
           <span className="grid min-w-0 flex-1">
             <span className="truncate font-medium">{tripAlerts[0].header}</span>
-            {tripAlerts.length > 1 && <span className="text-xs text-kumo-subtle">and {tripAlerts.length - 1} more TransLink service alerts on these routes</span>}
+            {tripAlerts.length > 1 && <span className="text-xs text-kumo-subtle">and {tripAlerts.length - 1} more Translink service alerts on these routes</span>}
           </span>
           <CaretRightIcon size={14} className="mt-1 shrink-0 text-kumo-inactive" />
         </button>

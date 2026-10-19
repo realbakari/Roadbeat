@@ -27,7 +27,7 @@ export const REGION_NAMES: Record<TransitRegion, string> = {
 export const MAIN_REGIONS: readonly TransitRegion[] = ['SEQ', 'CNS']
 
 /**
- * The other regions with a GTFS-RT endpoint. TransLink answers all of them,
+ * The other regions with a GTFS-RT endpoint. Translink answers all of them,
  * but on 16 Oct 2026 only North Stradbroke Island's listed any trips; the rest
  * sent empty feeds. Magnetic Island ferry (MIF) has no endpoint (404).
  */
@@ -43,7 +43,7 @@ export function liveRegions(counts: FeedCounts): TransitRegion[] {
 
 /**
  * What a region's pages can show: 'live' when its real-time feed is read,
- * 'timetable' when TransLink publishes no real-time feed for it or its feed
+ * 'timetable' when Translink publishes no real-time feed for it or its feed
  * listed no trips when last read, 'checking' before the first read.
  */
 export type RealtimeState = 'live' | 'timetable' | 'checking'

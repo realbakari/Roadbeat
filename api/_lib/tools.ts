@@ -86,7 +86,7 @@ export function searchRoadEvents(events: TrafficEvent[], q: RoadEventQuery, fetc
 
 const isStation = (index: StopIndex, s: Stop) => !s.parent && index.children(s).length > 0
 
-/** TransLink stops and stations whose name contains every word of the query; stations first, then shortest names. */
+/** Translink stops and stations whose name contains every word of the query; stations first, then shortest names. */
 export function findStops(index: StopIndex, query: string, region: TransitRegion | undefined, limit = 10) {
   const terms = words(query)
   if (!terms.length) return []
@@ -124,7 +124,7 @@ export interface Realtime {
 
 type RouteInfo = (code: string, region: TransitRegion) => { short: string; long: string; line?: string } | null
 
-/** Next departures from a stop or station, from TransLink's real-time feed. */
+/** Next departures from a stop or station, from Translink's real-time feed. */
 export function nextDepartures(
   stop: Stop,
   index: StopIndex,
@@ -144,7 +144,7 @@ export function nextDepartures(
     .slice(0, opts.limit ?? 10)
   return {
     source: 'Translink GTFS-RT real-time feed (CC BY 4.0)',
-    note: "Times are TransLink's real-time predictions for services running now or starting soon. A delay counts as tracked only when a vehicle on that trip reports its position; otherwise the time is the timetable.",
+    note: "Times are Translink's real-time predictions for services running now or starting soon. A delay counts as tracked only when a vehicle on that trip reports its position; otherwise the time is the timetable.",
     feed_time: brisbaneIso(rt.updates.at[stop.region]),
     stop: { id: stop.id, name: stop.name, region: stop.region, link: `${SITE}/#transit/stop/${stop.region}/${encodeURIComponent(stop.id)}` },
     departures: list.map((d) => {

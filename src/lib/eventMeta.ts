@@ -51,7 +51,7 @@ export function priorityBadge(p: string): {
   }
 }
 
-export const CAMERA_COLOR = { webcam: '#475569', floodcam: '#0891b2' } as const
+export const CAMERA_COLOR = { webcam: '#475569', floodcam: '#0e7490' } as const
 
 /** The Queensland Government's flood driving advice, quoted word for word on flooding events (qld.gov.au, CC BY 4.0). */
 export const FLOOD_ADVICE = {

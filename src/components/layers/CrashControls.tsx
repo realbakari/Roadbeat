@@ -47,7 +47,7 @@ export function CrashControls({ filter, onChange }: { filter: CrashFilter; onCha
       </div>
       <Text size="xs" variant="secondary">
         Property-damage-only crashes were recorded until 2010. Data to {CRASH_DATA_END}.{' '}
-        <InlineLink href={CRASH_DATASET_URL}>TMR, CC BY 4.0</InlineLink>
+        <InlineLink href={CRASH_DATASET_URL}>Transport and Main Roads, CC BY 4.0</InlineLink>
       </Text>
     </div>
   )

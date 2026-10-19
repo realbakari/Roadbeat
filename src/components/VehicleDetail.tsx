@@ -1,4 +1,4 @@
-import { Badge, Button, Text } from '@cloudflare/kumo'
+import { Badge, Button, Loader, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, CrosshairIcon, BellIcon, BellRingingIcon, BoatIcon, BusIcon, TrainIcon, TramIcon, type Icon } from '@phosphor-icons/react'
 import { alertActive, routeInfo, type TransitAlert } from '../api/translink'
 import type { LiveVehicle, VehicleMode } from '../api/transitTypes'
@@ -26,6 +26,8 @@ const STATUS: Record<NonNullable<LiveVehicle['status']>, string> = {
 interface Props {
   vehicle: LiveVehicle | null
   alerts: TransitAlert[] | null
+  /** Why the alerts feed failed, if it did. */
+  alertsError?: string | null
   watchedRoutes: string[]
   now: number
   onBack: () => void
@@ -37,7 +39,7 @@ interface Props {
   onToggleFollow: () => void
 }
 
-/** A live TransLink vehicle picked on the map. */
+/** A live Translink vehicle picked on the map. */
 export function VehicleDetail({
   vehicle: v,
   alerts,
@@ -49,6 +51,7 @@ export function VehicleDetail({
   onOpenHref,
   following,
   onToggleFollow,
+  alertsError,
 }: Props) {
   const stops = useStopIndex(!!v?.stopId, v?.mode === 'bus')
   const trips = useTripIndex(!!v?.tripId)
@@ -169,8 +172,12 @@ export function VehicleDetail({
                   </li>
                 ))}
               </ul>
+            ) : alerts ? (
+              <Text variant="secondary">No disruptions reported for this route.</Text>
+            ) : alertsError ? (
+              <Text variant="error">Couldn't load Translink's service alerts.</Text>
             ) : (
-              <Text variant="secondary">{alerts ? 'No disruptions reported for this route.' : 'Loading…'}</Text>
+              <Loader size="sm" />
             )}
           </section>
 
@@ -181,14 +188,14 @@ export function VehicleDetail({
               rel="noopener noreferrer"
               className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
             >
-              Timetable on TransLink
+              Timetable on Translink
               <NewTabNote />
             </a>
           )}
 
           <Text size="xs" variant="secondary">
-            Shown at the GPS position TransLink last reported for this vehicle, checked every 15 seconds. Route, stop
-            and destination names from TransLink's published timetable data.
+            Shown at the GPS position Translink last reported for this vehicle, checked every 15 seconds. Route, stop
+            and destination names from Translink's published timetable data.
           </Text>
         </div>
       </div>

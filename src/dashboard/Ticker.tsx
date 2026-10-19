@@ -21,7 +21,7 @@ export function Ticker({ events, now }: { events: TrafficEvent[]; now: number })
     )
   })
   return (
-    <div className="overflow-hidden rounded-xl bg-kumo-base py-3 ring ring-kumo-line" aria-label="Latest road events">
+    <div role="region" className="overflow-hidden rounded-xl bg-kumo-base py-3 ring ring-kumo-line" aria-label="Latest road events">
       {/* Rendered twice so the strip loops without a gap; the copy is hidden from screen readers. */}
       <div className="ticker-track flex w-max" style={{ animationDuration: `${events.length * 6}s` }}>
         <div className="flex">{items}</div>

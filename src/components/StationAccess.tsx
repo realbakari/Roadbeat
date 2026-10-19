@@ -54,7 +54,7 @@ import { InlineLink } from './ui/Links'
 const QR = 'https://www.queenslandrail.com.au'
 
 /**
- * Lift and escalator outages TransLink reports for a stop or its platforms. Shown
+ * Lift and escalator outages Translink reports for a stop or its platforms. Shown
  * near the top of a stop page, because they decide whether someone can use it.
  */
 export function AccessAlerts({ alerts }: { alerts: TransitAlert[] }) {
@@ -73,7 +73,7 @@ export function AccessAlerts({ alerts }: { alerts: TransitAlert[] }) {
               {a.description && <span>{a.description}</span>}
               {a.url && (
                 <a href={a.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
-                  More from TransLink <ArrowSquareOutIcon size={14} />
+                  More from Translink <ArrowSquareOutIcon size={14} />
                   <NewTabNote />
                 </a>
               )}
@@ -166,7 +166,7 @@ export function StationFacilitiesSection({ stopId }: { stopId: string }) {
       <Text size="xs" variant="secondary">
         Queensland Rail station details, published by Brisbane City Council (
         <InlineLink href={STATION_FACILITIES_URL}>Railway station facilities</InlineLink>
-        , CC BY 4.0). Lift outages come from TransLink's real-time alerts.
+        , CC BY 4.0). Lift outages come from Translink's real-time alerts.
       </Text>
     </section>
   )
@@ -227,7 +227,7 @@ export function FerryTerminalSection({ stopId }: { stopId: string }) {
       <Text size="xs" variant="secondary">
         Brisbane City Council (
         <InlineLink href={FERRY_TERMINALS_URL}>Ferry terminals</InlineLink>
-        , CC BY 4.0){inspected && `, last inspected ${inspected}`}. Lift outages come from TransLink's real-time alerts.
+        , CC BY 4.0){inspected && `, last inspected ${inspected}`}. Lift outages come from Translink's real-time alerts.
       </Text>
     </section>
   )

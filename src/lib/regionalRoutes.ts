@@ -2,11 +2,11 @@ import type { TimetableIndex } from '../api/timetables'
 import { TRANSIT_REGIONS, type TransitRegion, type VehicleMode } from '../api/transitTypes'
 import { REGION_NAMES } from './transitRegions'
 
-/** A route outside SEQ, whose lines TransLink's network status doesn't list. */
+/** A route outside SEQ, whose lines Translink's network status doesn't list. */
 export interface RegionRoute {
   region: TransitRegion
   code: string
-  /** Route number as TransLink publishes it ("200"). */
+  /** Route number as Translink publishes it ("200"). */
   short: string
   /** Official route name ("Ferry Terminal - City, Stockland and Kelso"). */
   long: string

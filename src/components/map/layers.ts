@@ -11,7 +11,7 @@ export const isLine = ['in', ['geometry-type'], ['literal', ['LineString', 'Mult
 
 /**
  * Track line width: a crisp line when zoomed out; from street zoom, a band
- * about 16 m wide on the ground. TransLink's shapes run down the middle of a
+ * about 16 m wide on the ground. Translink's shapes run down the middle of a
  * corridor rather than along each rail (about 2 m off either rail of a double
  * track), so a translucent corridor-wide band shows the line where it really
  * runs, with the base map's individual rails visible through it.
@@ -248,7 +248,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   })
   addWarningMarkers(map)
 
-  // Train, tram and ferry tracks (TransLink GTFS shapes): the network faintly with
+  // Train, tram and ferry tracks (Translink GTFS shapes): the network faintly with
   // live vehicles, and a shown line or the selected vehicle's route in its colour.
   map.addLayer({
     id: 'tracks-network',
@@ -370,7 +370,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
     paint: { 'text-color': '#0c4a6e', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
   })
 
-  // TransLink stations and stops: stations as network-map dots, bus stops once zoomed in.
+  // Translink stations and stops: stations as network-map dots, bus stops once zoomed in.
   map.addLayer({
     id: 'stops-bus',
     type: 'circle',
@@ -434,7 +434,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   stopLabel('stops-station-label', 12, ['==', ['get', 'kind'], 'station'])
   stopLabel('stops-line-label', 9, ['==', ['get', 'key'], ''])
 
-  // Live TransLink vehicles: small mode icons, with route numbers once zoomed in.
+  // Live Translink vehicles: small mode icons, with route numbers once zoomed in.
   map.addLayer({
     id: 'vehicles-selected',
     type: 'circle',

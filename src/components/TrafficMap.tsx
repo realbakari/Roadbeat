@@ -49,7 +49,7 @@ import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
 import type { SpeedCamera } from '../api/speedCameras'
 import { speedCameraFeatures } from './map/speedCameraLayers'
-import { fuelFeatures } from './map/fuelLayers'
+import { fuelFeatures, PINS } from './map/fuelLayers'
 import type { FuelStation } from '../api/fuelStations'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
@@ -518,7 +518,7 @@ export function TrafficMap(props: Props) {
       map.setFilter(id, ['all', ['==', ['get', 'region'], 'SEQ'], ['in', ['get', 'code'], ['literal', codes]]])
       map.setLayoutProperty(id, 'visibility', codes.length ? 'visible' : 'none')
     }
-    // The shown line's stations, named, like TransLink's network map.
+    // The shown line's stations, named, like Translink's network map.
     const onLine = ['any', ...codes.map((c) => ['in', `|${c}|`, ['get', 'codes']])]
     for (const id of ['stops-line', 'stops-line-label']) {
       map.setFilter(id, codes.length ? (onLine as never) : ['==', ['get', 'key'], ''])
@@ -607,7 +607,7 @@ export function TrafficMap(props: Props) {
           onClick={() => props.onSelectKey(`place/fuel/${encodeURIComponent(cheapest.stations[0].id)}`)}
           className="absolute top-14 left-1/2 z-10 flex max-w-[calc(100%-6rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base px-3 py-1.5 text-sm shadow-md ring ring-kumo-line hover:bg-kumo-tint"
         >
-          <span className="shrink-0 rounded-md bg-[#15803d] px-1.5 font-semibold text-white tabular-nums ring-2 ring-[#052e16]">{centsText(cheapest.cents)}</span>
+          <span className="shrink-0 rounded-md px-1.5 font-semibold text-white tabular-nums" style={{ backgroundColor: PINS['fuel-pin-cheap'][mode].fill, boxShadow: `0 0 0 2px ${PINS['fuel-pin-cheap'][mode].rim}` }}>{centsText(cheapest.cents)}</span>
           <span className="min-w-0 truncate">
             Cheapest {fuelLabel} in view · {brandedName(cheapest.stations[0])}
             {cheapest.stations.length > 1 && ` and ${cheapest.stations.length - 1} more`}

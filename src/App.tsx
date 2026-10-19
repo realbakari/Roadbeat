@@ -221,7 +221,7 @@ export function App() {
       setVehicleFilter({ title, match })
       turnOnLayers(['vehicles'])
       revealMap()
-      // Fit the line's track when TransLink publishes one, else its live vehicles.
+      // Fit the line's track when Translink publishes one, else its live vehicles.
       loadTracks().then((t) => {
         const track = t && trackBounds(t, match)
         if (track) return setFit({ bounds: track, id: Date.now() })
@@ -859,7 +859,7 @@ export function App() {
           </main>
         </div>
 
-        <nav className="flex shrink-0 justify-center border-t border-kumo-line bg-kumo-base px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden">
+        <nav aria-label="List or map" className="flex shrink-0 justify-center border-t border-kumo-line bg-kumo-base px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden">
           <Tabs
             className="w-full"
             listClassName="w-full [&>*]:flex-1"

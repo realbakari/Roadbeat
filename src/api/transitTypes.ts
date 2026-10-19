@@ -1,8 +1,8 @@
-// Types for TransLink's GTFS-RT feeds, shared by the app and the server functions in api/.
+// Types for Translink's GTFS-RT feeds, shared by the app and the server functions in api/.
 // Kept free of imports so server code can import them directly.
 
 /**
- * TransLink's GTFS feeds, by the region code in their URLs: South East
+ * Translink's GTFS feeds, by the region code in their URLs: South East
  * Queensland and every regional network on data.qld.gov.au. Keep in step with
  * scripts/lib/gtfs.mjs.
  */
@@ -25,7 +25,7 @@ export interface LiveVehicle {
   tripId: string | null
   /** Official T-line for trains ("T1 Caboolture"), else null. */
   lineName: string | null
-  /** Official route name from TransLink ("Brisbane City - Caboolture", "Toowong - University of Qld"). */
+  /** Official route name from Translink ("Brisbane City - Caboolture", "Toowong - University of Qld"). */
   routeName: string | null
   color: string | null
   label: string | null
@@ -36,7 +36,7 @@ export interface LiveVehicle {
   timestamp: number
 }
 
-/** One stop on a trip as TransLink's real-time feed reports it. */
+/** One stop on a trip as Translink's real-time feed reports it. */
 export interface StopTime {
   stopId: string
   sequence: number | null

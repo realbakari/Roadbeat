@@ -62,7 +62,7 @@ export function MapCard({ map, card, onDetails, onClose }: { map: maplibregl.Map
           target="_blank"
           rel="noopener noreferrer"
         >
-          Directions
+          Get directions
           <NewTabNote />
         </LinkButton>
         )}

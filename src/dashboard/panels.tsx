@@ -21,6 +21,8 @@ import { brisbaneClock as timeOnly } from '../lib/aest'
 export interface DashboardData {
   now: number
   loading: boolean
+  /** Feeds whose first read failed, so their panels say "Failed" rather than 0 or loading for ever. */
+  failed: { road: boolean; fires: boolean; transit: boolean }
   current: TrafficEvent[]
   districts: DistrictCount[]
   transit: Punctuality[] | null
@@ -40,6 +42,12 @@ const MODE_LABEL = { train: 'Trains', bus: 'Buses', tram: 'Trams', ferry: 'Ferri
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0)
 
+/** How a stat whose feed failed reads: a word, never a 0. */
+const FAILED = <span className="text-2xl text-kumo-danger xl:text-3xl">Failed</span>
+
+/** A count from road events: '…' while loading, "Failed" if they never loaded, else the count. */
+const roadCount = (d: DashboardData, n: number) => (d.loading ? '…' : d.failed.road ? FAILED : n)
+
 /** Seconds as m:ss. */
 function mmss(sec: number | null) {
   if (sec == null) return '–'
@@ -56,21 +64,22 @@ const sourceLink = (href: string, children: ReactNode) => (
 
 /** The panels that come from the road, transit, fire and Brisbane City Council feeds. Others are in panelsMonitor.tsx. */
 export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNode>> = {
-  events: (d) => <Stat label="Road events happening now" value={d.loading ? '…' : d.current.length} href="/" />,
-  closures: (d) => <Stat label="Road closures" value={d.loading ? '…' : d.current.filter(isClosure).length} tone={CLOSURE_TEXT} href="/" />,
-  crashes: (d) => <Stat label="Crashes" value={d.loading ? '…' : d.current.filter((e) => e.properties.event_type === 'Crash').length} tone={CRASH_TEXT} href="/" />,
+  events: (d) => <Stat label="Road events happening now" value={roadCount(d, d.current.length)} href="/" />,
+  closures: (d) => <Stat label="Road closures" value={roadCount(d, d.current.filter(isClosure).length)} tone={CLOSURE_TEXT} href="/" />,
+  crashes: (d) => <Stat label="Crashes" value={roadCount(d, d.current.filter((e) => e.properties.event_type === 'Crash').length)} tone={CRASH_TEXT} href="/" />,
   'fire-count': (d) => {
     const urgent = d.fires?.filter((f) => f.level === 'Emergency Warning' || f.level === 'Watch and Act').length
-    return <Stat label="Bushfire Emergency or Watch and Act" value={urgent ?? '…'} tone={urgent ? FIRE_TEXT['Watch and Act'] : undefined} />
+    return <Stat label="Bushfire Emergency or Watch and Act" value={urgent ?? (d.failed.fires ? FAILED : '…')} tone={urgent ? FIRE_TEXT['Watch and Act'] : undefined} />
   },
   trains: (d) => {
     const trains = d.transit?.find((t) => t.mode === 'train')
-    return <Stat label="Tracked trains on time" value={trains?.tracked ? `${pct(trains.onTime, trains.tracked)}%` : '…'} tone="text-kumo-success" href="/#transit" />
+    return <Stat label="Tracked trains on time" value={trains?.tracked ? `${pct(trains.onTime, trains.tracked)}%` : d.failed.transit ? FAILED : '…'} tone="text-kumo-success" href="/#transit" />
   },
+  // A total only when both car parks publish a count: a missing one is never counted as 0.
   parking: ({ parking }) => (
     <Stat
       label={parking ? `Free in council CBD car parks: King George Sq ${parking.kingGeorgeSquare ?? '–'}, Wickham Tce ${parking.wickhamTerrace ?? '–'}` : 'Free in council CBD car parks'}
-      value={parking ? (parking.kingGeorgeSquare ?? 0) + (parking.wickhamTerrace ?? 0) : '…'}
+      value={!parking ? '…' : parking.kingGeorgeSquare != null && parking.wickhamTerrace != null ? parking.kingGeorgeSquare + parking.wickhamTerrace : '–'}
     />
   ),
 
@@ -96,7 +105,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
             ))}
           </ul>
         ) : (
-          <EmptyNote>{d.loading ? 'Loading road events…' : 'No closures or crashes reported.'}</EmptyNote>
+          <EmptyNote>{d.loading ? 'Loading road events…' : d.failed.road ? "Failed to load QLDTraffic's road events." : 'No closures or crashes reported.'}</EmptyNote>
         )}
       </Tile>
     )
@@ -115,7 +124,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
               <span className="text-kumo-subtle">{d.liftOutages.map((a) => a.header.replace(/^(lift|escalator) outage\s*-\s*/i, '')).join('; ')}</span>
             </span>
           )}
-          {`TransLink real-time, trips with a vehicle reporting its position. On time: ${-ON_TIME.early / 60} min early to under ${ON_TIME.late / 60} min late, as reported. Not TransLink's official punctuality figure.`}
+          {`Translink real-time, trips with a vehicle reporting its position. On time: ${-ON_TIME.early / 60} min early to under ${ON_TIME.late / 60} min late, as reported. Not Translink's official punctuality figure.`}
         </>
       }
     >
@@ -144,7 +153,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
           ))}
         </ul>
       ) : (
-        <EmptyNote>{d.transit ? 'No tracked services right now.' : 'Loading TransLink real-time…'}</EmptyNote>
+        <EmptyNote>{d.transit ? 'No tracked services right now.' : d.failed.transit ? "Failed to load Translink's real-time feed." : 'Loading Translink real-time…'}</EmptyNote>
       )}
     </Tile>
   ),
@@ -170,7 +179,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
           </ul>
         </div>
       ) : (
-        <EmptyNote>Loading bushfire warnings…</EmptyNote>
+        <EmptyNote>{d.failed.fires ? "Failed to load the Queensland Fire Department's warnings." : 'Loading bushfire warnings…'}</EmptyNote>
       )}
     </Tile>
   ),
@@ -204,7 +213,7 @@ export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNod
               key={b.site.tsc}
               label={b.site.streets.slice(0, 2).join(' & ') || `Signal ${b.site.tsc}`}
               detail={b.site.suburb}
-              value={<span style={{ color: dsColor(b.maxDs) }}>{Math.round(b.maxDs)}%</span>}
+              value={<span className="text-kumo-strong">{Math.round(b.maxDs)}%</span>}
               bar={b.maxDs / 120}
               color={dsColor(b.maxDs)}
               href={`/#signal/${encodeURIComponent(b.site.tsc)}`}

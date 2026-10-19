@@ -42,7 +42,7 @@ interface Seen {
 }
 
 /**
- * Watches road events and TransLink alerts for things the user cares about and
+ * Watches road events and Translink alerts for things the user cares about and
  * raises notifications: a toast while the app is in view, a system notification
  * (if allowed) while it's in the background, and an entry in the notification
  * centre either way. Runs only while the app is open in a tab; with system
@@ -151,7 +151,7 @@ export function useNotifications({
     store(SEEN_KEY, seen.current)
   }, [events, eventsAt, raise, setSettings])
 
-  // TransLink alerts on watched routes and lines.
+  // Translink alerts on watched routes and lines.
   useEffect(() => {
     if (!transitAlerts) return
     const s = latest.current.settings

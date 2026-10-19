@@ -166,7 +166,8 @@ body {
 .ticker-track {
   animation: ticker 120s linear infinite;
 }
-.ticker-track:hover {
+.ticker-track:hover,
+.ticker-track:focus-within {
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -184,9 +185,19 @@ body {
  * a thumb. Apple asks for 44pt; 36px is as far as the layout stretches
  * without changing its shape. Mouse and trackpad keep the compact sizes.
  */
+/* No icon-only button smaller than 24px, whatever the pointer (WCAG 2.5.8). */
+[data-kumo-component="Button"][class*="size-3.5"] {
+  min-width: 24px;
+  min-height: 24px;
+}
+
 @media (pointer: coarse) {
   [data-kumo-component="Button"],
-  [role="tab"] {
+  [data-kumo-component="LinkButton"],
+  [data-kumo-component="Select"],
+  [role="combobox"],
+  [role="tab"],
+  button[aria-pressed] {
     min-height: 36px;
   }
   [data-kumo-component="Button"][class*="size-"] {

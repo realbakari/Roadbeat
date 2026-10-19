@@ -4,7 +4,7 @@ import type { Feature } from './stationFacilities'
 
 // Brisbane City Council's ferry terminals, with each terminal's access features
 // (data.brisbane.qld.gov.au "Ferry terminals", CC BY 4.0). The `hastus` field is
-// TransLink's stop id, so a ferry stop page can look itself up. CORS is open.
+// Translink's stop id, so a ferry stop page can look itself up. CORS is open.
 
 export const FERRY_TERMINALS_URL = 'https://data.brisbane.qld.gov.au/explore/dataset/ferry-terminals/information/'
 /** The records endpoint, for a status check. */
@@ -96,7 +96,7 @@ export function parseFerryTerminal(raw: unknown): FerryTerminal | null {
 
 const cache = new Map<string, Promise<FerryTerminal | null>>()
 
-/** The ferry terminal for a TransLink stop id, or null when the stop isn't one of the council's terminals. */
+/** The ferry terminal for a Translink stop id, or null when the stop isn't one of the council's terminals. */
 export function fetchFerryTerminal(stopId: string): Promise<FerryTerminal | null> {
   if (!/^\d+$/.test(stopId)) return Promise.resolve(null)
   let hit = cache.get(stopId)

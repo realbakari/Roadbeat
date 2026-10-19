@@ -3,12 +3,12 @@ import { FireSimpleIcon, HurricaneIcon, PathIcon } from '@phosphor-icons/react'
 import { BOM_CYCLONES, CYCLONE_COLOR, JTWC_PAGE, type Cyclone } from '../api/jtwc'
 import { NSW_ALERT_COLOR, NSW_FIRES_ATTRIBUTION, NSW_FIRES_PAGE, type NswFire } from '../api/nswFires'
 import { IBTRACS_CITATION, IBTRACS_PAGE, PAST_CYCLONE_COLOR, pastCycloneTitle, type PastCyclone } from '../api/pastCyclones'
-import { timeAgo } from '../lib/format'
 import { Header } from './PlaceParts'
 import { ExternalLink } from './ui/Links'
 import { Section } from './ui/Section'
 import { Facts } from './ui/Facts'
 import { brisbaneDayDateTime as aest, brisbaneDateOnly as dayOnly } from '../lib/aest'
+import { RelativeTime } from './ui/RelativeTime'
 
 /** One NSW RFS incident near the border, with every field as the RFS publishes it. */
 export function NswFireBody({ f }: { f: NswFire }) {
@@ -51,7 +51,7 @@ export function CycloneBody({ c, now }: { c: Cyclone; now: number }) {
         <ExternalLink href={BOM_CYCLONES}>Bureau of Meteorology cyclone warnings</ExternalLink>
       </div>
       <Text size="sm" variant="secondary">
-        Warning {c.warning ?? 'number not given'}, issued {aest.format(c.issuedAt)} AEST · {timeAgo(c.issuedAt, now)}
+        Warning {c.warning ?? 'number not given'}, issued {aest.format(c.issuedAt)} AEST · <RelativeTime at={c.issuedAt} now={now} inline />
       </Text>
       <Section title="Position and JTWC forecast">
         <div className="overflow-x-auto">

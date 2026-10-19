@@ -133,7 +133,7 @@ export function CrashLayer({
           </ul>
         )}
         <Text size="xs" variant="secondary">
-          Police-reported crashes to {CRASH_DATA_END}; last 12 months preliminary. TMR, CC BY 4.0.
+          Police-reported crashes to {CRASH_DATA_END}; last 12 months preliminary. Transport and Main Roads, CC BY 4.0.
         </Text>
       </div>
     </div>

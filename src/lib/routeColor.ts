@@ -1,7 +1,7 @@
 import { contrastRatio, luminance } from './contrast'
 
 /**
- * Text colour that stays readable on a route's official colour. TransLink's
+ * Text colour that stays readable on a route's official colour. Translink's
  * palette includes light colours (T5 and the G:link are #FFC425) where white
  * text fails contrast, so this picks near-black for light backgrounds.
  */

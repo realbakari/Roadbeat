@@ -1,3 +1,5 @@
+import { chipClass } from './chip'
+import { NoResults } from './ui/StateMessage'
 import { Badge, Banner, Button, Empty, InputGroup, Loader, Tabs, Text } from '@cloudflare/kumo'
 import {
   ArrowLeftIcon,
@@ -65,7 +67,7 @@ interface Props {
   onShowMap: () => void
 }
 
-/** TransLink network status, live service alerts and per-line pages. */
+/** Translink network status, live service alerts and per-line pages. */
 export function TransitPanel(props: Props) {
   const { data, error } = useTransit(true)
   const { view, alerts } = props
@@ -81,7 +83,7 @@ export function TransitPanel(props: Props) {
     return <LinePage line={line} {...props} />
   }
   if (view.kind === 'route') {
-    return <RoutePage region={view.region} code={view.code} alerts={alerts} vehicles={props.vehicles} onNavigate={props.onNavigate} onShowOnMap={props.onShowOnMap} />
+    return <RoutePage region={view.region} code={view.code} alerts={alerts} alertsError={props.alertsError} vehicles={props.vehicles} onNavigate={props.onNavigate} onShowOnMap={props.onShowOnMap} />
   }
   if (view.kind === 'stop') {
     return <StopPage region={view.region} id={view.id} vehicles={props.vehicles} alerts={alerts} onNavigate={props.onNavigate} />
@@ -178,7 +180,7 @@ function Home({
         ) : alerts ? (
           <AlertList alerts={alerts} onOpen={(a) => onNavigate(`transit/alert/${encodeURIComponent(a.id)}`)} />
         ) : alertsError ? (
-          // Without the TransLink proxy (e.g. a plain static host), fall back to the RSS notices.
+          // Without the Translink proxy (e.g. a plain static host), fall back to the RSS notices.
           data ? <Notices notices={data.notices} /> : <Offline />
         ) : (
           <Centered>
@@ -187,7 +189,7 @@ function Home({
         )}
         {tab === 'alerts' && (
           <div className="px-4 py-4">
-            <ExternalLink href="https://translink.com.au/service-updates">All TransLink service updates</ExternalLink>
+            <ExternalLink href="https://translink.com.au/service-updates">All Translink service updates</ExternalLink>
           </div>
         )}
       </div>
@@ -210,7 +212,7 @@ function sessionSet(k: string, v: string) {
   }
 }
 
-/** "Lines & timetables": search plus mode chips over TransLink's status lines. */
+/** "Lines & timetables": search plus mode chips over Translink's status lines. */
 
 function Lines({
   lines,
@@ -236,11 +238,11 @@ function Lines({
             <MagnifyingGlassIcon />
           </InputGroup.Addon>
           <InputGroup.Input aria-label="Search lines" placeholder="Line name, e.g. Caboolture or F1" value={q} onChange={(e) => setQ(e.target.value)} />
-          {q && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear" icon={<XIcon />} onClick={() => setQ('')} />}
+          {q && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear search" icon={<XIcon />} onClick={() => setQ('')} />}
         </InputGroup>
         <ModeChips value={mode} onChange={setMode} />
       </div>
-      {list.length ? <Status lines={list} onOpen={onOpen} /> : <div className="px-4"><Text variant="secondary">No lines match.</Text></div>}
+      {list.length ? <Status lines={list} onOpen={onOpen} /> : <NoResults what="lines" query={q} onClear={() => (setQ(''), setMode('all'))} hint="Search by line name or number, or show every mode." />}
       <section className="mx-4 grid gap-2 rounded-lg bg-kumo-recessed p-3">
         <Text bold>Network maps</Text>
         <Text size="sm" variant="secondary">
@@ -260,7 +262,7 @@ function Lines({
           Maps
         </Text>
         <Text size="sm" variant="secondary">
-          Every printable map TransLink publishes, by place: network maps, busway maps, and station and locality maps.
+          Every printable map Translink publishes, by place: network maps, busway maps, and station and locality maps.
         </Text>
         <TransitMapsDirectory />
       </section>
@@ -309,8 +311,8 @@ function Status({ lines, onOpen }: { lines: TransitLine[]; onOpen: (l: TransitLi
   )
 }
 
-/** A line's page, modelled on TransLink's timetable page: status, upcoming changes, next departures, live vehicles. */
-function LinePage({ line, alerts, vehicles, watchedRoutes, onNavigate, onToggleWatch, onShowOnMap }: Props & { line: TransitLine }) {
+/** A line's page, modelled on Translink's timetable page: status, upcoming changes, next departures, live vehicles. */
+function LinePage({ line, alerts, alertsError, vehicles, watchedRoutes, onNavigate, onToggleWatch, onShowOnMap }: Props & { line: TransitLine }) {
   const match = useMemo(() => lineMatcher(line), [line])
   const watchKey = lineWatchKey(line)
   const watching = !!watchKey && watchedRoutes.some((r) => r.toLowerCase() === watchKey.toLowerCase())
@@ -324,7 +326,7 @@ function LinePage({ line, alerts, vehicles, watchedRoutes, onNavigate, onToggleW
   // Planned changes can run to a dozen; show the next two so departures stay near the top.
   const [allUpcoming, setAllUpcoming] = useState(false)
   const I = MODE_ICON[line.mode]
-  // The line's official colour from TransLink's published route data, if any of its routes has one.
+  // The line's official colour from Translink's published route data, if any of its routes has one.
   const lineColor = useMemo(() => {
     const code = match ? allRouteCodes().find((c) => match(c) && routeInfo(c)?.color) : undefined
     return code ? (routeInfo(code)?.color ?? null) : null
@@ -387,6 +389,8 @@ function LinePage({ line, alerts, vehicles, watchedRoutes, onNavigate, onToggleW
                   ) : (
                     <Text variant="secondary">No current disruptions reported.</Text>
                   )
+                ) : alertsError ? (
+                  <Text variant="error">Couldn't load Translink's service alerts.</Text>
                 ) : (
                   <Loader size="sm" />
                 )}
@@ -408,6 +412,8 @@ function LinePage({ line, alerts, vehicles, watchedRoutes, onNavigate, onToggleW
                   ) : (
                     <Text variant="secondary">No planned changes listed.</Text>
                   )
+                ) : alertsError ? (
+                  <Text variant="error">Couldn't load Translink's service alerts.</Text>
                 ) : (
                   <Loader size="sm" />
                 )}
@@ -434,12 +440,12 @@ function LinePage({ line, alerts, vehicles, watchedRoutes, onNavigate, onToggleW
             <Banner
               variant="secondary"
               size="sm"
-              description="This status line doesn't match a route in TransLink's published timetable data, so live alerts and vehicles aren't linked here. See the timetable for details."
+              description="This status line doesn't match a route in Translink's published timetable data, so live alerts and vehicles aren't linked here. See the timetable for details."
             />
           )}
 
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <ExternalLink href={line.link}>Timetable on TransLink</ExternalLink>
+            <ExternalLink href={line.link}>Timetable on Translink</ExternalLink>
             <ExternalLink href="https://jp.translink.com.au/plan-your-journey">Plan a journey</ExternalLink>
           </div>
         </div>
@@ -511,11 +517,12 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
                     <button
                       key={r}
                       type="button"
+                      aria-pressed={on}
                       onClick={() => onToggleWatch(r)}
-                      title={on ? 'Stop watching' : 'Watch this route'}
-                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-sm ring ${on ? 'bg-kumo-tint ring-kumo-brand' : 'ring-kumo-line hover:bg-kumo-tint'}`}
+                      title={on ? 'Watching: stop alerts for this route' : 'Watch this route'}
+                      className={chipClass(on)}
                     >
-                      {on && <BellRingingIcon size={12} weight="fill" />}
+                      {on ? <BellRingingIcon size={14} weight="fill" aria-hidden /> : <BellIcon size={14} aria-hidden />}
                       {r}
                     </button>
                   )
@@ -527,7 +534,7 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
             </Section>
           )}
           <div className="flex gap-4">
-            {a.url && <ExternalLink href={a.url}>Details on TransLink</ExternalLink>}
+            {a.url && <ExternalLink href={a.url}>Details on Translink</ExternalLink>}
             <button type="button" className="text-sm text-kumo-link hover:underline" onClick={() => onNavigate('transit')}>
               All alerts
             </button>
@@ -563,7 +570,7 @@ function AlertList({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen: (a: Tra
             <MagnifyingGlassIcon />
           </InputGroup.Addon>
           <InputGroup.Input aria-label="Search alerts" placeholder="Route, station or stop" value={q} onChange={(e) => setQ(e.target.value)} />
-          {q && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear" icon={<XIcon />} onClick={() => setQ('')} />}
+          {q && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear search" icon={<XIcon />} onClick={() => setQ('')} />}
         </InputGroup>
         <Tabs
           size="sm"
@@ -579,9 +586,11 @@ function AlertList({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen: (a: Tra
         <div className="px-4">
           <AlertCards alerts={list} onOpen={onOpen} />
         </div>
+      ) : q.trim() ? (
+        <NoResults what="alerts" query={q} onClear={() => setQ('')} hint="Search by route, station or stop." />
       ) : (
         <div className="px-4 py-8">
-          <Empty size="sm" title="No alerts" description={q ? 'Nothing matches that search.' : 'Nothing reported here right now.'} />
+          <Empty size="sm" title="No alerts" description="Nothing reported here right now." />
         </div>
       )}
     </div>

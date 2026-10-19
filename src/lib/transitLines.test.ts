@@ -24,7 +24,7 @@ const index = {
 } as unknown as TimetableIndex
 
 describe('timetableCodes', () => {
-  it("adds through trains that stop at every one of the line's stations, as TransLink's timetables do", () => {
+  it("adds through trains that stop at every one of the line's stations, as Translink's timetables do", () => {
     expect(timetableCodes(['CABR', 'BRCA'], index, 'train')).toEqual(['CABR', 'BRCA', 'NABR'])
   })
 

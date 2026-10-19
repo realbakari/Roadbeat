@@ -5,7 +5,7 @@ import { findStops } from '../tools.js'
 
 const Query = z.object({ q: z.string().min(1).max(100), region: Region.optional(), limit: Limit.optional() })
 
-/** GET /api/stops: TransLink stops and stations by name. See public/openapi.json. */
+/** GET /api/stops: Translink stops and stations by name. See public/openapi.json. */
 export function GET(request: Request) {
   const q = query(request, Query)
   if (q instanceof Response) return q

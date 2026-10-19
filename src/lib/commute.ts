@@ -141,13 +141,13 @@ export function commuteAlerts(
     const at = brisbaneClock.format(d.scheduled ?? d.time)
     const what = `${at} ${label}${d.headsign ? ` to ${d.headsign}` : ''}${data.stopName ? ` from ${data.stopName}` : ''}`
     if (d.trip.relationship === 'cancelled') {
-      out.push({ key: `trip:${d.key}:cancelled`, title: `Cancelled: ${what}`, body: 'TransLink reports this service is cancelled.', href: `transit/stop/${c.region}/${encodeURIComponent(c.stopId ?? '')}` })
+      out.push({ key: `trip:${d.key}:cancelled`, title: `Cancelled: ${what}`, body: 'Translink reports this service is cancelled.', href: `transit/stop/${c.region}/${encodeURIComponent(c.stopId ?? '')}` })
     } else if (d.vehicle && d.delay != null && d.delay >= ALERT_DELAY) {
       const late = Math.round(d.delay / 60)
       out.push({
         key: `trip:${d.key}:late${Math.floor(late / 5) * 5}`,
         title: `${late} min late: ${what}`,
-        body: 'As reported by TransLink real-time from the vehicle on this trip.',
+        body: 'As reported by Translink real-time from the vehicle on this trip.',
         href: `transit/stop/${c.region}/${encodeURIComponent(c.stopId ?? '')}`,
       })
     }

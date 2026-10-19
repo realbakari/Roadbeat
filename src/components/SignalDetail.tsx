@@ -1,10 +1,10 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, TrafficSignalIcon } from '@phosphor-icons/react'
 import { SIGNALS_DATASET_URL, type ApproachReading, type SignalSite } from '../api/bccSignals'
-import { timeAgo } from '../lib/format'
 import { dsColor, siteLoad } from '../lib/signals'
 import { ExternalLink } from './ui/Links'
 import { brisbaneClock as time } from '../lib/aest'
+import { RelativeTime } from './ui/RelativeTime'
 
 /**
  * A Brisbane City Council signalised intersection with its latest measured
@@ -60,7 +60,7 @@ export function SignalDetail({
                 <Stat value={`${approaches[0].cycle} s`} label="Signal cycle" />
               </div>
               <Text size="sm" variant="secondary">
-                Measured {time.format(load.recorded)} ({timeAgo(load.recorded, now)}). Degree of saturation is the average time a
+                Measured {time.format(load.recorded)} AEST · <RelativeTime at={load.recorded} now={now} inline />. Degree of saturation is the average time a
                 lane's detector was occupied, as a percentage, as the council's SCATS system measures it.
               </Text>
 

@@ -73,9 +73,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
             aria-expanded={moreOpen}
             aria-controls="news-more-filters"
             onClick={() => setMoreOpen((v) => !v)}
-            className={`ml-auto inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-sm ring md:hidden ${
-              moreOpen || dropdownsSet ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-            }`}
+            className={chipClass(moreOpen || !!dropdownsSet, 'ml-auto md:hidden')}
           >
             <FunnelSimpleIcon size={14} aria-hidden /> Filters{dropdownsSet ? ` (${dropdownsSet})` : ''}
           </button>
@@ -118,7 +116,7 @@ export function NewsPanel({ snapshot, error, stories, filter, onFilterChange, no
             title="Show stories from everywhere"
           >
             <MapPinIcon size={14} aria-hidden /> Naming {filter.place}
-            <XIcon size={12} aria-label="Clear" />
+            <XIcon size={12} aria-label="Clear" aria-hidden={false} role="img" />
           </button>
         )}
       </div>

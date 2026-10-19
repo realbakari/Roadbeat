@@ -55,6 +55,8 @@ const LANE_CRIMSON = '#be123c'
 const RESTRICTION_AMBER = '#f59e0b'
 
 export const LAYER_COLOR = {
+  gaugeStream: '#0369a1',
+  gaugeRain: '#0d9488',
   restArea: '#15803d',
   hvRestArea: '#166534',
   dumpPoint: '#7c3aed',
@@ -208,8 +210,8 @@ function buildIcons(): Record<string, string> {
   icons['outage-energex'] = disc(OUTAGE_COLOR.energex, LightningIcon)
   icons['outage-council'] = disc(OUTAGE_COLOR.council, MegaphoneSimpleIcon)
   for (const [rating, color] of Object.entries(AIR_COLOR)) icons[`air-${rating}`] = disc(color, WindIcon)
-  icons['gauge-stream'] = disc('#0369a1', DropHalfBottomIcon)
-  icons['gauge-rain'] = disc('#0d9488', CloudRainIcon)
+  icons['gauge-stream'] = disc(LAYER_COLOR.gaugeStream, DropHalfBottomIcon)
+  icons['gauge-rain'] = disc(LAYER_COLOR.gaugeRain, CloudRainIcon)
   for (const [level, color] of Object.entries(NSW_ALERT_COLOR)) icons[nswFireIcon(level)] = disc(color, FlameIcon)
   // NSW road hazards are squares, unlike QLDTraffic's pins, so the two states' events can't be mistaken for each other.
   const NSW_GLYPH: Record<NswHazardKind, Icon> = { incident: WarningIcon, flood: WavesIcon, roadwork: WrenchIcon, majorevent: CalendarStarIcon }

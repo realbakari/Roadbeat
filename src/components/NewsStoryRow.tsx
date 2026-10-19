@@ -33,9 +33,9 @@ export function PublisherIcon({ publisher, kind, icon, size = 'md' }: { publishe
       title={publisher}
     >
       {src && !failed ? (
-        <img src={src} alt={publisher} loading="lazy" referrerPolicy="no-referrer" className="size-full object-cover" onError={() => setFailed(true)} />
+        <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-full object-cover" onError={() => setFailed(true)} />
       ) : (
-        <Fallback size={px} weight={kind === 'official' ? 'fill' : 'regular'} aria-label={publisher} />
+        <Fallback size={px} weight={kind === 'official' ? 'fill' : 'regular'} />
       )}
     </span>
   )

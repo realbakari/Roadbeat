@@ -38,7 +38,7 @@ export type TransitView =
   | { kind: 'line'; mode: string; name: string }
   | { kind: 'alert'; id: string }
   | { kind: 'stop'; region: TransitRegion; id: string }
-  /** One GTFS route's page, for regions TransLink's network status doesn't list lines for. */
+  /** One GTFS route's page, for regions Translink's network status doesn't list lines for. */
   | { kind: 'route'; region: TransitRegion; code: string }
   /** One trip's stops; `route` names its timetable file and `date` its service day, when known. */
   | { kind: 'trip'; region: TransitRegion; tripId: string; route: string | null; date: string | null }

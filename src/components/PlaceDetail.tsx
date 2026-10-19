@@ -146,7 +146,7 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
           <Banner
             variant="secondary"
             title="Unverified driver report"
-            description="Waze users reported this. TMR hasn't confirmed it, so treat it as a heads-up."
+            description="Waze users reported this. Transport and Main Roads hasn't confirmed it, so treat it as a heads-up."
           />
           <Section title="Report">
             <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5 text-sm">

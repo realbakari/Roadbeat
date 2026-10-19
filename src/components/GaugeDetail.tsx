@@ -3,11 +3,11 @@ import { ArrowLeftIcon, CloudRainIcon, WavesIcon } from '@phosphor-icons/react'
 import { GAUGES_DATASET_URL, type Gauge, type GaugeReading } from '../api/bccGauges'
 import { BOM_QLD_WARNINGS, floodWarningArea } from '../api/floodWarnings'
 import { qldGaugeUrl, WMIP_PORTAL } from '../api/qldGauges'
-import { timeAgo } from '../lib/format'
 import { changeWithin, latestReading, rainfallTotal } from '../lib/gauges'
 import { InlineLink } from './ui/Links'
 import { ExternalLink } from './ui/Links'
 import { brisbaneDayClock as time } from '../lib/aest'
+import { RelativeTime } from './ui/RelativeTime'
 
 const HOUR = 60 * 60_000
 
@@ -54,8 +54,8 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
             <div className="grid gap-1">
               <span className="text-base font-semibold tabular-nums">{latest.value.toFixed(2)} m</span>
               <Text size="sm" variant="secondary">
-                {council ? 'Above the Australian Height Datum (AHD)' : "Gauge height on the station's own datum"}, measured {time.format(latest.time)} (
-                {timeAgo(latest.time, now)}).
+                {council ? 'Above the Australian Height Datum (AHD)' : "Gauge height on the station's own datum"}, measured {time.format(latest.time)} AEST ·{' '}
+                <RelativeTime at={latest.time} now={now} inline />.
               </Text>
               {council ? (
                 <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm">
@@ -75,7 +75,7 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
                 <Total label="Last 24 hours" mm={rainfallTotal(gauge, now - 24 * HOUR)} />
               </div>
               <Text size="sm" variant="secondary">
-                Sums of the gauge's 5-minute readings. Last reading {time.format(latest.time)} ({timeAgo(latest.time, now)}).
+                Sums of the gauge's 5-minute readings. Last reading {time.format(latest.time)} AEST · <RelativeTime at={latest.time} now={now} inline />.
               </Text>
             </div>
           )}

@@ -27,7 +27,7 @@ describe('scheduledArrivals', () => {
 })
 
 describe('timetableGrid', () => {
-  it('orders services by Roma Street when every service calls at it, as TransLink does', () => {
+  it('orders services by Roma Street when every service calls at it, as Translink does', () => {
     const stops = new StopIndex().add({
       stops: {
         SEQ: [

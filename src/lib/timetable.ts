@@ -3,7 +3,7 @@ import type { ScheduledStop, ScheduledTrip } from '../api/timetables'
 import { alignStops } from './stopAlign'
 import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/transitTypes'
 
-/** What TransLink's real-time feed currently reports for one timetabled trip. */
+/** What Translink's real-time feed currently reports for one timetabled trip. */
 export interface LiveTrip {
   update: TripUpdate
   vehicle: LiveVehicle | null
@@ -75,7 +75,7 @@ export interface GridDirection {
 
 /**
  * A line's published timetable as one stop × trip grid per GTFS direction, like
- * TransLink's own timetable pages. Platforms are shown as their station.
+ * Translink's own timetable pages. Platforms are shown as their station.
  */
 export function timetableGrid(trips: ScheduledTrip[], stops: StopIndex | null): GridDirection[] {
   const stationOf = (region: TransitRegion, stopId: string): GridRow => {
@@ -114,8 +114,8 @@ export function timetableGrid(trips: ScheduledTrip[], stops: StopIndex | null): 
       }
       return cells
     }
-    // Like TransLink, order services by their time at the stop most of them call at,
-    // and among stops every service calls at, by Roma Street or Central, as TransLink's timetables do.
+    // Like Translink, order services by their time at the stop most of them call at,
+    // and among stops every service calls at, by Roma Street or Central, as Translink's timetables do.
     const grid = list.map((t) => ({ t, c: cellsOf(t) }))
     const calls = order.map((_, r) => grid.filter((g) => g.c[r]).length)
     const most = order.map((_, r) => r).filter((r) => calls[r] === Math.max(...calls))
@@ -154,7 +154,7 @@ export function scheduledDepartures(trips: ScheduledTrip[], stopIds: Set<string>
 
 /**
  * Services that end at (or only set down at) any of `stopIds`, in arrival
- * order: the TransLink app's "Arrivals" tab. Times are the published arrivals.
+ * order: the Translink app's "Arrivals" tab. Times are the published arrivals.
  */
 export function scheduledArrivals(trips: ScheduledTrip[], stopIds: Set<string>): ScheduledDeparture[] {
   const out: ScheduledDeparture[] = []

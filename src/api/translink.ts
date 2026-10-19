@@ -2,7 +2,7 @@ import ROUTE_DATA from '../data/translink-routes.json'
 import { decodeFeed, num, parseTripUpdates, parseVehicles, routeCode, rt } from './gtfsrt'
 import type { LiveVehicle, TransitRegion, TripUpdates, VehicleMode } from './transitTypes'
 
-// TransLink GTFS-RT (data.qld.gov.au "Translink real time data"). The feeds are
+// Translink GTFS-RT (data.qld.gov.au "Translink real time data"). The feeds are
 // protobuf and send no CORS headers, so they're read through /translink-rt
 // (see vite.config.ts and functions/translink-rt).
 const BASE = import.meta.env.VITE_TRANSLINK_RT_BASE ?? '/translink-rt'
@@ -27,10 +27,10 @@ export interface TransitAlert {
 
 async function feed(region: TransitRegion, name: 'VehiclePositions' | 'TripUpdates' | 'alerts', signal?: AbortSignal) {
   const res = await fetch(`${BASE}/${region}/${name}`, { signal, cache: 'no-cache' })
-  if (!res.ok) throw new Error(`TransLink responded with ${res.status}`)
+  if (!res.ok) throw new Error(`Translink responded with ${res.status}`)
   const type = res.headers.get('content-type') ?? ''
   // A static host without the proxy serves index.html here instead of protobuf.
-  if (type.includes('text/html')) throw new Error('TransLink proxy is not configured')
+  if (type.includes('text/html')) throw new Error('Translink proxy is not configured')
   return decodeFeed(new Uint8Array(await res.arrayBuffer()))
 }
 
@@ -46,7 +46,7 @@ export interface RouteInfo {
 
 const ROUTES = (ROUTE_DATA as { routes: Record<string, RouteInfo> }).routes
 
-/** Official route details from TransLink's published GTFS (see scripts/build-routes.mjs). */
+/** Official route details from Translink's published GTFS (see scripts/build-routes.mjs). */
 export function routeInfo(code: string, region: TransitRegion = 'SEQ'): RouteInfo | null {
   return ROUTES[`${region}:${code}`] ?? (region === 'SEQ' ? null : (ROUTES[`SEQ:${code}`] ?? null))
 }
@@ -124,7 +124,7 @@ export async function fetchTransitAlerts(regions: TransitRegion[], signal?: Abor
   return out
 }
 
-/** TransLink files lift and escalator outages under the GTFS-RT effect ACCESSIBILITY_ISSUE. */
+/** Translink files lift and escalator outages under the GTFS-RT effect ACCESSIBILITY_ISSUE. */
 export function isAccessibilityAlert(a: TransitAlert) {
   return a.effect === 'Accessibility issue' || /^(lift|escalator) outage/i.test(a.header)
 }
@@ -141,7 +141,7 @@ export function alertNextStart(a: TransitAlert, now = Date.now()) {
   return starts.length ? Math.min(...starts) : null
 }
 
-/** GTFS-RT TripUpdates: TransLink's real-time stop times for running and about-to-start trips. */
+/** GTFS-RT TripUpdates: Translink's real-time stop times for running and about-to-start trips. */
 export async function fetchTripUpdates(regions: TransitRegion[], signal?: AbortSignal): Promise<TripUpdates> {
   // Each region on its own, with a time limit, so a slow regional feed doesn't hold up Brisbane's.
   const settled = await Promise.allSettled(

@@ -51,11 +51,11 @@ export function Dashboard() {
   const has = (id: PanelId) => layout.includes(id)
 
   const { events, loading, fetchedAt, error } = useTrafficData()
-  const { fires } = useBushfires(has('fires') || has('fire-count'))
+  const { fires, error: firesError } = useBushfires(has('fires') || has('fire-count'))
   const { gauges } = useGauges(has('gauges'))
   const { sites, volumes } = useSignals(has('signals'))
   const wantTransit = has('transit') || has('trains')
-  const { updates } = useTripUpdates(wantTransit)
+  const { updates, error: transitError } = useTripUpdates(wantTransit)
   const { vehicles } = useLiveVehicles(wantTransit)
   const { alerts } = useTransitAlerts(has('transit'))
   const parking = useCarParkSpaces(has('parking'))
@@ -78,6 +78,7 @@ export function Dashboard() {
   const data: DashboardData = {
     now,
     loading,
+    failed: { road: !loading && fetchedAt == null && !!error, fires: fires == null && !!firesError, transit: updates == null && !!transitError },
     current,
     districts: useMemo(() => closuresAndCrashesByDistrict(events, now).slice(0, 7), [events, now]),
     transit: useMemo(() => (updates ? punctuality(updates, vehicles, now, (t) => modeOf(t.route, t.region)) : null), [updates, vehicles, now]),
@@ -103,14 +104,14 @@ export function Dashboard() {
   }, [layout])
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:p-6 tv:overflow-hidden">
+    <div role="main" className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:p-6 tv:overflow-hidden">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <a href="/" className="flex items-center gap-2" title="Open the full app">
           <img src="/favicon.svg" alt="" className="size-8" />
           <span className="text-lg font-semibold text-kumo-strong">Roadbeat</span>
         </a>
         <h1 className="text-lg text-kumo-subtle">Queensland network dashboard</h1>
-        <span className="ml-auto flex items-center gap-3 text-sm text-kumo-subtle">
+        <span className="ml-auto flex flex-wrap items-center gap-3 text-sm text-kumo-subtle">
           <span role="status" className="sr-only">
             {feedAnnouncement(error, fetchedAt)}
           </span>
@@ -119,7 +120,7 @@ export function Dashboard() {
             {error ? 'Road events delayed' : fetchedAt ? <>Updated <RelativeTime at={fetchedAt} now={now} /></> : 'Connecting…'}
           </span>
           <span className="text-base font-medium text-kumo-strong tabular-nums">{clock.format(now)}</span>
-          <a href="/status" className="hover:text-kumo-default hover:underline" title="Every feed the app reads, its health and where it comes from">
+          <a href="/status" className="underline decoration-1 underline-offset-2 hover:text-kumo-default" title="Every feed the app reads, its health and where it comes from">
             Status
           </a>
           <Button variant="ghost" size="sm" icon={<SlidersHorizontalIcon />} onClick={() => setCustomising(true)}>

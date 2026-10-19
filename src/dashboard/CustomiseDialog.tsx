@@ -40,8 +40,8 @@ export function CustomiseDialog({ open, onOpenChange, layout, onChange }: { open
                         <Checkbox label={p.title} checked={on} onCheckedChange={() => onChange(togglePanel(layout, p.id))} />
                         <span className="ml-auto hidden truncate text-xs text-kumo-subtle sm:inline">{p.source}</span>
                         <span className="flex shrink-0">
-                          <Button size="xs" variant="ghost" shape="square" aria-label={`Move ${p.title} earlier`} icon={<ArrowUpIcon />} disabled={!on || at <= 0} onClick={() => onChange(movePanel(layout, p.id, -1))} />
-                          <Button size="xs" variant="ghost" shape="square" aria-label={`Move ${p.title} later`} icon={<ArrowDownIcon />} disabled={!on || at < 0 || at >= shown.length - 1} onClick={() => onChange(movePanel(layout, p.id, 1))} />
+                          <Button size="sm" variant="ghost" shape="square" aria-label={`Move ${p.title} earlier`} icon={<ArrowUpIcon />} disabled={!on || at <= 0} onClick={() => onChange(movePanel(layout, p.id, -1))} />
+                          <Button size="sm" variant="ghost" shape="square" aria-label={`Move ${p.title} later`} icon={<ArrowDownIcon />} disabled={!on || at < 0 || at >= shown.length - 1} onClick={() => onChange(movePanel(layout, p.id, 1))} />
                         </span>
                       </li>
                     )

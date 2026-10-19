@@ -4,11 +4,11 @@ import { Fragment, type ReactNode } from 'react'
 import { AIR_COLOR, AIR_QUALITY_DATASET, AIR_RATINGS, AIR_TEXT, worstRating, type AirStation } from '../../api/airQuality'
 import { HOTSPOT_COLOR, HOTSPOTS_ATTRIBUTION, HOTSPOTS_PORTAL, type Hotspot } from '../../api/hotspots'
 import { brisbaneDayDateTime as when } from '../../lib/aest'
-import { timeAgo } from '../../lib/format'
 import { AirHistory } from '../AirHistory'
 import { Header } from '../PlaceParts'
 import { ExternalLink } from '../ui/Links'
 import { Section } from '../ui/Section'
+import { RelativeTime } from '../ui/RelativeTime'
 
 // Air quality stations and satellite hotspots, as their publishers give them.
 
@@ -20,7 +20,7 @@ export function AirBody({ s, now }: { s: AirStation; now: number }) {
       <Header icon={WindIcon} color={AIR_COLOR[worst ?? 0]} title={s.name} subtitle={`Air quality station · ${s.region}`} />
       <div className="grid gap-1 rounded-lg bg-kumo-recessed p-3">
         <Text size="sm" variant="secondary">
-          Values as of {when.format(s.measuredAt)} · {timeAgo(s.measuredAt, now)}
+          Values as of {when.format(s.measuredAt)} AEST · <RelativeTime at={s.measuredAt} now={now} inline />
         </Text>
         <span className={`text-lg font-semibold ${worst ? AIR_TEXT[worst] : ''}`}>
           {worst ? AIR_RATINGS[worst - 1] : 'No rated reading'}
@@ -62,7 +62,7 @@ export function AirBody({ s, now }: { s: AirStation; now: number }) {
 /** One satellite detection, as Geoscience Australia publishes it, with what it can and can't tell. */
 export function HotspotBody({ h, now }: { h: Hotspot; now: number }) {
   const rows: [string, ReactNode][] = [
-    ['Observed', `${when.format(h.observedAt)} · ${timeAgo(h.observedAt, now)}`],
+    ['Observed', <>{when.format(h.observedAt)} AEST · <RelativeTime at={h.observedAt} now={now} inline /></>],
     ['Satellite', h.sensor ? `${h.satellite} (${h.sensor})` : h.satellite],
     ['Detection method', h.product || 'Not published'],
     ['Position accuracy', h.accuracy ?? 'Not published'],

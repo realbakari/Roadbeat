@@ -23,6 +23,10 @@ import {
 } from '@phosphor-icons/react'
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { loadLocalities } from '../api/localities'
+import { FIRE_COLOR } from '../api/bushfires'
+import { CENTRE_COLOR } from '../lib/councilCentres'
+import { LAYER_COLOR } from '../lib/mapIcons'
+import { OUTAGE_COLOR } from '../lib/outages'
 import { useStopIndex, useTransit } from '../hooks/useTransitFeeds'
 import type { Locality } from '../lib/locality'
 import { groupHits, KIND_LABEL, MIN_QUERY, searchIn, searchIndex, unloadedLayers, words, type SearchHit, type SearchKind, type SearchSources } from '../lib/search'
@@ -39,15 +43,15 @@ const KIND_STYLE: Record<SearchKind, [Icon, string]> = {
   stop: [TrainIcon, '#059669'],
   camera: [VideoCameraIcon, '#0284c7'],
   warning: [WarningIcon, '#d97706'],
-  fire: [FlameIcon, '#dc2626'],
+  fire: [FlameIcon, FIRE_COLOR['Emergency Warning']],
   fuel: [GasPumpIcon, '#15803d'],
-  speedcamera: [CameraIcon, '#64748b'],
+  speedcamera: [CameraIcon, LAYER_COLOR.speedCamera],
   place: [MapPinIcon, '#64748b'],
   news: [NewspaperIcon, '#7c3aed'],
-  centre: [HouseLineIcon, '#0d9488'],
-  outage: [LightningIcon, '#ca8a04'],
+  centre: [HouseLineIcon, CENTRE_COLOR.shelter],
+  outage: [LightningIcon, OUTAGE_COLOR.energex],
   air: [WindIcon, '#0891b2'],
-  gauge: [DropIcon, '#0369a1'],
+  gauge: [DropIcon, LAYER_COLOR.gaugeStream],
 }
 
 /** Searches to try on an empty box, one per kind of thing people look for. */
@@ -229,12 +233,16 @@ function SearchPanel({ sources, onOpen, onClose }: { sources: LoadedSources; onO
           className="h-14 min-w-0 flex-1 bg-transparent text-base text-kumo-default outline-none placeholder:text-kumo-subtle"
         />
         {query ? (
-          <button type="button" aria-label="Clear search" onClick={() => (setQuery(''), input.current?.focus())} className="rounded-md p-1.5 text-kumo-subtle hover:bg-kumo-tint hover:text-kumo-default">
-            <XIcon size={16} />
+          <button type="button" aria-label="Clear search" onClick={() => (setQuery(''), input.current?.focus())} className="flex size-9 items-center justify-center rounded-md text-kumo-subtle hover:bg-kumo-tint hover:text-kumo-default">
+            <XIcon size={16} aria-hidden />
           </button>
         ) : (
-          <button type="button" onClick={onClose} className="rounded-md px-1.5 py-1 text-xs text-kumo-subtle hover:bg-kumo-tint">
-            Esc
+          // Phones have no Escape key: an X there, "Esc" from sm up where a keyboard is likely.
+          <button type="button" aria-label="Close search" onClick={onClose} className="flex size-9 items-center justify-center rounded-md text-kumo-subtle hover:bg-kumo-tint sm:size-auto sm:px-1.5 sm:py-1">
+            <XIcon size={18} className="sm:hidden" aria-hidden />
+            <span className="hidden text-xs sm:inline" aria-hidden>
+              Esc
+            </span>
           </button>
         )}
       </div>

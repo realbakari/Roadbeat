@@ -37,7 +37,7 @@ export function RouteRows({ routes, showRegion, onNavigate }: { routes: RegionRo
 
 const REGIONS = TRANSIT_REGIONS.filter((r) => r !== 'SEQ')
 
-/** The Lines tab's routes outside SEQ, one region at a time, from TransLink's published timetables. */
+/** The Lines tab's routes outside SEQ, one region at a time, from Translink's published timetables. */
 export function RegionalRoutesDirectory({ onNavigate }: { onNavigate: (hash: string) => void }) {
   const { index, failed } = useTimetableIndex(true)
   const [region, setRegion] = useState<TransitRegion>('CNS')
@@ -53,7 +53,7 @@ export function RegionalRoutesDirectory({ onNavigate }: { onNavigate: (hash: str
         Regional routes
       </Text>
       <Text size="sm" variant="secondary">
-        TransLink's bus and ferry routes outside South East Queensland, with their published timetables.
+        Translink's bus and ferry routes outside South East Queensland, with their published timetables.
       </Text>
       <Select
         aria-label="Region"
@@ -64,7 +64,7 @@ export function RegionalRoutesDirectory({ onNavigate }: { onNavigate: (hash: str
         items={items}
       />
       {failed ? (
-        <Text variant="secondary">TransLink's published timetable isn't available here right now.</Text>
+        <Text variant="secondary">Translink's published timetable isn't available here right now.</Text>
       ) : !routes ? (
         <Loader size="sm" />
       ) : (

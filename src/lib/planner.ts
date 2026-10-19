@@ -47,7 +47,7 @@ const MIN_CHANGE = 60_000
 const MAX_WAIT = 90 * 60_000
 
 /**
- * Direct services plus journeys with one change, built only from TransLink's
+ * Direct services plus journeys with one change, built only from Translink's
  * published stop times. A change is offered only at the same station (any of
  * its platforms) or the same stop, where no walking time has to be guessed: the
  * change time shown is simply the gap between the published arrival and the
@@ -173,7 +173,7 @@ export function searchStops(stops: StopIndex, query: string, limit = 8): Stop[] 
 }
 
 /**
- * TransLink's own journey planner with this search filled in. Station ids
+ * Translink's own journey planner with this search filled in. Station ids
  * ("place_censta") are what its URL takes; other stops go by name only, for the
  * rider to confirm there.
  */

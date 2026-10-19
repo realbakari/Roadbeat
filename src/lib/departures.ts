@@ -2,7 +2,7 @@ import type { StopIndex, TripIndex } from '../api/stops.js'
 import type { LiveVehicle, StopTime, TransitRegion, TripUpdate, TripUpdates } from '../api/transitTypes.js'
 
 /**
- * A departure exactly as TransLink's real-time feed lists it. `time` is the
+ * A departure exactly as Translink's real-time feed lists it. `time` is the
  * reported time; `scheduled` is that time minus the reported delay (the
  * timetabled time), so nothing here is estimated.
  */

@@ -78,7 +78,7 @@ export function eventNotices(prev: Record<string, string>, events: TrafficEvent[
   return away ? out.slice(0, 20) : out
 }
 
-/** TransLink alerts not seen before that name a watched route or line. */
+/** Translink alerts not seen before that name a watched route or line. */
 export function transitNotices(prev: string[], alerts: TransitAlert[], routes: string[], now: number, away: boolean): Notice[] {
   const known = new Set(prev)
   return alerts

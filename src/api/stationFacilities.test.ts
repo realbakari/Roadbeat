@@ -60,7 +60,7 @@ describe('floodWarningArea', () => {
 
 describe('isAccessibilityAlert', () => {
   const alert = (effect: string, header: string) => ({ effect, header }) as TransitAlert
-  it('recognises TransLink lift and escalator outages', () => {
+  it('recognises Translink lift and escalator outages', () => {
     expect(isAccessibilityAlert(alert('Accessibility issue', 'Lift outage - Caloundra station'))).toBe(true)
     expect(isAccessibilityAlert(alert('Other effect', 'Escalator outage - Central'))).toBe(true)
     expect(isAccessibilityAlert(alert('Reduced service', 'Track closures'))).toBe(false)

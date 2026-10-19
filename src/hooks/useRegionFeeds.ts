@@ -3,7 +3,7 @@ import { fetchTripUpdates } from '../api/translink'
 import type { TransitRegion } from '../api/transitTypes'
 import { MAIN_REGIONS, PROBED_REGIONS, realtimeState, type FeedCounts, type RealtimeState } from '../lib/transitRegions'
 
-// TransLink answers a GTFS-RT endpoint for every regional network, but most
+// Translink answers a GTFS-RT endpoint for every regional network, but most
 // send an empty feed. Each is read every 5 minutes while something needs to
 // know, and only those listing trips are polled with SEQ and Cairns.
 

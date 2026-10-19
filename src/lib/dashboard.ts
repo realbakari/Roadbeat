@@ -45,7 +45,7 @@ export interface Punctuality {
   onTime: number
   late: number
   early: number
-  /** Trips TransLink's feed marks as cancelled. */
+  /** Trips Translink's feed marks as cancelled. */
   cancelled: number
 }
 
@@ -59,10 +59,10 @@ function nextDelay(trip: TripUpdate, now: number): number | null {
 }
 
 /**
- * Running performance per mode from TransLink's real-time feed. Only trips with
+ * Running performance per mode from Translink's real-time feed. Only trips with
  * a vehicle reporting its position count, because the feed also lists trips
  * that haven't started, whose delay is just the timetable. Every delay is as
- * TransLink reports it.
+ * Translink reports it.
  */
 export function punctuality(
   updates: TripUpdates,

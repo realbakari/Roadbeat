@@ -39,7 +39,7 @@ describe('labels', () => {
   })
 
   it('recognises the fetch functions’ proxy message', () => {
-    expect(isProxyError('TransLink proxy is not configured')).toBe(true)
-    expect(isProxyError('TransLink responded with 502')).toBe(false)
+    expect(isProxyError('Translink proxy is not configured')).toBe(true)
+    expect(isProxyError('Translink responded with 502')).toBe(false)
   })
 })

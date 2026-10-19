@@ -65,14 +65,14 @@ export function CameraCard({ camera, now, large, onToggleSize, onClose, onOpenLo
         </div>
         <div className="flex shrink-0">
           <Button
-            size="xs"
+            size="sm"
             variant="ghost"
             shape="square"
             aria-label={large ? 'Smaller view' : 'Larger view'}
             icon={large ? <ArrowsInIcon /> : <ArrowsOutIcon />}
             onClick={onToggleSize}
           />
-          <Button size="xs" variant="ghost" shape="square" aria-label="Close camera" icon={<XIcon />} onClick={onClose} />
+          <Button size="sm" variant="ghost" shape="square" aria-label="Close camera" icon={<XIcon />} onClick={onClose} />
         </div>
       </div>
       <button

@@ -4,8 +4,8 @@ import { routesAtStops, type TimetableIndex } from '../api/timetables'
 import type { TransitLine } from '../api/types'
 
 /**
- * Links a TransLink status line to the GTFS-RT route codes it covers, using
- * TransLink's own data: trains by the official T-code mapping ("T1 Caboolture"),
+ * Links a Translink status line to the GTFS-RT route codes it covers, using
+ * Translink's own data: trains by the official T-code mapping ("T1 Caboolture"),
  * other modes by route number ("F1", "L1") or official route name (bus status
  * lines are titled with the route's long name). Returns null when nothing in the
  * published route data matches, rather than guessing.
@@ -58,7 +58,7 @@ export function lineSlug(line: TransitLine) {
  * at Caboolture), are listed under other lines. For trains, this adds every
  * train route that calls at the line's terminus: the station its routes most
  * often end at other than Brisbane City, as long as it also stops at every
- * station the line's own trains all stop at. TransLink's line timetables list
+ * station the line's own trains all stop at. Translink's line timetables list
  * Nambour trains on T1 Caboolture, which stop everywhere from Caboolture in,
  * but not Gympie North trains, which run express past Morayfield to Dakabin.
  */

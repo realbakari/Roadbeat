@@ -10,6 +10,7 @@ import { FEEDS, type Feed } from '../lib/feedRegistry'
 import { timeAgo } from '../lib/format'
 import { useFeedHealth } from './useFeedHealth'
 import { NewTabNote } from '../components/NewTabNote'
+import { InlineLink } from '../components/ui/Links'
 import { brisbaneDayDateTime as clock } from '../lib/aest'
 import { RelativeTime } from '../components/ui/RelativeTime'
 
@@ -32,7 +33,7 @@ export function StatusPage() {
   }, [counts.ok, counts.failed])
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:p-6">
+    <div role="main" className="flex h-full flex-col gap-4 overflow-y-auto bg-kumo-canvas p-4 xl:p-6">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <a href="/" className="flex items-center gap-2" title="Open the full app">
           <img src="/favicon.svg" alt="" className="size-8" />
@@ -45,7 +46,7 @@ export function StatusPage() {
           <Button variant="secondary" size="sm" icon={<ArrowsClockwiseIcon />} loading={checking} onClick={() => void check()}>
             Check now
           </Button>
-          <a href="/dashboard" className="hover:text-kumo-default hover:underline">
+          <a href="/dashboard" className="underline decoration-1 underline-offset-2 hover:text-kumo-default">
             Dashboard
           </a>
           <Button variant="ghost" shape="square" aria-label="Back to the app" icon={<ArrowLeftIcon />} onClick={() => location.assign('/')} />
@@ -63,9 +64,7 @@ export function StatusPage() {
       <p className="text-sm text-kumo-subtle">
         Each feed is read from this browser through the same path and parser the app uses, when the page opens and every two minutes after. A result says what this
         browser saw at that moment, nothing more. The list comes from <code className="text-xs">src/lib/feedRegistry.ts</code>; see{' '}
-        <a href="https://github.com/realbakari/Roadbeat/blob/main/docs/data-sources.md" className="underline decoration-1 underline-offset-2">
-          Data sources
-        </a>{' '}
+        <InlineLink href="https://github.com/realbakari/Roadbeat/blob/main/docs/data-sources.md">Data sources</InlineLink>{' '}
         for licences and terms in full.
       </p>
 
@@ -126,7 +125,7 @@ function FeedRow({ feed, outcome, now }: { feed: Feed; outcome: FeedOutcome; now
           )}
         </Fact>
         <Fact label="Shown on" wide>
-          {feed.feeds.join(', ')} · <code>{feed.module}</code>
+          {feed.feeds.join(', ')} · <code className="break-all">{feed.module}</code>
         </Fact>
       </dl>
       {outcome.kind === 'ok' && outcome.sources && <Sources sources={outcome.sources} />}

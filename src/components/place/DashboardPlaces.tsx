@@ -4,12 +4,12 @@ import { Fragment, type ReactNode } from 'react'
 import type { CouncilCentre, Outage } from '../../api/newsTypes'
 import { brisbaneDayDateTime as when } from '../../lib/aest'
 import { CENTRE_COLOR, centreKind } from '../../lib/councilCentres'
-import { timeAgo } from '../../lib/format'
 import { isUnplaced, OUTAGE_COLOR } from '../../lib/outages'
 import { ClampedText } from '../ClampedText'
 import { Header } from '../PlaceParts'
 import { ExternalLink } from '../ui/Links'
 import { Section } from '../ui/Section'
+import { RelativeTime } from '../ui/RelativeTime'
 
 // What the council disaster dashboards list: centres, power outages and notices.
 
@@ -55,7 +55,7 @@ export function OutageBody({ o, now, onOpenHref }: { o: Outage; now: number; onO
   if (o.start) rows.push(['From', when.format(o.start)])
   if (o.end) rows.push([energex ? 'Estimated restore' : 'Until', when.format(o.end)])
   if (o.streets.length) rows.push(['Streets', o.streets.join(', ')])
-  if (o.updated) rows.push(['Updated', `${when.format(o.updated)} · ${timeAgo(o.updated, now)}`])
+  if (o.updated) rows.push(['Updated', <>{when.format(o.updated)} AEST · <RelativeTime at={o.updated} now={now} inline /></>])
   return (
     <>
       <Header icon={LightningIcon} color={OUTAGE_COLOR[o.source]} title={o.title} subtitle={energex ? `${o.type} outage · reported by Energex` : `${o.type} · ${o.council} notice`} />

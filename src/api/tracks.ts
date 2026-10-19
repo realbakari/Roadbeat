@@ -1,6 +1,6 @@
 import type { TransitRegion } from './transitTypes'
 
-// Train, tram and ferry tracks from TransLink's published GTFS shapes, one
+// Train, tram and ferry tracks from Translink's published GTFS shapes, one
 // feature per route code (see scripts/build-tracks.mjs). Fetched on demand.
 
 export type Tracks = GeoJSON.FeatureCollection<

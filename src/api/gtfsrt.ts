@@ -1,7 +1,7 @@
 import GtfsRealtimeBindings from 'gtfs-realtime-bindings'
 import type { LiveVehicle, TransitRegion, TripUpdate, TripUpdates, VehicleMode } from './transitTypes.js'
 
-// Decoding for TransLink's GTFS-RT protobuf feeds. Pure and free of browser-only
+// Decoding for Translink's GTFS-RT protobuf feeds. Pure and free of browser-only
 // code, so the app (src/api/translink.ts) and the server functions in api/ share it.
 
 export const rt = GtfsRealtimeBindings.transit_realtime

@@ -13,7 +13,7 @@ export type AlertKind = 'crash' | 'closure' | 'redAlert' | 'high' | 'flooding' |
 export const ALERT_KINDS: { key: AlertKind; label: string }[] = [
   { key: 'crash', label: 'Crashes' },
   { key: 'closure', label: 'Road closures' },
-  { key: 'redAlert', label: 'Red alerts' },
+  { key: 'redAlert', label: 'Red Alerts' },
   { key: 'high', label: 'High-priority events' },
   { key: 'flooding', label: 'Flooding' },
   { key: 'hazard', label: 'Hazards' },

@@ -229,7 +229,7 @@ export function HazardLayers({
         </div>
       </LayerRow>
       <LayerRow
-        icon={<Badge className="bg-sky-700" icon={<WavesIcon size={12} weight="fill" />} />}
+        icon={<Badge color={LAYER_COLOR.gaugeStream} icon={<WavesIcon size={12} weight="fill" />} />}
         label="Stream and rain gauges"
         count={counts.gauges}
         layer="gauges"

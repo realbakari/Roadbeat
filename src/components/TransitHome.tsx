@@ -1,3 +1,4 @@
+import { chipClass } from './chip'
 import { Button, Empty, InputGroup, Loader, Text } from '@cloudflare/kumo'
 import {
   BoatIcon,
@@ -38,7 +39,7 @@ import { brisbaneClock as clockTime } from '../lib/aest'
 
 const MODE_ICON: Record<string, Icon> = { train: TrainIcon, bus: BusIcon, ferry: BoatIcon, tram: TramIcon }
 
-/** Routes calling at a stop (or any platform of a station), from TransLink's published timetable. */
+/** Routes calling at a stop (or any platform of a station), from Translink's published timetable. */
 function stopRoutes(idx: TimetableIndex | null, stops: StopIndex, stop: Stop) {
   if (!idx) return []
   const codes = routesAtStops(idx, stop.region, [stop.id, ...stops.children(stop).map((c) => c.id)])
@@ -83,7 +84,7 @@ export function StopRow({
   stops: StopIndex
   idx: TimetableIndex | null
   detail?: string
-  /** Next departures from the real-time feed, previewed as on the TransLink app's Explore screen. */
+  /** Next departures from the real-time feed, previewed as on the Translink app's Explore screen. */
   preview?: Departure[] | null
   now?: number
   onNavigate: (hash: string) => void
@@ -109,7 +110,8 @@ export function StopRow({
               {preview.length ? (
                 preview.map((d) => (
                   <span key={d.key} className="inline-flex items-center gap-1">
-                    <span className={`size-1.5 rounded-full ${d.vehicle ? 'bg-kumo-success' : 'ring-1 ring-kumo-line ring-inset'}`} />
+                    <span className={`size-1.5 rounded-full ${d.vehicle ? 'bg-kumo-success' : 'ring-1 ring-kumo-line ring-inset'}`} aria-hidden />
+                    <span className="sr-only">{d.vehicle ? 'Real-time' : 'Scheduled'}</span>
                     <span className="font-medium text-kumo-default">{routeLabel(d.trip.route, d.trip.region).split(' ')[0]}</span>
                     {minutesUntil(d.time, now) ?? clockTime.format(d.time)}
                     {d.delay != null && (d.vehicle || Math.abs(d.delay) >= 60) && <DelayChip delay={d.delay} />}
@@ -132,7 +134,7 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 
 /**
  * The search box at the top of Transit, like the journey planners on
- * TransLink, Transport Victoria and transportnsw.info: one place to find a
+ * Translink, Transport Victoria and transportnsw.info: one place to find a
  * station, stop or line.
  */
 export function TransitSearch({
@@ -177,7 +179,7 @@ export function TransitSearch({
           value={query}
           onChange={(e) => onQuery(e.target.value)}
         />
-        {query && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear" icon={<XIcon />} onClick={() => onQuery('')} />}
+        {query && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear search" icon={<XIcon />} onClick={() => onQuery('')} />}
       </InputGroup>
       {q.length >= 2 && (
         <div className="grid gap-3">
@@ -434,9 +436,9 @@ export function DeparturesHome({
       <section className="grid gap-2 rounded-lg bg-kumo-recessed p-3">
         <Text bold>Going somewhere?</Text>
         <Text size="sm" variant="secondary">
-          Open a stop for its next departures and full timetable, or plan a door-to-door trip in TransLink's journey planner.
+          Open a stop for its next departures and full timetable, or plan a door-to-door trip in Translink's journey planner.
         </Text>
-        <ExternalLink href="https://jp.translink.com.au/plan-your-journey/journey-planner">Plan a journey on TransLink</ExternalLink>
+        <ExternalLink href="https://jp.translink.com.au/plan-your-journey/journey-planner">Plan a journey on Translink</ExternalLink>
       </section>
     </div>
   )
@@ -463,9 +465,9 @@ export function ModeChips({ value, onChange }: { value: TransitMode | 'all'; onC
             role="radio"
             aria-checked={on}
             onClick={() => onChange(mode)}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm ring ${on ? 'bg-kumo-tint ring-kumo-brand' : 'text-kumo-subtle ring-kumo-line hover:bg-kumo-tint'}`}
+            className={chipClass(on)}
           >
-            {I && <I size={14} weight="fill" />}
+            {I && <I size={14} weight="fill" aria-hidden />}
             {label}
           </button>
         )

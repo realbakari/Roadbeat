@@ -15,8 +15,8 @@ export interface StopFeatureProps {
 let features: Promise<GeoJSON.FeatureCollection<GeoJSON.Point, StopFeatureProps>> | null = null
 
 /**
- * Every TransLink station and stop as map points, like the stations on
- * TransLink's network map. Platforms are left to their station; a station is
+ * Every Translink station and stop as map points, like the stations on
+ * Translink's network map. Platforms are left to their station; a station is
  * any stop a train, tram or ferry route calls at in the published timetable.
  */
 export function loadStopFeatures() {

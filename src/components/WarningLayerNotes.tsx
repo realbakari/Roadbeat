@@ -69,7 +69,7 @@ export function FiresNote({ newest, notice, fetchedAt, now }: FeedState & { newe
           <img src={iconUrl(fireIcon('Advice'))} alt="" className="size-4" /> Fire
         </span>
         <span className="inline-flex items-center gap-1">
-          <img src={iconUrl(fireIcon('Advice', 'FIRE PERMITTED BURN'))} alt="" className="size-4" /> Planned (permitted) burn, as QFD lists it
+          <img src={iconUrl(fireIcon('Advice', 'FIRE PERMITTED BURN'))} alt="" className="size-4" /> Planned (permitted) burn, as the Queensland Fire Department lists it
         </span>
       </div>
       <LayerFacts

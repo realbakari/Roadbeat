@@ -9,7 +9,7 @@ const norm = (s: string) =>
 
 let index: Map<string, { label: string; href: string }> | null = null
 
-/** Stations whose TransLink stop name differs from their locality map's title. */
+/** Stations whose Translink stop name differs from their locality map's title. */
 const BY_STOP: Record<string, string> = {
   place_asphyp: 'Aspley',
   place_intcar: 'Carindale',
@@ -21,7 +21,7 @@ const BY_STOP: Record<string, string> = {
 }
 
 /**
- * TransLink's station/locality map for a stop or station name ("Central
+ * Translink's station/locality map for a stop or station name ("Central
  * station" → the Central locality map), or null when it doesn't publish one.
  * Only exact name matches (or the listed stop ids) count, so a stop never gets
  * another place's map.

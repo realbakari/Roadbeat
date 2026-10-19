@@ -11,7 +11,7 @@ import { brisbaneClock as clock } from '../lib/aest'
 /**
  * The next service from a stop, given a card of its own above the rest, as on
  * Transit Pulse's route page: the scheduled clock time large, minutes to go
- * beside it, then the route, platform and whether TransLink is tracking it.
+ * beside it, then the route, platform and whether Translink is tracking it.
  */
 export function NextService({ d, now, stops, onNavigate }: { d: Departure; now: number; stops: StopIndex | null; onNavigate: (hash: string) => void }) {
   const info = routeInfo(d.trip.route, d.trip.region)

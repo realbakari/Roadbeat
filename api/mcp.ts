@@ -56,8 +56,8 @@ function server() {
   s.registerTool(
     'find_stops',
     {
-      title: 'Find TransLink stops',
-      description: 'Look up TransLink stops and stations by name, for example "Central", "Roma Street" or "Cairns City". Returns stop ids to use with next_departures.',
+      title: 'Find Translink stops',
+      description: 'Look up Translink stops and stations by name, for example "Central", "Roma Street" or "Cairns City". Returns stop ids to use with next_departures.',
       inputSchema: {
         query: z.string().min(1).max(100),
         region: z.enum(['SEQ', 'CNS']).optional().describe('SEQ = South East Queensland, CNS = Cairns'),
@@ -73,7 +73,7 @@ function server() {
     {
       title: 'Next departures',
       description:
-        "Next trains, buses, trams and ferries from a TransLink stop or station, with real-time delays and platforms, for example stop \"Central\" and route \"T6\" for Ferny Grove trains. Covers services running now or starting soon.",
+        "Next trains, buses, trams and ferries from a Translink stop or station, with real-time delays and platforms, for example stop \"Central\" and route \"T6\" for Ferny Grove trains. Covers services running now or starting soon.",
       inputSchema: {
         stop: z.string().min(1).max(100).describe('Stop id from find_stops, or a stop or station name'),
         region: z.enum(['SEQ', 'CNS']).optional(),
@@ -84,7 +84,7 @@ function server() {
     },
     async (a) => {
       const stop = resolveStop(stops, a.stop, a.region)
-      if (!stop) return { isError: true, content: [{ type: 'text' as const, text: `No TransLink stop matches "${a.stop}". Try find_stops first.` }] }
+      if (!stop) return { isError: true, content: [{ type: 'text' as const, text: `No Translink stop matches "${a.stop}". Try find_stops first.` }] }
       try {
         return result(nextDepartures(stop, stops, trips, await transitRealtime(stop.region), routeInfo, { route: a.route, limit: a.limit, now: Date.now() }))
       } catch (e) {

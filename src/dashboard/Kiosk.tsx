@@ -36,7 +36,7 @@ function Status({ d }: { d: Departure }) {
 /**
  * Large, self-refreshing departure board for one stop or station, at
  * /kiosk/<region>/<stop id>, for a screen in a lobby or café. Times are
- * TransLink's real-time feed, which lists services running now or starting soon.
+ * Translink's real-time feed, which lists services running now or starting soon.
  */
 export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: string }) {
   const now = useNow(10_000)
@@ -70,7 +70,7 @@ export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: strin
         <img src="/favicon.svg" alt="" className="size-10 lg:size-12" />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <h1 className="truncate text-2xl font-semibold text-kumo-strong lg:text-4xl">{stop?.name ?? (stops ? 'Stop not found' : 'Loading…')}</h1>
-          <p className="text-sm text-kumo-subtle lg:text-base">Next departures · TransLink real-time</p>
+          <p className="text-sm text-kumo-subtle lg:text-base">Next departures · Translink real-time</p>
         </div>
         <span className="text-3xl font-semibold text-kumo-strong tabular-nums lg:text-5xl">{clock.format(clockNow)}</span>
       </header>
@@ -78,21 +78,21 @@ export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: strin
       {stale && lastRead != null && (
         <p role="status" className="flex items-center gap-2 bg-kumo-warning-tint px-6 py-3 text-lg text-kumo-default lg:px-10">
           <WarningIcon className="shrink-0 text-kumo-warning" weight="fill" aria-hidden />
-          TransLink real-time is not answering. Times shown are from {clock.format(lastRead)}.
+          Translink real-time is not answering. Times shown are from {clock.format(lastRead)}.
         </p>
       )}
 
       <main className="min-h-0 flex-1 overflow-hidden px-6 lg:px-10">
         {stops && !stop ? (
           <p className="py-10 text-lg text-kumo-subtle">
-            There's no stop "{stopId}" in TransLink's published stops. Check the link, or open a stop in Roadbeat and choose Kiosk display.
+            There's no stop "{stopId}" in Translink's published stops. Check the link, or open a stop in Roadbeat and choose Kiosk display.
           </p>
         ) : error && !updates ? (
-          <p className="py-10 text-lg text-kumo-subtle">Couldn't reach TransLink real-time. Trying again shortly.</p>
+          <p className="py-10 text-lg text-kumo-subtle">Couldn't reach Translink real-time. Trying again shortly.</p>
         ) : !departures ? (
           <p className="py-10 text-lg text-kumo-subtle">Loading departures…</p>
         ) : !departures.length ? (
-          <p className="py-10 text-lg text-kumo-subtle">No services in TransLink's real-time feed for this stop right now.</p>
+          <p className="py-10 text-lg text-kumo-subtle">No services in Translink's real-time feed for this stop right now.</p>
         ) : (
           <ul className="divide-y divide-kumo-line">
             {departures.map((d) => {
@@ -133,7 +133,7 @@ export function Kiosk({ region, stopId }: { region: TransitRegion; stopId: strin
           Scheduled: not tracked yet.
         </span>
         <span>
-          {lastRead != null && <>Updated {clock.format(lastRead)} · </>}Roadbeat · Data from TransLink, CC BY 4.0
+          {lastRead != null && <>Updated {clock.format(lastRead)} · </>}Roadbeat · Data from Translink, CC BY 4.0
         </span>
       </footer>
     </div>

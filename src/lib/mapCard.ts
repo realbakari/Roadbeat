@@ -268,7 +268,7 @@ export function gaugeCard(g: Gauge, now: number): MapCard {
     title: g.name,
     subtitle: g.kind === 'stream' ? 'Stream height gauge' : 'Rain gauge',
     facts: [fact, g.source === 'bcc' ? 'Brisbane City Council' : 'Queensland Government'],
-    color: g.kind === 'stream' ? '#0369a1' : '#0d9488',
+    color: g.kind === 'stream' ? LAYER_COLOR.gaugeStream : LAYER_COLOR.gaugeRain,
     position: g.position,
   }
 }

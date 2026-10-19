@@ -166,7 +166,7 @@ export function AlertSettingsDialog({ open, onOpenChange, settings: s, onChange,
             </div>
           </Section>
 
-          <Section title="Public transport" hint="Alerts when TransLink posts a disruption on these routes or lines.">
+          <Section title="Public transport" hint="Alerts when Translink posts a disruption on these routes or lines.">
             <TagInput
               label="Routes and lines"
               description="Bus or ferry numbers (402, F1), or a train line station (Caboolture, Ipswich)."
@@ -201,7 +201,7 @@ export function AlertSettingsDialog({ open, onOpenChange, settings: s, onChange,
             variant="secondary"
             size="sm"
             icon={<InfoIcon weight="fill" />}
-            description="Alerts are checked every minute while Roadbeat is open in a browser tab. With system notifications on, road events, TransLink alerts, bushfire, storm, flood and cyclone warnings and news keep being checked while the tab is in the background, though browsers may check a background tab less often. Anything that happened while Roadbeat was closed shows up here when you come back."
+            description="Alerts are checked every minute while Roadbeat is open in a browser tab. With system notifications on, road events, Translink alerts, bushfire, storm, flood and cyclone warnings and news keep being checked while the tab is in the background, though browsers may check a background tab less often. Anything that happened while Roadbeat was closed shows up here when you come back."
           />
         </div>
       </Dialog>

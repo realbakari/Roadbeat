@@ -5,7 +5,7 @@ export function delayOf(reported: number | null | undefined, scheduled: number) 
   return reported == null ? null : Math.round((reported - scheduled) / 1000)
 }
 
-// How departure times are shown, as in the TransLink app's stop filter: minutes to go
+// How departure times are shown, as in the Translink app's stop filter: minutes to go
 // (the default, as on station screens) or clock times.
 export type TimeFormat = 'clock' | 'minutes'
 const KEY = 'qldt-time-format'
@@ -39,7 +39,7 @@ export function useTimeFormat(): [TimeFormat, (f: TimeFormat) => void] {
 
 /**
  * "Now" or "5 min" until `t`, or null an hour or more away, where (as in the
- * TransLink app) a clock time reads better than a long countdown.
+ * Translink app) a clock time reads better than a long countdown.
  */
 export function minutesUntil(t: number, now: number): string | null {
   const m = Math.round((t - now) / 60_000)

@@ -12,7 +12,7 @@ const VEHICLE_MODES: { mode: VehicleMode; label: string }[] = [
   { mode: 'ferry', label: 'Ferries' },
 ]
 
-/** TransLink's live vehicles, with a chip per mode. */
+/** Translink's live vehicles, with a chip per mode. */
 export function TransitLayers({
   layers,
   set,
@@ -56,7 +56,7 @@ export function TransitLayers({
         <Text size="xs" variant={vehicleError ? 'error' : 'secondary'}>
           {vehicleError
             ? `Live positions unavailable: ${vehicleError}.`
-            : 'TransLink live positions (SEQ, Cairns and any other region whose feed is live), every 15 s. Zoom in to see them.'}
+            : 'Translink live positions (SEQ, Cairns and any other region whose feed is live), every 15 s. Zoom in to see them.'}
         </Text>
       </LayerRow>
     </Group>

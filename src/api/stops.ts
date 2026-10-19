@@ -1,6 +1,6 @@
 import type { TransitRegion } from './transitTypes.js'
 
-// Stop names and trip headsigns from TransLink's published GTFS (see
+// Stop names and trip headsigns from Translink's published GTFS (see
 // scripts/build-stops.mjs). Loaded on demand: SEQ and Cairns rail/tram/ferry
 // stops are small; bus stops, the other regional networks' stops and the trip
 // table are fetched only when something needs them.

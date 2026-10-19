@@ -2,7 +2,7 @@ import type { ScheduledStop } from '../api/timetables'
 import type { StopTime } from '../api/transitTypes'
 
 /**
- * Pairs each published stop of a trip with the stop TransLink's real-time
+ * Pairs each published stop of a trip with the stop Translink's real-time
  * feed reports for that same visit, or null. A loop calls at some stops twice,
  * so a stop id alone can't say which visit the feed means. The feed lists its
  * stops in trip order, so they are matched in that order, as many as possible.

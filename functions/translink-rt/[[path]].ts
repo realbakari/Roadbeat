@@ -1,4 +1,4 @@
-// Cloudflare Pages Function: proxies /translink-rt/<region>/<feed> to TransLink's
+// Cloudflare Pages Function: proxies /translink-rt/<region>/<feed> to Translink's
 // GTFS-RT API (which sends no CORS headers) and caches each feed at the edge for
 // a few seconds so many viewers share one upstream request.
 

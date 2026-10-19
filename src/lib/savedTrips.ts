@@ -79,7 +79,7 @@ export function filterJourneys(
 
 /**
  * The next `n` journeys that have not left. A journey counts as gone once both
- * its published departure and the departure TransLink reports (when it reports
+ * its published departure and the departure Translink reports (when it reports
  * one) are behind `now`, so a late service stays listed until it actually leaves.
  */
 export function nextJourneys(journeys: Journey[], now: number, n: number, reported: (j: Journey) => number | null): Journey[] {

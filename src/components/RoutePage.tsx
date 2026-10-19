@@ -17,7 +17,7 @@ import { ExternalLink } from './ui/Links'
 const MODE_ICON: Record<string, Icon> = { train: TrainIcon, bus: BusIcon, ferry: BoatIcon, tram: TramIcon }
 
 /**
- * One route's page outside SEQ, where TransLink's network status lists no
+ * One route's page outside SEQ, where Translink's network status lists no
  * lines: its alerts, next departures where the region's real-time feed
  * carries any, and its published timetable.
  */
@@ -25,14 +25,17 @@ export function RoutePage({
   region,
   code,
   alerts: mainAlerts,
+  alertsError,
   vehicles,
   onNavigate,
   onShowOnMap,
 }: {
   region: TransitRegion
   code: string
-  /** TransLink service alerts for SEQ and Cairns, or null while loading. */
+  /** Translink service alerts for SEQ and Cairns, or null while loading. */
   alerts: TransitAlert[] | null
+  /** Why the main alerts feed failed, so a failure never spins for ever. */
+  alertsError?: string | null
   vehicles: LiveVehicle[]
   onNavigate: (hash: string) => void
   onShowOnMap: (title: string, match: (code: string) => boolean) => void
@@ -88,7 +91,7 @@ export function RoutePage({
 
           <Section title="Current status">
             {!routeAlerts ? (
-              <Loader size="sm" />
+              alertsError ? <Text variant="error">Couldn't load Translink's service alerts.</Text> : <Loader size="sm" />
             ) : routeAlerts.length ? (
               <AlertCards alerts={routeAlerts} onOpen={(a) => onNavigate(`transit/alert/${encodeURIComponent(a.id)}`)} />
             ) : (
@@ -117,7 +120,7 @@ export function RoutePage({
             </Section>
           )}
 
-          {info?.url && <ExternalLink href={info.url}>Timetable on TransLink</ExternalLink>}
+          {info?.url && <ExternalLink href={info.url}>Timetable on Translink</ExternalLink>}
         </div>
       </div>
     </div>

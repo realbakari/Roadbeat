@@ -9,7 +9,7 @@ import { ExternalLink } from './ui/Links'
 type Region = (typeof MAPS)['regions'][number]
 
 /**
- * Every map TransLink publishes on its Maps page (network, busway and
+ * Every map Translink publishes on its Maps page (network, busway and
  * station/locality PDFs), by place, as that page lists them. Searchable, so a
  * rider can type a station or town instead of opening each region.
  */
@@ -37,7 +37,7 @@ export function TransitMapsDirectory() {
           <MagnifyingGlassIcon />
         </InputGroup.Addon>
         <InputGroup.Input aria-label="Search maps" placeholder={`Search ${total} maps: town, station or busway`} value={q} onChange={(e) => setQ(e.target.value)} />
-        {q && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear" icon={<XIcon />} onClick={() => setQ('')} />}
+        {q && <InputGroup.Button variant="ghost" shape="square" aria-label="Clear search" icon={<XIcon />} onClick={() => setQ('')} />}
       </InputGroup>
       {regions.length ? (
         <div className="divide-y divide-kumo-line overflow-hidden rounded-lg bg-kumo-base ring ring-kumo-line">
@@ -81,12 +81,12 @@ export function TransitMapsDirectory() {
           No map matches “{q.trim()}”.
         </Text>
       )}
-      <ExternalLink href={MAPS.source}>TransLink maps page</ExternalLink>
+      <ExternalLink href={MAPS.source}>Translink maps page</ExternalLink>
     </div>
   )
 }
 
-/** "Station map (PDF)" for a stop page, when TransLink publishes a locality map for that station. */
+/** "Station map (PDF)" for a stop page, when Translink publishes a locality map for that station. */
 export function StationMapLink({ name, stopId }: { name: string; stopId: string }) {
   const map = findStationMap(name, stopId)
   if (!map) return null

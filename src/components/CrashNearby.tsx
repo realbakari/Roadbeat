@@ -48,7 +48,7 @@ export function CrashNearby({ at }: { at: LngLat }) {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-0.5 text-kumo-link underline decoration-1 underline-offset-2"
         >
-          TMR, CC BY 4.0
+          Transport and Main Roads, CC BY 4.0
           <ArrowSquareOutIcon size={12} />
           <NewTabNote />
         </a>

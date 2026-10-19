@@ -27,7 +27,7 @@ export function EventPlace({ event, index, onOpenHref }: Props) {
             <a
               href={`#place/locality/${encodeURIComponent(p.locality.name)}`}
               onClick={(e) => (e.preventDefault(), onOpenHref(`place/locality/${encodeURIComponent(p.locality!.name)}`))}
-              className="relative z-10 underline underline-offset-2 hover:text-kumo-strong"
+              className="relative z-10 -my-1.5 inline-block py-1.5 underline underline-offset-2 hover:text-kumo-strong"
             >
               {p.name}
             </a>

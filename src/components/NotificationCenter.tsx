@@ -76,7 +76,7 @@ export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, 
               </Button>
             )}
             <Button
-              size="xs"
+              size="sm"
               variant="ghost"
               shape="square"
               aria-label="Notification settings"
@@ -91,7 +91,7 @@ export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, 
             <Empty
               size="sm"
               icon={<BellIcon size={32} className="text-kumo-inactive" />}
-              title="No alerts yet"
+              title="No notifications yet"
               description={
                 unset
                   ? 'Events you watch and your Translink routes alert here.'

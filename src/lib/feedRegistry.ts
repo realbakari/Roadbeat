@@ -121,7 +121,7 @@ export const FEEDS = [
   },
   {
     id: 'translink-status',
-    name: 'TransLink network status and notices',
+    name: 'Translink network status and notices',
     publisher: TRANSLINK,
     url: 'data.qldtraffic.qld.gov.au/translink/*.json',
     path: null,
