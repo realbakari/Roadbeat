@@ -197,7 +197,7 @@ body {
   [data-kumo-component="Select"],
   [role="combobox"],
   [role="tab"],
-  button[aria-pressed] {
+  .chip {
     min-height: 36px;
   }
   [data-kumo-component="Button"][class*="size-"] {

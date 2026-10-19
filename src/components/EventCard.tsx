@@ -73,24 +73,7 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
   // screen readers can jump from event to event by heading.
   return (
     <div className="relative flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-kumo-tint has-[:focus-visible]:bg-kumo-tint has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-kumo-brand has-[:focus-visible]:ring-inset">
-      {/* The type, and under it the watch bell: a column of its own, so the bell never wraps onto a line by itself. */}
-      <div className="flex shrink-0 flex-col items-center gap-1.5">
-        <TypeIcon type={p.event_type} />
-        {onToggleWatch && (
-          <button
-            type="button"
-            aria-pressed={watched}
-            aria-label={watched ? `Watching ${eventTitle(event)}` : `Watch ${eventTitle(event)}`}
-            title={watched ? 'Watching: stop alerts for this event' : 'Watch: get alerts when this event changes or clears'}
-            onClick={() => onToggleWatch(p.id)}
-            className={`relative z-10 flex size-8 items-center justify-center rounded-md ring ${
-              watched ? 'bg-kumo-tint text-kumo-link ring-kumo-brand' : 'text-kumo-subtle ring-transparent hover:bg-kumo-recessed hover:text-kumo-strong'
-            }`}
-          >
-            {watched ? <BellRingingIcon size={16} weight="fill" aria-hidden /> : <BellIcon size={16} aria-hidden />}
-          </button>
-        )}
-      </div>
+      <TypeIcon type={p.event_type} />
       <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5">
         <div className="grid min-w-0 gap-0.5">
           <div className="flex min-w-0 items-start justify-between gap-2">
@@ -100,9 +83,24 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
                 {eventTitle(event)}
               </button>
             </Text>
-            {updated && (
-              <span className="shrink-0 text-xs leading-5 text-kumo-subtle">{updated}</span>
-            )}
+            {/* The time, then the watch bell, on the title's line: the bell sits above the card's stretched button. */}
+            <span className="flex shrink-0 items-center gap-1">
+              {updated && <span className="text-xs leading-5 text-kumo-subtle">{updated}</span>}
+              {onToggleWatch && (
+                <button
+                  type="button"
+                  aria-pressed={watched}
+                  aria-label={watched ? `Watching ${eventTitle(event)}` : `Watch ${eventTitle(event)}`}
+                  title={watched ? 'Watching: stop alerts for this event' : 'Watch: get alerts when this event changes or clears'}
+                  onClick={() => onToggleWatch(p.id)}
+                  className={`relative z-10 -my-1 -mr-1.5 flex size-7 items-center justify-center rounded-md pointer-coarse:-my-2 pointer-coarse:size-9 ${
+                    watched ? 'text-kumo-link hover:bg-kumo-recessed' : 'text-kumo-subtle hover:bg-kumo-recessed hover:text-kumo-strong'
+                  }`}
+                >
+                  {watched ? <BellRingingIcon size={16} weight="fill" /> : <BellIcon size={16} />}
+                </button>
+              )}
+            </span>
           </div>
           {place && (
             <Text variant="secondary" size="sm" truncate>

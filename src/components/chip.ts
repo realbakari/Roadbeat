@@ -6,5 +6,5 @@
  */
 export function chipClass(on: boolean, extra = '') {
   const state = on ? 'bg-kumo-tint font-medium text-kumo-strong ring-2 ring-kumo-brand' : 'text-kumo-default ring-kumo-line hover:bg-kumo-tint'
-  return `inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${state} ${extra}`
+  return `chip inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap ring ${state} ${extra}`
 }
