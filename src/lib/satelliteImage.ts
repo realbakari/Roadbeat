@@ -1,13 +1,15 @@
 import { HIMAWARI_BANDS, HIMAWARI_CREDIT, himawariTiles, type HimawariBand } from '../api/himawari'
 import { JMA_CREDIT, JMA_MAX_ZOOM, JMA_MIN_ZOOM, jmaTiles, type JmaFrame, type JmaProduct } from '../api/jmaHimawari'
 import { DAILY_PASSES, GIBS_MAX_ZOOM, gibsTiles, type DailyPass } from '../api/satelliteImagery'
+import { QLD_AERIAL_CREDIT, QLD_AERIAL_MAX_ZOOM, QLD_AERIAL_TILES } from '../api/qldImagery'
 
 /**
  * The satellite images the map can show, one at a time: Himawari-9 from NASA
  * GIBS (infrared or visible) or from the Japan Meteorological Agency's own map
- * (infrared or true colour), or one day's NASA image from NOAA-20 or Terra.
+ * (infrared or true colour), one day's NASA image from NOAA-20 or Terra, or
+ * the Queensland Government's aerial photos for detail on the ground.
  */
-export type SatelliteSource = HimawariBand | 'jma-infrared' | 'jma-truecolour' | DailyPass
+export type SatelliteSource = HimawariBand | 'jma-infrared' | 'jma-truecolour' | DailyPass | 'qld-aerial'
 
 export const SATELLITE_SOURCES: { value: SatelliteSource; label: string }[] = [
   { value: 'infrared', label: 'Live infrared (Himawari-9, NASA)' },
@@ -16,7 +18,11 @@ export const SATELLITE_SOURCES: { value: SatelliteSource; label: string }[] = [
   { value: 'jma-truecolour', label: 'Live true colour, daytime only (Himawari-9, JMA)' },
   { value: 'noaa20', label: 'Daily true colour, afternoon pass (NOAA-20)' },
   { value: 'terra', label: 'Daily true colour, morning pass (Terra)' },
+  { value: 'qld-aerial', label: 'Aerial photos, 2022 or older (Queensland Government)' },
 ]
+
+/** The state's aerial photos: a fixed image of the ground, not a picture of today's weather. */
+export const isAerial = (s: SatelliteSource) => s === 'qld-aerial'
 
 export function isGibsLive(s: SatelliteSource): s is HimawariBand {
   return s === 'infrared' || s === 'visible'
@@ -54,6 +60,7 @@ export interface SatelliteFrames {
  * two images can't stack.
  */
 export function satelliteTiles(source: SatelliteSource, f: SatelliteFrames): SatelliteTiles | null {
+  if (isAerial(source)) return { tiles: QLD_AERIAL_TILES, minzoom: 0, maxzoom: QLD_AERIAL_MAX_ZOOM, attribution: QLD_AERIAL_CREDIT }
   const pass = dailyPass(source)
   if (pass) return f.date ? { tiles: gibsTiles(f.date, pass), minzoom: 0, maxzoom: GIBS_MAX_ZOOM, attribution: `${DAILY_PASSES[pass].credit}, ${f.date}` } : null
   const product = jmaProduct(source)

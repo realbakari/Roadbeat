@@ -2,7 +2,8 @@ import { Radio, Text } from '@cloudflare/kumo'
 import { GIBS_ACKNOWLEDGEMENT, himawariLabel, JMA_COPYRIGHT } from '../api/himawari'
 import { JMA_CREDIT, type JmaFrame } from '../api/jmaHimawari'
 import { aestWithAge } from '../lib/aest'
-import { dailyPass, jmaProduct, SATELLITE_SOURCES, type SatelliteSource } from '../lib/satelliteImage'
+import { dailyPass, isAerial, jmaProduct, SATELLITE_SOURCES, type SatelliteSource } from '../lib/satelliteImage'
+import { QLD_AERIAL_ACKNOWLEDGEMENT, QLD_AERIAL_CREDIT, QLD_AERIAL_PAGE } from '../api/qldImagery'
 import { DailyImageNote, type DailyState } from './DailyImageNote'
 import { LayerFacts } from './LayerFacts'
 import { InlineLink } from './ui/Links'
@@ -32,11 +33,28 @@ export function SatelliteImageNote(p: Props) {
 }
 
 function SourceNote(p: Props) {
+  if (isAerial(p.source)) return <AerialNote />
   const pass = dailyPass(p.source)
   if (pass) return <DailyImageNote {...p} pass={pass} />
   const product = jmaProduct(p.source)
   if (product) return <JmaNote {...p} truecolour={product === 'truecolour'} />
   return <LiveNote {...p} band={p.source === 'visible' ? 'visible' : 'infrared'} />
+}
+
+/** The state's aerial photos: what they are, how old, and the licence's credit and acknowledgement. */
+function AerialNote() {
+  return (
+    <>
+      <LayerFacts publisher="Queensland Government (Queensland imagery: Latest state program)" cadence="Updated as new aerial projects are released; the public service shows photos from 2022 or older" latest="2022 or older" latestLabel="Photos" />
+      <Text size="xs" variant="secondary">
+        Aerial photos down to street level where the state has flown them, and a 2017 satellite mosaic elsewhere. A picture of the ground, not of today: roads, floods and
+        works may have changed since. {QLD_AERIAL_CREDIT} <InlineLink href={QLD_AERIAL_PAGE}>About this imagery</InlineLink>
+      </Text>
+      <Text size="xs" variant="secondary">
+        {QLD_AERIAL_ACKNOWLEDGEMENT}
+      </Text>
+    </>
+  )
 }
 
 function LiveNote({ band, live, now }: Props & { band: 'infrared' | 'visible' }) {

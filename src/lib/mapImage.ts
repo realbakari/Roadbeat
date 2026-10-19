@@ -76,6 +76,8 @@ export interface SourceLines {
   firesReadAt: number | null
   /** The satellite image shown, by its label and published time, or null for none. */
   satellite: { label: string; time: string } | null
+  /** A notice the shown image's licence asks to be carried on any copy, such as the state's aerial imagery acknowledgement. */
+  notice?: string | null
 }
 
 /** The footer's line for each shown source and its data time. */
@@ -84,6 +86,7 @@ export function imageSources(d: SourceLines): string[] {
     d.replayAt != null ? `Road events: QLDTraffic, replay of ${aestTime(d.replayAt, d.now)}` : d.eventsReadAt != null ? `Road events: QLDTraffic, read ${aestTime(d.eventsReadAt, d.now)}` : 'Road events: QLDTraffic',
     ...(d.firesReadAt != null ? [`Bushfires: Queensland Fire Department, read ${aestTime(d.firesReadAt, d.now)}`] : []),
     ...(d.satellite ? [`Satellite: ${d.satellite.label}, image ${d.satellite.time}`] : []),
+    ...(d.notice ? [d.notice] : []),
   ]
 }
 

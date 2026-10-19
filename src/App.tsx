@@ -50,7 +50,8 @@ import { useLastVisit } from './hooks/useLastVisit'
 import { crossingStatus } from './lib/crossings'
 import { majorIncidents } from './lib/majorIncidents'
 import { feedStatus } from './lib/feedAge'
-import { isGibsLive, jmaProduct, SATELLITE_SOURCES, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
+import { isAerial, isGibsLive, jmaProduct, SATELLITE_SOURCES, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
+import { QLD_AERIAL_ACKNOWLEDGEMENT } from './api/qldImagery'
 import { frameAt, recentFrames } from './lib/frames'
 import { brisbaneDate } from './lib/aest'
 import { layerCounts as countLayers, layerTimes } from './lib/layerInfo'
@@ -297,14 +298,17 @@ export function App() {
     satellite: satelliteImage
       ? {
           label: SATELLITE_SOURCES.find((s) => s.value === satelliteSource)?.label ?? satelliteSource,
-          time: satelliteImageTime({
-            frameTime: shownFrame ?? (isGibsLive(satelliteSource) ? imagery.live.time : imagery.jma.latest?.time) ?? null,
-            live: allLiveFrames.length > 0,
-            date: replayDate ?? imagery.date,
-            now,
-          }),
+          time: isAerial(satelliteSource)
+            ? '2022 or older'
+            : satelliteImageTime({
+                frameTime: shownFrame ?? (isGibsLive(satelliteSource) ? imagery.live.time : imagery.jma.latest?.time) ?? null,
+                live: allLiveFrames.length > 0,
+                date: replayDate ?? imagery.date,
+                now,
+              }),
         }
       : null,
+    notice: satelliteImage && isAerial(satelliteSource) ? QLD_AERIAL_ACKNOWLEDGEMENT : null,
   })
   const [dismissed, dismissSuggestion] = useSatelliteDismissals()
   const suggestion = useMemo(
