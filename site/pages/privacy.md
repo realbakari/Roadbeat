@@ -22,7 +22,7 @@ Saved trips, with the names, order and travel modes you give them, stay in this 
 
 ## Your location
 
-Roadbeat asks for your location only when you choose a feature that needs it, such as **Find stops near me**, sorting events by distance, or alerts near you. Your browser asks for your permission first. Roadbeat uses your location inside your browser to sort and filter what you see, and does not send it to any server. If you turn on alerts near you, your chosen location is saved in local storage with your other settings.
+Roadbeat asks for your location only when you choose a feature that needs it, such as **Find stops near me**, the map's **Show my location** button, sorting events by distance, or alerts near you. Your browser asks for your permission first. Roadbeat uses your location inside your browser to sort and filter what you see, and does not send it to any server. If you turn on alerts near you, your chosen location is saved in local storage with your other settings.
 
 ## Data sources you connect to
 

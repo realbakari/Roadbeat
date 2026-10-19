@@ -1,5 +1,5 @@
 import { Button, Text } from '@cloudflare/kumo'
-import { CrosshairIcon, DownloadSimpleIcon } from '@phosphor-icons/react'
+import { CrosshairIcon, DownloadSimpleIcon, NavigationArrowIcon } from '@phosphor-icons/react'
 import type * as maplibregl from 'maplibre-gl'
 import { useEffect, useState } from 'react'
 import { imageFileName, imageFooter } from '../../lib/mapImage'
@@ -15,10 +15,15 @@ interface Props {
   sources: string[]
   /** Layers whose features the crosshair reads (the map's clickable layers). */
   readable: string[]
+  /** Finds the user; the map then flies to them and marks where they are. */
+  onLocate: () => void
+  locating: boolean
+  /** Whether the map already shows where the user is. */
+  located: boolean
 }
 
-/** "Save image" and the crosshair, under the zoom buttons. */
-export function MapTools({ map, layers, sources, readable }: Props) {
+/** "My location", "Save image" and the crosshair, under the zoom buttons. */
+export function MapTools({ map, layers, sources, readable, onLocate, locating, located }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [crosshair, setCrosshair] = useState(false)
@@ -53,6 +58,16 @@ export function MapTools({ map, layers, sources, readable }: Props) {
   return (
     <>
       <div className="absolute top-24 right-2.5 z-10 grid gap-1.5">
+        <Button
+          size="sm"
+          shape="square"
+          icon={<NavigationArrowIcon weight={located ? 'fill' : 'regular'} />}
+          aria-label="Show my location"
+          title="Show my location"
+          loading={locating}
+          onClick={onLocate}
+          className="shadow-md"
+        />
         <Button size="sm" shape="square" icon={<DownloadSimpleIcon />} aria-label="Save image of the map" title="Save image of the map" loading={saving} onClick={save} className="shadow-md" />
         <Button size="sm" shape="square" variant={crosshair ? 'primary' : 'secondary'} icon={<CrosshairIcon />} aria-label="Crosshair" aria-pressed={crosshair} title="Crosshair: what's at the centre of the map" onClick={() => setCrosshair((v) => !v)} className="shadow-md" />
       </div>

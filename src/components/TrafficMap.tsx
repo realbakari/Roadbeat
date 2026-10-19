@@ -157,6 +157,9 @@ interface Props {
   focus: { center: LngLat; zoom?: number; ring?: boolean } | null
   fit: { bounds: Bounds; id: number } | null
   userLocation: LngLat | null
+  /** Finds the user and flies the map there, from the map's own locate button. */
+  onLocate: () => void
+  locating: boolean
   onSelectEvent: (id: number) => void
   onSelectKey: (hashKey: string) => void
   onCloseCamera: () => void
@@ -258,6 +261,8 @@ export function TrafficMap(props: Props) {
     focus,
     fit,
     userLocation,
+    onLocate,
+    locating,
   } = props
   const container = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<maplibregl.Map | null>(null)
@@ -549,7 +554,7 @@ export function TrafficMap(props: Props) {
     <div className="relative h-full w-full">
       <div ref={container} className="h-full w-full" aria-label="Traffic map" role="region" />
       <RainRadar map={map} enabled={layers.radar} ready={ready} />
-      <MapTools map={map} layers={layers} sources={imageSources} readable={READABLE} />
+      <MapTools map={map} layers={layers} sources={imageSources} readable={READABLE} onLocate={onLocate} locating={locating} located={userLocation != null} />
       <SatelliteImagery map={map} ready={ready} image={satelliteImage} />
       {map && <CrashLayer map={map} ready={ready} enabled={layers.crashes} filter={crashFilter} />}
       {map && (

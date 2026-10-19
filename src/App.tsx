@@ -749,6 +749,8 @@ export function App() {
               selectedCamera={selectedCamera}
               focus={focus}
               userLocation={userLocation}
+              onLocate={locate}
+              locating={locating}
               onSelectEvent={(id) => {
                 selectEvent(id)
                 if (!cardVisible) revealList()
