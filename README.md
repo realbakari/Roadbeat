@@ -66,10 +66,11 @@ The `npm run data:*` scripts rebuild the published data in `src/data/` and `publ
 
 ## Bugs and ideas
 
-Report a bug or suggest a feature in [GitHub Issues](https://github.com/realbakari/Roadbeat/issues), or use **Send feedback** in the app's menu. Report security problems privately, as [SECURITY.md](SECURITY.md) describes. To change the code, see [Contributing](docs/contributing.md).
+Report a bug or suggest a feature in [GitHub Issues](https://github.com/realbakari/Roadbeat/issues), or use **Send feedback** in the app's menu. Report security problems privately, as [SECURITY.md](SECURITY.md) describes. To change the code, read the named rules in [AGENTS.md](AGENTS.md), then [Contributing](docs/contributing.md).
 
 ## Documentation
 
+- [Product](docs/product.md) says who Roadbeat is for, the commitments it keeps, and what it deliberately doesn't do yet.
 - [Architecture](docs/architecture.md) explains how the app is put together and why.
 - [Data sources](docs/data-sources.md) lists every feed and dataset, where it comes from, how often it changes, and its licence.
 - [Refresh the published data](docs/refresh-data.md) shows how to rebuild the timetables, stops, tracks and maps when Translink publishes new ones.

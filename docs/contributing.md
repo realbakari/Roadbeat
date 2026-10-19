@@ -1,6 +1,6 @@
 # Contributing
 
-This page sets out how code in this project is written and how to check a change. Read [Architecture](architecture.md) first for how the parts fit together.
+This page sets out how code in this project is written and how to check a change. The rules it expands on are named in [AGENTS.md](../AGENTS.md), and what's out of scope for now is in [Product](product.md). Read [Architecture](architecture.md) first for how the parts fit together.
 
 ## Show only published data
 
