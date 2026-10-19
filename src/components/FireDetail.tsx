@@ -1,8 +1,8 @@
 import { Badge, Button, Text } from '@cloudflare/kumo'
 import { ArrowLeftIcon, FlameIcon } from '@phosphor-icons/react'
 import { FIRE_BADGE, FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
-import { readableTextOn } from '../lib/routeColor'
 import { ExternalLink } from './ui/Links'
+import { Header } from './PlaceParts'
 import { PublishedText, TextPart } from './PublishedText'
 import { brisbaneDayDateTime as when } from '../lib/aest'
 import { RelativeTime } from './ui/RelativeTime'
@@ -22,24 +22,21 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-5 px-4 pt-4 pb-8">
-          <header className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: color, color: readableTextOn(color) }} aria-hidden>
-              <FlameIcon size={22} weight="fill" />
-            </span>
-            <div className="grid min-w-0 gap-1">
-              <Text as="h2" variant="heading" size="lg">
-                {fire.area ?? fire.title}
-              </Text>
-              <div className="flex flex-wrap items-center gap-1.5">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
+          <Header
+            icon={FlameIcon}
+            color={color}
+            title={fire.area ?? fire.title}
+            badges={
+              <>
                 <Badge variant="secondary" className={FIRE_BADGE[fire.level]}>
                   {warning ? fire.levelText : fireKindLabel(fire)}
                 </Badge>
                 {fire.status && <Badge variant="outline">{fire.status}</Badge>}
                 {warning && <Badge variant="outline">{fireKindLabel(fire)}</Badge>}
-              </div>
-            </div>
-          </header>
+              </>
+            }
+          />
 
           {fire.callToAction && warning && (
             <div className="flex overflow-hidden rounded-lg ring ring-kumo-line">

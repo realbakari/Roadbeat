@@ -2,6 +2,7 @@ import { Button, Dialog, Input, Select, Text, Textarea } from '@cloudflare/kumo'
 import { CheckCircleIcon, XIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { FEEDBACK_KIND_LABEL, sendFeedback, type FeedbackDraft, type FeedbackKind } from '../api/feedback'
+import { linkClass } from './ui/Links'
 
 interface Props {
   open: boolean
@@ -100,7 +101,7 @@ function FeedbackForm({ onClose }: { onClose: () => void }) {
           <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] size-px opacity-0" value={draft.website} onChange={(e) => set('website', e.target.value)} />
           <Text size="xs" variant="secondary">
             Roadbeat keeps your message, the page you were on and when you sent it. Not your address or browser. See the{' '}
-            <a href="/privacy/" className="text-kumo-link underline decoration-1 underline-offset-2">
+            <a href="/privacy/" className={linkClass}>
               privacy page
             </a>
             . In an emergency, call Triple Zero (000).

@@ -35,6 +35,7 @@ import { REGION_NAMES } from '../lib/transitRegions'
 import { regionalRoutes, searchRoutes } from '../lib/regionalRoutes'
 import { RouteRows } from './RegionalRoutes'
 import { ExternalLink } from './ui/Links'
+import { Section } from './ui/Section'
 import { brisbaneClock as clockTime } from '../lib/aest'
 
 const MODE_ICON: Record<string, Icon> = { train: TrainIcon, bus: BusIcon, ferry: BoatIcon, tram: TramIcon }
@@ -326,13 +327,7 @@ export function DeparturesHome({
     <div className="grid gap-5 px-4 pt-4">
       <SavedTrips vehicles={vehicles} alerts={alerts} onNavigate={onNavigate} hint="Save a trip in the Planner to see its next departures here." />
 
-      <section className="grid gap-2">
-        <div className="flex items-center gap-2">
-          <StarIcon size={18} weight="fill" className="text-kumo-subtle" />
-          <Text as="h3" variant="heading">
-            My stops
-          </Text>
-        </div>
+      <Section title="My stops" icon={<StarIcon size={18} weight="fill" className="text-kumo-subtle" />}>
         {!saved.length ? (
           <Text size="sm" variant="secondary">
             Save a stop with the star on its page to see it here.
@@ -349,21 +344,18 @@ export function DeparturesHome({
             })}
           </ul>
         )}
-      </section>
+      </Section>
 
       {recent.length > 0 && stops && (
-        <section className="grid gap-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ClockCounterClockwiseIcon size={18} weight="bold" className="text-kumo-subtle" />
-              <Text as="h3" variant="heading">
-                Recent
-              </Text>
-            </div>
+        <Section
+          title="Recent"
+          icon={<ClockCounterClockwiseIcon size={18} weight="bold" className="text-kumo-subtle" />}
+          action={
             <button type="button" className="text-sm text-kumo-link hover:underline" onClick={clearRecentStops}>
               Clear
             </button>
-          </div>
+          }
+        >
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {recent.map((x) => {
               const s = stops.get(x.region, x.id)
@@ -372,21 +364,15 @@ export function DeparturesHome({
               ) : null
             })}
           </ul>
-        </section>
+        </Section>
       )}
 
-      <section className="grid gap-2">
-        <div className="flex items-center gap-2">
-          <MapPinIcon size={18} weight="fill" className="text-kumo-subtle" />
-          <Text as="h3" variant="heading">
-            Near me
-          </Text>
-        </div>
-        {near.state === 'ok' && (
-          <Text size="sm" variant="secondary">
-            {near.source === 'you' ? 'Closest to you' : 'Closest to the centre of the map'}, within 1.5 km.
-          </Text>
-        )}
+      <Section
+        title="Near me"
+        icon={<MapPinIcon size={18} weight="fill" className="text-kumo-subtle" />}
+        hint={near.state === 'ok' && `${near.source === 'you' ? 'Closest to you' : 'Closest to the centre of the map'}, within 1.5 km.`}
+        spaced
+      >
         {near.state === 'ok' ? (
           !nearby ? (
             <Loader size="sm" />
@@ -431,7 +417,7 @@ export function DeparturesHome({
             </button>
           </Text>
         )}
-      </section>
+      </Section>
 
       <section className="grid gap-2 rounded-lg bg-kumo-recessed p-3">
         <Text bold>Going somewhere?</Text>

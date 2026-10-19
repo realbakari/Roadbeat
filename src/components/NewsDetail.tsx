@@ -1,5 +1,5 @@
 import { Banner, Button, Text } from '@cloudflare/kumo'
-import { ArrowLeftIcon, ArrowSquareOutIcon, CaretRightIcon, InfoIcon, MapPinIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, CaretRightIcon, InfoIcon, MapPinIcon } from '@phosphor-icons/react'
 import { useMemo, type ReactNode } from 'react'
 import type { FireWarning } from '../api/bushfires'
 import type { NewsPlace, NewsRoad } from '../api/newsTypes'
@@ -9,7 +9,8 @@ import { officialNow } from '../lib/newsOfficial'
 import { lastDate } from '../lib/newsItems'
 import { reportedAgo, storySourceLine, type NewsStory } from '../lib/newsStories'
 import { LiveBlogBadge, PublisherIcon, StoryMark } from './NewsStoryRow'
-import { NewTabNote } from './NewTabNote'
+import { ExternalLink } from './ui/Links'
+import { Section } from './ui/Section'
 import { brisbaneDayDateTime as when } from '../lib/aest'
 
 /**
@@ -47,7 +48,7 @@ export function NewsDetail({
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-5 px-4 pt-4 pb-8">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
           <header className="flex items-start gap-3">
             <StoryMark story={story} size="lg" />
             <div className="grid min-w-0 gap-1">
@@ -61,10 +62,9 @@ export function NewsDetail({
             </div>
           </header>
 
-          <section className="grid gap-2">
-            <Text as="h3" variant="heading">
-              {isOfficial ? 'Notice' : story.items.length === 1 ? 'Report' : `${story.items.length} reports from ${story.publishers.length} ${story.publishers.length === 1 ? 'outlet' : 'outlets'}`}
-            </Text>
+          <Section
+            title={isOfficial ? 'Notice' : story.items.length === 1 ? 'Report' : `${story.items.length} reports from ${story.publishers.length} ${story.publishers.length === 1 ? 'outlet' : 'outlets'}`}
+          >
             <ul className="grid gap-2">
               {story.items.map((it) => (
                 <li key={it.id} className="grid gap-1.5 rounded-lg px-3 py-2.5 ring ring-kumo-line">
@@ -77,19 +77,13 @@ export function NewsDetail({
                   </span>
                   {story.items.length > 1 && <span className="text-sm leading-snug font-medium text-kumo-strong">{it.title}</span>}
                   {it.summary && <span className="text-sm leading-snug text-kumo-default">{it.summary}</span>}
-                  <a href={it.link} target="_blank" rel="noopener noreferrer" className="inline-flex w-fit items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-                    Read at {it.publisher} <ArrowSquareOutIcon size={13} aria-hidden />
-                    <NewTabNote />
-                  </a>
+                  <ExternalLink href={it.link}>Read at {it.publisher}</ExternalLink>
                 </li>
               ))}
             </ul>
-          </section>
+          </Section>
 
-          <section className="grid gap-2">
-            <Text as="h3" variant="heading">
-              On the map
-            </Text>
+          <Section title="On the map">
             {story.places.length ? (
               <ul className="grid gap-1.5">
                 {story.roads.map((r) => (
@@ -133,18 +127,13 @@ export function NewsDetail({
                 Not on the map: no headline or summary here names a place in Queensland's place names gazetteer.
               </Text>
             )}
-          </section>
+          </Section>
 
           {officialCount > 0 && (
-            <section className="grid gap-2">
-              <div className="grid gap-0.5">
-                <Text as="h3" variant="heading">
-                  Official reports there now
-                </Text>
-                <Text size="sm" variant="secondary">
-                  Reported by QLDTraffic and the Queensland Fire Department at the places this story names. They may not be the incident it describes.
-                </Text>
-              </div>
+            <Section
+              title="Official reports there now"
+              hint="Reported by QLDTraffic and the Queensland Fire Department at the places this story names. They may not be the incident it describes."
+            >
               <ul className="grid gap-1">
                 {official.events.map((e) => (
                   <OfficialRow key={`e${e.properties.id}`} onClick={() => onOpenHref(`event/${e.properties.id}`)}>
@@ -158,7 +147,7 @@ export function NewsDetail({
                   </OfficialRow>
                 ))}
               </ul>
-            </section>
+            </Section>
           )}
 
           <Banner

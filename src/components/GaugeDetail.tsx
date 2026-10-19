@@ -4,8 +4,10 @@ import { GAUGES_DATASET_URL, type Gauge, type GaugeReading } from '../api/bccGau
 import { BOM_QLD_WARNINGS, floodWarningArea } from '../api/floodWarnings'
 import { qldGaugeUrl, WMIP_PORTAL } from '../api/qldGauges'
 import { changeWithin, latestReading, rainfallTotal } from '../lib/gauges'
-import { InlineLink } from './ui/Links'
-import { ExternalLink } from './ui/Links'
+import { ExternalLink, InlineLink } from './ui/Links'
+import { Section } from './ui/Section'
+import { Header } from './PlaceParts'
+import { LAYER_COLOR } from '../lib/mapIcons'
 import { brisbaneDayClock as time } from '../lib/aest'
 import { RelativeTime } from './ui/RelativeTime'
 
@@ -17,7 +19,6 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
   const stream = gauge.kind === 'stream'
   const hour = changeWithin(gauge, HOUR)
   const day = changeWithin(gauge, 24 * HOUR)
-  const Icon = stream ? WavesIcon : CloudRainIcon
   const warningArea = floodWarningArea(gauge.id)
   const council = gauge.source === 'bcc'
   return (
@@ -28,25 +29,19 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-5 px-4 pt-4 pb-8">
-          <header className="flex items-start gap-3">
-            <span
-              className={`flex size-10 shrink-0 items-center justify-center rounded-lg text-white ${stream ? 'bg-sky-700' : 'bg-teal-600'}`}
-              aria-hidden
-            >
-              <Icon size={22} weight="fill" />
-            </span>
-            <div className="grid min-w-0 gap-1">
-              <Text as="h2" variant="heading" size="lg">
-                {gauge.name}
-              </Text>
-              <div className="flex flex-wrap gap-1.5">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
+          <Header
+            icon={stream ? WavesIcon : CloudRainIcon}
+            color={stream ? LAYER_COLOR.gaugeStream : LAYER_COLOR.gaugeRain}
+            title={gauge.name}
+            badges={
+              <>
                 <Badge variant="outline">{stream ? 'Stream height' : 'Rainfall'}</Badge>
                 <Badge variant="outline">{council ? 'Gauge' : 'Station'} {gauge.id}</Badge>
                 <Badge variant="outline">{council ? 'Brisbane City Council' : 'Queensland Government'}</Badge>
-              </div>
-            </div>
-          </header>
+              </>
+            }
+          />
 
           {!latest ? (
             <Text variant="secondary">This gauge hasn't reported in the last 24 hours.</Text>
@@ -81,22 +76,16 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
           )}
 
           {gauge.readings.length > 1 && (
-            <section className="grid gap-1.5">
-              <Text as="h3" variant="heading">
-                Last 24 hours
-              </Text>
+            <Section title="Last 24 hours" spaced>
               <Chart readings={gauge.readings} unit={gauge.unit} bars={!stream} />
               <Text size="xs" variant="secondary">
                 {gauge.readings.length} readings. Each point is a reading the gauge sent; gaps are times it sent nothing.
               </Text>
-            </section>
+            </Section>
           )}
 
           {stream && (
-            <section className="grid gap-1.5">
-              <Text as="h3" variant="heading">
-                Flood warnings
-              </Text>
+            <Section title="Flood warnings" spaced>
               <Text size="sm" variant="secondary">
                 This page shows heights only. The Bureau of Meteorology issues flood warnings and sets the minor, moderate and major flood
                 levels.
@@ -108,7 +97,7 @@ export function GaugeDetail({ gauge, now, onBack }: { gauge: Gauge; now: number;
                 )}
                 <ExternalLink href={BOM_QLD_WARNINGS}>All Queensland warnings (BoM)</ExternalLink>
               </div>
-            </section>
+            </Section>
           )}
 
           {council ? (

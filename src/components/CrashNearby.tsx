@@ -1,5 +1,4 @@
 import { Loader, Text } from '@cloudflare/kumo'
-import { ArrowSquareOutIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import {
   CRASH_DATA_END,
@@ -11,7 +10,7 @@ import {
   type CrashSummary,
 } from '../api/crashes'
 import type { LngLat } from '../lib/geo'
-import { NewTabNote } from './NewTabNote'
+import { InlineLink } from './ui/Links'
 
 /** Five-year crash history around a point, from TMR's police-reported crash data. */
 export function CrashNearby({ at }: { at: LngLat }) {
@@ -42,16 +41,7 @@ export function CrashNearby({ at }: { at: LngLat }) {
       )}
       <Text size="xs" variant="secondary">
         Historical police-reported crashes to {CRASH_DATA_END}; the last 12 months are preliminary and may change.{' '}
-        <a
-          href={CRASH_DATASET_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-0.5 text-kumo-link underline decoration-1 underline-offset-2"
-        >
-          Transport and Main Roads, CC BY 4.0
-          <ArrowSquareOutIcon size={12} />
-          <NewTabNote />
-        </a>
+        <InlineLink href={CRASH_DATASET_URL}>Transport and Main Roads, CC BY 4.0</InlineLink>
       </Text>
     </div>
   )

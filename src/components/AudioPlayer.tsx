@@ -1,7 +1,7 @@
 import { Button } from '@cloudflare/kumo'
 import { PauseIcon, PlayIcon } from '@phosphor-icons/react'
 import { useRef, useState } from 'react'
-import { NewTabNote } from './NewTabNote'
+import { ExternalLink } from './ui/Links'
 
 const clock = (s: number) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '–:––')
 
@@ -52,10 +52,7 @@ export function AudioPlayer({ src, label }: { src: string; label: string }) {
         onClick={toggle}
       />
       {failed ? (
-        <a href={src} target="_blank" rel="noopener noreferrer" className="text-sm text-kumo-link underline decoration-1 underline-offset-2">
-          Couldn't play here. Open the recording
-          <NewTabNote />
-        </a>
+        <ExternalLink href={src}>Couldn't play here. Open the recording</ExternalLink>
       ) : (
         <>
           <input

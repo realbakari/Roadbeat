@@ -42,10 +42,17 @@ Do not narrate what the next line does.
 
 The UI uses Kumo. Content text is 14px (`text-sm`). Only headings are larger. Headings are sentence case. Hover colours change instantly, without transitions. Use `ring ring-kumo-line` for borders, never `border` with a shadow.
 
+Build pages from the shared pieces rather than copying their classes:
+
+- A detail or place page opens with `Header` from `src/components/PlaceParts.tsx`: the icon tile in the item's map colour, the title, and a subtitle, badges or both. It picks white or near-black for the icon with `readableTextOn`, so pass a `#rrggbb` colour.
+- Each titled part of a page is a `Section` from `src/components/ui/Section.tsx`, with an optional `hint` line under the heading, an `icon` before it and an `action` at the end of its row.
+- A detail page's body is `grid gap-6 px-4 pt-4 pb-8`.
+
 Never rely on colour alone:
 
-- Links in or next to text are underlined (`underline decoration-1 underline-offset-2`). A link that opens a new tab ends with `<NewTabNote />`, which tells screen readers.
+- Links in or next to text are underlined. Use `ExternalLink` (standalone, with the new-tab icon) or `InlineLink` (inside a sentence) from `src/components/ui/Links.tsx` for outbound links; both end with `<NewTabNote />`, which tells screen readers the link opens a new tab. A link that stays on Roadbeat, or a `tel:` or `mailto:` link, takes `linkClass`.
 - Status tags are Kumo `Badge` pills. Toggle chips (buttons with `aria-pressed` or `role="radio"`) use `rounded-md`, so a tag never looks clickable.
+- A badge colour means one thing. An event type's badge is its colour from `src/lib/eventMeta.ts`, so blue is flooding and water, which is also why a flood camera is blue. `primary` marks what's new since the last visit. `secondary` is a qualifier the publisher adds, such as Drop-off only or an NSW hazard's Major; warning levels lay their own colours over it (`FIRE_BADGE`). `outline` is a plain fact, such as a suburb or an id.
 - The title of a card in a list is a heading (`Text as="h3"`) holding the card's button, whose `::after` stretches over the card. See `EventCard`.
 
 ## Edit the public pages

@@ -362,7 +362,7 @@ function directionLabel(d: GridDirection) {
 /** "Drop-off only" or "Pick-up only", in a tag as Translink's timetables show it. */
 function StopKindBadge({ kind }: { kind: 'arrival' | 'pickup' }) {
   return (
-    <Badge variant="blue" className="whitespace-nowrap">
+    <Badge variant="secondary" className="whitespace-nowrap">
       {kind === 'arrival' ? 'Drop-off only' : 'Pick-up only'}
     </Badge>
   )

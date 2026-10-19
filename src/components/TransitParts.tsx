@@ -1,9 +1,7 @@
 import { Badge, Text } from '@cloudflare/kumo'
-import type { ReactNode } from 'react'
 import { alertActive, alertNextStart, type TransitAlert } from '../api/translink'
 import { routeLabels } from '../lib/transitLines'
 import { useNow } from '../hooks/useNow'
-import { Section as SharedSection } from './ui/Section'
 import { brisbaneDayDateTime as when } from '../lib/aest'
 
 // Pieces shared by the transit line, route and alert pages.
@@ -37,9 +35,4 @@ export function AlertCards({ alerts, onOpen }: { alerts: TransitAlert[]; onOpen:
       })}
     </ul>
   )
-}
-
-/** Transit sections lay each child on the section's gap, and some carry an id to scroll to. */
-export function Section(props: { title: string; id?: string; children: ReactNode }) {
-  return <SharedSection {...props} spaced />
 }

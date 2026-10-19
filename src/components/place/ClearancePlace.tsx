@@ -5,7 +5,7 @@ import { BCC_CLEARANCES_URL, clearanceLabel, QR_BRIDGES_URL, QR_CLEARANCES_URL, 
 import { formatDay, titleCase } from '../../lib/format'
 import { LAYER_COLOR } from '../../lib/mapIcons'
 import { Header } from '../PlaceParts'
-import { ExternalLink } from '../ui/Links'
+import { ExternalLink, linkClass } from '../ui/Links'
 import { Section } from '../ui/Section'
 import { Directions } from './Directions'
 
@@ -26,7 +26,6 @@ export function ClearanceBody({ c }: { c: Clearance }) {
       <Header
         icon={ArrowsVerticalIcon}
         color={LAYER_COLOR.clearance}
-        ink="#111"
         title={c.title}
         subtitle={qr ? `Queensland Rail bridge${c.suburb ? `, ${c.suburb}` : ''}` : 'Brisbane City Council low clearance'}
       />
@@ -68,7 +67,7 @@ function Contact({ name, phone }: { name: string | null; phone: string | null })
       {phone && (
         <>
           {name && ' · '}
-          <a href={`tel:${phone.replace(/\s+/g, '')}`} className="text-kumo-link underline decoration-1 underline-offset-2">
+          <a href={`tel:${phone.replace(/\s+/g, '')}`} className={linkClass}>
             {phone}
           </a>
         </>

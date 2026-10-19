@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { fetchRoadContacts } from '../api/client'
 import type { RoadContact } from '../api/types'
 import type { LngLat } from '../lib/geo'
-import { NewTabNote } from './NewTabNote'
+import { ExternalLink, linkClass } from './ui/Links'
 
 const ORDER: Record<string, number> = { local: 0, district: 1, state: 2 }
 
@@ -46,20 +46,19 @@ export function RoadContacts({ at }: { at: LngLat }) {
           </Text>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {c.phone_number && (
-              <a href={`tel:${c.phone_number.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
+              <a href={`tel:${c.phone_number.replace(/\s/g, '')}`} className={`inline-flex items-center gap-1 ${linkClass}`}>
                 <PhoneIcon /> {c.phone_number}
               </a>
             )}
             {c.email && (
-              <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
+              <a href={`mailto:${c.email}`} className={`inline-flex items-center gap-1 ${linkClass}`}>
                 <EnvelopeIcon /> Email
               </a>
             )}
             {c.website && (
-              <a href={c.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
-                <GlobeIcon /> Report online
-                <NewTabNote />
-              </a>
+              <ExternalLink href={c.website} icon={<GlobeIcon />}>
+                Report online
+              </ExternalLink>
             )}
           </div>
         </li>

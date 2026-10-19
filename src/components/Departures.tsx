@@ -36,9 +36,10 @@ import { shortName } from '../lib/planner'
 import { departuresAt, lineDirections, stopHref, type Departure, type DepartureContext } from '../lib/departures'
 import { regionRead } from '../lib/tripFeed'
 import { readableTextOn } from '../lib/routeColor'
-import { NewTabNote } from './NewTabNote'
 import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
 import { LoadFailed } from './ui/StateMessage'
+import { ExternalLink } from './ui/Links'
+import { Section } from './ui/Section'
 
 function dueIn(t: number, now: number) {
   const m = Math.round((t - now) / 60_000)
@@ -288,7 +289,7 @@ export function StopPage({
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-5 px-4 pt-4 pb-8">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
           {!stops ? (
             <Loader />
           ) : !stop ? (
@@ -317,16 +318,9 @@ export function StopPage({
                 {main && <StationMapLink name={stops.station(stop).name} stopId={stops.station(stop).id} />}
                 {/* The kiosk board lists real-time departures only. */}
                 {realtime === 'live' && (
-                  <a
-                    href={kioskPath(region, stop.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="A large departure board for a screen in a lobby or café"
-                    className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2"
-                  >
-                    <MonitorIcon size={14} /> Kiosk display
-                    <NewTabNote />
-                  </a>
+                  <ExternalLink href={kioskPath(region, stop.id)} icon={<MonitorIcon size={14} aria-hidden />} title="A large departure board for a screen in a lobby or café">
+                    Kiosk display
+                  </ExternalLink>
                 )}
               </div>
             </header>
@@ -338,13 +332,7 @@ export function StopPage({
 
           {stopAlerts && stopAlerts.length > 0 && <StopAlerts alerts={stopAlerts} routes={routes} onNavigate={onNavigate} />}
 
-          <section id="stop-next" className="grid scroll-mt-4 gap-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Text as="h3" variant="heading">
-                Next departures
-              </Text>
-              <TimeFormatToggle />
-            </div>
+          <Section title="Next departures" id="stop-next" action={<TimeFormatToggle />} spaced>
             {realtime !== 'live' ? (
               <TimetableOnly region={region} state={realtime} />
             ) : !list ? (
@@ -372,25 +360,19 @@ export function StopPage({
             ) : (
               <Text variant="secondary">No departures from here in Translink's real-time feed right now.</Text>
             )}
-          </section>
+          </Section>
           {realtime === 'live' && <Legend />}
           {/* SEQ lines have pages from Translink's network status; elsewhere each route has its own. */}
           {region !== 'SEQ' && routes && routes.length > 0 && (
-            <section className="grid gap-2">
-              <Text as="h3" variant="heading">
-                Routes
-              </Text>
+            <Section title="Routes">
               <RouteRows routes={regionRoutes(region, routes, routeInfo)} onNavigate={onNavigate} />
-            </section>
+            </Section>
           )}
           {/* Facilities, terminal and bus stop records are SEQ datasets, keyed by Translink's SEQ stop ids. */}
           {stop && region === 'SEQ' && <StationFacilitiesSection stopId={stops?.station(stop).id ?? stop.id} />}
           {stop && region === 'SEQ' && <FerryTerminalSection stopId={stop.id} />}
           {stop && region === 'SEQ' && <BusStopSection stopId={stop.id} />}
-          <section id="stop-timetable" className="grid scroll-mt-4 gap-2">
-            <Text as="h3" variant="heading">
-              Timetable
-            </Text>
+          <Section title="Timetable" id="stop-timetable" spaced>
             {stops && (
               <StopTimetable
                 region={region}
@@ -402,18 +384,8 @@ export function StopPage({
                 onNavigate={onNavigate}
               />
             )}
-          </section>
-          {/^\d+$/.test(id) && (
-            <a
-              href={`https://translink.com.au/stop/${id.padStart(6, '0')}/gtfs/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
-            >
-              Full timetable on Translink
-              <NewTabNote />
-            </a>
-          )}
+          </Section>
+          {/^\d+$/.test(id) && <ExternalLink href={`https://translink.com.au/stop/${id.padStart(6, '0')}/gtfs/`}>Full timetable on Translink</ExternalLink>}
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { NewTabNote } from './NewTabNote'
+import { InlineLink } from './ui/Links'
 
 /**
  * Renders the small Markdown subset in Queensland Rail's station text: paragraphs,
@@ -44,10 +44,9 @@ function inline(s: string, base: string): ReactNode[] {
       }
       out.push(
         url && /^https?:$/.test(url.protocol) ? (
-          <a key={m.index} href={url.href} target="_blank" rel="noopener noreferrer" className="text-kumo-link underline decoration-1 underline-offset-2">
+          <InlineLink key={m.index} href={url.href}>
             {label.replace(/\*\*/g, '')}
-            <NewTabNote />
-          </a>
+          </InlineLink>
         ) : (
           label
         ),

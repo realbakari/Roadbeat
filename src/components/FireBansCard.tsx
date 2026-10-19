@@ -1,8 +1,8 @@
 import { Text } from '@cloudflare/kumo'
 import { ProhibitIcon } from '@phosphor-icons/react'
 import { FIRE_BANS_PAGE, type FireBans } from '../api/fireBans'
-import { NewTabNote } from './NewTabNote'
 import { brisbaneDayClock as when } from '../lib/aest'
+import { ExternalLink } from './ui/Links'
 
 /**
  * The Queensland Fire Department's current fire bans, above the road events,
@@ -27,10 +27,7 @@ export function FireBansCard({ bans }: { bans: FireBans | null }) {
           </li>
         ))}
       </ul>
-      <a href={FIRE_BANS_PAGE} target="_blank" rel="noopener noreferrer" className="text-xs text-kumo-link underline decoration-1 underline-offset-2">
-        Queensland Fire Department fire bans and restrictions
-        <NewTabNote />
-      </a>
+      <ExternalLink href={FIRE_BANS_PAGE}>Queensland Fire Department fire bans and restrictions</ExternalLink>
     </section>
   )
 }

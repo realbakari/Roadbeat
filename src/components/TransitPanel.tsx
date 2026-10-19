@@ -32,7 +32,8 @@ import { LineTimetable, TimetableLink } from './Timetable'
 import { DeparturesHome, ModeChips, TransitSearch } from './TransitHome'
 import { TransitMapsDirectory } from './TransitMaps'
 import { TripPage } from './TripPage'
-import { AlertCards, Section } from './TransitParts'
+import { AlertCards } from './TransitParts'
+import { Section } from './ui/Section'
 import { ExternalLink } from './ui/Links'
 import { alertsForCodes, lineMatcher, lineSlug, lineWatchKey, routeLabels, vehiclesForCodes } from '../lib/transitLines'
 import { NewTabNote } from './NewTabNote'
@@ -382,7 +383,7 @@ function LinePage({ line, alerts, alertsError, vehicles, watchedRoutes, onNaviga
 
           {match ? (
             <>
-              <Section title="Current status">
+              <Section spaced title="Current status">
                 {alerts ? (
                   current.length ? (
                     <AlertCards alerts={current} onOpen={(a) => onNavigate(`transit/alert/${encodeURIComponent(a.id)}`)} />
@@ -395,7 +396,7 @@ function LinePage({ line, alerts, alertsError, vehicles, watchedRoutes, onNaviga
                   <Loader size="sm" />
                 )}
               </Section>
-              <Section title="Upcoming changes">
+              <Section spaced title="Upcoming changes">
                 {alerts ? (
                   upcoming.length ? (
                     <>
@@ -418,13 +419,13 @@ function LinePage({ line, alerts, alertsError, vehicles, watchedRoutes, onNaviga
                   <Loader size="sm" />
                 )}
               </Section>
-              <Section title="Next departures">
+              <Section spaced title="Next departures">
                 <LineDepartures match={match} mode={line.mode} vehicles={vehicles} onNavigate={onNavigate} />
               </Section>
-              <Section title="Timetable" id="line-timetable">
+              <Section spaced title="Timetable" id="line-timetable">
                 <LineTimetable match={match} mode={line.mode} vehicles={vehicles} onNavigate={onNavigate} />
               </Section>
-              <Section title="Live">
+              <Section spaced title="Live">
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-kumo-recessed px-3 py-2.5">
                   <Text>
                     <span className="font-medium tabular-nums">{live.length}</span>{' '}
@@ -466,7 +467,7 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-5 px-4 pt-4 pb-8">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
           <header className="grid gap-2">
             <Text as="h2" variant="heading" size="lg">
               {a.header}
@@ -481,7 +482,7 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
           </header>
           {a.description && <Text>{a.description}</Text>}
           {upcomingPeriods.length > 0 && (
-            <Section title="When">
+            <Section spaced title="When">
               <ul className="grid gap-1">
                 {upcomingPeriods.map((p, i) => (
                   <li key={i} className="text-sm">
@@ -493,7 +494,7 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
           )}
           {a.routes.length > 0 && !MAIN_REGIONS.includes(a.region) && (
             // Route alerts are watched across SEQ and Cairns only, so a regional route links to its page instead.
-            <Section title={`Affected routes (${a.routes.length})`}>
+            <Section spaced title={`Affected routes (${a.routes.length})`}>
               <div className="flex flex-wrap gap-1.5">
                 {a.routes.map((code) => (
                   <button
@@ -509,7 +510,7 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
             </Section>
           )}
           {a.routes.length > 0 && MAIN_REGIONS.includes(a.region) && (
-            <Section title={`Affected routes (${routeLabels(a).length})`}>
+            <Section spaced title={`Affected routes (${routeLabels(a).length})`}>
               <div className="flex flex-wrap gap-1.5">
                 {routeLabels(a).map((r) => {
                   const on = watchedRoutes.some((w) => w.toLowerCase() === r.toLowerCase())

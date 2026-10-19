@@ -28,7 +28,7 @@ import { eventTitle } from '../lib/eventText'
 import { updateGap, updateGapText } from '../lib/eventAge'
 import { shareUrl } from '../lib/sharePage'
 import { useCopied } from '../hooks/useCopied'
-import { ExternalLink, InlineLink } from './ui/Links'
+import { ExternalLink, InlineLink, linkClass } from './ui/Links'
 import { Section } from './ui/Section'
 import { Facts } from './ui/Facts'
 import { RelativeTime } from './ui/RelativeTime'
@@ -197,7 +197,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
                 ['Delay', clean(impact?.delay)],
               ]}
             />
-            <a href="/glossary/#road-closures-and-restrictions" className="mt-2 inline-block text-sm text-kumo-link underline">
+            <a href="/glossary/#road-closures-and-restrictions" className={`mt-2 inline-block text-sm ${linkClass}`}>
               What these terms mean
             </a>
           </Section>

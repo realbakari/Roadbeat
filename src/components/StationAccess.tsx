@@ -49,7 +49,7 @@ import { BUS_STOPS_URL, fetchBusStopAudit, type BusStopAudit, type Rating } from
 import { formatDay } from '../lib/format'
 import { LightMarkdown } from './LightMarkdown'
 import { NewTabNote } from './NewTabNote'
-import { InlineLink } from './ui/Links'
+import { ExternalLink, InlineLink } from './ui/Links'
 
 const QR = 'https://www.queenslandrail.com.au'
 
@@ -72,10 +72,7 @@ export function AccessAlerts({ alerts }: { alerts: TransitAlert[] }) {
             <span className="grid gap-1">
               {a.description && <span>{a.description}</span>}
               {a.url && (
-                <a href={a.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-kumo-link underline decoration-1 underline-offset-2">
-                  More from Translink <ArrowSquareOutIcon size={14} />
-                  <NewTabNote />
-                </a>
+                <ExternalLink href={a.url}>More from Translink</ExternalLink>
               )}
             </span>
           }

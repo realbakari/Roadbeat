@@ -15,6 +15,7 @@ import { CameraThumb } from './CameraGrid'
 import { EventCard } from './EventCard'
 import { StoryRow } from './NewsStoryRow'
 import { RelativeTime } from './ui/RelativeTime'
+import { Section } from './ui/Section'
 
 /** The map layer that shows each source a locality page lists, as the Layers panel names it. */
 const LAYER: Record<LocalitySource, { key: keyof MapLayers; label: string }> = {
@@ -103,7 +104,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
     ...(report.gauges.length ? ['gauges' as const] : []),
   ]
   return (
-    <div className="grid gap-5 px-4 pt-4 pb-8">
+    <div className="grid gap-6 px-4 pt-4 pb-8">
       <header className="grid gap-1">
         <Text as="h2" variant="heading" size="lg">
           {locality.name}
@@ -121,7 +122,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
       </header>
 
       {report.events.length > 0 && (
-        <Section title="Road events" note="QLDTraffic events in effect that it files under this locality.">
+        <Section title="Road events" hint="QLDTraffic events in effect that it files under this locality.">
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.events.map((e) => (
               <li key={e.properties.id}>
@@ -133,7 +134,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
       )}
 
       {report.fires.length > 0 && (
-        <Section title="Bushfires" note="Queensland Fire Department warnings and incidents whose area, title or location names it.">
+        <Section title="Bushfires" hint="Queensland Fire Department warnings and incidents whose area, title or location names it.">
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.fires.map((f) => (
               <Row key={f.id} onClick={() => onOpenHref(`fire/${encodeURIComponent(f.id)}`)} icon={FlameIcon} color={FIRE_COLOR[f.level]}>
@@ -150,7 +151,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
       )}
 
       {report.cameras.length > 0 && (
-        <Section title="Cameras" note={`Filed under ${locality.name} by QLDTraffic or a council, or within ${NEAR_KM} km of its gazetteer point.`}>
+        <Section title="Cameras" hint={`Filed under ${locality.name} by QLDTraffic or a council, or within ${NEAR_KM} km of its gazetteer point.`}>
           <div className="grid grid-cols-2 gap-2">
             {report.cameras.map(({ item: c, km }) => (
               <CameraThumb key={`${c.council ?? ''}${c.kind}${c.properties.id}`} camera={c} note={`${km.toFixed(1)} km`} onOpen={onOpenCamera} />
@@ -159,12 +160,12 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
         </Section>
       )}
 
-      <Section title="Model weather forecast" note="The next 24 hours, every third hour.">
+      <Section title="Model weather forecast" hint="The next 24 hours, every third hour.">
         <ModelForecast at={locality.position} now={now} />
       </Section>
 
       {report.airStations.length > 0 && (
-        <Section title="Air quality" note={`The department's monitoring stations within ${NEAR_KM} km.`}>
+        <Section title="Air quality" hint={`The department's monitoring stations within ${NEAR_KM} km.`}>
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.airStations.map(({ item: s, km }) => {
               const worst = worstRating(s)
@@ -182,7 +183,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
       )}
 
       {report.centres.length > 0 && (
-        <Section title="Council centres" note={`Centres councils list on their disaster dashboards within ${NEAR_KM} km.`}>
+        <Section title="Council centres" hint={`Centres councils list on their disaster dashboards within ${NEAR_KM} km.`}>
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.centres.map(({ item: c, km }) => {
               const kind = centreKind(c.type)
@@ -201,7 +202,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
       )}
 
       {report.outages.length > 0 && (
-        <Section title="Power outages" note={`Energex outages whose suburb is ${locality.name}, as a council dashboard relays them.`}>
+        <Section title="Power outages" hint={`Energex outages whose suburb is ${locality.name}, as a council dashboard relays them.`}>
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.outages.map((o) => (
               <Row key={o.id} onClick={() => onOpenHref(`place/outage/${encodeURIComponent(o.id)}`)} icon={LightningIcon} color={OUTAGE_COLOR[o.source]}>
@@ -214,7 +215,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
       )}
 
       {report.stories.length > 0 && (
-        <Section title="News" note={`Stories whose headline or summary names ${locality.name}. A place named in a story isn't always where it happened.`}>
+        <Section title="News" hint={`Stories whose headline or summary names ${locality.name}. A place named in a story isn't always where it happened.`}>
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.stories.map((s) => (
               <li key={s.id}>
@@ -226,7 +227,7 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
       )}
 
       {report.gauges.length > 0 && (
-        <Section title="Gauges" note={`Brisbane City Council and Queensland Government gauges within ${NEAR_KM} km. Heights are gauge readings, not flood levels.`}>
+        <Section title="Gauges" hint={`Brisbane City Council and Queensland Government gauges within ${NEAR_KM} km. Heights are gauge readings, not flood levels.`}>
           <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
             {report.gauges.map(({ item: g, km }) => {
               const latest = latestReading(g)
@@ -271,24 +272,6 @@ function Body({ locality, report, now, onOpenHref, onOpenCamera, onShowOnMap, on
         description={`${reportCount(report) ? 'Each item is listed' : 'Items are listed'} here only because its publisher named ${locality.name} or gave a position within ${NEAR_KM} km of the gazetteer's point for it. Roadbeat infers no locations, so a report filed under a neighbouring suburb is on that suburb's page instead.`}
       />
     </div>
-  )
-}
-
-function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-2">
-      <div className="grid gap-0.5">
-        <Text as="h3" variant="heading">
-          {title}
-        </Text>
-        {note && (
-          <Text size="sm" variant="secondary">
-            {note}
-          </Text>
-        )}
-      </div>
-      {children}
-    </section>
   )
 }
 

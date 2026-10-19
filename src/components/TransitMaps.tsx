@@ -1,5 +1,5 @@
 import { InputGroup, Text } from '@cloudflare/kumo'
-import { ArrowSquareOutIcon, CaretRightIcon, FilePdfIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
+import { CaretRightIcon, FilePdfIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import MAPS from '../data/translink-maps.json'
 import { findStationMap } from '../lib/transitMaps'
@@ -91,9 +91,8 @@ export function StationMapLink({ name, stopId }: { name: string; stopId: string 
   const map = findStationMap(name, stopId)
   if (!map) return null
   return (
-    <a href={map.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-kumo-link underline decoration-1 underline-offset-2">
-      <FilePdfIcon size={14} /> Station map (PDF) <ArrowSquareOutIcon size={14} />
-      <NewTabNote />
-    </a>
+    <ExternalLink href={map.href} icon={<FilePdfIcon size={14} aria-hidden />}>
+      Station map (PDF)
+    </ExternalLink>
   )
 }

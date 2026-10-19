@@ -134,7 +134,7 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
         )}
         <div className="flex flex-wrap items-center gap-1.5">
           {isNew && (
-            <Badge variant="blue">
+            <Badge variant="primary">
               New<span className="sr-only"> since your last visit</span>
             </Badge>
           )}

@@ -89,7 +89,7 @@ export function TripPage({
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-5 px-4 pt-4 pb-8">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
           <header className="flex items-start gap-3">
             {route && (
               <span

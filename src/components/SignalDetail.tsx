@@ -3,6 +3,8 @@ import { ArrowLeftIcon, TrafficSignalIcon } from '@phosphor-icons/react'
 import { SIGNALS_DATASET_URL, type ApproachReading, type SignalSite } from '../api/bccSignals'
 import { dsColor, siteLoad } from '../lib/signals'
 import { ExternalLink } from './ui/Links'
+import { Section } from './ui/Section'
+import { Header } from './PlaceParts'
 import { brisbaneClock as time } from '../lib/aest'
 import { RelativeTime } from './ui/RelativeTime'
 
@@ -30,25 +32,18 @@ export function SignalDetail({
         </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid gap-5 px-4 pt-4 pb-8">
-          <header className="flex items-start gap-3">
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-lg text-white"
-              style={{ backgroundColor: load ? dsColor(load.maxDs) : '#64748b' }}
-              aria-hidden
-            >
-              <TrafficSignalIcon size={22} weight="fill" />
-            </span>
-            <div className="grid min-w-0 gap-1">
-              <Text as="h2" variant="heading" size="lg">
-                {site.streets.length ? site.streets.join(' & ') : `Signal ${site.tsc}`}
-              </Text>
-              <div className="flex flex-wrap gap-1.5">
+        <div className="grid gap-6 px-4 pt-4 pb-8">
+          <Header
+            icon={TrafficSignalIcon}
+            color={load ? dsColor(load.maxDs) : '#64748b'}
+            title={site.streets.length ? site.streets.join(' & ') : `Signal ${site.tsc}`}
+            badges={
+              <>
                 {site.suburb && <Badge variant="outline">{site.suburb}</Badge>}
                 <Badge variant="outline">Signal {site.tsc}</Badge>
-              </div>
-            </div>
-          </header>
+              </>
+            }
+          />
 
           {!approaches || !load ? (
             <Text variant="secondary">No measured volumes from this intersection in the council's live feed right now.</Text>
@@ -64,10 +59,7 @@ export function SignalDetail({
                 lane's detector was occupied, as a percentage, as the council's SCATS system measures it.
               </Text>
 
-              <section className="grid gap-2">
-                <Text as="h3" variant="heading">
-                  Approaches
-                </Text>
+              <Section title="Approaches" spaced>
                 <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
                   {approaches.map((a) => (
                     <li key={a.id} className="grid gap-1.5 px-3 py-2">
@@ -96,7 +88,7 @@ export function SignalDetail({
                   Approaches are SCATS strategic approaches. The council doesn't publish which street each one is, so they're
                   listed by number.
                 </Text>
-              </section>
+              </Section>
             </>
           )}
 

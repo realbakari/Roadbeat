@@ -11,7 +11,7 @@ import type { BusySignal, DistrictCount, FootTraffic, Punctuality, RisingGauge, 
 import { ON_TIME } from '../lib/dashboard'
 import type { PanelId } from '../lib/dashboardLayout'
 import { EmptyNote, Row, Stat, Tile } from './Tile'
-import { NewTabNote } from '../components/NewTabNote'
+import { InlineLink } from '../components/ui/Links'
 import { brisbaneClock as timeOnly } from '../lib/aest'
 
 // The dashboard's panels, each rendered from the data Dashboard.tsx gathers.
@@ -55,12 +55,7 @@ function mmss(sec: number | null) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-const sourceLink = (href: string, children: ReactNode) => (
-  <a href={href} target="_blank" rel="noopener noreferrer" className="underline decoration-1 underline-offset-2">
-    {children}
-    <NewTabNote />
-  </a>
-)
+const sourceLink = (href: string, children: ReactNode) => <InlineLink href={href}>{children}</InlineLink>
 
 /** The panels that come from the road, transit, fire and Brisbane City Council feeds. Others are in panelsMonitor.tsx. */
 export const PANEL_VIEWS: Partial<Record<PanelId, (d: DashboardData) => ReactNode>> = {

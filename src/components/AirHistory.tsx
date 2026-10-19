@@ -12,8 +12,8 @@ import {
   type AirTimeframe,
 } from '../api/airHistory'
 import { AirHistoryChart } from './AirHistoryChart'
-import { ExternalLink } from './ui/Links'
 import { brisbaneDate } from '../lib/aest'
+import { ExternalLink } from './ui/Links'
 
 const when = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric' })
 

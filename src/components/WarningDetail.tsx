@@ -1,8 +1,8 @@
 import { Badge, Text } from '@cloudflare/kumo'
 import { WarningIcon } from '@phosphor-icons/react'
 import { QLD_WARNINGS_PAGE, WARNING_BADGE, WARNING_COLOR, type QldWarning } from '../api/qldWarnings'
-import { readableTextOn } from '../lib/routeColor'
 import { ExternalLink } from './ui/Links'
+import { Header } from './PlaceParts'
 import { PublishedText, TextPart } from './PublishedText'
 
 /**
@@ -21,22 +21,19 @@ export function WarningBody({ w }: { w: QldWarning }) {
   if (w.callToAction) rows.push(['Call to action', w.callToAction])
   return (
     <>
-      <header className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: color, color: readableTextOn(color) }} aria-hidden>
-          <WarningIcon size={22} weight="fill" />
-        </span>
-        <div className="grid min-w-0 gap-1">
-          <Text as="h2" variant="heading" size="lg">
-            {w.area ?? 'Queensland warning'}
-          </Text>
-          <div className="flex flex-wrap items-center gap-1.5">
+      <Header
+        icon={WarningIcon}
+        color={color}
+        title={w.area ?? 'Queensland warning'}
+        badges={
+          <>
             <Badge variant="secondary" className={WARNING_BADGE[w.level]}>
               {w.levelText}
             </Badge>
             {w.type && <Badge variant="outline">{w.type}</Badge>}
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="flex overflow-hidden rounded-lg ring ring-kumo-line">
         <span className="w-1 shrink-0" style={{ backgroundColor: color }} aria-hidden />

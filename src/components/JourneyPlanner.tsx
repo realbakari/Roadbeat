@@ -29,6 +29,7 @@ import { RouteBadges } from './TransitHome'
 import { REGION_NAMES } from '../lib/transitRegions'
 import { useCopied } from '../hooks/useCopied'
 import { ExternalLink } from './ui/Links'
+import { Section } from './ui/Section'
 import { chipClass } from './chip'
 import { brisbaneClock as clock, brisbaneDate } from '../lib/aest'
 
@@ -353,11 +354,10 @@ export function JourneyPlanner({
       ) : !options ? (
         <Loader size="sm" />
       ) : (
-        <section className="grid gap-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <Text as="h3" variant="heading">
-              Your options
-            </Text>
+        <Section
+          title="Your options"
+          spaced
+          action={
             <div className="flex gap-1">
               {filterChanged ? (
                 <Button size="sm" variant="secondary" icon={<StarIcon weight="fill" />} onClick={() => thisTrip && keepSavedTrip(thisTrip)}>
@@ -377,7 +377,8 @@ export function JourneyPlanner({
                 {shared ? 'Link copied' : 'Share'}
               </Button>
             </div>
-          </div>
+          }
+        >
           {options.length ? (
             <ul className="grid gap-2">
               {options.map((o) => (
@@ -418,7 +419,7 @@ export function JourneyPlanner({
               {arrive ? 'Earlier' : 'Later'} trips
             </Button>
           )}
-        </section>
+        </Section>
       )}
 
       <div className="grid gap-1 rounded-lg p-3 ring ring-kumo-line">

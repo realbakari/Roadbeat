@@ -11,7 +11,8 @@ import { alertsForCodes, vehiclesForCodes } from '../lib/transitLines'
 import { MAIN_REGIONS, REGION_NAMES } from '../lib/transitRegions'
 import { LineDepartures, TimetableOnly } from './Departures'
 import { LineTimetable, TimetableLink } from './Timetable'
-import { AlertCards, Section } from './TransitParts'
+import { AlertCards } from './TransitParts'
+import { Section } from './ui/Section'
 import { ExternalLink } from './ui/Links'
 
 const MODE_ICON: Record<string, Icon> = { train: TrainIcon, bus: BusIcon, ferry: BoatIcon, tram: TramIcon }
@@ -89,7 +90,7 @@ export function RoutePage({
             </div>
           </header>
 
-          <Section title="Current status">
+          <Section spaced title="Current status">
             {!routeAlerts ? (
               alertsError ? <Text variant="error">Couldn't load Translink's service alerts.</Text> : <Loader size="sm" />
             ) : routeAlerts.length ? (
@@ -99,7 +100,7 @@ export function RoutePage({
             )}
           </Section>
 
-          <Section title="Next departures">
+          <Section spaced title="Next departures">
             {realtime === 'live' ? (
               <LineDepartures region={region} match={match} mode={info?.mode ?? 'bus'} vehicles={vehicles} onNavigate={onNavigate} />
             ) : (
@@ -107,12 +108,12 @@ export function RoutePage({
             )}
           </Section>
 
-          <Section title="Timetable" id="route-timetable">
+          <Section spaced title="Timetable" id="route-timetable">
             <LineTimetable region={region} match={match} mode={info?.mode ?? 'bus'} vehicles={vehicles} onNavigate={onNavigate} />
           </Section>
 
           {realtime === 'live' && (
-            <Section title="Live">
+            <Section spaced title="Live">
               <Text>
                 <span className="font-medium tabular-nums">{live.length}</span> {live.length === 1 ? 'service' : 'services'} on this route
                 reporting a position right now

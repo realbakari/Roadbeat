@@ -1,10 +1,11 @@
 import { Banner, Button, Checkbox, Dialog, Select, Switch, TagInput, Text } from '@cloudflare/kumo'
 import { InfoIcon, NavigationArrowIcon, XIcon } from '@phosphor-icons/react'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import type { TrafficEvent } from '../api/types'
 import { ALERT_KINDS, alertArea, type AlertSettings } from '../lib/alertRules'
 import { currentPosition } from '../lib/position'
 import { eventTitle } from '../lib/eventText'
+import { Section } from './ui/Section'
 
 interface Props {
   open: boolean
@@ -206,23 +207,5 @@ export function AlertSettingsDialog({ open, onOpenChange, settings: s, onChange,
         </div>
       </Dialog>
     </Dialog.Root>
-  )
-}
-
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-2.5">
-      <div className="grid gap-0.5">
-        <Text as="h3" variant="heading">
-          {title}
-        </Text>
-        {hint && (
-          <Text size="sm" variant="secondary">
-            {hint}
-          </Text>
-        )}
-      </div>
-      {children}
-    </section>
   )
 }

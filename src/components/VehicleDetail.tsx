@@ -7,8 +7,10 @@ import { stopHref } from '../lib/departures'
 import { tripHref } from '../lib/trip'
 import { VEHICLE_COLOR } from '../lib/mapIcons'
 import { REGION_NAMES } from '../lib/transitRegions'
-import { NewTabNote } from './NewTabNote'
+import { Header } from './PlaceParts'
+import { ExternalLink } from './ui/Links'
 import { RelativeTime } from './ui/RelativeTime'
+import { Section } from './ui/Section'
 
 const MODE: Record<VehicleMode, { label: string; icon: Icon }> = {
   bus: { label: 'Bus', icon: BusIcon },
@@ -88,7 +90,6 @@ export function VehicleDetail({
   }
 
   const m = MODE[v.mode]
-  const I = m.icon
   const stop = stops?.get(v.region, v.stopId) ?? null
   const headsign = trips?.get(v.region, v.tripId)?.headsign ?? null
   const routeAlerts = (alerts ?? []).filter((a) => a.routes.includes(v.route) && alertActive(a, now))
@@ -98,23 +99,12 @@ export function VehicleDetail({
       {back}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid gap-6 px-4 pt-4 pb-8">
-          <header className="flex items-start gap-3">
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-lg text-white"
-              style={{ backgroundColor: v.color ?? VEHICLE_COLOR[v.mode] }}
-              aria-hidden
-            >
-              <I size={22} weight="fill" />
-            </span>
-            <div className="grid min-w-0 gap-0.5">
-              <Text as="h2" variant="heading" size="lg">
-                {v.mode === 'train' ? (v.lineName ?? `Train ${v.route}`) : `${m.label} ${routeInfo(v.route, v.region)?.short ?? v.route}`}
-              </Text>
-              <Text variant="secondary">
-                {v.routeName ?? REGION_NAMES[v.region]}
-              </Text>
-            </div>
-          </header>
+          <Header
+            icon={m.icon}
+            color={v.color ?? VEHICLE_COLOR[v.mode]}
+            title={v.mode === 'train' ? (v.lineName ?? `Train ${v.route}`) : `${m.label} ${routeInfo(v.route, v.region)?.short ?? v.route}`}
+            subtitle={v.routeName ?? REGION_NAMES[v.region]}
+          />
 
           <Button
             variant={following ? 'primary' : 'secondary'}
@@ -157,10 +147,7 @@ export function VehicleDetail({
             </button>
           )}
 
-          <section className="grid gap-2">
-            <Text as="h3" variant="heading">
-              Alerts for this route
-            </Text>
+          <Section title="Alerts for this route">
             {routeAlerts.length ? (
               <ul className="divide-y divide-kumo-line overflow-hidden rounded-lg ring ring-kumo-line">
                 {routeAlerts.map((a) => (
@@ -179,18 +166,10 @@ export function VehicleDetail({
             ) : (
               <Loader size="sm" />
             )}
-          </section>
+          </Section>
 
           {routeInfo(v.route, v.region)?.url && (
-            <a
-              href={routeInfo(v.route, v.region)!.url!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-kumo-link underline decoration-1 underline-offset-2"
-            >
-              Timetable on Translink
-              <NewTabNote />
-            </a>
+            <ExternalLink href={routeInfo(v.route, v.region)!.url!}>Timetable on Translink</ExternalLink>
           )}
 
           <Text size="xs" variant="secondary">
