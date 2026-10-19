@@ -118,6 +118,12 @@ export function EventList({
     return { now: count('now'), upcoming: count('upcoming') }
   }, [allEvents, filters])
 
+  // How many the Closures chip would show: the other filters as set, with closures only on.
+  const closureCount = useMemo(() => {
+    const f = { ...filters, closuresOnly: true }
+    return allEvents.filter((e) => matchesBase(e, f) && (f.types.size === 0 || f.types.has(e.properties.event_type))).length
+  }, [allEvents, filters])
+
   const toggleType = (t: EventType) => {
     const next = new Set(filters.types)
     if (next.has(t)) next.delete(t)
@@ -201,6 +207,17 @@ export function EventList({
             </div>
 
             <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 py-px [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0" role="group" aria-label="Event types">
+              {/* Closures first, as the header's Closures shortcut: the filter people most often look for. */}
+              <button
+                type="button"
+                aria-pressed={filters.closuresOnly}
+                onClick={() => set('closuresOnly', !filters.closuresOnly)}
+                className={chipClass(filters.closuresOnly)}
+              >
+                <ProhibitIcon size={14} weight="bold" className="text-kumo-danger" aria-hidden />
+                Closures only
+                <span className="text-kumo-subtle tabular-nums">{closureCount}</span>
+              </button>
               {EVENT_TYPES.map((m) => {
                 const count = typeCounts.get(m.type) ?? 0
                 const active = filters.types.has(m.type)
@@ -218,16 +235,6 @@ export function EventList({
                   </button>
                 )
               })}
-              {/* Closures as a chip too, matching the header's Closures shortcut. */}
-              <button
-                type="button"
-                aria-pressed={filters.closuresOnly}
-                onClick={() => set('closuresOnly', !filters.closuresOnly)}
-                className={chipClass(filters.closuresOnly)}
-              >
-                <ProhibitIcon size={14} weight="bold" className="text-kumo-danger" aria-hidden />
-                Closures only
-              </button>
             </div>
 
             <div id="event-more-filters" className={`${moreOpen ? 'grid' : 'hidden'} grid-cols-2 gap-2`}>
