@@ -3,6 +3,9 @@ import { ArrowLeftIcon, FlameIcon } from '@phosphor-icons/react'
 import { FIRE_BADGE, FIRE_COLOR, fireKindLabel, type FireWarning } from '../api/bushfires'
 import { ExternalLink } from './ui/Links'
 import { Header } from './PlaceParts'
+import { ReportChange } from './ReportChange'
+import { ShareButton } from './ui/ShareButton'
+import { fireShareText } from '../lib/shareText'
 import { PublishedText, TextPart } from './PublishedText'
 import { brisbaneDayDateTime as when } from '../lib/aest'
 import { RelativeTime } from './ui/RelativeTime'
@@ -16,10 +19,11 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
   const warning = fire.level !== 'Information'
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center border-b border-kumo-line px-2 py-2">
+      <div className="flex items-center justify-between gap-2 border-b border-kumo-line px-2 py-2">
         <Button variant="ghost" size="sm" icon={<ArrowLeftIcon />} onClick={onBack}>
           All events
         </Button>
+        <ShareButton title={fire.area ?? fire.title} text={fireShareText(fire)} url={location.href} />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid gap-6 px-4 pt-4 pb-8">
@@ -86,6 +90,8 @@ export function FireDetail({ fire, now, onBack }: { fire: FireWarning; now: numb
               <TextPart title="More information">{fire.further}</TextPart>
             </>
           )}
+
+          <ReportChange about="fire" />
 
           <div className="grid gap-1">
             <ExternalLink href={QFD_WARNINGS}>Current incidents on the Queensland Fire Department site</ExternalLink>

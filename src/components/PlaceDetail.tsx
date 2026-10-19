@@ -12,6 +12,8 @@ import { ExternalLink } from './ui/Links'
 import { Section } from './ui/Section'
 import { CycloneBody, NswFireBody, PastCycloneBody } from './HazardPlaces'
 import { NswHazardBody } from './NswHazardPlace'
+import { ShareButton } from './ui/ShareButton'
+import { nswHazardShareText, warningShareText } from '../lib/shareText'
 import { SpeedCameraBody } from './SpeedCameraParts'
 import { ClearanceBody } from './place/ClearancePlace'
 import { BikeBody, EventBody, ToiletBody } from './place/CouncilAmenities'
@@ -46,13 +48,26 @@ interface Props {
   onOpenHref?: (href: string) => void
 }
 
+/**
+ * What a place's Share button sends: warnings and NSW road hazards, which people
+ * pass on to each other. Fuel stations have none: the fuel licence bars
+ * republishing prices.
+ */
+function shareFor(place: Place): { title: string; text: string } | null {
+  if (place.kind === 'warning') return { title: place.data.area ?? place.data.title, text: warningShareText(place.data) }
+  if (place.kind === 'nswhazard') return { title: place.data.roads[0]?.street ?? place.data.title, text: nswHazardShareText(place.data) }
+  return null
+}
+
 export function PlaceDetail({ place, now, onBack, onOpenHref }: Props) {
+  const share = shareFor(place)
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center border-b border-kumo-line px-2 py-2">
+      <div className="flex items-center justify-between gap-2 border-b border-kumo-line px-2 py-2">
         <Button variant="ghost" size="sm" icon={<ArrowLeftIcon />} onClick={onBack}>
           Back
         </Button>
+        {share && <ShareButton title={share.title} text={share.text} url={location.href} />}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid gap-6 px-4 pt-4 pb-8">{body(place, now, onOpenHref)}</div>

@@ -1,4 +1,7 @@
 import { chipClass } from './chip'
+import { ReportChange } from './ReportChange'
+import { ShareButton } from './ui/ShareButton'
+import { transitAlertShareText } from '../lib/shareText'
 import { NoResults } from './ui/StateMessage'
 import { Badge, Banner, Button, Empty, InputGroup, Loader, Tabs, Text } from '@cloudflare/kumo'
 import {
@@ -461,10 +464,11 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
   const upcomingPeriods = a.periods.filter((p) => p.end == null || p.end > now).slice(0, 8)
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center border-b border-kumo-line px-2 py-2">
+      <div className="flex items-center justify-between gap-2 border-b border-kumo-line px-2 py-2">
         <Button variant="ghost" size="sm" icon={<ArrowLeftIcon />} onClick={() => history.back()}>
           Back
         </Button>
+        <ShareButton title={a.header} text={transitAlertShareText(a)} url={location.href} />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid gap-6 px-4 pt-4 pb-8">
@@ -481,6 +485,7 @@ function AlertPage({ alert: a, onNavigate, watchedRoutes, onToggleWatch }: Props
             </div>
           </header>
           {a.description && <Text>{a.description}</Text>}
+          <ReportChange about="transit" />
           {upcomingPeriods.length > 0 && (
             <Section spaced title="When">
               <ul className="grid gap-1">

@@ -68,7 +68,7 @@ export function MapTools({ map, layers, sources, readable, onLocate, locating, l
           onClick={onLocate}
           className="shadow-md"
         />
-        <Button size="sm" shape="square" icon={<DownloadSimpleIcon />} aria-label="Save image of the map" title="Save image of the map" loading={saving} onClick={save} className="shadow-md" />
+        <Button size="sm" shape="square" icon={<DownloadSimpleIcon />} aria-label="Share or save an image of the map" title="Share or save an image of the map, with its sources" loading={saving} onClick={save} className="shadow-md" />
         <Button size="sm" shape="square" variant={crosshair ? 'primary' : 'secondary'} icon={<CrosshairIcon />} aria-label="Crosshair" aria-pressed={crosshair} title="Crosshair: what's at the centre of the map" onClick={() => setCrosshair((v) => !v)} className="shadow-md" />
       </div>
       {error && (

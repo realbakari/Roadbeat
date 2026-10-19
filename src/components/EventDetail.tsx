@@ -3,9 +3,7 @@ import {
   ArrowLeftIcon,
   BellIcon,
   BellRingingIcon,
-  CheckIcon,
   ClockCounterClockwiseIcon,
-  LinkSimpleIcon,
   ProhibitIcon,
   SirenIcon,
   WarningIcon,
@@ -27,7 +25,9 @@ import { TypeIcon } from './EventCard'
 import { eventTitle } from '../lib/eventText'
 import { updateGap, updateGapText } from '../lib/eventAge'
 import { shareUrl } from '../lib/sharePage'
-import { useCopied } from '../hooks/useCopied'
+import { ShareButton } from './ui/ShareButton'
+import { ReportChange } from './ReportChange'
+import { eventShareText } from '../lib/shareText'
 import { ExternalLink, InlineLink, linkClass } from './ui/Links'
 import { Section } from './ui/Section'
 import { Facts } from './ui/Facts'
@@ -71,16 +71,6 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
       .slice(0, 4)
   }, [anchor, cameras])
 
-  const [copied, flashCopied] = useCopied(1500)
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl(location.origin, location.hash) ?? location.href)
-      flashCopied()
-    } catch {
-      // Clipboard can be blocked; the URL bar still holds the link.
-    }
-  }
-
   const gap = updateGap(event, now)
   // Brisbane time, labelled as every other detail page labels it.
   const aest = (iso: string | null | undefined) => {
@@ -108,15 +98,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
         >
           {watched ? 'Watching' : 'Watch'}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={copied ? <CheckIcon /> : <LinkSimpleIcon />}
-          onClick={copyLink}
-          aria-live="polite"
-        >
-          {copied ? 'Copied' : 'Copy link'}
-        </Button>
+        <ShareButton title={eventTitle(event)} text={eventShareText(event)} url={shareUrl(location.origin, `#event/${p.id}`) ?? location.href} />
         </div>
       </div>
 
@@ -247,6 +229,8 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
             )}
           </Section>
 
+          <ReportChange about="road" managersId={anchor ? 'who-manages' : undefined} />
+
           <Section title="Location">
             <Facts
               labelWidth="wide"
@@ -287,7 +271,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
           )}
 
           {anchor && (
-            <Section title="Who manages this road">
+            <Section id="who-manages" title="Who manages this road">
               <RoadContacts at={anchor} />
             </Section>
           )}
