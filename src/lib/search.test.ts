@@ -157,6 +157,26 @@ describe('search over the newer sources', () => {
   })
 })
 
+describe('telling results apart', () => {
+  it("drops a gazetteer twin's bracketed council from its title, keeping the full name in the link", () => {
+    const s: SearchSources = { ...EMPTY, towns: [{ name: 'Miva (Gympie Regional)', council: 'Gympie Regional', position: [152.5, -25.9] }, { name: 'Miva', council: 'Somerset Regional', position: [152.4, -27.1] }] }
+    const hits = search(s, 'Miva')
+    expect(hits).toHaveLength(2)
+    expect(hits).toEqual(
+      expect.arrayContaining([
+        { kind: 'town', title: 'Miva', detail: 'Somerset Regional', href: 'place/locality/Miva' },
+        { kind: 'town', title: 'Miva', detail: 'Gympie Regional', href: 'place/locality/Miva%20(Gympie%20Regional)' },
+      ]),
+    )
+  })
+
+  it('shows where each of several same-named dump points is', () => {
+    const dump = (id: string, description: string) => ({ id, name: 'Gympie', description, coordinates: [152.66, -26.19] as [number, number] })
+    const s: SearchSources = { ...EMPTY, dumpPoints: [dump('d1', 'Lake Alford Park, Bruce Highway'), dump('d2', 'Gympie Showgrounds')] }
+    expect(search(s, 'Gympie').map((h) => h.detail)).toEqual(['RV dump point · Lake Alford Park, Bruce Highway', 'RV dump point · Gympie Showgrounds'])
+  })
+})
+
 describe('unloadedLayers', () => {
   it('names the layers whose data is not loaded', () => {
     expect(unloadedLayers(sources)).toEqual([

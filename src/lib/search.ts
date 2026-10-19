@@ -170,6 +170,16 @@ const MODE_LABEL: Record<TransitLine['mode'], string> = { train: 'Train line', b
 
 const join = (...parts: (string | null | undefined)[]) => parts.filter(Boolean).join(' · ')
 
+/**
+ * A town's name as a result shows it. The gazetteer names a second place of
+ * the same name with its council in brackets, "Miva (Gympie Regional)"; the
+ * council is already on the line below, so the title keeps just "Miva".
+ */
+export function townTitle(t: Locality): string {
+  const m = t.name.match(/^(.+) \((.+)\)$/)
+  return m && m[2] === t.council ? m[1] : t.name
+}
+
 /** Every item the loaded data offers, with the published fields the search matches on. Build it once per load, not per keystroke. */
 export function searchIndex(s: SearchSources): SearchEntry[] {
   const out: SearchEntry[] = []
@@ -178,7 +188,7 @@ export function searchIndex(s: SearchSources): SearchEntry[] {
     out.push({ hit: { kind, title, detail, href }, name, nameWords, allWords: [...nameWords, ...places.flatMap((p) => (p ? words(p) : []))] })
   }
 
-  for (const t of s.towns ?? []) add('town', t.name, t.council ?? 'Queensland', `place/locality/${encodeURIComponent(t.name)}`, t.name, [t.council])
+  for (const t of s.towns ?? []) add('town', townTitle(t), t.council ?? 'Queensland', `place/locality/${encodeURIComponent(t.name)}`, townTitle(t), [t.council])
   for (const e of s.events) {
     const r = e.properties.road_summary
     add('event', eventTitle(e), join(e.properties.event_type, eventPlace(e)), `event/${e.properties.id}`, r?.road_name ?? '', [r?.locality, r?.local_government_area, r?.district])
@@ -202,7 +212,8 @@ export function searchIndex(s: SearchSources): SearchEntry[] {
   for (const f of s.fuel ?? []) add('fuel', brandedName(f), join(FUEL_STATUS_LABEL[f.status], f.address), `place/fuel/${encodeURIComponent(f.id)}`, brandedName(f), [f.address, f.council])
   for (const c of s.speedCameras ?? []) add('speedcamera', c.site, SPEED_CAMERA_LABEL[c.type], `place/speedcamera/${encodeURIComponent(c.id)}`, c.site)
   for (const r of s.restAreas) if (r.name) add('place', r.name, 'Rest area', `place/rest/${r.id}`, r.name)
-  for (const d of s.dumpPoints) add('place', d.name, 'RV dump point', `place/dump/${d.id}`, d.name)
+  // Several dump points share a town's name ("Gympie" three times), so the published location tells them apart.
+  for (const d of s.dumpPoints) add('place', d.name, join('RV dump point', clean(d.description)), `place/dump/${d.id}`, d.name)
   for (const t of s.truckRestrictions) add('place', t.properties.name, 'Heavy vehicle restriction', `place/truck/${t.properties.id}`, t.properties.name, [t.properties.suburbs])
   for (const c of s.clearances ?? []) add('place', c.title, join('Low clearance', c.suburb), `place/clearance/${c.id}`, c.title, [c.suburb])
   for (const t of s.toilets ?? []) add('place', t.name, join('Public toilet', t.address), `place/toilet/${t.id}`, t.name, [t.address])
