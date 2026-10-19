@@ -18,6 +18,7 @@ import { AIR_COLOR, AIR_RATINGS, worstRating } from '../api/airQuality'
 import { HOTSPOT_COLOR } from '../api/hotspots'
 import { WARNING_COLOR } from '../api/qldWarnings'
 import { NSW_ALERT_COLOR } from '../api/nswFires'
+import { NSW_HAZARD_COLOR, nswHazardHeading } from '../api/nswHazards'
 import { SPEED_CAMERA_LABEL } from '../api/speedCameras'
 import { PAST_CYCLONE_COLOR, pastCycloneTitle } from '../api/pastCyclones'
 import { CYCLONE_COLOR } from '../api/jtwc'
@@ -84,6 +85,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   hotspot: 'Heat detected by satellite',
   warning: 'Queensland warning',
   nswfire: 'NSW Rural Fire Service incident',
+  nswhazard: 'Transport for NSW, Live Traffic',
   cyclone: 'JTWC warning, not the official Australian warning',
   pastcyclone: 'Past cyclone track, IBTrACS',
   speedcamera: 'Camera site, Queensland Government',
@@ -125,6 +127,8 @@ function placeTitle(place: Place): string {
       return place.data.area ?? 'Queensland warning'
     case 'nswfire':
       return place.data.title
+    case 'nswhazard':
+      return place.data.roads[0]?.street ?? nswHazardHeading(place.data)
     case 'cyclone':
       return place.data.name ? `Tropical cyclone ${place.data.name} (${place.data.id})` : `Tropical cyclone ${place.data.id}`
     case 'pastcyclone':
@@ -160,6 +164,10 @@ export function placeCard(place: Place): MapCard | null {
     const w = place.data
     facts.push(...[w.callToAction, w.issued ? `${w.issued} (AEST)` : null].filter((f) => f != null))
   }
+  if (place.kind === 'nswhazard') {
+    const h = place.data
+    facts.push(...[nswHazardHeading(h), h.roads[0] ? [h.roads[0].suburb, h.roads[0].region].filter(Boolean).join(' · ') : null, h.lastUpdated ? `Updated ${observed.format(h.lastUpdated)} AEST` : null].filter((f): f is string => !!f))
+  }
   if (place.kind === 'nswfire') facts.push(...[place.data.alertLevel, place.data.fields.find(([k]) => k === 'Status')?.[1]].filter((f): f is string => !!f))
   if (place.kind === 'cyclone') {
     const c = place.data
@@ -189,6 +197,7 @@ export function placeCard(place: Place): MapCard | null {
     hotspot: HOTSPOT_COLOR,
     warning: place.kind === 'warning' ? WARNING_COLOR[place.data.level] : '',
     nswfire: place.kind === 'nswfire' ? (NSW_ALERT_COLOR[place.data.alertLevel] ?? NSW_ALERT_COLOR['Not Applicable']) : '',
+    nswhazard: place.kind === 'nswhazard' ? (place.data.major ? NSW_HAZARD_COLOR.major : NSW_HAZARD_COLOR.normal) : '',
     cyclone: CYCLONE_COLOR,
     pastcyclone: PAST_CYCLONE_COLOR,
     fuel: place.kind === 'fuel' ? { available: LAYER_COLOR.fuelAvailable, partial: LAYER_COLOR.fuelPartial, unavailable: LAYER_COLOR.fuelUnavailable, unknown: LAYER_COLOR.fuelUnknown }[place.data.status] : '',

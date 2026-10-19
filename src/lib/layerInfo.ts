@@ -38,6 +38,7 @@ const SOURCES: Partial<Record<keyof MapLayers, Source>> = {
   outages: { feeds: ['news'], publisher: 'Council disaster dashboards (power outages are Energex’s)' },
   airQuality: { feeds: ['air-quality'] },
   nswFires: { feeds: ['nsw-fires'] },
+  nswHazards: { feeds: ['nsw-hazards'] },
   cyclones: { feeds: ['jtwc'] },
   pastCyclones: { feeds: ['past-cyclones'] },
   speedCameras: { feeds: ['speed-cameras'] },
@@ -83,6 +84,7 @@ interface LayerData {
   /** When the news snapshot (news, centres and outages) was read by Roadbeat's server. */
   newsReadAt: number | null
   nswReadAt: number | null
+  nswHazardsReadAt?: number | null
 }
 
 /** The latest time each layer can show, from the data loaded now. Layers with no time in their feed get none. */
@@ -96,6 +98,7 @@ export function layerTimes(d: LayerData): Partial<Record<keyof MapLayers, DataTi
   if (storm) out.cyclones = { at: storm, label: 'Latest warning' }
   if (d.newsReadAt) for (const k of ['news', 'councilCentres', 'outages'] as const) out[k] = { at: d.newsReadAt, label: 'Feeds read' }
   if (d.nswReadAt) out.nswFires = { at: d.nswReadAt, label: 'Feed read' }
+  if (d.nswHazardsReadAt) out.nswHazards = { at: d.nswHazardsReadAt, label: 'Feed read' }
   return out
 }
 

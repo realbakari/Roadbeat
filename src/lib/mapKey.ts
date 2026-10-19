@@ -1,10 +1,11 @@
 import { HOTSPOT_AGES } from '../api/hotspots'
 import { CYCLONE_COLOR } from '../api/jtwc'
 import { NSW_ALERT_COLOR } from '../api/nswFires'
+import { NSW_HAZARD_KINDS, NSW_HAZARD_LABEL } from '../api/nswHazards'
 import { PAST_CYCLONE_COLOR } from '../api/pastCyclones'
 import type { MapLayers } from '../components/map/settings'
 import { EVENT_TYPES } from './eventMeta'
-import { nswFireIcon, typeSlug } from './mapIcons'
+import { nswFireIcon, nswHazardIcon, typeSlug } from './mapIcons'
 import { AIR_RATINGS } from '../api/airQuality'
 
 /** One row of the map key: a map icon (by its image id) or a coloured dot, and what it means. */
@@ -46,6 +47,10 @@ export function mapKeySections(layers: MapLayers): KeySection[] {
   ])
   add(layers.hotspots, 'Satellite hotspots, heat seen (not confirmed fires)', HOTSPOT_AGES.map((a) => ({ label: a.label, color: a.color })))
   add(layers.nswFires, 'NSW fires near the border (NSW RFS)', Object.keys(NSW_ALERT_COLOR).map((label) => ({ label, icon: nswFireIcon(label) })))
+  add(layers.nswHazards, 'NSW road hazards near the border (Transport for NSW)', [
+    ...NSW_HAZARD_KINDS.map((kind) => ({ label: NSW_HAZARD_LABEL[kind], icon: nswHazardIcon(kind, false) })),
+    { label: 'Marked major', icon: nswHazardIcon('incident', true) },
+  ])
   add(layers.cyclones, 'Tropical cyclones (JTWC, not the official warning)', [{ label: 'Warning position, and JTWC forecast points', color: CYCLONE_COLOR }])
   add(layers.pastCyclones, 'Past cyclone tracks (IBTrACS)', [{ label: 'Reported track, history only', color: PAST_CYCLONE_COLOR }])
   add(layers.speedCameras, 'Speed and red light cameras (Qld Government)', [

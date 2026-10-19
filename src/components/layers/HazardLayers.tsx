@@ -8,13 +8,14 @@ import type { FireBans } from '../../api/fireBans'
 import { HOTSPOT_COLOR } from '../../api/hotspots'
 import { CYCLONE_COLOR, type Cyclone } from '../../api/jtwc'
 import { NSW_ALERT_COLOR, type NswFire } from '../../api/nswFires'
+import { NSW_HAZARD_COLOR, type NswHazard } from '../../api/nswHazards'
 import { PAST_CYCLONE_COLOR, type PastCyclone } from '../../api/pastCyclones'
 import { WARNING_COLOR } from '../../api/qldWarnings'
 import type { Feed } from '../../hooks/useHazardFeeds'
 import { CENTRE_COLOR } from '../../lib/councilCentres'
 import { LAYER_COLOR } from '../../lib/mapIcons'
 import { OUTAGE_COLOR } from '../../lib/outages'
-import { CyclonesNote, FireBansLine, NswFiresNote, PastCyclonesNote } from '../HazardLayerNotes'
+import { CyclonesNote, FireBansLine, NswFiresNote, NswHazardsNote, PastCyclonesNote } from '../HazardLayerNotes'
 import { HotspotsNote } from '../SatelliteLayerNotes'
 import { InlineLink } from '../ui/Links'
 import { FiresNote, WarningsNote } from '../WarningLayerNotes'
@@ -39,7 +40,7 @@ export function HazardLayers({
   fireState: ComponentProps<typeof FiresNote>
   warningState: ComponentProps<typeof WarningsNote>
   hotspotState: ComponentProps<typeof HotspotsNote>
-  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]> }
+  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; nswHazards: Feed<NswHazard[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]> }
   airError: string | null
   unplacedOutages: number
   gaugeNotice: string | null
@@ -88,6 +89,16 @@ export function HazardLayers({
         onChange={(v) => set('nswFires', v)}
       >
         <NswFiresNote feed={hazards.nswFires} />
+      </LayerRow>
+      <LayerRow
+        icon={<Badge color={NSW_HAZARD_COLOR.normal} icon={<WarningIcon size={12} weight="fill" />} />}
+        label="NSW road hazards near the border"
+        count={hazards.nswHazards.data?.length}
+        layer="nswHazards"
+        checked={layers.nswHazards}
+        onChange={(v) => set('nswHazards', v)}
+      >
+        <NswHazardsNote feed={hazards.nswHazards} />
       </LayerRow>
       <LayerRow
         icon={<Badge color={CYCLONE_COLOR} icon={<HurricaneIcon size={12} weight="fill" />} />}

@@ -12,6 +12,7 @@ import type { FiresNote, WarningsNote } from './WarningLayerNotes'
 import type { Feed } from '../hooks/useHazardFeeds'
 import type { FireBans } from '../api/fireBans'
 import type { NswFire } from '../api/nswFires'
+import type { NswHazard } from '../api/nswHazards'
 import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
 import type { SpeedCamera } from '../api/speedCameras'
@@ -59,7 +60,7 @@ interface Props {
   /** Which satellite image is chosen, and the state of each source. */
   imagery: ComponentProps<typeof SatelliteImageNote>
   /** Fire bans, NSW border fires, JTWC cyclones and past cyclone tracks, for their notes. */
-  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]>; speedCameras: Feed<SpeedCamera[]>; fuel: Feed<FuelStation[]> }
+  hazards: { fireBans: Feed<FireBans>; nswFires: Feed<NswFire[]>; nswHazards: Feed<NswHazard[]>; cyclones: Feed<Cyclone[]>; pastCyclones: Feed<PastCyclone[]>; speedCameras: Feed<SpeedCamera[]>; fuel: Feed<FuelStation[]> }
   /** Load errors for the council's clearway, toilet, parking, cycling and events layers. */
   councilErrors: { clearways: string | null; toilets: string | null; accessibleParking: string | null; parkingMeters: string | null; cycling: string | null; councilEvents: string | null }
 }

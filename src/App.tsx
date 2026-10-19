@@ -63,7 +63,7 @@ import { satelliteSuggestion } from './lib/satelliteSuggestion'
 import { useSatelliteDismissals } from './hooks/useSatelliteDismissals'
 import { useFocusOnce } from './hooks/useFocusOnce'
 import { SatelliteSuggestion } from './components/map/SatelliteSuggestion'
-import { useAirQuality, useBushfires, useCyclones, useFireBans, useNswFires, usePastCyclones, useSpeedCameras, useFuelStations } from './hooks/useHazardFeeds'
+import { useAirQuality, useBushfires, useCyclones, useFireBans, useNswFires, useNswHazards, usePastCyclones, useSpeedCameras, useFuelStations } from './hooks/useHazardFeeds'
 import { asCameras } from './lib/cameras'
 import { roadBounds } from './lib/newsRoads'
 import { DEFAULT_STORY_FILTER, filterStories, groupStories, storyBounds, type StoryFilter } from './lib/newsStories'
@@ -257,6 +257,7 @@ export function App() {
   const hot = useHotspots(layers.hotspots || sel.place?.kind === 'hotspot')
   const fireBans = useFireBans(layers.fires)
   const nswFires = useNswFires(layers.nswFires || sel.place?.kind === 'nswfire')
+  const nswHazards = useNswHazards(layers.nswHazards || sel.place?.kind === 'nswhazard')
   // Also read while the street map is the base, so a storm near Australia can suggest the satellite view.
   const cyclones = useCyclones(layers.cyclones || sel.place?.kind === 'cyclone' || base === 'map')
   const pastCyclones = usePastCyclones(layers.pastCyclones || sel.place?.kind === 'pastcyclone')
@@ -311,8 +312,8 @@ export function App() {
     [base, cyclones.data, qw.warnings, dismissed],
   )
   const layerTimesNow = useMemo(
-    () => layerTimes({ gauges, airStations: air.stations, cyclones: cyclones.data, newsReadAt: news.snapshot?.fetchedAt ?? null, nswReadAt: nswFires.fetchedAt }),
-    [gauges, air.stations, cyclones.data, news.snapshot, nswFires.fetchedAt],
+    () => layerTimes({ gauges, airStations: air.stations, cyclones: cyclones.data, newsReadAt: news.snapshot?.fetchedAt ?? null, nswReadAt: nswFires.fetchedAt, nswHazardsReadAt: nswHazards.fetchedAt }),
+    [gauges, air.stations, cyclones.data, news.snapshot, nswFires.fetchedAt, nswHazards.fetchedAt],
   )
   const firesNewest = useMemo(() => (fires?.length ? Math.max(...fires.map((f) => f.published ?? 0)) || null : null), [fires])
   const selectedGauge = useMemo(() => (sel.gauge ? (gauges?.find((g) => g.id === sel.gauge) ?? null) : null), [gauges, sel.gauge])
@@ -364,7 +365,7 @@ export function App() {
   const cardVisible = isDesktop ? panelMode === 'closed' : mobileView === 'map'
   const selectedPlace = useSelectedPlace(
     sel,
-    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, warnings: qw.warnings, nswFires: nswFires.data, cyclones: cyclones.data, pastCyclones: pastCyclones.data, speedCameras: speedCameras.data, fuelStations: fuelStations.data },
+    { ...ref, waze, clearances, clearways: council.clearways, toilets: council.toilets, bays: council.bays, meters: council.meters, bikeStops: council.bikeStops, councilEvents: council.events, councilCentres: news.snapshot?.centres ?? null, outages: news.snapshot?.outages ?? null, airStations: air.stations, hotspots: hot.hotspots, warnings: qw.warnings, nswFires: nswFires.data, nswHazards: nswHazards.data, cyclones: cyclones.data, pastCyclones: pastCyclones.data, speedCameras: speedCameras.data, fuelStations: fuelStations.data },
     setLayers,
     setFocus,
   )
@@ -740,6 +741,7 @@ export function App() {
               satelliteImage={satelliteImage}
               imageSources={imageSources}
               nswFires={nswFires.data ?? []}
+              nswHazards={nswHazards.data ?? []}
               cyclones={cyclones.data ?? []}
               pastCyclones={pastCyclones.data ?? []}
               speedCameras={speedCameras.data ?? []}
@@ -801,7 +803,7 @@ export function App() {
                 )
               }
               imagery={{ source: satelliteSource, onSource: (s) => (setSatelliteSource(s), setFrame(null)), now, live: imagery.live, jma: imagery.jma, date: imagery.date, latest: imagery.latest, checking: imagery.checking, error: imagery.error, today: imagery.today, onPick: imagery.pick }}
-              hazards={{ fireBans, nswFires, cyclones, pastCyclones, speedCameras, fuel: fuelStations }}
+              hazards={{ fireBans, nswFires, nswHazards, cyclones, pastCyclones, speedCameras, fuel: fuelStations }}
               councilErrors={council.errors}
             />
             {base === 'satellite' && !timelineOpen && (

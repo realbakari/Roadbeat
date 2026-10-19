@@ -6,6 +6,7 @@ import { fetchJmaFrames } from '../api/jmaHimawari'
 import { fetchQldWarnings } from '../api/qldWarnings'
 import { fetchFireBans } from '../api/fireBans'
 import { fetchNswFires } from '../api/nswFires'
+import { fetchNswHazards } from '../api/nswHazards'
 import { fetchCyclones } from '../api/jtwc'
 import { fetchPastCyclones } from '../api/pastCyclones'
 import { fetchSpeedCameras } from '../api/speedCameras'
@@ -167,6 +168,7 @@ export const CHECKS: Record<FeedId, FeedCheck | { skip: string }> = {
     return { publisherTime: f.feedUpdatedAt ? { at: f.feedUpdatedAt, label: 'Feed generated' } : null }
   },
   'nsw-fires': (signal) => fetchNswFires(signal).then(none),
+  'nsw-hazards': (signal) => fetchNswHazards(signal).then(none),
   jtwc: (signal) => fetchCyclones(signal).then(none),
   'past-cyclones': (signal) => fetchPastCyclones(signal).then(none),
   'speed-cameras': (signal) => fetchSpeedCameras(signal).then(none),

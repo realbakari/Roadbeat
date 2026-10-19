@@ -8,6 +8,7 @@ const PLACE_TITLE: Record<string, string> = {
   air: 'Air quality station',
   hotspot: 'Satellite hotspot',
   nswfire: 'NSW fire',
+  nswhazard: 'NSW road hazard',
   cyclone: 'Tropical cyclone (JTWC)',
   pastcyclone: 'Past cyclone',
   speedcamera: 'Speed camera site',

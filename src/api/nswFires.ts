@@ -1,5 +1,6 @@
 import type { LngLat } from '../lib/geo'
 import { decodeEntities } from '../lib/newsText'
+import { NSW_BORDER_LAT } from '../lib/nswBorder'
 
 // NSW Rural Fire Service major incidents (the Fires Near Me feed), for fires
 // just south of the Queensland border. The feed answers CORS requests. The
@@ -11,12 +12,7 @@ export const NSW_FIRES_URL = 'https://www.rfs.nsw.gov.au/feeds/majorIncidents.js
 export const NSW_FIRES_PAGE = 'https://www.rfs.nsw.gov.au/fire-information/fires-near-me'
 export const NSW_FIRES_ATTRIBUTION = '© State of New South Wales (NSW Rural Fire Service). For current information go to www.rfs.nsw.gov.au'
 
-/**
- * Incidents north of this latitude are kept: within about 150 km of the
- * Queensland border, which runs between 28.2° and 29° south. A fixed line,
- * stated in the layer's note, rather than a distance Roadbeat would compute.
- */
-export const NSW_BORDER_LAT = -29.6
+export { NSW_BORDER_LAT }
 
 export const NSW_ALERT_COLOR: Record<string, string> = {
   'Emergency Warning': '#b91c1c',

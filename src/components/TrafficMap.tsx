@@ -42,8 +42,9 @@ import type { AirStation } from '../api/airQuality'
 import type { Hotspot } from '../api/hotspots'
 import { SatelliteImagery } from './map/SatelliteImagery'
 import { MapTools } from './map/MapTools'
-import { cycloneFeatures, nswFireFeatures, pastCycloneFeatures } from './map/hazardLayers'
+import { cycloneFeatures, nswFireFeatures, nswHazardFeatures, pastCycloneFeatures } from './map/hazardLayers'
 import type { NswFire } from '../api/nswFires'
+import type { NswHazard } from '../api/nswHazards'
 import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
 import type { SpeedCamera } from '../api/speedCameras'
@@ -136,6 +137,8 @@ interface Props {
   imageSources: string[]
   /** NSW RFS incidents near the Queensland border. */
   nswFires: NswFire[]
+  /** Transport for NSW road hazards near the border. */
+  nswHazards: NswHazard[]
   /** JTWC's current cyclones near Australia. */
   cyclones: Cyclone[]
   /** Past cyclone tracks near Queensland. */
@@ -202,13 +205,14 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   airQuality: ['air-quality'],
   hotspots: ['hotspots'],
   nswFires: ['nsw-fires'],
+  nswHazards: ['nsw-hazard-lines', 'nsw-hazards'],
   cyclones: ['cyclone-track', 'cyclone-points'],
   pastCyclones: ['past-cyclones'],
   speedCameras: ['speed-cameras'],
   fuel: ['fuel'],
 }
 
-const CLICKABLE_PLACES = ['fuel', 'speed-cameras', 'air-quality', 'hotspots', 'nsw-fires', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
+const CLICKABLE_PLACES = ['fuel', 'speed-cameras', 'air-quality', 'hotspots', 'nsw-fires', 'nsw-hazards', 'nsw-hazard-lines', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
 const EVENT_LAYERS = ['event-markers', 'event-lines', 'event-areas']
 /** What the crosshair reads under the centre: everything a tap can open. */
 const READABLE = [...EVENT_LAYERS, ...CLICKABLE_PLACES]
@@ -250,6 +254,7 @@ export function TrafficMap(props: Props) {
     satelliteImage,
     imageSources,
     nswFires,
+    nswHazards,
     cyclones,
     pastCyclones,
     speedCameras,
@@ -408,6 +413,8 @@ export function TrafficMap(props: Props) {
   const cycloneData = useMemo(() => cycloneFeatures(cyclones), [cyclones])
   const pastCycloneData = useMemo(() => pastCycloneFeatures(pastCyclones), [pastCyclones])
   useSourceData(map, ready, 'nsw-fires', nswFireData)
+  const nswHazardData = useMemo(() => nswHazardFeatures(nswHazards), [nswHazards])
+  useSourceData(map, ready, 'nsw-hazards', nswHazardData)
   useSourceData(map, ready, 'cyclones', cycloneData)
   useSourceData(map, ready, 'past-cyclones', pastCycloneData)
   const speedCameraData = useMemo(() => speedCameraFeatures(speedCameras), [speedCameras])

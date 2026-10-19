@@ -5,6 +5,7 @@ import { fetchFireBans, type FireBans } from '../api/fireBans'
 import { fetchCyclones, type Cyclone } from '../api/jtwc'
 import { fetchModelForecast, type ModelForecast } from '../api/modelForecast'
 import { fetchNswFires, type NswFire } from '../api/nswFires'
+import { fetchNswHazards, type NswHazard } from '../api/nswHazards'
 import { fetchPastCyclones, type PastCyclone } from '../api/pastCyclones'
 import { fetchSpeedCameras, type SpeedCamera } from '../api/speedCameras'
 import type { LngLat } from '../lib/geo'
@@ -48,6 +49,9 @@ export const useFireBans = (enabled: boolean): Feed<FireBans> => usePolled(enabl
 
 /** NSW RFS incidents near the Queensland border, read every 2 minutes while their layer is on. */
 export const useNswFires = (enabled: boolean): Feed<NswFire[]> => usePolled(enabled, fetchNswFires, 2 * 60_000)
+
+/** Transport for NSW road hazards near the Queensland border, read every 2 minutes (Roadbeat's server reads them each minute) while their layer is on. */
+export const useNswHazards = (enabled: boolean): Feed<NswHazard[]> => usePolled(enabled, fetchNswHazards, 2 * 60_000)
 
 /** JTWC's current tropical cyclones near Australia, read every 30 minutes (JTWC warns every 6 hours) while their layer is on. */
 export const useCyclones = (enabled: boolean): Feed<Cyclone[]> => usePolled(enabled, fetchCyclones, 30 * 60_000)

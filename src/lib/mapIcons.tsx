@@ -29,6 +29,7 @@ import {
   CloudRainIcon,
   GaugeIcon,
   GasPumpIcon,
+  WavesIcon,
   type Icon,
   type IconWeight,
 } from '@phosphor-icons/react'
@@ -42,6 +43,7 @@ import { CENTRE_COLOR } from './councilCentres'
 import { OUTAGE_COLOR } from './outages'
 import { AIR_COLOR } from '../api/airQuality'
 import { NSW_ALERT_COLOR } from '../api/nswFires'
+import { NSW_HAZARD_COLOR, NSW_HAZARD_KINDS, type NswHazardKind } from '../api/nswHazards'
 
 // Map icons are drawn as SVG badges (Phosphor glyph on a coloured disc or
 // rounded square), rasterised once, and registered with MapLibre as images.
@@ -209,6 +211,12 @@ function buildIcons(): Record<string, string> {
   icons['gauge-stream'] = disc('#0369a1', DropHalfBottomIcon)
   icons['gauge-rain'] = disc('#0d9488', CloudRainIcon)
   for (const [level, color] of Object.entries(NSW_ALERT_COLOR)) icons[nswFireIcon(level)] = disc(color, FlameIcon)
+  // NSW road hazards are squares, unlike QLDTraffic's pins, so the two states' events can't be mistaken for each other.
+  const NSW_GLYPH: Record<NswHazardKind, Icon> = { incident: WarningIcon, flood: WavesIcon, roadwork: WrenchIcon, majorevent: CalendarStarIcon }
+  for (const kind of NSW_HAZARD_KINDS) {
+    icons[nswHazardIcon(kind, false)] = square(NSW_HAZARD_COLOR.normal, NSW_GLYPH[kind])
+    icons[nswHazardIcon(kind, true)] = square(NSW_HAZARD_COLOR.major, NSW_GLYPH[kind])
+  }
   // Camera sites are squares, like the signs that warn of them: a camera for speed, a signal for red light, a speedometer for point-to-point.
   icons['speedcam-fixed'] = square(LAYER_COLOR.speedCamera, CameraIcon)
   icons['speedcam-combined'] = square(LAYER_COLOR.redLightCamera, CameraIcon)
@@ -223,6 +231,11 @@ function buildIcons(): Record<string, string> {
 }
 
 /** Map image id for a saturation band (an index into DS_BANDS). */
+/** Map image id for an NSW road hazard of a type, major or not. */
+export function nswHazardIcon(kind: NswHazardKind, major: boolean) {
+  return `nswhazard-${kind}${major ? '-major' : ''}`
+}
+
 /** Map image id for an NSW RFS incident at its published alert level. */
 export function nswFireIcon(level: string) {
   return `nswfire-${level.toLowerCase().replace(/[^a-z]+/g, '-')}`

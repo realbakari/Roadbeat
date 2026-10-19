@@ -105,6 +105,14 @@ The fuel layer reads `/api/fuel`, which needs one server setting:
 
 Without it, `/api/fuel` answers 503 and the layer says fuel status isn't set up. The endpoint sends no CORS header, so other sites can't use it from their pages, and it reads availability only, never prices.
 
+### Turn on NSW road hazards near the border
+
+The NSW road hazards layer reads `/api/nsw-hazards`, which needs one server setting:
+
+- **`TFNSW_API_KEY`**: an API key from Transport for NSW's Open Data Hub (opendata.transport.nsw.gov.au), with the **Live Traffic Hazards** API added to its application. Set it in Vercel (Settings → Environment Variables, Production) and in `.env.local` for `npm run dev`. The key is sent only from the server, as `Authorization: apikey <key>`.
+
+Without it, `/api/nsw-hazards` answers 503 and the layer says it isn't set up.
+
 ### Turn on feedback
 
 The app's menu has **Send feedback**, which posts to `/api/feedback` (`api/_lib/endpoints/feedback.ts`). It needs the same Upstash for Redis database as push alerts. Without the database, the form says feedback isn't set up.

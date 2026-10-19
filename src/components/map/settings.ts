@@ -49,6 +49,7 @@ export interface MapLayers {
   hotspots: boolean
   /** NSW Rural Fire Service incidents just south of the Queensland border. */
   nswFires: boolean
+  nswHazards: boolean
   /** The US Joint Typhoon Warning Center's current cyclones near Australia, with its forecast track. */
   cyclones: boolean
   /** Past tropical cyclone tracks near Queensland since 1980, from IBTrACS. */
@@ -88,6 +89,7 @@ export const DEFAULT_LAYERS: MapLayers = {
   airQuality: false,
   hotspots: false,
   nswFires: false,
+  nswHazards: false,
   cyclones: false,
   pastCyclones: false,
   speedCameras: false,

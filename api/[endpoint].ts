@@ -5,6 +5,7 @@ import * as events from './_lib/endpoints/events.js'
 import * as feedback from './_lib/endpoints/feedback.js'
 import * as fuel from './_lib/endpoints/fuel.js'
 import * as history from './_lib/endpoints/history.js'
+import * as nswHazards from './_lib/endpoints/nsw-hazards.js'
 import * as roads from './_lib/endpoints/roads.js'
 import * as share from './_lib/endpoints/share.js'
 import * as stops from './_lib/endpoints/stops.js'
@@ -13,7 +14,7 @@ import { json } from './_lib/http.js'
 
 // One Vercel function for the small endpoints: /api/events, /api/stops,
 // /api/departures, /api/bushfires, /api/history, /api/camera-time,
-// /api/fuel, /api/share (an HTML page for link previews), /api/roads (the text-only
+// /api/fuel, /api/nsw-hazards, /api/share (an HTML page for link previews), /api/roads (the text-only
 // events page, served at /roads), /api/visits and /api/feedback
 // (the two that take POST). Vercel's Hobby plan deploys at
 // most 12 functions, and each file in api/ (plus middleware.ts) is one, so
@@ -35,6 +36,7 @@ const ENDPOINTS: Record<string, Endpoint> = {
   feedback,
   fuel,
   history,
+  'nsw-hazards': nswHazards,
   roads,
   share,
   stops,

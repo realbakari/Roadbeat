@@ -2,6 +2,7 @@ import { Text } from '@cloudflare/kumo'
 import { FIRE_BANS_PAGE, type FireBans } from '../api/fireBans'
 import { BOM_CYCLONES, JTWC_PAGE, type Cyclone } from '../api/jtwc'
 import { NSW_ALERT_COLOR, NSW_FIRES_ATTRIBUTION, NSW_FIRES_PAGE, type NswFire } from '../api/nswFires'
+import { NSW_HAZARD_COLOR, NSW_HAZARDS_ATTRIBUTION, NSW_HAZARDS_PAGE, type NswHazard } from '../api/nswHazards'
 import { IBTRACS_PAGE, type PastCyclone } from '../api/pastCyclones'
 import type { Feed } from '../hooks/useHazardFeeds'
 import { feedNotice } from '../lib/feedNotice'
@@ -38,6 +39,37 @@ export function NswFiresNote({ feed }: { feed: Feed<NswFire[]> }) {
       <Text size="xs" variant="secondary">
         NSW Rural Fire Service major incidents north of 29.6° S, within about 150 km of the border, read every 2 minutes. {NSW_FIRES_ATTRIBUTION}, CC BY 4.0.{' '}
         <InlineLink href={NSW_FIRES_PAGE}>Fires Near Me</InlineLink>
+      </Text>
+    </div>
+  )
+}
+
+export function NswHazardsNote({ feed }: { feed: Feed<NswHazard[]> }) {
+  const notice = feedNotice('Transport for NSW hazards', feed.data != null, feed.error, feed.fetchedAt)
+  return (
+    <div className="grid gap-1">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-kumo-subtle">
+        <span className="inline-flex items-center gap-1">
+          <span className="size-2 rounded-sm" style={{ background: NSW_HAZARD_COLOR.normal }} />
+          Incident, flood, roadwork or major event
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="size-2 rounded-sm" style={{ background: NSW_HAZARD_COLOR.major }} />
+          Marked major
+        </span>
+      </div>
+      {notice ? (
+        <Text size="xs" variant="error">{notice}</Text>
+      ) : (
+        feed.data?.length === 0 && (
+          <Text size="xs" variant="secondary">
+            Transport for NSW lists no road hazards north of 29.6° S right now.
+          </Text>
+        )
+      )}
+      <Text size="xs" variant="secondary">
+        Transport for NSW's Live Traffic hazards north of 29.6° S, within about 150 km of the border, as squares with dashed lines so they aren't mistaken for QLDTraffic's. Roadbeat's server reads them
+        every minute. {NSW_HAZARDS_ATTRIBUTION}. <InlineLink href={NSW_HAZARDS_PAGE}>Live Traffic NSW</InlineLink>
       </Text>
     </div>
   )

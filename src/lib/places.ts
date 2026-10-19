@@ -5,6 +5,7 @@ import type { AirStation } from '../api/airQuality'
 import type { Hotspot } from '../api/hotspots'
 import type { QldWarning } from '../api/qldWarnings'
 import type { NswFire } from '../api/nswFires'
+import type { NswHazard } from '../api/nswHazards'
 import type { Cyclone } from '../api/jtwc'
 import type { PastCyclone } from '../api/pastCyclones'
 import type { SpeedCamera } from '../api/speedCameras'
@@ -35,6 +36,7 @@ export type Place =
   | { kind: 'hotspot'; data: Hotspot }
   | { kind: 'warning'; data: QldWarning }
   | { kind: 'nswfire'; data: NswFire }
+  | { kind: 'nswhazard'; data: NswHazard }
   | { kind: 'cyclone'; data: Cyclone }
   | { kind: 'pastcyclone'; data: PastCyclone }
   | { kind: 'speedcamera'; data: SpeedCamera }
@@ -59,6 +61,7 @@ export interface PlaceSources {
   hotspots: Hotspot[] | null
   warnings: QldWarning[] | null
   nswFires: NswFire[] | null
+  nswHazards: NswHazard[] | null
   cyclones: Cyclone[] | null
   pastCyclones: PastCyclone[] | null
   speedCameras: SpeedCamera[] | null
@@ -84,6 +87,7 @@ export const PLACE_LAYER: Partial<Record<string, keyof MapLayers>> = {
   hotspot: 'hotspots',
   warning: 'warnings',
   nswfire: 'nswFires',
+  nswhazard: 'nswHazards',
   cyclone: 'cyclones',
   pastcyclone: 'pastCyclones',
   speedcamera: 'speedCameras',
@@ -161,6 +165,10 @@ export function findPlace(ref: { kind: string; id: string }, s: PlaceSources): P
     const data = s.nswFires?.find((f) => f.id === id)
     return data ? { kind, data } : null
   }
+  if (kind === 'nswhazard') {
+    const data = s.nswHazards?.find((h) => h.id === id)
+    return data ? { kind, data } : null
+  }
   if (kind === 'cyclone') {
     const data = s.cyclones?.find((c) => c.id === id)
     return data ? { kind, data } : null
@@ -211,6 +219,8 @@ export function placeFocus(place: Place): { center: LngLat; zoom: number } | nul
       return { center: place.data.position, zoom: 10 }
     case 'nswfire':
       return { center: place.data.position, zoom: 11 }
+    case 'nswhazard':
+      return { center: place.data.position, zoom: 12 }
     case 'cyclone':
       return { center: place.data.points[0].position, zoom: 5 }
     case 'pastcyclone': {

@@ -11,6 +11,7 @@ import { Header } from './PlaceParts'
 import { ExternalLink } from './ui/Links'
 import { Section } from './ui/Section'
 import { CycloneBody, NswFireBody, PastCycloneBody } from './HazardPlaces'
+import { NswHazardBody } from './NswHazardPlace'
 import { SpeedCameraBody } from './SpeedCameraParts'
 import { ClearanceBody } from './place/ClearancePlace'
 import { BikeBody, EventBody, ToiletBody } from './place/CouncilAmenities'
@@ -187,6 +188,8 @@ function body(place: Place, now: number, onOpenHref?: (href: string) => void) {
       return <WarningBody w={place.data} />
     case 'nswfire':
       return <NswFireBody f={place.data} />
+    case 'nswhazard':
+      return <NswHazardBody h={place.data} now={now} />
     case 'cyclone':
       return <CycloneBody c={place.data} now={now} />
     case 'pastcyclone':
