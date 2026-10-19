@@ -26,6 +26,41 @@ export function findLocality(list: Locality[], name: string): Locality | null {
   return list.find((l) => l.name.toLowerCase() === lower) ?? null
 }
 
+/** A gazetteer name without the council the gazetteer adds to tell twins apart: "Miva (Gympie Regional)" is "Miva". */
+export function townTitle(t: Locality): string {
+  const m = t.name.match(/^(.+) \((.+)\)$/)
+  return m && m[2] === t.council ? m[1] : t.name
+}
+
+/** Gazetteer localities by their name without a twin's council, lower-cased, for matching names other sources publish. */
+export function localityIndex(list: Locality[]): Map<string, Locality[]> {
+  const index = new Map<string, Locality[]>()
+  for (const l of list) {
+    const key = townTitle(l).toLowerCase()
+    index.set(key, [...(index.get(key) ?? []), l])
+  }
+  return index
+}
+
+/**
+ * The gazetteer locality for each place a QLDTraffic event names ("Desailly /
+ * Mount Carbine"), or null where there's none to link to. A name the
+ * gazetteer has once is that place, whatever council spelling the event
+ * uses; twins are told apart by the event's council, and left unlinked when
+ * it names neither. Places QLDTraffic files under NSW are never matched to
+ * a Queensland namesake.
+ */
+export function eventLocalities(index: Map<string, Locality[]>, locality: string | null | undefined, councils: string | null | undefined): { name: string; locality: Locality | null }[] {
+  const names = (locality ?? '').split(' / ').map((n) => n.trim()).filter(Boolean)
+  const lgas = (councils ?? '').split(' / ').map((c) => c.trim().toLowerCase()).filter(Boolean)
+  const nsw = lgas.length > 0 && lgas.every((c) => c === 'nsw')
+  return names.map((name) => {
+    const found = nsw ? [] : (index.get(name.toLowerCase()) ?? [])
+    const locality = found.length === 1 ? found[0] : (found.find((l) => lgas.includes(l.council.toLowerCase())) ?? null)
+    return { name, locality }
+  })
+}
+
 /** The locality whose gazetteer point is nearest a point, within `km`; null when none is that close. */
 export function nearestLocality(list: Locality[], at: LngLat, km: number): { locality: Locality; km: number } | null {
   let best: { locality: Locality; km: number } | null = null

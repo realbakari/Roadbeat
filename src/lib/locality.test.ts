@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { airStation, camera, councilCentre, fireWarning, gauge, gazetteerPlace, newsItem, outage, roadEvent } from '../test/fixtures'
-import { atLocality, findLocality, nearestLocality, reportCount, type Locality, type LocalitySources } from './locality'
+import { atLocality, eventLocalities, findLocality, type Locality, localityIndex, type LocalitySources, nearestLocality, reportCount, townTitle } from './locality'
 import { groupStories } from './newsStories'
 
 const NOW = Date.parse('2026-10-16T08:00:00+10:00')
@@ -82,5 +82,39 @@ describe('atLocality', () => {
     const r = atLocality(goodna, { ...empty, fires: null, gauges: null, errors: { fires: 'The QFD feed responded with 502' } }, NOW)
     expect(r.failed).toEqual([{ source: 'fires', error: 'The QFD feed responded with 502' }])
     expect(r.notLoaded).toEqual(['gauges'])
+  })
+})
+
+describe('eventLocalities', () => {
+  const at = (name: string, council: string): Locality => ({ name, council, position: [0, 0] })
+  const index = localityIndex([
+    at('Desailly', 'Mareeba Shire'),
+    at('Mount Carbine', 'Mareeba Shire'),
+    at('Miva (Fraser Coast Regional)', 'Fraser Coast Regional'),
+    at('Miva (Gympie Regional)', 'Gympie Regional'),
+    at('Bunya', 'Moreton Bay City'),
+    at('Tibooburra Creek', 'Bulloo Shire'),
+  ])
+  const names = (r: ReturnType<typeof eventLocalities>) => r.map((x) => [x.name, x.locality?.name ?? null])
+
+  it('finds each place an event names, whatever case or council spelling it uses', () => {
+    expect(names(eventLocalities(index, 'Desailly / Mount Carbine', 'Mareeba Shire'))).toEqual([['Desailly', 'Desailly'], ['Mount Carbine', 'Mount Carbine']])
+    expect(names(eventLocalities(index, 'BUNYA', 'Moreton Bay Regional'))).toEqual([['BUNYA', 'Bunya']])
+  })
+
+  it('tells twins apart by the event’s council, and leaves them unlinked when it names neither', () => {
+    expect(names(eventLocalities(index, 'Miva', 'Gympie Regional'))).toEqual([['Miva', 'Miva (Gympie Regional)']])
+    expect(names(eventLocalities(index, 'Miva', 'Noosa Shire'))).toEqual([['Miva', null]])
+  })
+
+  it('links nothing for places QLDTraffic files under NSW, or that the gazetteer doesn’t have', () => {
+    expect(names(eventLocalities(index, 'Bunya', 'Nsw'))).toEqual([['Bunya', null]])
+    expect(names(eventLocalities(index, 'Tibooburra', 'Nsw'))).toEqual([['Tibooburra', null]])
+    expect(eventLocalities(index, null, null)).toEqual([])
+  })
+
+  it('names twins without their council', () => {
+    expect(townTitle(at('Miva (Gympie Regional)', 'Gympie Regional'))).toBe('Miva')
+    expect(townTitle(at('Bunya', 'Moreton Bay City'))).toBe('Bunya')
   })
 })

@@ -23,7 +23,7 @@ import { CrashNearby } from './CrashNearby'
 import { GaugesNearby } from './GaugesNearby'
 import { RoadContacts } from './RoadContacts'
 import { TypeIcon } from './EventCard'
-import { eventPlace, eventTitle } from '../lib/eventText'
+import { eventTitle } from '../lib/eventText'
 import { updateGap, updateGapText } from '../lib/eventAge'
 import { shareUrl } from '../lib/sharePage'
 import { useCopied } from '../hooks/useCopied'
@@ -31,6 +31,8 @@ import { ExternalLink } from './ui/Links'
 import { Section } from './ui/Section'
 import { Facts } from './ui/Facts'
 import { RelativeTime } from './ui/RelativeTime'
+import { EventPlace } from './EventPlace'
+import { useLocalityIndex } from '../hooks/useLocality'
 
 interface Props {
   event: TrafficEvent
@@ -79,6 +81,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
   }
 
   const gap = updateGap(event, now)
+  const localities = useLocalityIndex()
   const direction = [clean(impact?.direction), clean(impact?.towards) && `towards ${clean(impact?.towards)}`]
     .filter(Boolean)
     .join(' ')
@@ -120,7 +123,9 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
                 <Text as="h2" variant="heading" size="lg">
                   {eventTitle(event)}
                 </Text>
-                <Text variant="secondary">{eventPlace(event)}</Text>
+                <Text variant="secondary">
+                  <EventPlace event={event} index={localities} onOpenHref={onOpenHref} />
+                </Text>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">

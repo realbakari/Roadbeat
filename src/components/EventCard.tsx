@@ -8,6 +8,8 @@ import { updateGap, updateGapText } from '../lib/eventAge'
 import { hasEnded, nextActiveDate } from '../lib/filters'
 import { isClosure } from '../lib/filters'
 import { RelativeTime } from './ui/RelativeTime'
+import { EventPlace } from './EventPlace'
+import type { Locality } from '../lib/locality'
 
 const startsFmt = new Intl.DateTimeFormat('en-AU', {
   timeZone: 'Australia/Brisbane',
@@ -42,9 +44,12 @@ interface Props {
   /** Whether the user gets alerts when this event changes or clears; the card shows a Watch button only when `onToggleWatch` is given. */
   watched?: boolean
   onToggleWatch?: (id: number) => void
+  /** The gazetteer index and a way to open a place, so the card links the places it names. */
+  localities?: Map<string, Locality[]> | null
+  onOpenPlace?: (hash: string) => void
 }
 
-export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingAs = 'h3', watched = false, onToggleWatch }: Props) {
+export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingAs = 'h3', watched = false, onToggleWatch, localities, onOpenPlace }: Props) {
   const p = event.properties
   const meta = typeMeta(p.event_type)
   const pr = priorityBadge(p.event_priority)
@@ -82,7 +87,7 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
           </div>
           {place && (
             <Text variant="secondary" size="sm" truncate>
-              {place}
+              {onOpenPlace ? <EventPlace event={event} index={localities ?? null} onOpenHref={onOpenPlace} /> : place}
               {distanceKm != null && ` · ${distanceKm < 10 ? distanceKm.toFixed(1) : Math.round(distanceKm)} km`}
             </Text>
           )}

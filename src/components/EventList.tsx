@@ -16,6 +16,7 @@ import { nextHidden } from '../lib/scrollReveal'
 import { distanceKm, eventAnchor, type LngLat } from '../lib/geo'
 import { EventCard } from './EventCard'
 import { useAnnouncement } from '../hooks/useAnnouncement'
+import { useLocalityIndex } from '../hooks/useLocality'
 import { chipClass } from './chip'
 import { LoadFailed, NoResults } from './ui/StateMessage'
 
@@ -87,6 +88,7 @@ export function EventList({
   const lastScrollY = useRef(0)
   const ignoreScrollUntil = useRef(0)
   const hideControls = scrolledAway && !moreOpen && !searchFocused
+  const localities = useLocalityIndex()
 
   const onListScroll = (e: UIEvent<HTMLDivElement>) => {
     const y = e.currentTarget.scrollTop
@@ -348,6 +350,8 @@ export function EventList({
                     onSelect={onSelect}
                     watched={watchedEvents.includes(e.properties.id)}
                     onToggleWatch={onToggleWatch}
+                    localities={localities}
+                    onOpenPlace={onOpenHref}
                   />
                 </li>
               )

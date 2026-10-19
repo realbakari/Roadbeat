@@ -15,7 +15,7 @@ import { eventPlace, eventTitle } from './eventText'
 import { clean } from './format'
 import { brandedName } from './fuelBrands'
 import { cameraKey } from './geo'
-import type { Locality } from './locality'
+import { townTitle, type Locality } from './locality'
 import type { NewsStory } from './newsStories'
 import { lineSlug } from './transitLines'
 
@@ -169,16 +169,6 @@ const GAUGE_SOURCE: Record<Gauge['source'], string> = { bcc: 'Brisbane City Coun
 const MODE_LABEL: Record<TransitLine['mode'], string> = { train: 'Train line', bus: 'Bus route', ferry: 'Ferry route', tram: 'Tram line' }
 
 const join = (...parts: (string | null | undefined)[]) => parts.filter(Boolean).join(' · ')
-
-/**
- * A town's name as a result shows it. The gazetteer names a second place of
- * the same name with its council in brackets, "Miva (Gympie Regional)"; the
- * council is already on the line below, so the title keeps just "Miva".
- */
-export function townTitle(t: Locality): string {
-  const m = t.name.match(/^(.+) \((.+)\)$/)
-  return m && m[2] === t.council ? m[1] : t.name
-}
 
 /** Every item the loaded data offers, with the published fields the search matches on. Build it once per load, not per keystroke. */
 export function searchIndex(s: SearchSources): SearchEntry[] {
