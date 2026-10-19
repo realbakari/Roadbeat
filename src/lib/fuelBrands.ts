@@ -58,19 +58,31 @@ export const setFuelLabel = (fuel: string) => labelStore.write([fuel])
 export type ViewBounds = [[number, number], [number, number]]
 
 /**
- * The lowest reported price of `fuel` among the stations in view, and every
- * station at that price (ties are all marked). Unavailable fuels don't count;
- * null when no station in view reports a price for it.
+ * How old a reported price can be and still count as the cheapest. Retailers
+ * report every change within 30 minutes, so a price unchanged for this long
+ * may be a station that has stopped reporting; it's still shown, faded, with
+ * its age, but never called the cheapest.
  */
-export function cheapestIn(stations: FuelStation[], fuel: string, bounds: ViewBounds | null): { cents: number; ids: Set<string>; stations: FuelStation[] } | null {
+export const FRESH_DAYS = 30
+
+/** Whether a price was reported within FRESH_DAYS of `now`. */
+export const isFresh = (reportedAt: number, now: number) => now - reportedAt <= FRESH_DAYS * 86_400_000
+
+/**
+ * The lowest reported price of `fuel` among the stations in view, and every
+ * station at that price (ties are all marked). Unavailable fuels and prices
+ * older than FRESH_DAYS don't count; null when no station in view has one.
+ */
+export function cheapestIn(stations: FuelStation[], fuel: string, bounds: ViewBounds | null, now: number): { cents: number; ids: Set<string>; stations: FuelStation[] } | null {
   if (!fuel) return null
   let best: number | null = null
   let at: FuelStation[] = []
   for (const s of stations) {
     const [lng, lat] = s.position
     if (bounds && (lng < bounds[0][0] || lng > bounds[1][0] || lat < bounds[0][1] || lat > bounds[1][1])) continue
-    const cents = s.fuels.find((f) => f.name === fuel)?.cents
-    if (cents == null) continue
+    const f = s.fuels.find((x) => x.name === fuel)
+    if (!f || f.cents == null || !isFresh(f.reportedAt, now)) continue
+    const cents = f.cents
     if (best == null || cents < best) {
       best = cents
       at = [s]

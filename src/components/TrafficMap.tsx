@@ -437,8 +437,10 @@ export function TrafficMap(props: Props) {
     }
   }, [map, layers.fuel])
   const shownFuel = useMemo(() => byBrand(fuelStations, fuelBrands), [fuelStations, fuelBrands])
-  const cheapest = useMemo(() => (layers.fuel ? cheapestIn(shownFuel, fuelLabel, fuelView) : null), [layers.fuel, shownFuel, fuelLabel, fuelView])
-  const fuelData = useMemo(() => fuelFeatures(shownFuel, fuelLabel, cheapest?.ids), [shownFuel, fuelLabel, cheapest])
+  // Freshness is judged by the day, so the pins aren't rebuilt each time the clock ticks.
+  const today = Math.floor(now / 86_400_000) * 86_400_000
+  const cheapest = useMemo(() => (layers.fuel ? cheapestIn(shownFuel, fuelLabel, fuelView, today) : null), [layers.fuel, shownFuel, fuelLabel, fuelView, today])
+  const fuelData = useMemo(() => fuelFeatures(shownFuel, fuelLabel, cheapest?.ids, today), [shownFuel, fuelLabel, cheapest, today])
   useSourceData(map, ready, 'fuel', fuelData)
   useSourceData(map, ready, 'council-centres', centreData)
   useSourceData(map, ready, 'outages', outageData)

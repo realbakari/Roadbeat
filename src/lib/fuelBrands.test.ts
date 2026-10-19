@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FuelStation } from '../api/fuelStations'
-import { brandCounts, brandedName, byBrand, cheapestIn, fuelNames, priceLabel } from './fuelBrands'
+import { brandCounts, brandedName, byBrand, cheapestIn, FRESH_DAYS, fuelNames, priceLabel } from './fuelBrands'
 
 const station = (name: string, brand: string | null): FuelStation => ({ id: name, name, brand, address: null, postcode: null, suburb: null, status: 'available', fuels: [], position: [153, -27] })
 
@@ -52,14 +52,20 @@ describe('cheapestIn', () => {
   const brisbane: [[number, number], [number, number]] = [[152.5, -28], [153.5, -27]]
 
   it('finds the lowest price in view and marks every station at it', () => {
-    const c = cheapestIn(stations, 'Unleaded', brisbane)
+    const c = cheapestIn(stations, 'Unleaded', brisbane, 0)
     expect(c?.cents).toBe(189.9)
     expect([...(c?.ids ?? [])]).toEqual(['B', 'C'])
   })
 
   it('looks everywhere without bounds, ignores unavailable fuels, and is null when nothing in view has a price', () => {
-    expect(cheapestIn(stations, 'Unleaded', null)?.cents).toBe(159.9)
-    expect(cheapestIn([stations[4]], 'Unleaded', null)).toBeNull()
-    expect(cheapestIn(stations, '', null)).toBeNull()
+    expect(cheapestIn(stations, 'Unleaded', null, 0)?.cents).toBe(159.9)
+    expect(cheapestIn([stations[4]], 'Unleaded', null, 0)).toBeNull()
+    expect(cheapestIn(stations, '', null, 0)).toBeNull()
+  })
+
+  it('never calls a price older than FRESH_DAYS the cheapest', () => {
+    const later = (FRESH_DAYS + 1) * 86_400_000
+    const fresh = { ...at('F', [153.05, -27.5], 209.9), fuels: [{ id: 2, name: 'Unleaded', cents: 209.9, available: true, reportedAt: later }] }
+    expect(cheapestIn([...stations, fresh], 'Unleaded', brisbane, later)?.stations.map((s) => s.name)).toEqual(['F'])
   })
 })

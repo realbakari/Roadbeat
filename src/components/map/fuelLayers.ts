@@ -1,6 +1,6 @@
 import type * as maplibregl from 'maplibre-gl'
 import { FUEL_STATUS_LABEL, type FuelStation } from '../../api/fuelStations'
-import { brandedName, priceLabel } from '../../lib/fuelBrands'
+import { brandedName, isFresh, priceLabel } from '../../lib/fuelBrands'
 import type { ColorMode } from '../../hooks/useColorMode'
 
 // Service stations at their published points. With no fuel chosen, or zoomed
@@ -23,11 +23,12 @@ type Pin = 'fuel-pin' | 'fuel-pin-cheap' | 'fuel-pin-out'
  * The stations as map features. `labelFuel` names the fuel whose price makes
  * the pin ('' for none); `cheapest` holds the ids at the lowest price in view.
  */
-export function fuelFeatures(stations: FuelStation[], labelFuel = '', cheapest: Set<string> = new Set()): GeoJSON.FeatureCollection {
+export function fuelFeatures(stations: FuelStation[], labelFuel = '', cheapest: Set<string> = new Set(), now = Date.now()): GeoJSON.FeatureCollection {
   return {
     type: 'FeatureCollection',
     features: stations.map((s) => {
       const price = labelFuel ? priceLabel(s, labelFuel) : null
+      const reported = labelFuel ? s.fuels.find((f) => f.name === labelFuel)?.reportedAt : undefined
       const pin: Pin | '' = price == null ? '' : price === 'Out' ? 'fuel-pin-out' : cheapest.has(s.id) ? 'fuel-pin-cheap' : 'fuel-pin'
       const [whole, tenth] = price && price !== 'Out' ? price.split('.') : [price ?? '', '']
       return {
@@ -44,6 +45,8 @@ export function fuelFeatures(stations: FuelStation[], labelFuel = '', cheapest: 
           tenth: tenth ? `.${tenth}` : '',
           // A station without the chosen fuel shrinks once pins show, so the prices lead.
           minor: labelFuel && !pin ? 1 : 0,
+          // A price older than FRESH_DAYS is faded; its page says how old.
+          old: reported != null && !isFresh(reported, now) ? 1 : 0,
         },
       }
     }),
@@ -149,6 +152,10 @@ export function addFuelLayers(map: maplibregl.Map, mode: ColorMode) {
       'symbol-sort-key': ['-', 0, ['get', 'rank']] as never,
       'text-padding': 2,
     },
-    paint: { 'text-color': ['match', ['get', 'pin'], 'fuel-pin-cheap', INK[mode]['fuel-pin-cheap'], 'fuel-pin-out', INK[mode]['fuel-pin-out'], INK[mode]['fuel-pin']] as never },
+    paint: {
+      'icon-opacity': ['case', ['==', ['get', 'old'], 1], 0.5, 1] as never,
+      'text-opacity': ['case', ['==', ['get', 'old'], 1], 0.6, 1] as never,
+      'text-color': ['match', ['get', 'pin'], 'fuel-pin-cheap', INK[mode]['fuel-pin-cheap'], 'fuel-pin-out', INK[mode]['fuel-pin-out'], INK[mode]['fuel-pin']] as never,
+    },
   })
 }
