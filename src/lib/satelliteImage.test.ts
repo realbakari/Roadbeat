@@ -30,6 +30,15 @@ describe('satelliteTiles', () => {
     expect(satelliteTiles('terra', FRAMES)?.tiles).toContain('/MODIS_Terra_CorrectedReflectance_TrueColor/default/2026-10-16/')
   })
 
+  it("draws the state's aerial photos within the service's extent, with the credit closed, whatever the frames", () => {
+    const none: SatelliteFrames = { gibsTime: null, jmaFrame: null, date: null }
+    const aerial = satelliteTiles('qld-aerial', none)
+    expect(aerial?.tiles).toContain('/LatestStateProgram_AllUsers/ImageServer/tile/{z}/{y}/{x}')
+    expect(aerial?.bounds).toEqual([137.74, -29.52, 153.76, -9.0])
+    expect(aerial?.collapseCredit).toBe(true)
+    expect(satelliteTiles('infrared', FRAMES)?.collapseCredit).toBeUndefined()
+  })
+
   it('draws nothing until the chosen source has published something', () => {
     const none: SatelliteFrames = { gibsTime: null, jmaFrame: null, date: null }
     for (const s of ['infrared', 'jma-infrared', 'noaa20', 'terra'] as const) expect(satelliteTiles(s, none)).toBeNull()

@@ -1,7 +1,7 @@
 import { HIMAWARI_BANDS, HIMAWARI_CREDIT, himawariTiles, type HimawariBand } from '../api/himawari'
 import { JMA_CREDIT, JMA_MAX_ZOOM, JMA_MIN_ZOOM, jmaTiles, type JmaFrame, type JmaProduct } from '../api/jmaHimawari'
 import { DAILY_PASSES, GIBS_MAX_ZOOM, gibsTiles, type DailyPass } from '../api/satelliteImagery'
-import { QLD_AERIAL_CREDIT, QLD_AERIAL_MAX_ZOOM, QLD_AERIAL_TILES } from '../api/qldImagery'
+import { QLD_AERIAL_BOUNDS, QLD_AERIAL_CREDIT, QLD_AERIAL_MAX_ZOOM, QLD_AERIAL_TILES } from '../api/qldImagery'
 
 /**
  * The satellite images the map can show, one at a time: Himawari-9 from NASA
@@ -40,6 +40,10 @@ export interface SatelliteTiles {
   minzoom: number
   maxzoom: number
   attribution: string
+  /** The area the source serves (west, south, east, north); no tiles are asked for outside it. */
+  bounds?: [number, number, number, number]
+  /** Start the map's credit closed behind its button, for a credit too long to cover the map with. */
+  collapseCredit?: boolean
 }
 
 /**
@@ -60,7 +64,7 @@ export interface SatelliteFrames {
  * two images can't stack.
  */
 export function satelliteTiles(source: SatelliteSource, f: SatelliteFrames): SatelliteTiles | null {
-  if (isAerial(source)) return { tiles: QLD_AERIAL_TILES, minzoom: 0, maxzoom: QLD_AERIAL_MAX_ZOOM, attribution: QLD_AERIAL_CREDIT }
+  if (isAerial(source)) return { tiles: QLD_AERIAL_TILES, minzoom: 0, maxzoom: QLD_AERIAL_MAX_ZOOM, attribution: QLD_AERIAL_CREDIT, bounds: QLD_AERIAL_BOUNDS, collapseCredit: true }
   const pass = dailyPass(source)
   if (pass) return f.date ? { tiles: gibsTiles(f.date, pass), minzoom: 0, maxzoom: GIBS_MAX_ZOOM, attribution: `${DAILY_PASSES[pass].credit}, ${f.date}` } : null
   const product = jmaProduct(source)

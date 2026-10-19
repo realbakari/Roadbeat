@@ -13,6 +13,12 @@ export const QLD_AERIAL_TILES = 'https://spatial-img.information.qld.gov.au/arcg
 /** The deepest level of the service's tile cache (1:564). */
 export const QLD_AERIAL_MAX_ZOOM = 20
 
+/**
+ * The service's published full extent (west, south, east, north), converted
+ * from Web Mercator; outside it the tile server answers 404.
+ */
+export const QLD_AERIAL_BOUNDS: [number, number, number, number] = [137.74, -29.52, 153.76, -9.0]
+
 /** The service's copyright text, as its licence asks to be shown on every copy, and its licence. */
 export const QLD_AERIAL_CREDIT =
   'Includes material © State of Queensland (Department of Natural Resources and Mines, Manufacturing and Regional and Rural Development); © Planet Labs Netherlands B.V. reproduced under licence from Planet and Geoplex, all rights reserved, 2026. CC BY-SA.'

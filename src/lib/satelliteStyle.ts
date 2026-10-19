@@ -17,6 +17,21 @@ export function imageBeforeLayer(layers: StyleLayer[]): string | undefined {
   return layers.find((l) => l['source-layer'] === 'transportation' || l['source-layer'] === 'boundary' || l.type === 'symbol')?.id
 }
 
+/**
+ * The base map's flat area fills drawn above the image, hidden until the image
+ * has faded (`imageFadedZoom`): the image shows buildings and airports itself,
+ * and OpenFreeMap's styles draw some after their first road or label (dark
+ * draws `building` after `water_name`, every style draws `aeroway-area` after
+ * a road or aeroway line), where they'd cover it. Only the base map's own vector layers are listed:
+ * Roadbeat's GeoJSON layers have no `source-layer`, and its 3D buildings are a
+ * `fill-extrusion` the reader turned on.
+ */
+export function coveringFills(layers: StyleLayer[], before: string | undefined): string[] {
+  const start = before ? layers.findIndex((l) => l.id === before) : -1
+  if (start < 0) return []
+  return layers.slice(start).filter((l) => l.type === 'fill' && l['source-layer'] != null && l['source-layer'] !== 'transportation').map((l) => l.id)
+}
+
 /** Text paint for labels over imagery: white on a dark outline. */
 export const LABEL_PAINT = {
   'text-color': '#ffffff',
@@ -36,5 +51,8 @@ export function labelLayers(layers: StyleLayer[]): string[] {
  * zooms later, where the street map shows through.
  */
 export function imageOpacity(maxzoom: number): unknown {
-  return ['interpolate', ['linear'], ['zoom'], maxzoom + 1, 1, maxzoom + 4, 0.15]
+  return ['interpolate', ['linear'], ['zoom'], maxzoom + 1, 1, imageFadedZoom(maxzoom), 0.15]
 }
+
+/** The zoom where the image has faded and the street map, buildings and all, takes over. */
+export const imageFadedZoom = (maxzoom: number) => maxzoom + 4
