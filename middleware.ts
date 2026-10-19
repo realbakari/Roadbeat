@@ -17,7 +17,10 @@ function markdownPathFor(path: string) {
 export default async function middleware(request: Request): Promise<Response | undefined> {
   if (request.method !== 'GET' || !(request.headers.get('accept') ?? '').includes('text/markdown')) return undefined
   const url = new URL(request.url)
-  const page = await fetch(new URL(markdownPathFor(url.pathname), url))
+  const target = new URL(markdownPathFor(url.pathname), url)
+  // A path that starts with two slashes, such as "//host/x", resolves to another host; only this site's own pages are fetched.
+  if (target.origin !== url.origin) return undefined
+  const page = await fetch(target)
   if (page.ok) return new Response(page.body, { headers: MARKDOWN })
   const missing = await fetch(new URL('/404.md', url))
   return new Response(missing.body, { status: 404, headers: MARKDOWN })

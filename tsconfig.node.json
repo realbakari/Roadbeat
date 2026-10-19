@@ -19,5 +19,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "site/**/*.ts", "middleware.ts"]
+  "include": ["vite.config.ts", "site/**/*.ts", "middleware.ts", "middleware.test.ts"]
 }

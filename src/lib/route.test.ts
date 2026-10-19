@@ -55,6 +55,12 @@ describe('parseHash', () => {
     expect([empty.event, empty.fire, empty.gauge, empty.signal, empty.transit, empty.news, empty.locality]).toEqual([null, null, null, null, null, null, null])
     expect(parseHash('#nonsense/1').event).toBeNull()
   })
+
+  it('keeps a part that is not valid percent-encoding as typed, rather than throwing', () => {
+    expect(parseHash('#fire/%').fire).toBe('%')
+    expect(parseHash('#transit/stop/SEQ/%E0%A4%A').transit).toEqual({ kind: 'stop', region: 'SEQ', id: '%E0%A4%A' })
+    expect(parsePath('/kiosk/SEQ/%')).toEqual({ kind: 'kiosk', region: 'SEQ', stopId: '%' })
+  })
 })
 
 describe('parsePath', () => {

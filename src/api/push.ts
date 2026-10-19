@@ -5,6 +5,9 @@ import type { Commute } from '../lib/commute'
 // watch. VITE_VAPID_PUBLIC_KEY is set at build time; without it push is off.
 
 const KEY: string | undefined = import.meta.env.VITE_VAPID_PUBLIC_KEY
+/** When this browser last sent its subscription, so it re-sends at most once a day. */
+const SENT_KEY = 'roadbeat-push-sent'
+const RESEND_MS = 86_400_000
 
 /** Whether this browser can receive push alerts at all, before asking the server. */
 export function pushSupported() {
@@ -41,14 +44,41 @@ export async function enablePush(commute: Commute) {
   if (permission !== 'granted') throw new Error('Notifications are blocked for this site. Allow them in your browser settings, then try again.')
   const sub = await subscription(true)
   if (!sub) throw new Error("This browser didn't create a push subscription.")
-  const res = await fetch('/api/push', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), commute }) })
+  const res = await send(sub, commute)
   if (!res.ok) throw new Error((((await res.json().catch(() => null)) as { error?: string } | null)?.error) ?? `Push service responded with ${res.status}.`)
 }
 
 /** Sends a changed commute for an existing subscription. */
 export async function updatePush(commute: Commute) {
   const sub = await subscription(false)
-  if (sub) await fetch('/api/push', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), commute }) })
+  if (sub) await send(sub, commute)
+}
+
+/**
+ * Re-sends this browser's subscription and commute if a day has passed since it
+ * last did, while push alerts are on. The server deletes a subscription unused
+ * for 60 days, so this keeps a rider's alerts while they keep opening Roadbeat.
+ */
+export async function renewPush(commute: Commute) {
+  const last = Number(storage(() => localStorage.getItem(SENT_KEY)) ?? 0)
+  if (Date.now() - last < RESEND_MS) return
+  const sub = await subscription(false)
+  if (sub) await send(sub, commute).catch(() => {})
+}
+
+async function send(sub: PushSubscription, commute: Commute) {
+  const res = await fetch('/api/push', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), commute }) })
+  if (res.ok) storage(() => localStorage.setItem(SENT_KEY, String(Date.now())))
+  return res
+}
+
+/** Runs a localStorage call, which throws in private mode or with storage blocked. */
+function storage<T>(call: () => T): T | null {
+  try {
+    return call()
+  } catch {
+    return null
+  }
 }
 
 /** Removes this browser's subscription from the server and the browser. */
@@ -57,4 +87,5 @@ export async function disablePush() {
   if (!sub) return
   await fetch('/api/push', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => {})
   await sub.unsubscribe()
+  storage(() => localStorage.removeItem(SENT_KEY))
 }

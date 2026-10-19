@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { jsonLd } from './head.ts'
+import { jsonLd, jsonLdScript } from './head.ts'
 import { markdownPathFor, markdownToHtml } from './markdown.ts'
 import { fillTemplate, loadPage, siteFiles } from './plugin.ts'
 import { sitemapFiles } from './sitemap.ts'
@@ -40,6 +40,24 @@ describe('markdownToHtml callouts, alerts and link lists', () => {
 describe('markdownToHtml headings', () => {
   it('gives second- and third-level headings an id to link to', () => {
     expect(markdownToHtml('# Places\n\n## Brisbane City\n\n### No council area')).toBe('<h1>Places</h1>\n<h2 id="brisbane-city">Brisbane City</h2>\n<h3 id="no-council-area">No council area</h3>')
+  })
+})
+
+describe('markdownToHtml links', () => {
+  it('links web, email, phone and same-site addresses, and leaves any other scheme as text', () => {
+    expect(markdownToHtml('[About](/about/) [Map](#top) [TMR](https://www.tmr.qld.gov.au) [Mail](mailto:a@b.example) [Call](tel:131940)')).toBe(
+      '<p><a href="/about/">About</a> <a href="#top">Map</a> <a href="https://www.tmr.qld.gov.au">TMR</a> <a href="mailto:a@b.example">Mail</a> <a href="tel:131940">Call</a></p>',
+    )
+    expect(markdownToHtml('[Tap for times](javascript:location=name)')).toBe('<p>[Tap for times](javascript:location=name)</p>')
+    expect(markdownToHtml('- [x](JavaScript:void 0)\n- [y](data:text/html,hi)')).not.toContain('href')
+  })
+})
+
+describe('jsonLdScript', () => {
+  it("can't be closed early by a name that holds a closing script tag", () => {
+    const html = jsonLdScript({ name: 'Stop</script><script>alert(1)</script><!--' })
+    expect(html.match(/<\/script>/gi)).toHaveLength(1)
+    expect(JSON.parse(html.replace(/^<script[^>]*>|<\/script>$/g, ''))).toEqual({ name: 'Stop</script><script>alert(1)</script><!--' })
   })
 })
 

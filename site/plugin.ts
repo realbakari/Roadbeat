@@ -17,7 +17,7 @@ import type { Plugin } from 'vite'
 import { mcpCard, openApi } from './agents.ts'
 import { loadDirectory } from './directory.ts'
 import { directoryPages, type Crumb, type StaticPage } from './directoryPages.ts'
-import { headTags, jsonLd } from './head.ts'
+import { headTags, jsonLd, jsonLdScript } from './head.ts'
 import { manifest } from './manifest.ts'
 import { escape, markdownPathFor, markdownToHtml } from './markdown.ts'
 import { pageHtml } from './pageHtml.ts'
@@ -102,7 +102,7 @@ export function sitePages(settings: SiteSettings): Plugin {
     transformIndexHtml(html) {
       const home = loadPage('index', s)
       return html
-        .replace('<!--site-head-->', `${headTags(home, s)}\n    <script type="application/ld+json">${JSON.stringify(jsonLd(home, s))}</script>`)
+        .replace('<!--site-head-->', `${headTags(home, s)}\n    ${jsonLdScript(jsonLd(home, s))}`)
         .replace('<!--site-title-->', escape(home.title))
         .replace('<!--site-static-home-->', `<div class="static-home">\n${markdownToHtml(home.markdown)}\n</div>`)
     },

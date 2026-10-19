@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 const FEEDBACK_KINDS = ['bug', 'idea', 'data', 'other'] as const
 
-/** At most this many messages a day from one browser and address (hashed, as for visits). */
+/** At most this many messages a day from one address (hashed, as for visits). */
 export const PER_DAY = 5
 /** At most this many messages kept; the oldest go first. */
 export const KEEP = 2000

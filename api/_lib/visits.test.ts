@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { brisbaneDay, clientIp, dayKey, recentWindowKeys, visitorId, WINDOW_MS, windowKey } from './visits'
+import { addressBlock, brisbaneDay, clientIp, dayKey, hasRoom, rateKey, recentWindowKeys, seenKey, visitorId, WINDOW_MS, windowKey } from './visits'
 
 describe('visitor counting', () => {
   it('rolls the day over at Brisbane midnight', () => {
@@ -29,9 +29,45 @@ describe('visitor counting', () => {
     expect(recentWindowKeys(t)).toEqual([windowKey(t), windowKey(t - WINDOW_MS)])
   })
 
+  it('counts a daily limit by address alone, so a new browser name starts no new count', () => {
+    const key = rateKey('feedback', '203.0.113.9', '2026-10-16', 'secret')
+    expect(key).toMatch(/^feedback:rate:[\w-]{22}$/)
+    expect(key).not.toContain('203')
+    expect(rateKey('push', '203.0.113.9', '2026-10-16', 'secret')).not.toBe(key)
+    expect(rateKey('feedback', '203.0.113.10', '2026-10-16', 'secret')).not.toBe(key)
+    expect(rateKey('feedback', '203.0.113.9', '2026-10-17', 'secret')).not.toBe(key)
+  })
+
+  it('counts an IPv6 address by its /64 network, and an IPv4 address alone', () => {
+    expect(addressBlock('2001:db8:1:2:aaaa::1')).toBe('2001:db8:1:2::/64')
+    expect(addressBlock('2001:0DB8:0001:0002:ffff:0:0:9')).toBe('2001:db8:1:2::/64')
+    expect(addressBlock('2001:db8::1')).toBe('2001:db8:0:0::/64')
+    expect(addressBlock('fe80::1%eth0')).toBe('fe80:0:0:0::/64')
+    expect(addressBlock('::ffff:203.0.113.9')).toBe('203.0.113.9')
+    expect(addressBlock('203.0.113.9')).toBe('203.0.113.9')
+    expect(addressBlock('')).toBe('')
+    expect(rateKey('push', '2001:db8:1:2::a', '2026-10-16', 's')).toBe(rateKey('push', '2001:db8:1:2:ffff::b', '2026-10-16', 's'))
+  })
+
   it('reads the first forwarded address, else the direct one', () => {
     expect(clientIp(new Headers({ 'x-forwarded-for': '203.0.113.9, 10.0.0.1' }))).toBe('203.0.113.9')
     expect(clientIp(new Headers({ 'x-real-ip': '203.0.113.9' }))).toBe('203.0.113.9')
     expect(clientIp(new Headers())).toBe('')
+  })
+})
+
+describe('Redis command savings', () => {
+  it('marks a browser once per 5-minute window', () => {
+    const start = Math.floor(Date.parse('2026-10-20T00:00:00Z') / WINDOW_MS) * WINDOW_MS
+    expect(seenKey(start, 'abc')).toBe(seenKey(start + WINDOW_MS - 1, 'abc'))
+    expect(seenKey(start + WINDOW_MS, 'abc')).not.toBe(seenKey(start, 'abc'))
+    expect(seenKey(start, 'abc')).not.toBe(seenKey(start, 'abd'))
+  })
+
+  it('has room until a daily count reaches its limit', () => {
+    expect(hasRoom(null, 10)).toBe(true)
+    expect(hasRoom('9', 10)).toBe(true)
+    expect(hasRoom('10', 10)).toBe(false)
+    expect(hasRoom(11, 10)).toBe(false)
   })
 })

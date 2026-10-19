@@ -4,11 +4,14 @@ import { slugify } from './directory.ts'
 
 export const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
+/** Link addresses a page may use: the web, email, phone and this site's own paths. Anything else (javascript:, data:) stays text. */
+const SAFE_HREF = /^(https?:|mailto:|tel:|\/|#)/i
+
 function inline(text: string) {
   return escape(text)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, (link, label: string, href: string) => (SAFE_HREF.test(href) ? `<a href="${href}">${label}</a>` : link))
 }
 
 /** Kinds of alert a quote can open with, GitHub's way: "> [!WARNING]". */

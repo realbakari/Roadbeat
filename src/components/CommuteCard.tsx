@@ -2,7 +2,7 @@ import { Button, Switch, Text } from '@cloudflare/kumo'
 import { BriefcaseIcon, CheckCircleIcon, FireIcon, PencilSimpleIcon, ProhibitIcon, WarningIcon } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import type { FireWarning } from '../api/bushfires'
-import { disablePush, enablePush, pushAvailable, pushSupported, updatePush } from '../api/push'
+import { disablePush, enablePush, pushAvailable, pushSupported, renewPush, updatePush } from '../api/push'
 import { alertActive, routeInfo, type TransitAlert } from '../api/translink'
 import type { LiveVehicle } from '../api/transitTypes'
 import type { TrafficEvent } from '../api/types'
@@ -255,6 +255,9 @@ function PushToggle({ commute }: { commute: Commute & { push?: boolean } }) {
       live = false
     }
   }, [])
+  useEffect(() => {
+    if (available && commute.push) void renewPush(commute)
+  }, [available, commute])
   if (!available) return null
 
   const toggle = async (on: boolean) => {

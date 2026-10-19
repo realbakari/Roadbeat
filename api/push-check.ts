@@ -4,13 +4,14 @@ import { commuteAlerts, commuteWindow } from '../src/lib/commute.js'
 import { departuresAt } from '../src/lib/departures.js'
 import { bushfires, roadEvents, routeInfo, stops, transitRealtime, trips } from './_lib/feeds.js'
 import { json, noStore } from './_lib/http.js'
-import { PushRecord } from './_lib/pushRecord.js'
-import { allSubscriptions, deleteSubscription, saveSubscription, storeConfigured } from './_lib/store.js'
+import { PushRecord, seenState } from './_lib/pushRecord.js'
+import { allSubscriptions, deleteSubscription, deleteSubscriptions, saveSubscription, saveSubscriptions, storeConfigured } from './_lib/store.js'
 import { SITE } from './_lib/tools.js'
 
 // Sends commute push alerts. A scheduler calls this every few minutes with
 // `Authorization: Bearer $CRON_SECRET` (see .github/workflows/push-check.yml).
 // Only commutes inside their window are checked, and each alert is sent once.
+// Each run first deletes subscriptions unused for 60 days (KEEP_UNSEEN_MS).
 
 const MAX_PER_RUN = 3
 const KEEP_SENT = 100
@@ -23,12 +24,24 @@ export async function GET(request: Request) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || SITE, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
   const now = Date.now()
-  const records = (await allSubscriptions()).flatMap(([id, raw]) => {
+  const parsed = (await allSubscriptions()).flatMap(([id, raw]) => {
     const r = PushRecord.safeParse(raw)
     return r.success ? [[id, r.data] as const] : []
   })
+  const expired: string[] = []
+  const stamped: [string, PushRecord][] = []
+  const records: [string, PushRecord][] = []
+  for (const [id, r] of parsed) {
+    const state = seenState(r, now)
+    if (state === 'expired') expired.push(id)
+    else if (state === 'unstamped') stamped.push([id, { ...r, seen: now }])
+    else records.push([id, r])
+  }
+  records.push(...stamped)
+  await deleteSubscriptions(expired)
+  await saveSubscriptions(stamped)
   const active = records.filter(([, r]) => commuteWindow(r.commute, now)?.active)
-  if (!active.length) return noStore({ subscriptions: records.length, active: 0, sent: 0 })
+  if (!active.length) return noStore({ subscriptions: records.length, active: 0, sent: 0, expired: expired.length })
 
   // Fetch each official feed once for every active commute.
   const regions = [...new Set(active.flatMap(([, r]) => (r.commute.stopId ? [r.commute.region] : [])))] as TransitRegion[]
@@ -69,9 +82,10 @@ export async function GET(request: Request) {
       continue
     }
     // Alerts beyond the per-run limit are marked sent too, so a burst doesn't trickle out over later runs.
-    // A failed send isn't, so it's tried again on the next run.
+    // A failed send isn't, so it's tried again on the next run. An alert the push
+    // service took shows the subscription is still in use.
     const done = [...delivered, ...fresh.slice(MAX_PER_RUN).map((a) => a.key)]
-    if (done.length) await saveSubscription(id, { ...record, sent: [...record.sent, ...done].slice(-KEEP_SENT) })
+    if (done.length) await saveSubscription(id, { ...record, sent: [...record.sent, ...done].slice(-KEEP_SENT), seen: delivered.length ? now : record.seen })
   }
-  return noStore({ subscriptions: records.length, active: active.length, sent, removed })
+  return noStore({ subscriptions: records.length, active: active.length, sent, removed, expired: expired.length })
 }

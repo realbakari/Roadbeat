@@ -27,8 +27,10 @@ export async function onRequest({ request, next, env }: Context): Promise<Respon
     return res.ok ? new Response(res.body, { headers: MARKDOWN }) : res
   }
 
-  if (isPage && (request.headers.get('accept') ?? '').includes('text/markdown')) {
-    const page = await env.ASSETS.fetch(new URL(markdownPathFor(url.pathname), url))
+  const target = new URL(markdownPathFor(url.pathname), url)
+  // A path that starts with two slashes, such as "//host/x", resolves to another host; only this site's own pages are fetched.
+  if (isPage && target.origin === url.origin && (request.headers.get('accept') ?? '').includes('text/markdown')) {
+    const page = await env.ASSETS.fetch(target)
     if (page.ok) return new Response(page.body, { headers: MARKDOWN })
     const missing = await env.ASSETS.fetch(new URL('/404.md', url))
     return new Response(missing.body, { status: 404, headers: MARKDOWN })

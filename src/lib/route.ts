@@ -59,6 +59,15 @@ export interface Selection {
   news: string | null
 }
 
+/** Decodes one part of a link, keeping it as typed if it isn't valid percent-encoding ("%"), so a mangled link can't stop the app. */
+function decode(part: string): string {
+  try {
+    return decodeURIComponent(part)
+  } catch {
+    return part
+  }
+}
+
 /**
  * Selection lives in the URL hash so links can be shared:
  * #event/123, #camera/webcam-5, #place/rest/long007, #place/truck/1-truck-restrictions, #place/locality/Goodna,
@@ -71,19 +80,19 @@ export function parseHash(hash: string): Selection {
     parts[0] !== 'transit'
       ? null
       : parts[1] === 'line' && parts[2] && parts[3]
-        ? { kind: 'line', mode: parts[2], name: decodeURIComponent(parts.slice(3).join('/')) }
+        ? { kind: 'line', mode: parts[2], name: decode(parts.slice(3).join('/')) }
         : parts[1] === 'alert' && parts[2]
-          ? { kind: 'alert', id: decodeURIComponent(parts[2]) }
+          ? { kind: 'alert', id: decode(parts[2]) }
           : parts[1] === 'route' && isTransitRegion(parts[2]) && parts[3]
-            ? { kind: 'route', region: parts[2], code: decodeURIComponent(parts[3]) }
+            ? { kind: 'route', region: parts[2], code: decode(parts[3]) }
           : parts[1] === 'stop' && isTransitRegion(parts[2]) && parts[3]
-            ? { kind: 'stop', region: parts[2], id: decodeURIComponent(parts[3]) }
+            ? { kind: 'stop', region: parts[2], id: decode(parts[3]) }
             : parts[1] === 'trip' && isTransitRegion(parts[2]) && parts[3]
               ? {
                   kind: 'trip',
                   region: parts[2],
-                  tripId: decodeURIComponent(parts[3]),
-                  route: parts[4] ? decodeURIComponent(parts[4]) : null,
+                  tripId: decode(parts[3]),
+                  route: parts[4] ? decode(parts[4]) : null,
                   date: /^\d{4}-\d{2}-\d{2}$/.test(parts[5] ?? '') ? parts[5] : null,
                 }
             : parts[1] === 'plan' && isTransitRegion(parts[2]) && parts[3] && parts[4]
@@ -91,8 +100,8 @@ export function parseHash(hash: string): Selection {
                   kind: 'home',
                   plan: {
                     region: parts[2],
-                    from: decodeURIComponent(parts[3]),
-                    to: decodeURIComponent(parts[4]),
+                    from: decode(parts[3]),
+                    to: decode(parts[4]),
                     date: /^\d{4}-\d{2}-\d{2}$/.test(parts[5] ?? '') ? parts[5] : null,
                     minutes: /^\d+$/.test(parts[6] ?? '') ? Number(parts[6]) : null,
                     arrive: parts[7] === 'arrive',
@@ -102,16 +111,16 @@ export function parseHash(hash: string): Selection {
                 }
               : { kind: 'home' }
   return {
-    vehicle: parts[0] === 'vehicle' && parts[1] ? decodeURIComponent(parts.slice(1).join('/')) : null,
+    vehicle: parts[0] === 'vehicle' && parts[1] ? decode(parts.slice(1).join('/')) : null,
     transit,
     event: parts[0] === 'event' && /^\d+$/.test(parts[1] ?? '') ? Number(parts[1]) : null,
     camera: parts[0] === 'camera' && parts[1] ? parts[1] : null,
-    place: parts[0] === 'place' && parts[1] && parts[1] !== 'locality' && parts[2] ? { kind: parts[1], id: decodeURIComponent(parts.slice(2).join('/')) } : null,
-    locality: parts[0] === 'place' && parts[1] === 'locality' && parts[2] ? decodeURIComponent(parts.slice(2).join('/')) : null,
-    fire: parts[0] === 'fire' && parts[1] ? decodeURIComponent(parts.slice(1).join('/')) : null,
-    gauge: parts[0] === 'gauge' && parts[1] ? decodeURIComponent(parts[1]) : null,
-    signal: parts[0] === 'signal' && parts[1] ? decodeURIComponent(parts[1]) : null,
-    news: parts[0] === 'news' ? decodeURIComponent(parts[1] ?? '') : null,
+    place: parts[0] === 'place' && parts[1] && parts[1] !== 'locality' && parts[2] ? { kind: parts[1], id: decode(parts.slice(2).join('/')) } : null,
+    locality: parts[0] === 'place' && parts[1] === 'locality' && parts[2] ? decode(parts.slice(2).join('/')) : null,
+    fire: parts[0] === 'fire' && parts[1] ? decode(parts.slice(1).join('/')) : null,
+    gauge: parts[0] === 'gauge' && parts[1] ? decode(parts[1]) : null,
+    signal: parts[0] === 'signal' && parts[1] ? decode(parts[1]) : null,
+    news: parts[0] === 'news' ? decode(parts[1] ?? '') : null,
   }
 }
 
@@ -124,7 +133,7 @@ export function parsePath(path: string): Screen {
   if (parts[0] === 'dashboard' && parts.length === 1) return { kind: 'dashboard' }
   if (parts[0] === 'status' && parts.length === 1) return { kind: 'status' }
   if (parts[0] === 'kiosk' && isTransitRegion(parts[1]) && parts[2]) {
-    return { kind: 'kiosk', region: parts[1], stopId: decodeURIComponent(parts[2]) }
+    return { kind: 'kiosk', region: parts[1], stopId: decode(parts[2]) }
   }
   return { kind: 'app' }
 }

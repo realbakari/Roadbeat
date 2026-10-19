@@ -1,6 +1,6 @@
 import { json, preflight, upstream } from '../http.js'
-import { redisPipeline, storeConfigured } from '../store.js'
-import { brisbaneDay, clientIp, dayKey, recentWindowKeys, visitorId, windowKey } from '../visits.js'
+import { redis, redisPipeline, storeConfigured } from '../store.js'
+import { brisbaneDay, clientIp, dayKey, recentWindowKeys, seenKey, visitorId, WINDOW_MS, windowKey } from '../visits.js'
 
 // /api/visits: how many people are using Roadbeat, for the count in the header.
 //
@@ -8,13 +8,17 @@ import { brisbaneDay, clientIp, dayKey, recentWindowKeys, visitorId, windowKey }
 // HyperLogLogs under an id hashed from its address, browser and the date with a
 // server-side secret (api/_lib/visits.ts). A HyperLogLog keeps an estimate of
 // how many distinct ids it saw, not the ids, and the day's key expires after
-// two days. GET returns the estimates, cached at the edge for a minute.
+// two days. A browser already counted in the current window is marked by a
+// short-lived key (seenKey()), so its further pings cost one command, not five.
+// GET returns the estimates, cached at the edge for a minute.
 // Without the Redis store, GET says the count isn't available and POST is a
 // no-op, so the app shows nothing.
 
 const SALT = process.env.VISITS_SALT ?? process.env.CRON_SECRET ?? ''
 const DAY_TTL = 2 * 86_400
 const WINDOW_TTL = 15 * 60
+
+const noContent = () => new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } })
 
 export function GET() {
   if (!storeConfigured) return json({ available: false }, 200, 60)
@@ -36,6 +40,8 @@ export async function POST(request: Request) {
     const id = visitorId(clientIp(request.headers), request.headers.get('user-agent') ?? '', day, SALT)
     const win = windowKey(now)
     try {
+      // SET NX answers null when the key is already there: this browser is counted in this window.
+      if ((await redis<string | null>(['SET', seenKey(now, id), 1, 'NX', 'EX', WINDOW_MS / 1000])) === null) return noContent()
       await redisPipeline([
         ['PFADD', dayKey(day), id],
         ['EXPIRE', dayKey(day), DAY_TTL],
@@ -46,7 +52,7 @@ export async function POST(request: Request) {
       // A missed ping only undercounts; the browser tries again in five minutes.
     }
   }
-  return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } })
+  return noContent()
 }
 
 export const OPTIONS = preflight

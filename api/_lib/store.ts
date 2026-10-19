@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { hasRoom } from './visits.js'
 
 // Push subscriptions and the news monitor's items, kept in Upstash Redis through
 // its REST API. Vercel's Upstash integration sets KV_REST_API_URL and
@@ -52,12 +53,48 @@ export const subscriptionId = (endpoint: string) => createHash('sha256').update(
 
 export const countSubscriptions = () => redis<number>(['HLEN', KEY])
 
+/** One stored subscription as parsed JSON: null when there's none, or a value that isn't JSON when it's corrupt. */
+export async function getSubscription(id: string): Promise<unknown> {
+  const raw = await redis<string | null>(['HGET', KEY, id])
+  if (raw === null) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return raw
+  }
+}
+
 export async function saveSubscription(id: string, value: unknown) {
   await redis(['HSET', KEY, id, JSON.stringify(value)])
 }
 
+/** Saves several subscriptions, 100 to a command so no request grows past Upstash's size limit. */
+export async function saveSubscriptions(entries: [string, unknown][]) {
+  for (let i = 0; i < entries.length; i += 100)
+    await redis(['HSET', KEY, ...entries.slice(i, i + 100).flatMap(([id, value]) => [id, JSON.stringify(value)])])
+}
+
 export async function deleteSubscription(id: string) {
-  await redis(['HDEL', KEY, id])
+  await deleteSubscriptions([id])
+}
+
+/** Deletes several subscriptions in one command. */
+export async function deleteSubscriptions(ids: string[]) {
+  if (ids.length) await redis(['HDEL', KEY, ...ids])
+}
+
+/**
+ * Counts one use of a daily allowance kept under `key` (from rateKey()) and says
+ * whether it was within `limit`. It reads the count first, so a caller already
+ * over the limit costs one Redis command and the count stops growing.
+ */
+export async function takeDaily(key: string, limit: number): Promise<boolean> {
+  if (!hasRoom(await redis<unknown>(['GET', key]), limit)) return false
+  const [count] = await redisPipeline<number>([
+    ['INCR', key],
+    ['EXPIRE', key, 86_400],
+  ])
+  return count <= limit
 }
 
 /** Every stored subscription as [id, parsed JSON]. */

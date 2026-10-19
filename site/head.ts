@@ -80,6 +80,12 @@ export function pageJsonLd(page: Page, s: SiteSettings) {
 }
 
 /** JSON-LD for the home page: the site, the app itself and the project behind it. */
+/**
+ * A JSON-LD script element. JSON.stringify leaves "<" alone, so a name holding
+ * "</script>" would end the element early; as \u003c it reads the same to a parser.
+ */
+export const jsonLdScript = (graph: unknown) => `<script type="application/ld+json">${JSON.stringify(graph).replace(/</g, '\\u003c')}</script>`
+
 export function jsonLd(page: Page, s: SiteSettings) {
   // Written once, and referred to by its @id everywhere else.
   const orgRef = { '@id': `${s.siteUrl}/#org` }

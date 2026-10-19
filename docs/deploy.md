@@ -83,7 +83,9 @@ Two counts run, and both are off until set up:
 - **Vercel Web Analytics** shows visitors, page views, countries, devices and referrers in the Vercel dashboard. The app includes Vercel's `<Analytics />` component (`src/main.tsx`), which does nothing until you open the project in Vercel, choose **Analytics** and click **Enable**. Redeploy after enabling. It sets no cookies. The Hobby plan counts 50,000 events a month.
 - **The visitor count in the app's header** ("14 online · 312 today") comes from `/api/visits` (`api/_lib/endpoints/visits.ts`) and needs the Upstash for Redis database, connected as for push alerts. Each open tab pings every five minutes and is counted under a daily-rotating hash of its address and browser (`api/_lib/visits.ts`), in HyperLogLogs that keep an estimate, not the ids. Set `VISITS_SALT` to a long random string so the hash can't be recomputed by anyone without it; without it, `CRON_SECRET` is used. Without the database, the endpoint answers `{ "available": false }` and the header shows no count.
 
-The header count costs four Redis commands per open tab every five minutes, about 1,150 a day for a tab left open all day. Upstash's free tier allows 500,000 commands a month, so the count stays free up to roughly 14 tabs open around the clock, or many more briefly. Past that, upgrade the database or lengthen the ping in `src/hooks/useVisitors.ts`.
+The header count costs five Redis commands per open tab every five minutes, about 1,440 a day for a tab left open all day. The first ping in each 5-minute window sets a marker key (`seenKey()` in `api/_lib/visits.ts`, `SET NX EX 300`), so any further ping from the same browser in that window costs one command, not five. Upstash's free tier allows 500,000 commands a month, so the count stays free up to roughly 11 tabs open around the clock, or many more briefly. Past that, upgrade the database or lengthen the ping in `src/hooks/useVisitors.ts`.
+
+The daily limits on feedback and new push subscriptions read their count before adding to it (`takeDaily()` in `api/_lib/store.ts`), so a caller already over its limit costs one command. Someone who changes their browser name with every ping still costs five commands a ping, and no code limit stops a flood from many addresses. If the commands run short, add a rate-limit rule for `/api/visits`, `/api/feedback` and `/api/push` in Vercel's Firewall, and check what the Upstash plan does past its quota.
 
 ### Turn on commute push alerts
 
@@ -94,6 +96,8 @@ Push alerts need four environment variables, a database and a scheduler. Until a
 3. In Vercel, open **Storage**, create an **Upstash for Redis** database and connect it to the project. This sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
 4. In GitHub, add a repository secret named `CRON_SECRET` with the same value. `.github/workflows/push-check.yml` then calls `/api/push-check` every 5 minutes. The workflow reads the site's address from the repository variable `SITE_URL`, and uses `https://www.roadbeat.app` if it isn't set.
 5. Redeploy, so the build picks up `VITE_VAPID_PUBLIC_KEY`.
+
+Each subscription has a last-seen time (`seen` in `api/_lib/pushRecord.ts`). The app renews it at most once a day while alerts are on (`renewPush()` in `src/api/push.ts`), and so does an alert the push service accepts. Each `/api/push-check` run deletes subscriptions not seen for 60 days (`KEEP_UNSEEN_MS`) and reports how many under `expired`, so made-up subscriptions can't fill the 5,000-record store for good. A record saved before last-seen times existed is stamped by the first run that finds it, so its 60 days start then. A record that no longer parses, such as one with keys of the wrong size from before the key check, isn't deleted automatically; remove it with `HDEL push:subs <id>`.
 
 GitHub runs scheduled workflows on a best-effort basis, often a few minutes late, and pauses them in repositories with no activity for 60 days. Vercel's Hobby plan runs its own cron jobs only once a day, which is why GitHub does the scheduling. Both scheduled workflows run only in `realbakari/Roadbeat`, so a fork never calls production. In a fork, change the `if:` line on the job to your repository's name.
 
@@ -117,7 +121,7 @@ Without it, `/api/nsw-hazards` answers 503 and the layer says it isn't set up.
 
 The app's menu has **Send feedback**, which posts to `/api/feedback` (`api/_lib/endpoints/feedback.ts`). It needs the same Upstash for Redis database as push alerts. Without the database, the form says feedback isn't set up.
 
-Messages are kept in the Redis list `feedback`, newest first, capped at 2,000. Each browser may send 5 a day. To read them, run:
+Messages are kept in the Redis list `feedback`, newest first, capped at 2,000. Each address may send 5 a day, counted under a daily hash of the address, or of its /64 network for IPv6 (`rateKey()` in `api/_lib/visits.ts`). To read the messages, run:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" https://www.roadbeat.app/api/feedback

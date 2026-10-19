@@ -1,13 +1,13 @@
 import { FeedbackInput, feedbackRecord, KEEP, PER_DAY } from '../feedback.js'
 import { json, noStore, preflight } from '../http.js'
-import { redis, redisPipeline, storeConfigured } from '../store.js'
-import { brisbaneDay, clientIp, visitorId } from '../visits.js'
+import { redis, redisPipeline, storeConfigured, takeDaily } from '../store.js'
+import { brisbaneDay, clientIp, rateKey } from '../visits.js'
 
 // /api/feedback: bug reports and feature requests from the app's form.
 //
-// POST keeps a message in a capped Redis list. Each browser may send PER_DAY a
-// day, counted under the same hashed id as visits, which isn't stored with the
-// message. A message whose hidden field is filled is answered as if kept and
+// POST keeps a message in a capped Redis list. Each address may send PER_DAY a
+// day, counted under a hash of the address (api/_lib/visits.ts), which isn't
+// stored with the message. A message whose hidden field is filled is answered as if kept and
 // thrown away, so a bot learns nothing.
 // GET answers whether the form works here. With `Authorization: Bearer
 // $CRON_SECRET` it returns the kept messages, newest first, for the owner.
@@ -33,13 +33,9 @@ export async function POST(request: Request) {
   const record = feedbackRecord(parsed.data, now)
   if (!record) return noStore({ ok: true })
   const day = brisbaneDay(now)
-  const rate = `feedback:rate:${visitorId(clientIp(request.headers), request.headers.get('user-agent') ?? '', day, SALT)}`
+  const rate = rateKey('feedback', clientIp(request.headers), day, SALT)
   try {
-    const [count] = await redisPipeline<number>([
-      ['INCR', rate],
-      ['EXPIRE', rate, 86_400],
-    ])
-    if (count > PER_DAY) return json({ error: `That's ${PER_DAY} messages today from this browser. Try again tomorrow.` }, 429)
+    if (!(await takeDaily(rate, PER_DAY))) return json({ error: `That's ${PER_DAY} messages today from this address. Try again tomorrow.` }, 429)
     await redisPipeline([
       ['LPUSH', LIST, JSON.stringify(record)],
       ['LTRIM', LIST, 0, KEEP - 1],
