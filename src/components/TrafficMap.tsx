@@ -32,6 +32,7 @@ import { ensureClearanceIcons, ensureIcons } from '../lib/mapIcons'
 import { pickTap, pickTop, tapBox, tapTolerance } from '../lib/mapPick'
 import { CrashLayer } from './CrashLayer'
 import { CameraThumbs, PinnedCamera } from './map/CameraOverlays'
+import type { CrossingStatus } from '../lib/crossings'
 import { MapCard } from './map/MapCard'
 import type { MapCard as MapCardData } from '../lib/mapCard'
 import { boundsOf, clearanceFeatures, clearwayFeatures, councilEventFeatures, councilPlaceFeatures, fireFeatures, gaugeFeatures, newsFeatures, newsRoadFeatures, councilCentreFeatures, outageFeatures, airFeatures, hotspotFeatures, setData, signalFeatures, withLabels } from './map/features'
@@ -154,6 +155,8 @@ interface Props {
   followVehicle: boolean
   selectedEvent: TrafficEvent | null
   selectedCamera: Camera | null
+  /** The selected flood camera's crossing, from all road events (not the list's filters), or null. */
+  cameraCrossing: CrossingStatus | null
   focus: { center: LngLat; zoom?: number; ring?: boolean } | null
   fit: { bounds: Bounds; id: number } | null
   userLocation: LngLat | null
@@ -567,7 +570,7 @@ export function TrafficMap(props: Props) {
         />
       )}
       {map && selectedCamera && (
-        <PinnedCamera map={map} camera={selectedCamera} now={now} onClose={props.onCloseCamera} onOpenLocality={props.onOpenLocality} />
+        <PinnedCamera map={map} camera={selectedCamera} now={now} onClose={props.onCloseCamera} onOpenLocality={props.onOpenLocality} crossing={props.cameraCrossing} onOpenEvent={props.onSelectEvent} />
       )}
       {map && card && !selectedCamera && <MapCard key={card.key} map={map} card={card} onDetails={props.onCardDetails} onClose={props.onCardClose} />}
     </div>

@@ -68,11 +68,11 @@ The functions in `api/` serve these, and Vercel builds them with no extra setup:
 - The MCP server at `/mcp` (`api/mcp.ts`).
 - The news monitor: `/api/news` and `/api/news-ingest`.
 - Push alerts: `/api/push` and `/api/push-check`.
-- The road event history at `/api/history`, the link preview pages at `/api/share`, the visitor count at `/api/visits` and the feedback form at `/api/feedback`.
+- The road event history at `/api/history`, the link preview pages at `/api/share`, the text-only events page at `/roads` (`/api/roads`), the visitor count at `/api/visits` and the feedback form at `/api/feedback`.
 
 `/api/camera-time` and `/qld-gauges` run on both hosts. On other hosts the app still works; only the endpoints above are missing.
 
-Vercel's Hobby plan deploys at most 12 functions, and every file directly in `api/` is one, as is `middleware.ts`. So the small endpoints share one function, `api/[endpoint].ts`, which routes by path to handlers in `api/_lib/endpoints/`: `/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`, `/api/history`, `/api/camera-time`, `/api/share`, `/api/visits` and `/api/feedback`. Add a new small endpoint there rather than as a new file in `api/`. Vercel doesn't deploy files under `api/_lib/` as functions.
+Vercel's Hobby plan deploys at most 12 functions, and every file directly in `api/` is one, as is `middleware.ts`. So the small endpoints share one function, `api/[endpoint].ts`, which routes by path to handlers in `api/_lib/endpoints/`: `/api/events`, `/api/stops`, `/api/departures`, `/api/bushfires`, `/api/history`, `/api/camera-time`, `/api/share`, `/api/roads`, `/api/visits` and `/api/feedback`. Add a new small endpoint there rather than as a new file in `api/`. Vercel doesn't deploy files under `api/_lib/` as functions.
 
 Vercel compiles each file in `api/` on its own for Node, without bundling. So every relative import in `api/`, and in the `src/` modules it imports, must end in `.js`, and JSON imports need `with { type: 'json' }`. `api/tsconfig.json` checks this, and `npm run typecheck` runs it.
 

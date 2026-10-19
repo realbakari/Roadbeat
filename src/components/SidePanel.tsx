@@ -90,6 +90,8 @@ interface Props {
   warnings: QldWarning[] | null
   /** Why the warnings are missing or stale, or null while the feed is fine. */
   warningNotice: string | null
+  /** Road events new since this browser's last visit. */
+  lastVisit: { newIds: Set<number>; since: number | null }
   selectedFire: FireWarning | null
   gauges: Gauge[] | null
   /** Why gauges are missing or stale, or null while the feeds are fine. */
@@ -252,6 +254,8 @@ export function SidePanel(p: Props) {
           occupancies={p.occupancies}
           watchedEvents={alertSettings.watchedEvents}
           onToggleWatch={notifications.toggleWatchEvent}
+          newIds={p.lastVisit.newIds}
+          newSince={p.lastVisit.since}
           top={
             <>
               <CommuteCard events={p.events} eventsAt={p.eventsAt} eventsError={p.eventsError} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />
@@ -260,7 +264,7 @@ export function SidePanel(p: Props) {
           }
         />
       ) : p.panel === 'cameras' ? (
-        <CameraGrid cameras={p.cameras} selectedKey={sel.camera} onOpen={p.onOpenCamera} />
+        <CameraGrid cameras={p.cameras} selectedKey={sel.camera} onOpen={p.onOpenCamera} events={p.eventsAt == null ? null : p.events} now={now} />
       ) : p.panel === 'news' ? (
         <NewsPanel
           snapshot={p.news.snapshot}

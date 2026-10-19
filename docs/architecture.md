@@ -69,6 +69,14 @@ A row and the event's page also say when QLDTraffic has gone quiet on an event (
 
 Each event's places link to their place pages (`EventPlace`, `eventLocalities()` in `src/lib/locality.ts`). The gazetteer loads once the browser is idle (`useLocalityIndex()`), and until then places show as text. A name the gazetteer has once links whatever council spelling QLDTraffic uses; same-named places are told apart by the event's council, and places QLDTraffic files under NSW aren't linked. The map key, the event page's Impact section and the More menu link to the Glossary (`site/pages/glossary.md`).
 
+A flooding event's page quotes the Queensland Government's flood driving advice word for word, "If it's flooded, forget it", with its link (`FLOOD_ADVICE` in `src/lib/eventMeta.ts`). Events QLDTraffic didn't list at this browser's last visit carry a **New** badge, and the list says how many are new since then (`src/lib/lastVisit.ts`, `useLastVisit`). A first visit marks nothing new.
+
+QLDTraffic places its flood cameras at crossings and roads that flood. Under **Cameras → Flood**, each says what QLDTraffic lists within 1 km of it: a road closure, flooding, or nothing (`crossingStatus()` in `src/lib/crossings.ts`, measured to the event's own published points). Crossings with a closure come first. The words never say a road is open, and the panel says so. A flood camera's card on the map names the events listed at its crossing, from all events, not the list's filters.
+
+## Text-only road events
+
+`/roads` is every current road event as one plain HTML page, by district and then road, with links for closures only and for each district (`roadListHtml()` in `src/lib/roadList.ts`, served by `api/_lib/endpoints/roads.ts` through a `vercel.json` rewrite). It has no map and no app code, for slow connections and screen readers. It prints when QLDTraffic's events were read. Its one small script says how old a saved copy is and registers the service worker, which keeps the last good copy for when the connection drops (`public/sw.js`). It's on Vercel only, like the other endpoints.
+
 ## Times and empty lists
 
 A relative time such as "3 hours ago" is `src/components/ui/RelativeTime.tsx`: a `<time datetime>` whose exact Brisbane time shows on hover, keyboard focus or tap, and which screen readers hear in full ("3 hours ago, Sun, 18 Oct, 2:12 pm AEST"). Inside a button or clickable card it can't take focus, so it gives the exact time as a hover title and to screen readers only. `useNow` stops its clock while the tab is hidden.
@@ -191,7 +199,7 @@ Map animation follows the same rule as the data. The **Signal traffic** layer do
 
 In-app notifications need no server. `useNotifications` in `src/hooks/useNotifications.ts` compares each refresh with the last one it saw, which it keeps in `localStorage`. It raises a notification for new or changed items that match the user's settings. Items that changed while the app was closed appear as "While you were away" on the next visit. Every feed is polled through `poll()` in `src/hooks/poll.ts`, which pauses while the tab is hidden and reads again as soon as it is back in view if a poll was missed. The feeds that raise alerts (road events, Translink alerts, bushfire warnings, storm, flood and cyclone warnings, and news) keep polling in a hidden tab while system notifications are on and allowed (`shouldPoll()` in `src/lib/polling.ts`), because a hidden tab is when those notifications show. Browsers may run a background tab's timers less often. The in-app and system notification switches are independent. New items alert only once the user has said where from: places (near them, roads and suburbs, or districts) or anywhere in Queensland (`alertArea()` in `src/lib/alertRules.ts`). Until then, which is how every first visit starts, only watched events and Translink routes alert, and the bell asks where (`src/components/AlertAreaPrompt.tsx`). Settings saved before this choice existed keep alerting statewide. Each event card in the list has a **Watch** button, as the event's page does.
 
-Commute push alerts are the one exception, and riders opt in. The browser subscribes with the server's VAPID key (`src/api/push.ts`, `public/sw.js`) and sends the subscription and its commute to `api/push.ts`, which stores them in Upstash Redis. Every five minutes a GitHub Actions workflow calls `api/push-check.ts`. It checks only commutes inside their window, runs `commuteAlerts()` from `src/lib/commute.ts` (the same rules the in-app card uses) and sends each alert once. The service worker shows alerts and caches nothing. In the app, the commute card's roads line says **Checking QLDTraffic…** until the events feed has been read once, and that it couldn't load them if the first read failed (`roadsBriefing()`), so an unknown never reads as "Nothing reported".
+Commute push alerts are the one exception, and riders opt in. The browser subscribes with the server's VAPID key (`src/api/push.ts`, `public/sw.js`) and sends the subscription and its commute to `api/push.ts`, which stores them in Upstash Redis. Every five minutes a GitHub Actions workflow calls `api/push-check.ts`. It checks only commutes inside their window, runs `commuteAlerts()` from `src/lib/commute.ts` (the same rules the in-app card uses) and sends each alert once. The service worker shows alerts, and caches only the text-only page at `/roads` (below). In the app, the commute card's roads line says **Checking QLDTraffic…** until the events feed has been read once, and that it couldn't load them if the first read failed (`roadsBriefing()`), so an unknown never reads as "Nothing reported".
 
 ## The news monitor reads feeds on the server
 
@@ -246,6 +254,7 @@ Preferences live in `localStorage`, so they stay in one browser and never reach 
 | `qldt-saved-stops`, `qldt-recent-stops`, `qldt-saved-trips` | My stops, Recent stops and My trips |
 | `qldt-saved-places` | My places, with their nicknames |
 | `qldt-recent-searches` | The last six results opened from the header search |
+| `qldt-last-visit` | The road event ids listed at this browser's last read, and when, to mark new ones |
 | `qldt-fuel-brands` | The brands the fuel layer is narrowed to, empty for all |
 | `roadbeat-commute` | My commute: roads, stop, line, departure time and days |
 | `qldt-mode` | Light or dark colour theme |

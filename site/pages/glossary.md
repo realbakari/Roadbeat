@@ -52,4 +52,7 @@ If you're not sure what one means for your trip, ask the Department of Transport
 
 ## Sources
 
+For where each of Roadbeat's feeds comes from and how often it's read, see [About](/about/#where-the-data-comes-from) and [Feed status](/status).
+
+
 Quotes from qld.gov.au and disaster.qld.gov.au are © The State of Queensland, under a [Creative Commons Attribution 4.0 licence](https://www.qld.gov.au/legal/copyright). The Heavy Vehicle National Law definitions were sourced from the Queensland Legislation website on 19 October 2026. For the latest information on Queensland Government legislation please go to [https://www.legislation.qld.gov.au](https://www.legislation.qld.gov.au).

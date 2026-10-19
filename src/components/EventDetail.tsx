@@ -9,10 +9,11 @@ import {
   ProhibitIcon,
   SirenIcon,
   WarningIcon,
+  WavesIcon,
 } from '@phosphor-icons/react'
 import { useMemo } from 'react'
 import type { Camera, TrafficEvent } from '../api/types'
-import { priorityBadge, typeMeta } from '../lib/eventMeta'
+import { FLOOD_ADVICE, priorityBadge, typeMeta } from '../lib/eventMeta'
 import { clean, formatDateTime, titleCase } from '../lib/format'
 import { isClosure } from '../lib/filters'
 import { startLabel } from '../lib/eventStatus'
@@ -27,7 +28,7 @@ import { eventTitle } from '../lib/eventText'
 import { updateGap, updateGapText } from '../lib/eventAge'
 import { shareUrl } from '../lib/sharePage'
 import { useCopied } from '../hooks/useCopied'
-import { ExternalLink } from './ui/Links'
+import { ExternalLink, InlineLink } from './ui/Links'
 import { Section } from './ui/Section'
 import { Facts } from './ui/Facts'
 import { RelativeTime } from './ui/RelativeTime'
@@ -145,6 +146,18 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
               icon={<ProhibitIcon weight="fill" />}
               title={clean(impact?.impact_subtype) ?? 'Road closed'}
               description={direction || undefined}
+            />
+          )}
+          {p.event_type === 'Flooding' && (
+            <Banner
+              variant="alert"
+              icon={<WavesIcon weight="bold" />}
+              title={FLOOD_ADVICE.title}
+              description={
+                <>
+                  “{FLOOD_ADVICE.text}” <InlineLink href={FLOOD_ADVICE.url}>Queensland Government</InlineLink>
+                </>
+              }
             />
           )}
           {gap && (

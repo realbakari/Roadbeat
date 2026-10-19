@@ -8,8 +8,8 @@ The browser reads these while the app is open.
 
 | Source | Publisher | URL | How the app reads it | App refresh | Code |
 | --- | --- | --- | --- | --- | --- |
-| Road events | Transport and Main Roads (TMR) | `data.qldtraffic.qld.gov.au/events_v2.geojson` | Direct. Each event's `last_updated` and `next_inspection` are shown as published, and flag an event QLDTraffic has gone quiet on (`src/lib/eventAge.ts`). | 60 s | `src/api/client.ts` |
-| Traffic and flood cameras | TMR | `data.qldtraffic.qld.gov.au/webcameras.geojson`, `floodcameras.geojson` | Direct | 5 min | `src/api/client.ts` |
+| Road events | Transport and Main Roads (TMR) | `data.qldtraffic.qld.gov.au/events_v2.geojson` | Direct. Each event's `last_updated` and `next_inspection` are shown as published, and flag an event QLDTraffic has gone quiet on (`src/lib/eventAge.ts`). The server also renders them as the text-only page at `/roads`. | 60 s | `src/api/client.ts` |
+| Traffic and flood cameras | TMR | `data.qldtraffic.qld.gov.au/webcameras.geojson`, `floodcameras.geojson` | Direct. Each flood camera says which current closures and flooding QLDTraffic places within 1 km of it (`src/lib/crossings.ts`). | 5 min | `src/api/client.ts` |
 | Rest areas, RV dump points, truck restrictions | TMR | `data.qldtraffic.qld.gov.au/QLD_RA_LITE.geojson`, `rvEffluentDumpSites.geojson`, `restrictedtruck.geojson` | Direct | Once per visit | `src/api/client.ts` |
 | Waze reports | TMR (QLDTraffic) | `data.qldtraffic.qld.gov.au/displayed_waze_events.json` | Direct | 60 s | `src/api/client.ts` |
 | TMR districts | TMR | `data.qldtraffic.qld.gov.au/districts.geojson` | Direct | Once per visit | `src/api/client.ts` |

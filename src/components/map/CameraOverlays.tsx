@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import type { Camera } from '../../api/types'
 import { cameraKey, type LngLat } from '../../lib/geo'
 import { cameraSrc } from '../../lib/cameras'
+import type { CrossingStatus } from '../../lib/crossings'
 import { CameraCard } from '../CameraCard'
 
 /** Zoom at which cameras in view show live thumbnails right on the map. */
@@ -21,12 +22,16 @@ export function PinnedCamera({
   now,
   onClose,
   onOpenLocality,
+  crossing,
+  onOpenEvent,
 }: {
   map: maplibregl.Map
   camera: Camera
   now: number
   onClose: () => void
   onOpenLocality: (name: string) => void
+  crossing: CrossingStatus | null
+  onOpenEvent: (id: number) => void
 }) {
   const [node] = useState(() => document.createElement('div'))
   const [large, setLarge] = useState(false)
@@ -79,7 +84,7 @@ export function PinnedCamera({
   }, [onClose])
 
   return createPortal(
-    <CameraCard camera={camera} now={now} large={large} onToggleSize={() => setLarge((v) => !v)} onClose={onClose} onOpenLocality={onOpenLocality} />,
+    <CameraCard camera={camera} now={now} large={large} onToggleSize={() => setLarge((v) => !v)} onClose={onClose} onOpenLocality={onOpenLocality} crossing={crossing} onOpenEvent={onOpenEvent} />,
     node,
   )
 }

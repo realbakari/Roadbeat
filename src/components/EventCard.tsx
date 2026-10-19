@@ -47,9 +47,11 @@ interface Props {
   /** The gazetteer index and a way to open a place, so the card links the places it names. */
   localities?: Map<string, Locality[]> | null
   onOpenPlace?: (hash: string) => void
+  /** QLDTraffic didn't list this event the last time this browser read the feed. */
+  isNew?: boolean
 }
 
-export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingAs = 'h3', watched = false, onToggleWatch, localities, onOpenPlace }: Props) {
+export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingAs = 'h3', watched = false, onToggleWatch, localities, onOpenPlace, isNew = false }: Props) {
   const p = event.properties
   const meta = typeMeta(p.event_type)
   const pr = priorityBadge(p.event_priority)
@@ -116,6 +118,11 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
           </p>
         )}
         <div className="flex flex-wrap items-center gap-1.5">
+          {isNew && (
+            <Badge variant="blue">
+              New<span className="sr-only"> since your last visit</span>
+            </Badge>
+          )}
           <Badge variant={meta.badge}>{subtype ? `${p.event_type} · ${subtype}` : p.event_type}</Badge>
           <Badge variant={pr.variant} appearance={pr.appearance}>
             {p.event_priority}

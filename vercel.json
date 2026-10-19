@@ -57,6 +57,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/roads",
+      "destination": "/api/roads"
+    },
+    {
       "source": "/kiosk/:path*",
       "destination": "/index.html"
     },

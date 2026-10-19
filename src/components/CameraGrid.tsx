@@ -1,7 +1,8 @@
 import { InputGroup, Select, Tabs, Text } from '@cloudflare/kumo'
-import { CameraSlashIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
+import { CameraSlashIcon, MagnifyingGlassIcon, ProhibitIcon, WavesIcon, XIcon } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
-import type { Camera } from '../api/types'
+import type { Camera, TrafficEvent } from '../api/types'
+import { CROSSING_KM, crossingNote, crossingStatuses, type CrossingStatus } from '../lib/crossings'
 import { CAMERA_COLOR } from '../lib/eventMeta'
 import { cameraKey } from '../lib/geo'
 import { shortName } from '../lib/cameras'
@@ -12,11 +13,14 @@ export type CameraKindFilter = 'all' | 'webcam' | 'floodcam'
 export function CameraThumb({
   camera,
   note,
+  crossing,
   selected,
   onOpen,
 }: {
   camera: Camera
   note?: string
+  /** For a flood camera, what QLDTraffic lists at its crossing, once road events have loaded. */
+  crossing?: CrossingStatus
   selected?: boolean
   onOpen: (key: string) => void
 }) {
@@ -65,8 +69,22 @@ export function CameraThumb({
             .filter(Boolean)
             .join(' · ')}
         </Text>
+        {crossing && <CrossingLine s={crossing} />}
       </div>
     </button>
+  )
+}
+
+/** A flood camera's crossing in words and shape: the closed sign, waves, or plain text when nothing is listed. */
+function CrossingLine({ s }: { s: CrossingStatus }) {
+  const closed = s.closures.length > 0
+  const flooding = !closed && s.flooding.length > 0
+  return (
+    <span className={`flex items-center gap-1 text-xs ${closed ? 'font-medium text-kumo-danger' : flooding ? 'font-medium text-kumo-strong' : 'text-kumo-subtle'}`}>
+      {closed && <ProhibitIcon size={12} weight="bold" className="shrink-0" aria-hidden />}
+      {flooding && <WavesIcon size={12} weight="bold" className="shrink-0 text-kumo-info" aria-hidden />}
+      <span className="truncate">{crossingNote(s)}</span>
+    </span>
   )
 }
 
@@ -74,9 +92,12 @@ interface Props {
   cameras: Camera[]
   selectedKey: string | null
   onOpen: (key: string) => void
+  /** Road events, or null until they've loaded, when flood cameras say nothing about their crossings. */
+  events: TrafficEvent[] | null
+  now: number
 }
 
-export function CameraGrid({ cameras, selectedKey, onOpen }: Props) {
+export function CameraGrid({ cameras, selectedKey, onOpen, events, now }: Props) {
   const [query, setQuery] = useState('')
   const [kind, setKind] = useState<CameraKindFilter>('all')
   const [district, setDistrict] = useState('all')
@@ -99,6 +120,19 @@ export function CameraGrid({ cameras, selectedKey, onOpen }: Props) {
       })
       .sort((a, b) => a.properties.description.localeCompare(b.properties.description))
   }, [cameras, kind, district, query])
+
+  // What QLDTraffic lists at each flood camera's crossing, keyed by camera.
+  const crossings = useMemo(() => (events ? crossingStatuses(cameras, events, now, cameraKey) : new Map<string, CrossingStatus>()), [cameras, events, now])
+  // Under Flood, crossings with a closure come first, then those with flooding listed.
+  const shown = useMemo(() => {
+    if (kind !== 'floodcam') return visible
+    const rank = (c: Camera) => {
+      const s = crossings.get(cameraKey(c))
+      return s?.closures.length ? 0 : s?.flooding.length ? 1 : 2
+    }
+    return [...visible].sort((a, b) => rank(a) - rank(b))
+  }, [kind, visible, crossings])
+  const listed = [...crossings.values()].filter((s) => s.closures.length || s.flooding.length).length
 
   const counts = {
     all: cameras.length,
@@ -145,6 +179,13 @@ export function CameraGrid({ cameras, selectedKey, onOpen }: Props) {
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        {kind === 'floodcam' && (
+          <p className="px-1 pb-2 text-sm text-kumo-subtle">
+            {events
+              ? `QLDTraffic lists flooding or a road closure within ${CROSSING_KM} km of ${listed} of these ${counts.floodcam} flood cameras. A camera with nothing listed isn't a sign the road is open: check the image and the official event.`
+              : 'Checking QLDTraffic for flooding and closures at each crossing…'}
+          </p>
+        )}
         {visible.length === 0 ? (
           <div className="-mx-3 -my-3">
             <NoResults
@@ -157,8 +198,8 @@ export function CameraGrid({ cameras, selectedKey, onOpen }: Props) {
         ) : (
           // Two columns in the side panel; more when the panel is full screen.
           <div className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-1">
-            {visible.map((c) => (
-              <CameraThumb key={cameraKey(c)} camera={c} selected={cameraKey(c) === selectedKey} onOpen={onOpen} />
+            {shown.map((c) => (
+              <CameraThumb key={cameraKey(c)} camera={c} crossing={crossings.get(cameraKey(c))} selected={cameraKey(c) === selectedKey} onOpen={onOpen} />
             ))}
           </div>
         )}

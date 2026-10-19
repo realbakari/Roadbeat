@@ -17,6 +17,7 @@ import { distanceKm, eventAnchor, type LngLat } from '../lib/geo'
 import { EventCard } from './EventCard'
 import { useAnnouncement } from '../hooks/useAnnouncement'
 import { useLocalityIndex } from '../hooks/useLocality'
+import { brisbaneDayClock } from '../lib/aest'
 import { chipClass } from './chip'
 import { LoadFailed, NoResults } from './ui/StateMessage'
 
@@ -53,6 +54,9 @@ interface Props {
   /** Ids of the events the user watches, and the toggle for a card's Watch button. */
   watchedEvents: number[]
   onToggleWatch: (id: number) => void
+  /** Events QLDTraffic didn't list on this browser's last visit, and when that visit was. */
+  newIds: Set<number>
+  newSince: number | null
 }
 
 export function EventList({
@@ -79,6 +83,8 @@ export function EventList({
   occupancies,
   watchedEvents,
   onToggleWatch,
+  newIds,
+  newSince,
 }: Props) {
   // On phones the district and priority pickers fold behind a button, so the list starts higher.
   const [moreOpen, setMoreOpen] = useState(false)
@@ -151,6 +157,7 @@ export function EventList({
   const reset = () =>
     onFiltersChange({ ...filters, query: '', types: new Set(), district: 'all', priority: 'all', closuresOnly: false })
 
+  const shownNew = events.filter((e) => newIds.has(e.properties.id)).length
   const moreActive = (filters.district !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0)
   const announcement = useAnnouncement(filtersKey(filters), events.length ? `${events.length} ${events.length === 1 ? 'event' : 'events'}` : 'No matching events')
 
@@ -267,6 +274,12 @@ export function EventList({
             <span className="whitespace-nowrap">
               <span className="tabular-nums">{events.length}</span> {events.length === 1 ? 'event' : 'events'}
             </span>
+            {newSince != null && shownNew > 0 && (
+              <span className="whitespace-nowrap" title={`Not listed by QLDTraffic at your last visit, ${brisbaneDayClock.format(newSince)}`}>
+                {' · '}
+                <span className="tabular-nums">{shownNew}</span> new since {brisbaneDayClock.format(newSince)}
+              </span>
+            )}
             <span role="status" className="sr-only">
               {announcement}
             </span>
@@ -352,6 +365,7 @@ export function EventList({
                     onToggleWatch={onToggleWatch}
                     localities={localities}
                     onOpenPlace={onOpenHref}
+                    isNew={newIds.has(e.properties.id)}
                   />
                 </li>
               )

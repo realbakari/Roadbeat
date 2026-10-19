@@ -3,6 +3,8 @@ import { ArrowsInIcon, ArrowsOutIcon, CameraSlashIcon, XIcon } from '@phosphor-i
 import { useEffect, useState } from 'react'
 import { fetchCameraTime, isCameraImage } from '../api/cameraTime'
 import type { Camera } from '../api/types'
+import { CROSSING_KM, type CrossingStatus } from '../lib/crossings'
+import { eventTitle, impactLine } from '../lib/eventText'
 import { clean } from '../lib/format'
 import { cameraSrc, shortName } from '../lib/cameras'
 import { ClampedText } from './ClampedText'
@@ -16,10 +18,13 @@ interface Props {
   onClose: () => void
   /** Opens the page for the locality the camera's owner files it under. */
   onOpenLocality?: (name: string) => void
+  /** For a flood camera, the closures and flooding QLDTraffic lists at its crossing, once road events have loaded. */
+  crossing?: CrossingStatus | null
+  onOpenEvent?: (id: number) => void
 }
 
 /** Live camera view that sits on the map, pinned above the camera's location. */
-export function CameraCard({ camera, now, large, onToggleSize, onClose, onOpenLocality }: Props) {
+export function CameraCard({ camera, now, large, onToggleSize, onClose, onOpenLocality, crossing, onOpenEvent }: Props) {
   const p = camera.properties
   const src = cameraSrc(camera, now)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
@@ -102,6 +107,28 @@ export function CameraCard({ camera, now, large, onToggleSize, onClose, onOpenLo
           </span>
         </div>
         <ClampedText className="text-xs text-kumo-subtle" text={`${note ?? 'The camera owner publishes no update interval.'} Roadbeat reloads the image every minute.`} />
+        {crossing && (
+          <div className="grid gap-1 border-t border-kumo-line pt-1.5">
+            <Text size="xs" bold>
+              QLDTraffic within {CROSSING_KM} km
+            </Text>
+            {[...crossing.closures, ...crossing.flooding].length === 0 ? (
+              <Text size="xs" variant="secondary">
+                No flooding or road closure listed. Check the image before you go.
+              </Text>
+            ) : (
+              <ul className="grid gap-0.5">
+                {[...crossing.closures, ...crossing.flooding].slice(0, 3).map((e) => (
+                  <li key={e.properties.id}>
+                    <button type="button" onClick={() => onOpenEvent?.(e.properties.id)} className="w-full truncate text-left text-xs text-kumo-link underline">
+                      {eventTitle(e)}: {impactLine(e) ?? e.properties.event_type}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -46,6 +46,8 @@ import { useHotspots } from './hooks/useSatellite'
 import { useSatelliteImagery } from './hooks/useSatelliteImagery'
 import { useQldWarnings } from './hooks/useQldWarnings'
 import { MajorStrip } from './components/MajorStrip'
+import { useLastVisit } from './hooks/useLastVisit'
+import { crossingStatus } from './lib/crossings'
 import { majorIncidents } from './lib/majorIncidents'
 import { feedStatus } from './lib/feedAge'
 import { isGibsLive, jmaProduct, SATELLITE_SOURCES, satelliteTiles, type SatelliteSource } from './lib/satelliteImage'
@@ -234,6 +236,10 @@ export function App() {
   const visible = useMemo(() => applyFilters(events, filters, userLocation), [events, filters, userLocation])
   const selectedEvent = useMemo(() => events.find((e) => e.properties.id === sel.event) ?? null, [events, sel.event])
   const selectedCamera = useMemo(() => cameras.find((c) => cameraKey(c) === sel.camera) ?? null, [cameras, sel.camera])
+  const cameraCrossing = useMemo(
+    () => (selectedCamera?.kind === 'floodcam' && fetchedAt != null ? crossingStatus(selectedCamera, events, now) : null),
+    [selectedCamera, events, fetchedAt, now],
+  )
 
   // Brisbane City Council gauges and signals load only when something shows them.
   const { gauges, notice: gaugeNotice } = useGauges(layers.gauges || !!sel.gauge || selectedEvent?.properties.event_type === 'Flooding')
@@ -390,6 +396,7 @@ export function App() {
     if (sel.transit || sel.event || sel.camera || sel.place || sel.locality || sel.vehicle || sel.fire || sel.gauge || sel.signal || sel.news != null) go('')
   }
 
+  const lastVisit = useLastVisit(events, fetchedAt)
   const major = useMemo(
     // Until road events have loaded once, their counts are unknown, not zero.
     () => majorIncidents({ events: fetchedAt == null ? null : events, fires, warnings: qw.warnings, now }),
@@ -635,6 +642,7 @@ export function App() {
                 fireNotice={fireNotice}
                 warnings={qw.warnings}
                 warningNotice={warningNotice}
+                lastVisit={lastVisit}
                 selectedFire={selectedFire}
                 gauges={gauges}
                 gaugeNotice={gaugeNotice}
@@ -747,6 +755,7 @@ export function App() {
               fit={fit}
               selectedEvent={selectedEvent}
               selectedCamera={selectedCamera}
+              cameraCrossing={cameraCrossing}
               focus={focus}
               userLocation={userLocation}
               onLocate={locate}

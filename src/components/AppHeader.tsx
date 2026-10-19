@@ -10,6 +10,7 @@ import {
   DotsThreeIcon,
   EnvelopeSimpleIcon,
   InfoIcon,
+  ListBulletsIcon,
   PulseIcon,
   ShieldCheckIcon,
   SquaresFourIcon,
@@ -272,8 +273,11 @@ export function AppHeader({
             <DropdownMenu.LinkItem href="/dashboard" icon={SquaresFourIcon}>
               Network dashboard
             </DropdownMenu.LinkItem>
+            <DropdownMenu.LinkItem href="/roads" icon={ListBulletsIcon}>
+              Text-only list
+            </DropdownMenu.LinkItem>
             <DropdownMenu.LinkItem href="/status" icon={PulseIcon}>
-              Feed status
+              Data sources and status
             </DropdownMenu.LinkItem>
             <DropdownMenu.Separator />
             <DropdownMenu.LinkItem href="/about/" icon={InfoIcon}>

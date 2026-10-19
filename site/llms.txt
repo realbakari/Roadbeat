@@ -23,6 +23,7 @@
 ## Pages
 
 - [Home](%SITE_URL%/): the live map and lists.
+- [Road events, text only](%SITE_URL%/roads): every current QLDTraffic road event as one plain HTML page, by district and road; `?closures=1` for closures only, `?district=Metropolitan` for one district.
 - [About](%SITE_URL%/about/): what Roadbeat is, its data sources and its accuracy rule.
 - [Glossary](%SITE_URL%/glossary/): what warning levels, road closures and restrictions mean, quoted from the agencies that publish them, and which terms have no official definition.
 <!--if:GA_MEASUREMENT_ID-->

@@ -52,3 +52,10 @@ export function priorityBadge(p: string): {
 }
 
 export const CAMERA_COLOR = { webcam: '#475569', floodcam: '#0891b2' } as const
+
+/** The Queensland Government's flood driving advice, quoted word for word on flooding events (qld.gov.au, CC BY 4.0). */
+export const FLOOD_ADVICE = {
+  title: "If it's flooded, forget it",
+  text: "Any amount of swift flowing water can sweep away your car, no matter what you drive. Don't risk it.",
+  url: 'https://www.qld.gov.au/transport/conditions/disasters/flood',
+}
