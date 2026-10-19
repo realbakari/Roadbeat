@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_FILTERS } from '../lib/filters'
 import { AppHeader } from './AppHeader'
+import { DEFAULT_SETTINGS } from '../lib/alertRules'
 
 // A client render, as in the browser: a closed menu's parts still mount there, which a server render skips.
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -34,6 +35,8 @@ function header(visitors: Props['visitors']) {
     notifications: { items: [], unread: 0, markRead: () => {}, markAllRead: () => {}, clear: () => {} } as unknown as Props['notifications'],
     onOpenHref: () => {},
     onAlertSettings: () => {},
+    alertSettings: DEFAULT_SETTINGS,
+    onAlertSettingsChange: () => {},
     onFeedback: () => {},
     searchSources: { events: [], cameras: [], restAreas: [], dumpPoints: [], truckRestrictions: [], clearances: null, toilets: null, bays: null, meters: null, bikeStops: null, councilEvents: null, stories: null, centres: null, outages: null, airStations: null, gauges: null, fires: null, warnings: null, fuel: null, speedCameras: null },
     onOpenSearch: () => {},

@@ -250,6 +250,8 @@ export function SidePanel(p: Props) {
           warningNotice={p.warningNotice}
           onOpenHref={p.onOpenHref}
           occupancies={p.occupancies}
+          watchedEvents={alertSettings.watchedEvents}
+          onToggleWatch={notifications.toggleWatchEvent}
           top={
             <>
               <CommuteCard events={p.events} eventsAt={p.eventsAt} eventsError={p.eventsError} fires={p.fires} vehicles={p.vehicles} alerts={p.transitAlerts} now={now} onOpen={p.onOpenHref} />

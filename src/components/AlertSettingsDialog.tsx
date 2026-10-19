@@ -2,7 +2,8 @@ import { Banner, Button, Checkbox, Dialog, Select, Switch, TagInput, Text } from
 import { InfoIcon, NavigationArrowIcon, XIcon } from '@phosphor-icons/react'
 import { useState, type ReactNode } from 'react'
 import type { TrafficEvent } from '../api/types'
-import { ALERT_KINDS, hasAreaFilter, type AlertSettings } from '../lib/alertRules'
+import { ALERT_KINDS, alertArea, type AlertSettings } from '../lib/alertRules'
+import { currentPosition } from '../lib/position'
 import { eventTitle } from '../lib/eventText'
 
 interface Props {
@@ -40,21 +41,14 @@ export function AlertSettingsDialog({ open, onOpenChange, settings: s, onChange,
 
   const enableNearMe = (on: boolean) => {
     if (!on) return set('nearMe', null)
-    if (!navigator.geolocation) return setLocateError('Your browser does not support location.')
     setLocating(true)
     setLocateError(null)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false)
-        set('nearMe', { at: [pos.coords.longitude, pos.coords.latitude], km: s.nearMe?.km ?? 25 })
-      },
-      () => {
-        setLocating(false)
-        setLocateError('Location permission was denied.')
-      },
-      { timeout: 10_000, maximumAge: 600_000 },
+    currentPosition().then(
+      (at) => (setLocating(false), set('nearMe', { at, km: s.nearMe?.km ?? 25 })),
+      (e: Error) => (setLocating(false), setLocateError(e.message)),
     )
   }
+  const area = alertArea(s)
 
   const watched = s.watchedEvents
     .map((id) => events.find((e) => e.properties.id === id))
@@ -109,9 +103,18 @@ export function AlertSettingsDialog({ open, onOpenChange, settings: s, onChange,
 
           <Section
             title="Where"
-            hint={hasAreaFilter(s) ? 'Only events matching at least one of these.' : 'Anywhere in Queensland. Add places to narrow it down.'}
+            hint={
+              area === 'places'
+                ? 'Only events matching at least one of these.'
+                : area === 'everywhere'
+                  ? 'Anywhere in Queensland. Add places to narrow it down.'
+                  : "Not chosen yet, so you'll only hear about events you watch and your routes. Add places, or choose anywhere in Queensland."
+            }
           >
             <div className="grid gap-4">
+              {area !== 'places' && (
+                <Switch label="Anywhere in Queensland" checked={s.everywhere} onCheckedChange={(v: boolean) => set('everywhere', v)} />
+              )}
               <div className="grid gap-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <Switch label="Near me" checked={!!s.nearMe} onCheckedChange={enableNearMe} />

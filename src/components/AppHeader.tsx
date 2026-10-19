@@ -26,6 +26,7 @@ import { SUPPORT_URL } from '../lib/support'
 import { NewTabNote } from './NewTabNote'
 import type { TrafficEvent } from '../api/types'
 import type { useNotifications } from '../hooks/useNotifications'
+import type { AlertSettings } from '../lib/alertRules'
 import { DEFAULT_FILTERS, isClosure, isCurrent, type EventFilters } from '../lib/filters'
 import { feedAnnouncement, feedStatus } from '../lib/feedAge'
 import { timeDetail } from '../lib/relativeTime'
@@ -54,6 +55,8 @@ interface Props {
   notifications: ReturnType<typeof useNotifications>
   onOpenHref: (href: string) => void
   onAlertSettings: () => void
+  alertSettings: AlertSettings
+  onAlertSettingsChange: (s: AlertSettings) => void
   /** Opens the feedback form. */
   onFeedback: () => void
   /** Everything loaded so far, for the search. */
@@ -89,6 +92,8 @@ export function AppHeader({
   notifications,
   onOpenHref,
   onAlertSettings,
+  alertSettings,
+  onAlertSettingsChange,
   onFeedback,
   searchSources,
   onOpenSearch,
@@ -199,6 +204,8 @@ export function AppHeader({
           onMarkAllRead={notifications.markAllRead}
           onClear={notifications.clear}
           onSettings={onAlertSettings}
+          settings={alertSettings}
+          onSettingsChange={onAlertSettingsChange}
         />
         <span
           className="mx-1 flex items-center gap-1.5 text-sm whitespace-nowrap text-kumo-subtle"

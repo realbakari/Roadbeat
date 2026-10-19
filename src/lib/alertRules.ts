@@ -38,6 +38,12 @@ export interface AlertSettings {
   watchedEvents: number[]
   /** Route numbers or line names, e.g. "402", "F1", "Caboolture". */
   routes: string[]
+  /**
+   * The user chose alerts from anywhere in Queensland. Until they choose that
+   * or an area, only watched events and routes alert, so a first visit isn't
+   * a stream of statewide crashes and closures.
+   */
+  everywhere: boolean
 }
 
 export const DEFAULT_SETTINGS: AlertSettings = {
@@ -62,6 +68,7 @@ export const DEFAULT_SETTINGS: AlertSettings = {
   nearMe: null,
   watchedEvents: [],
   routes: [],
+  everywhere: false,
 }
 
 const KEY = 'qldt-alert-settings'
@@ -91,6 +98,8 @@ export function parseSettings(json: unknown): AlertSettings {
     nearMe: at && isNumber(near?.km) && near.km > 0 ? { at, km: near.km } : null,
     watchedEvents: listOf(s.watchedEvents, isNumber, D.watchedEvents),
     routes: listOf(s.routes, isString, D.routes),
+    // Settings saved before the choice existed alerted statewide, and keep doing so.
+    everywhere: flag(s.everywhere, !!json && typeof json === 'object' && !Array.isArray(json)),
   }
 }
 
@@ -113,6 +122,11 @@ export function saveSettings(s: AlertSettings) {
 
 export function hasAreaFilter(s: AlertSettings) {
   return s.districts.length > 0 || s.roads.length > 0 || !!s.nearMe
+}
+
+/** Where new-item alerts come from: the user's places, anywhere in Queensland, or nowhere until they choose. */
+export function alertArea(s: AlertSettings): 'places' | 'everywhere' | 'unset' {
+  return hasAreaFilter(s) ? 'places' : s.everywhere ? 'everywhere' : 'unset'
 }
 
 function kindsOf(e: TrafficEvent): AlertKind[] {
@@ -146,7 +160,7 @@ function inArea(e: TrafficEvent, s: AlertSettings) {
 
 /** Does a newly published (current) event match the user's rules? */
 export function matchesRules(e: TrafficEvent, s: AlertSettings, now = Date.now()) {
-  if (isUpcoming(e, now)) return false
+  if (isUpcoming(e, now) || alertArea(s) === 'unset') return false
   return kindsOf(e).some((k) => s.kinds[k]) && inArea(e, s)
 }
 
@@ -210,7 +224,7 @@ export function eventHeadline(e: TrafficEvent) {
  * never matches a fire rather than guessing.
  */
 export function fireMatches(f: FireWarning, s: AlertSettings) {
-  if (!s.kinds.bushfire || f.level === 'Information') return false
+  if (!s.kinds.bushfire || f.level === 'Information' || alertArea(s) === 'unset') return false
   if (!hasAreaFilter(s)) return true
   if (s.nearMe && distanceKm(s.nearMe.at, f.position) <= s.nearMe.km) return true
   if (s.roads.length) {
@@ -241,7 +255,7 @@ function inShape(p: LngLat, shape: GeoJSON.MultiPolygon): boolean {
  * districts-only filter never matches one rather than guessing.
  */
 export function warningMatches(w: QldWarning, s: AlertSettings) {
-  if (!s.kinds.warning || w.level === 'Other') return false
+  if (!s.kinds.warning || w.level === 'Other' || alertArea(s) === 'unset') return false
   if (!hasAreaFilter(s)) return true
   if (s.nearMe && (distanceKm(s.nearMe.at, w.position) <= s.nearMe.km || (w.areaShape != null && inShape(s.nearMe.at, w.areaShape)))) return true
   if (s.roads.length) {
@@ -259,7 +273,7 @@ export function warningMatches(w: QldWarning, s: AlertSettings) {
  * matches one rather than guessing.
  */
 export function newsMatches(story: NewsStory, s: AlertSettings) {
-  if (!s.kinds[story.kind === 'official' ? 'newsOfficial' : 'news']) return false
+  if (!s.kinds[story.kind === 'official' ? 'newsOfficial' : 'news'] || alertArea(s) === 'unset') return false
   if (!hasAreaFilter(s)) return true
   if (s.nearMe && story.places.some((p) => distanceKm(s.nearMe!.at, p.position) <= s.nearMe!.km)) return true
   if (s.roads.length) {

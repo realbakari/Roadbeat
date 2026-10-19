@@ -7,7 +7,8 @@ import { groupStories } from './newsStories'
 import { fireWarning, gazetteerPlace, newsItem, qldWarning, roadEvent } from '../test/fixtures'
 
 const now = Date.parse('2026-10-18T00:00:00Z')
-const settings = (over: Partial<AlertSettings> = {}): AlertSettings => ({ ...DEFAULT_SETTINGS, ...over })
+// Alerts from anywhere, as most of these tests are about what matches, not where.
+const settings = (over: Partial<AlertSettings> = {}): AlertSettings => ({ ...DEFAULT_SETTINGS, everywhere: true, ...over })
 
 describe('eventNotices', () => {
   const crash = roadEvent(1, 'Bruce Highway', 'Caboolture')

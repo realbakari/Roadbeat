@@ -49,6 +49,9 @@ interface Props {
   top?: ReactNode
   /** Brisbane City Council planned road occupancies, or null while loading. */
   occupancies: RoadOccupancy[] | null
+  /** Ids of the events the user watches, and the toggle for a card's Watch button. */
+  watchedEvents: number[]
+  onToggleWatch: (id: number) => void
 }
 
 export function EventList({
@@ -73,6 +76,8 @@ export function EventList({
   onOpenHref,
   top,
   occupancies,
+  watchedEvents,
+  onToggleWatch,
 }: Props) {
   // On phones the district and priority pickers fold behind a button, so the list starts higher.
   const [moreOpen, setMoreOpen] = useState(false)
@@ -334,6 +339,8 @@ export function EventList({
                     distanceKm={a && userLocation ? distanceKm(userLocation, a) : null}
                     upcoming={filters.when === 'upcoming'}
                     onSelect={onSelect}
+                    watched={watchedEvents.includes(e.properties.id)}
+                    onToggleWatch={onToggleWatch}
                   />
                 </li>
               )

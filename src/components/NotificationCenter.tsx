@@ -13,6 +13,8 @@ import { FlameIcon,
 } from '@phosphor-icons/react'
 import { useState } from 'react'
 import type { AppNotification } from '../lib/alertNotices'
+import { alertArea, type AlertSettings } from '../lib/alertRules'
+import { AlertAreaPrompt } from './AlertAreaPrompt'
 import { RelativeTime } from './ui/RelativeTime'
 
 interface Props {
@@ -23,6 +25,8 @@ interface Props {
   onMarkAllRead: () => void
   onClear: () => void
   onSettings: () => void
+  settings: AlertSettings
+  onSettingsChange: (s: AlertSettings) => void
 }
 
 const TONE: Record<AppNotification['tone'], { icon: Icon; className: string }> = {
@@ -33,8 +37,13 @@ const TONE: Record<AppNotification['tone'], { icon: Icon; className: string }> =
 }
 
 /** Bell button in the header with the list of recent alerts. */
-export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, onClear, onSettings }: Props) {
+export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, onClear, onSettings, settings, onSettingsChange }: Props) {
   const [open, setOpen] = useState(false)
+  const unset = alertArea(settings) === 'unset'
+  const openSettings = () => {
+    setOpen(false)
+    onSettings()
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,10 +52,12 @@ export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, 
           <Button
             variant="ghost"
             shape="square"
-            aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
+            aria-label={unread ? `Notifications, ${unread} unread` : unset ? 'Notifications, not set up' : 'Notifications'}
             icon={unread ? <BellRingingIcon weight="fill" /> : <BellIcon />}
             className="relative"
           >
+            {/* A dot until the user chooses where alerts come from; the unread count takes over once there's one. */}
+            {unset && unread === 0 && <span className="absolute top-1 right-1 size-2 rounded-full bg-kumo-brand" aria-hidden />}
             {unread > 0 && (
               <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-kumo-badge-red px-1 text-[11px] leading-none font-semibold text-white tabular-nums">
                 {unread > 99 ? '99+' : unread}
@@ -70,28 +81,24 @@ export function NotificationCenter({ items, unread, now, onOpen, onMarkAllRead, 
               shape="square"
               aria-label="Notification settings"
               icon={<GearSixIcon />}
-              onClick={() => {
-                setOpen(false)
-                onSettings()
-              }}
+              onClick={openSettings}
             />
           </div>
         </div>
+        {unset && <AlertAreaPrompt settings={settings} onChange={onSettingsChange} onChoosePlaces={openSettings} />}
         {items.length === 0 ? (
           <div className="px-4 py-8">
             <Empty
               size="sm"
               icon={<BellIcon size={32} className="text-kumo-inactive" />}
               title="No alerts yet"
-              description="You'll be alerted here about new crashes, closures and red alerts, plus anything you watch."
+              description={
+                unset
+                  ? 'Events you watch and your Translink routes alert here.'
+                  : 'New crashes, closures, Red Alerts and warnings where you asked for them alert here, and so do events you watch.'
+              }
               contents={
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setOpen(false)
-                    onSettings()
-                  }}
-                >
+                <Button size="sm" onClick={openSettings}>
                   Choose what to watch
                 </Button>
               }

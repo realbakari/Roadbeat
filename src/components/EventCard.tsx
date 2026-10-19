@@ -1,5 +1,5 @@
 import { Badge, Text } from '@cloudflare/kumo'
-import { ProhibitIcon } from '@phosphor-icons/react'
+import { BellIcon, BellRingingIcon, ProhibitIcon } from '@phosphor-icons/react'
 import type { TrafficEvent } from '../api/types'
 import { priorityBadge, typeMeta } from '../lib/eventMeta'
 import { clean } from '../lib/format'
@@ -38,9 +38,12 @@ interface Props {
   onSelect: (id: number) => void
   /** The title's heading level: h3 in the side panel's list, h4 under a place page's section heading. */
   headingAs?: 'h3' | 'h4'
+  /** Whether the user gets alerts when this event changes or clears; the card shows a Watch button only when `onToggleWatch` is given. */
+  watched?: boolean
+  onToggleWatch?: (id: number) => void
 }
 
-export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingAs = 'h3' }: Props) {
+export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingAs = 'h3', watched = false, onToggleWatch }: Props) {
   const p = event.properties
   const meta = typeMeta(p.event_type)
   const pr = priorityBadge(p.event_priority)
@@ -101,6 +104,22 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
           <Badge variant={pr.variant} appearance={pr.appearance}>
             {p.event_priority}
           </Badge>
+          {/* Above the card's stretched button, so it toggles the watch without opening the event. */}
+          {onToggleWatch && (
+            <button
+              type="button"
+              aria-pressed={watched}
+              aria-label={watched ? `Watching ${eventTitle(event)}` : `Watch ${eventTitle(event)}`}
+              title={watched ? 'Stop alerts for this event' : 'Get alerts when this event changes or clears'}
+              onClick={() => onToggleWatch(p.id)}
+              className={`relative z-10 ml-auto inline-flex min-h-7 items-center gap-1 rounded-md px-1.5 text-xs font-medium ring ${
+                watched ? 'bg-kumo-tint text-kumo-strong ring-kumo-brand' : 'text-kumo-subtle ring-transparent hover:bg-kumo-recessed hover:text-kumo-strong'
+              }`}
+            >
+              {watched ? <BellRingingIcon size={14} weight="fill" aria-hidden /> : <BellIcon size={14} aria-hidden />}
+              {watched ? 'Watching' : 'Watch'}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { FireWarning } from '../api/bushfires'
-import { DEFAULT_SETTINGS, fireMatches, newsMatches, parseSettings, warningMatches, type AlertSettings } from './alertRules'
+import { alertArea, DEFAULT_SETTINGS, fireMatches, matchesRules, newsMatches, parseSettings, warningMatches, type AlertSettings } from './alertRules'
 import { groupStories } from './newsStories'
-import { gazetteerPlace, newsItem, qldWarning } from '../test/fixtures'
+import { gazetteerPlace, newsItem, qldWarning, roadEvent } from '../test/fixtures'
 
 const fire = (over: Partial<FireWarning> = {}): FireWarning => ({
   id: 'WARN-1',
@@ -27,7 +27,8 @@ const fire = (over: Partial<FireWarning> = {}): FireWarning => ({
   expires: null,
   ...over,
 })
-const settings = (over: Partial<AlertSettings> = {}): AlertSettings => ({ ...DEFAULT_SETTINGS, ...over })
+// Alerts from anywhere, as most of these tests are about what matches, not where.
+const settings = (over: Partial<AlertSettings> = {}): AlertSettings => ({ ...DEFAULT_SETTINGS, everywhere: true, ...over })
 
 describe('fireMatches', () => {
   it('alerts on warnings anywhere when no area is set', () => {
@@ -105,7 +106,7 @@ describe('parseSettings', () => {
 })
 
 describe('warningMatches', () => {
-  const s = (over: Partial<AlertSettings> = {}): AlertSettings => ({ ...DEFAULT_SETTINGS, ...over })
+  const s = settings
   // A square around Condamine, its marker well away at one corner.
   const square: GeoJSON.MultiPolygon = { type: 'MultiPolygon', coordinates: [[[[150, -27], [151, -27], [151, -26], [150, -26], [150, -27]]]] }
   const w = { ...qldWarning('Q1', 'Watch and Act', 'Condamine', [150, -27]), areaShape: square }
@@ -123,5 +124,27 @@ describe('warningMatches', () => {
 
   it('never matches a districts-only filter, as warnings aren’t filed under TMR districts', () => {
     expect(warningMatches(w, s({ districts: ['Darling Downs'] }))).toBe(false)
+  })
+})
+
+describe('alertArea', () => {
+  it('is unset on a first visit, and new items then alert only once the user chooses where', () => {
+    const crash = roadEvent(1, 'Bruce Highway', 'Caboolture')
+    expect(alertArea(DEFAULT_SETTINGS)).toBe('unset')
+    expect(matchesRules(crash, DEFAULT_SETTINGS)).toBe(false)
+    expect(warningMatches(qldWarning('Q1', 'Emergency Warning', 'Condamine'), DEFAULT_SETTINGS)).toBe(false)
+    expect(fireMatches(fire(), DEFAULT_SETTINGS)).toBe(false)
+
+    const anywhere = { ...DEFAULT_SETTINGS, everywhere: true }
+    expect(alertArea(anywhere)).toBe('everywhere')
+    expect(matchesRules(crash, anywhere)).toBe(true)
+
+    const nearby = { ...DEFAULT_SETTINGS, nearMe: { at: [0, 0] as [number, number], km: 25 } }
+    expect(alertArea(nearby)).toBe('places')
+  })
+
+  it('keeps statewide alerts for settings saved before the choice existed', () => {
+    expect(parseSettings({ inApp: true }).everywhere).toBe(true)
+    expect(parseSettings({ everywhere: false }).everywhere).toBe(false)
   })
 })

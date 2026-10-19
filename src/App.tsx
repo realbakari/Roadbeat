@@ -539,6 +539,8 @@ export function App() {
           notifications={notifications}
           onOpenHref={openHref}
           onAlertSettings={() => setSettingsOpen(true)}
+          alertSettings={alertSettings}
+          onAlertSettingsChange={setAlertSettings}
           onFeedback={() => setFeedbackOpen(true)}
           searchSources={searchSources}
           onOpenSearch={openSearchHit}
