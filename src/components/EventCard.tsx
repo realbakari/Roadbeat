@@ -3,7 +3,7 @@ import { ProhibitIcon } from '@phosphor-icons/react'
 import type { TrafficEvent } from '../api/types'
 import { priorityBadge, typeMeta } from '../lib/eventMeta'
 import { clean } from '../lib/format'
-import { eventPlace, eventTitle } from '../lib/eventText'
+import { eventPlace, eventTitle, impactLine } from '../lib/eventText'
 import { hasEnded, nextActiveDate } from '../lib/filters'
 import { isClosure } from '../lib/filters'
 import { RelativeTime } from './ui/RelativeTime'
@@ -45,7 +45,8 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
   const meta = typeMeta(p.event_type)
   const pr = priorityBadge(p.event_priority)
   const subtype = clean(p.event_subtype)
-  const impact = clean(p.impact?.impact_subtype) ?? clean(p.impact?.impact_type)
+  const impact = impactLine(event)
+  const closed = isClosure(event)
   const next = upcoming ? nextActiveDate(event, now) : null
   const ended = upcoming && hasEnded(event, now)
   const updated = ended
@@ -81,18 +82,22 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
             </Text>
           )}
         </div>
+        {/* What it does to the road, in QLDTraffic's words, so the row can be read without opening it. */}
+        {impact && (
+          <p className={`flex items-start gap-1.5 text-sm font-medium ${closed ? 'text-kumo-danger' : 'text-kumo-strong'}`}>
+            {closed && (
+              <span className="flex h-lh items-center">
+                <ProhibitIcon size={14} weight="bold" aria-hidden />
+              </span>
+            )}
+            <span className="line-clamp-2 min-w-0">{impact}</span>
+          </p>
+        )}
         {clean(p.description) && (
           <p className="line-clamp-2 text-sm text-kumo-default">{clean(p.description)}</p>
         )}
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant={meta.badge}>{subtype ? `${p.event_type} · ${subtype}` : p.event_type}</Badge>
-          {isClosure(event) ? (
-            <Badge variant="red" icon={<ProhibitIcon weight="bold" />}>
-              {impact ?? 'Closed'}
-            </Badge>
-          ) : (
-            impact && <Badge variant="outline">{impact}</Badge>
-          )}
           <Badge variant={pr.variant} appearance={pr.appearance}>
             {p.event_priority}
           </Badge>
