@@ -56,4 +56,3 @@ Worth doing, not yet built:
 - **Fuel Prices Queensland:** the publisher licence and token (applied for 15 October 2026).
 - **Bureau of Meteorology:** written permission for its warnings.
 - **Address search:** built on a branch, held until the geocoder's terms are clear.
-- **Global search:** an open pull request that needs rebuilding on the current `main`.

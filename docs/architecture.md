@@ -55,6 +55,10 @@ Each layer has one job.
 - **`src/hooks/` owns polling.** Each hook fetches on an interval while something needs the data. `useTripUpdates` shares one poller between every component that shows departures, so a line page fetches the TripUpdates feed once, not once per section.
 - **`src/components/` renders.** Components call hooks and `lib/` functions. They do not parse feeds or compute schedules themselves.
 
+## Search
+
+The header's **Search** button (or `/`, or Cmd/Ctrl+K) opens one search over everything the app has loaded: `searchIndex()` and `searchIn()` in `src/lib/search.ts`, shown by `src/components/GlobalSearch.tsx`. The index is built once each time the data changes, not on every key press. It matches whole words of each item's published name and place, and ranks a match in the name above one only in its suburb, council or district, so "Central" finds Central station before everything in the Central Highlands. Results are grouped by kind, best group first, at most five of each. The search reads three small lists itself once someone types: the gazetteer's towns and suburbs, the train, tram and ferry stops, and Translink's lines. Everything else comes from layers that are already on, and the footer names the layers that aren't, rather than fetching them. The last six results opened are kept in this browser (`src/lib/searchRecent.ts`).
+
 ## Times and empty lists
 
 A relative time such as "3 hours ago" is `src/components/ui/RelativeTime.tsx`: a `<time datetime>` whose exact Brisbane time shows on hover, keyboard focus or tap, and which screen readers hear in full ("3 hours ago, Sun, 18 Oct, 2:12 pm AEST"). Inside a button or clickable card it can't take focus, so it gives the exact time as a hover title and to screen readers only. `useNow` stops its clock while the tab is hidden.
@@ -231,6 +235,8 @@ Preferences live in `localStorage`, so they stay in one browser and never reach 
 | `qldt-notifications`, `qldt-seen` | The notification list and the last state seen |
 | `qldt-saved-stops`, `qldt-recent-stops`, `qldt-saved-trips` | My stops, Recent stops and My trips |
 | `qldt-saved-places` | My places, with their nicknames |
+| `qldt-recent-searches` | The last six results opened from the header search |
+| `qldt-fuel-brands` | The brands the fuel layer is narrowed to, empty for all |
 | `roadbeat-commute` | My commute: roads, stop, line, departure time and days |
 | `qldt-mode` | Light or dark colour theme |
 | `qldt-basemap` | Street map style |
