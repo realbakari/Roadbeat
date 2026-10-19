@@ -10,7 +10,7 @@ import type { MapLayers } from '../map/settings'
 import { SpeedCamerasNote } from '../SpeedCameraParts'
 import { InlineLink } from '../ui/Links'
 import { Badge, Group, LayerRow, type LayerGroupProps } from './LayerRow'
-import type { FuelStation } from '../../api/fuelAvailability'
+import type { FuelStation } from '../../api/fuelStations'
 import { FuelNote } from '../FuelParts'
 import { byBrand, useFuelBrands } from '../../lib/fuelBrands'
 

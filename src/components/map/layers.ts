@@ -526,7 +526,7 @@ export function addLayers(map: maplibregl.Map, mode: ColorMode) {
   // NSW border fires, JTWC cyclones and past cyclone tracks, under hotspots and markers.
   addHazardLayers(map)
   addSpeedCameraLayers(map)
-  addFuelLayers(map)
+  addFuelLayers(map, mode)
   // Satellite hotspots: small dots, newest on top, under the stations and markers above.
   map.addLayer({
     id: 'hotspots',

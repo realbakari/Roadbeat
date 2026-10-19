@@ -256,6 +256,7 @@ Preferences live in `localStorage`, so they stay in one browser and never reach 
 | `qldt-recent-searches` | The last six results opened from the header search |
 | `qldt-last-visit` | The road event ids listed at this browser's last read, and when, to mark new ones |
 | `qldt-fuel-brands` | The brands the fuel layer is narrowed to, empty for all |
+| `qldt-fuel-label` | The fuel whose price labels stations on the map, or none |
 | `roadbeat-commute` | My commute: roads, stop, line, departure time and days |
 | `qldt-mode` | Light or dark colour theme |
 | `qldt-basemap` | Street map style |

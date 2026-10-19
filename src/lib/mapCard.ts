@@ -27,7 +27,7 @@ import { dsColor, siteLoad } from './signals'
 import { truckKey } from './trucks'
 import { wazeLabel } from './waze'
 import { brisbaneDayClock as observed, brisbaneClock as clock } from './aest'
-import { FUEL_STATUS_LABEL } from '../api/fuelAvailability'
+import { centsText, FUEL_STATUS_LABEL } from '../api/fuelStations'
 import { brandedName } from './fuelBrands'
 
 /**
@@ -89,7 +89,7 @@ const PLACE_SUBTITLE: Record<Place['kind'], string> = {
   cyclone: 'JTWC warning, not the official Australian warning',
   pastcyclone: 'Past cyclone track, IBTrACS',
   speedcamera: 'Camera site, Queensland Government',
-  fuel: 'Service station fuel, via council dashboards',
+  fuel: 'Service station, Fuel Prices Queensland',
 }
 
 function placeTitle(place: Place): string {
@@ -176,8 +176,13 @@ export function placeCard(place: Place): MapCard | null {
   if (place.kind === 'pastcyclone') facts.push(place.data.peakKt ? `Peak ${place.data.peakKt} kt (${place.data.agency ?? 'WMO agency'})` : 'Peak wind not recorded', 'History, not a current warning')
   if (place.kind === 'speedcamera') facts.push(SPEED_CAMERA_LABEL[place.data.type])
   if (place.kind === 'fuel') {
+    const priced = place.data.fuels.flatMap((f) => (f.cents != null ? [`${f.name} ${centsText(f.cents)}`] : [])).slice(0, 3)
     const out = place.data.fuels.filter((f) => !f.available).map((f) => f.name)
-    facts.push(FUEL_STATUS_LABEL[place.data.status], ...(out.length && place.data.status !== 'unavailable' ? [`Unavailable: ${out.join(', ')}`] : []))
+    facts.push(
+      FUEL_STATUS_LABEL[place.data.status],
+      ...(priced.length ? [priced.join(' · ')] : []),
+      ...(out.length && place.data.status !== 'unavailable' ? [`Unavailable: ${out.join(', ')}`] : []),
+    )
   }
   const colors: Record<Place['kind'], string> = {
     rest: LAYER_COLOR.restArea,

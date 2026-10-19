@@ -33,7 +33,7 @@ import type { PublisherTime } from '../lib/feedHealth'
 import type { FeedId } from '../lib/feedRegistry'
 import { MAIN_REGIONS, PROBED_REGIONS } from '../lib/transitRegions'
 import { brisbaneDate, brisbaneDayKey as dayKey } from '../lib/aest'
-import { fetchFuelStations } from '../api/fuelAvailability'
+import { fetchFuelStations } from '../api/fuelStations'
 
 // One check per feed in the registry, through the same fetch and parse
 // functions the app uses, so a feed counts as healthy only when its data

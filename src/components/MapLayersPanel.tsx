@@ -25,7 +25,7 @@ import { HazardLayers } from './layers/HazardLayers'
 import { TrafficLayers } from './layers/TrafficLayers'
 import { TransitLayers } from './layers/TransitLayers'
 import { PlaceLayers } from './layers/PlaceLayers'
-import type { FuelStation } from '../api/fuelAvailability'
+import type { FuelStation } from '../api/fuelStations'
 
 interface Props {
   basemap: Basemap

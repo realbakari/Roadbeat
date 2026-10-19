@@ -50,7 +50,7 @@ import type { PastCyclone } from '../api/pastCyclones'
 import type { SpeedCamera } from '../api/speedCameras'
 import { speedCameraFeatures } from './map/speedCameraLayers'
 import { fuelFeatures } from './map/fuelLayers'
-import type { FuelStation } from '../api/fuelAvailability'
+import type { FuelStation } from '../api/fuelStations'
 import { addLayers, highlightRing, isLine, youAreHere } from './map/layers'
 import { RainRadar } from './map/RainRadar'
 import type { Basemap, MapLayers } from './map/settings'
@@ -58,7 +58,8 @@ import { useAnimatedVehicles } from './map/useAnimatedVehicles'
 import { useSourceData } from './map/useSourceData'
 import { useFitEvent } from './map/useFitEvent'
 import { prefersReducedMotion, useSignalAnimation } from './map/useSignalAnimation'
-import { byBrand, useFuelBrands } from '../lib/fuelBrands'
+import { brandedName, byBrand, cheapestIn, useFuelBrands, useFuelLabel, type ViewBounds } from '../lib/fuelBrands'
+import { centsText } from '../api/fuelStations'
 
 // Vite pre-bundles maplibre-gl away from its sibling worker file, so point at it explicitly.
 maplibregl.setWorkerUrl(workerUrl)
@@ -209,7 +210,7 @@ const TOGGLES: Record<keyof MapLayers, string[]> = {
   cyclones: ['cyclone-track', 'cyclone-points'],
   pastCyclones: ['past-cyclones'],
   speedCameras: ['speed-cameras'],
-  fuel: ['fuel'],
+  fuel: ['fuel', 'fuel-prices'],
 }
 
 const CLICKABLE_PLACES = ['fuel', 'speed-cameras', 'air-quality', 'hotspots', 'nsw-fires', 'nsw-hazards', 'nsw-hazard-lines', 'cyclone-points', 'cyclone-track', 'past-cyclones', 'outages', 'outages-line', 'outages-area', 'council-centres', 'news-pins', 'news-roads', 'council-events', 'clearways-on', 'clearways-off', 'toilets', 'accessible-parking', 'parking-meters', 'bike-stops', 'clearances', 'gauges', 'signals', 'fire-markers', 'fire-areas', 'warning-markers', 'warning-areas', 'stops-bus', 'stops-station', 'stops-line', 'vehicles', 'cameras-web', 'cameras-flood', 'places-rest', 'places-dump', 'places-waze', 'trucks-icon', 'trucks-line']
@@ -420,7 +421,24 @@ export function TrafficMap(props: Props) {
   const speedCameraData = useMemo(() => speedCameraFeatures(speedCameras), [speedCameras])
   useSourceData(map, ready, 'speed-cameras', speedCameraData)
   const fuelBrands = useFuelBrands()
-  const fuelData = useMemo(() => fuelFeatures(byBrand(fuelStations, fuelBrands)), [fuelStations, fuelBrands])
+  const fuelLabel = useFuelLabel()
+  // The view's bounds after each move, for the cheapest price in view; only kept while the fuel layer is on.
+  const [fuelView, setFuelView] = useState<ViewBounds | null>(null)
+  useEffect(() => {
+    if (!map || !layers.fuel) return
+    const read = () => {
+      const b = map.getBounds()
+      setFuelView([[b.getWest(), b.getSouth()], [b.getEast(), b.getNorth()]])
+    }
+    read()
+    map.on('moveend', read)
+    return () => {
+      map.off('moveend', read)
+    }
+  }, [map, layers.fuel])
+  const shownFuel = useMemo(() => byBrand(fuelStations, fuelBrands), [fuelStations, fuelBrands])
+  const cheapest = useMemo(() => (layers.fuel ? cheapestIn(shownFuel, fuelLabel, fuelView) : null), [layers.fuel, shownFuel, fuelLabel, fuelView])
+  const fuelData = useMemo(() => fuelFeatures(shownFuel, fuelLabel, cheapest?.ids), [shownFuel, fuelLabel, cheapest])
   useSourceData(map, ready, 'fuel', fuelData)
   useSourceData(map, ready, 'council-centres', centreData)
   useSourceData(map, ready, 'outages', outageData)
@@ -580,6 +598,20 @@ export function TrafficMap(props: Props) {
         <PinnedCamera map={map} camera={selectedCamera} now={now} onClose={props.onCloseCamera} onOpenLocality={props.onOpenLocality} crossing={props.cameraCrossing} onOpenEvent={props.onSelectEvent} />
       )}
       {map && card && !selectedCamera && <MapCard key={card.key} map={map} card={card} onDetails={props.onCardDetails} onClose={props.onCardClose} />}
+      {/* The cheapest in view, in words as well as the green tag; opens the station. */}
+      {cheapest && (
+        <button
+          type="button"
+          onClick={() => props.onSelectKey(`place/fuel/${encodeURIComponent(cheapest.stations[0].id)}`)}
+          className="absolute top-14 left-1/2 z-10 flex max-w-[calc(100%-6rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-kumo-base px-3 py-1.5 text-sm shadow-md ring ring-kumo-line hover:bg-kumo-tint"
+        >
+          <span className="shrink-0 rounded-md bg-[#15803d] px-1.5 font-semibold text-white tabular-nums ring-2 ring-[#052e16]">{centsText(cheapest.cents)}</span>
+          <span className="min-w-0 truncate">
+            Cheapest {fuelLabel} in view · {brandedName(cheapest.stations[0])}
+            {cheapest.stations.length > 1 && ` and ${cheapest.stations.length - 1} more`}
+          </span>
+        </button>
+      )}
     </div>
   )
 }

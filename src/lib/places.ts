@@ -15,7 +15,7 @@ import type { MapLayers } from '../components/map/settings'
 import type { LngLat } from './geo'
 import { outagePosition } from './outages'
 import { findTruck, truckIconPoint } from './trucks'
-import type { FuelStation } from '../api/fuelAvailability'
+import type { FuelStation } from '../api/fuelStations'
 
 /** A map item that has its own detail page, reached by #place/<kind>/<id>. */
 export type Place =

@@ -35,14 +35,13 @@ Each of these was considered and set aside. Building one needs the maintainer's 
 | Estimated arrival times, vehicle positions between GPS reports, walking times | No source publishes them; Roadbeat would be guessing. Trips that need a walk go to Translink's journey planner. |
 | Accounts, sign-in, profiles | Nothing needs them: preferences stay in the browser. |
 | Ads, sponsorships, subscriptions | Roadbeat stays free and non-commercial, which Open-Meteo's terms require. |
-| Fuel prices | Waiting on Roadbeat's own Fuel Prices Queensland publisher licence. The fuel layer shows availability only until then. |
 | Bureau of Meteorology warnings and products beyond QLDTraffic's radar | Needs the Bureau's written permission. The ingest is built and switched off (`NEWS_BOM_WARNINGS`). |
 | Brand logos for fuel stations or other companies | No source publishes them, and copying the artwork needs each company's permission. Brands are shown by name. |
 | Community data from OpenStreetMap as places (hospitals, fuel stations, speed cameras) | Not official. OpenStreetMap stays as the base map only. |
 | Mobile speed camera positions | The state publishes the sites by road and suburb, not by position, so they're linked rather than placed. |
 | An AI chat on `/chat` | Free model tiers exist, but answers could be worded wrongly, and the provider would see people's questions. Connecting an assistant to Roadbeat's MCP server (`/mcp`) covers it for now. Google AI Mode has no API to build on. |
 | Reading sites that publish no feed (9News, The Courier-Mail) | Scraping isn't a published feed, and their terms don't allow it. |
-| Showing a third party's copy of an official feed when the official one is reachable | Go to the publisher. The fuel layer is the exception: it's what the council dashboards publish, until the state's own API is available to Roadbeat. |
+| Showing a third party's copy of an official feed when the official one is reachable | Go to the publisher. |
 
 ## Maybe later
 
@@ -53,6 +52,5 @@ Worth doing, not yet built:
 
 ## Waiting on someone else
 
-- **Fuel Prices Queensland:** the publisher licence and token (applied for 15 October 2026).
 - **Bureau of Meteorology:** written permission for its warnings.
 - **Address search:** built on a branch, held until the geocoder's terms are clear.

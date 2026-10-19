@@ -17,7 +17,7 @@ Rules for anyone changing Roadbeat, people and AI coding agents alike. Each rule
 **The Licence-First Rule.** Read a source's terms before showing it, and show only what they allow:
 - Bureau of Meteorology products stay off without written permission (`NEWS_BOM_WARNINGS`).
 - News outlets: headline, link and first sentence only.
-- Fuel prices are not shown until Roadbeat holds its own Fuel Prices Queensland publisher licence; the fuel layer reads availability only.
+- Fuel prices come under Roadbeat's Fuel Prices Queensland publisher licence: show a price change within 30 minutes, show the state's notice (`fuelNotice()` in `src/api/fuelStations.ts`) and "Prices may not be republished" wherever prices appear, and never pass prices to anyone else to publish, so they stay out of Roadbeat's API, MCP server, `/roads` and `llms.txt`.
 - Don't copy company logos (fuel brands are shown by name), and don't use the Queensland Government brand: no coat of arms, government header or anything that implies endorsement. The one exception is News, which shows each council's own site icon beside that council's notices, as its dashboard serves it.
 - Open-Meteo is free for non-commercial sites only, so Roadbeat carries no ads or subscriptions.
 
@@ -27,7 +27,7 @@ Rules for anyone changing Roadbeat, people and AI coding agents alike. Each rule
 
 **The Twelve Functions Rule.** Vercel's Hobby plan deploys at most 12 functions, and every file directly in `api/` plus `middleware.ts` counts. A new endpoint is a handler in `api/_lib/endpoints/`, registered in `api/[endpoint].ts`. Never add a file to `api/` without counting.
 
-**The Hidden Address Rule.** Secrets and server-only settings (`CRON_SECRET`, the Upstash keys, `VAPID_PRIVATE_KEY`, `FUEL_LAYER_URL`, `TFNSW_API_KEY`) live in Vercel and `.env.local`, never in the code, docs, commits, issues or chat. Where a source's address is a setting, the docs describe the setting, not the address.
+**The Hidden Address Rule.** Secrets and server-only settings (`CRON_SECRET`, the Upstash keys, `VAPID_PRIVATE_KEY`, `FPQ_API_TOKEN`, `TFNSW_API_KEY`) live in Vercel and `.env.local`, never in the code, docs, commits, issues or chat. Where a source's address is a setting, the docs describe the setting, not the address.
 
 **The Same-Change Rule.** Update the docs in the change that makes them wrong: `docs/` for how it works, `docs/data-sources.md` for any feed, `site/pages/privacy.md` for anything stored, sent or asked for, and `docs/product.md` when scope changes.
 

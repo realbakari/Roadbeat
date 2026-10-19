@@ -1,9 +1,10 @@
-import type { FuelStation } from '../api/fuelAvailability'
+import type { FuelStation } from '../api/fuelStations'
 import { storedList } from './storedList'
 
-// The fuel layer's brands, as the source names them ("Ampol", "7 Eleven",
-// "Independent"). Brands are shown as their names only: the source publishes
-// no logos, and Roadbeat doesn't copy the companies' artwork.
+// The fuel layer's brands, as Fuel Prices Queensland names them ("Ampol",
+// "7 Eleven", "Independent"), and the fuel whose price the map labels. Brands
+// are shown as their names only: the source publishes no logos, and Roadbeat
+// doesn't copy the companies' artwork.
 
 /** Each brand with how many stations carry it, most first, then by name. */
 export function brandCounts(stations: FuelStation[]): [string, number][] {
@@ -30,3 +31,50 @@ const store = storedList<string>('qldt-fuel-brands', (x): x is string => typeof 
 /** The brands the fuel layer is narrowed to in this browser; empty for all. */
 export const useFuelBrands = store.use
 export const setFuelBrands = (brands: string[]) => store.write(brands)
+
+/** The fuels a map label can show, most stations first: every fuel any station reports. */
+export function fuelNames(stations: FuelStation[]): string[] {
+  const counts = new Map<string, number>()
+  for (const s of stations) for (const f of s.fuels) counts.set(f.name, (counts.get(f.name) ?? 0) + 1)
+  return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([n]) => n)
+}
+
+/** A station's map label for a fuel: its price, "Out" when reported unavailable, or null when it doesn't report that fuel. */
+export function priceLabel(s: FuelStation, fuel: string): string | null {
+  const f = s.fuels.find((x) => x.name === fuel)
+  if (!f) return null
+  return f.cents != null ? f.cents.toFixed(1) : 'Out'
+}
+
+/** What the map labels stations with until someone chooses: the fuel most stations sell. */
+export const DEFAULT_PRICE_LABEL = 'Unleaded'
+
+const labelStore = storedList<string>('qldt-fuel-label', (x): x is string => typeof x === 'string')
+/** The fuel whose price labels the map in this browser, or '' for no labels. */
+export const useFuelLabel = (): string => labelStore.use()[0] ?? DEFAULT_PRICE_LABEL
+export const setFuelLabel = (fuel: string) => labelStore.write([fuel])
+
+/** A map view's bounds as [[west, south], [east, north]]. */
+export type ViewBounds = [[number, number], [number, number]]
+
+/**
+ * The lowest reported price of `fuel` among the stations in view, and every
+ * station at that price (ties are all marked). Unavailable fuels don't count;
+ * null when no station in view reports a price for it.
+ */
+export function cheapestIn(stations: FuelStation[], fuel: string, bounds: ViewBounds | null): { cents: number; ids: Set<string>; stations: FuelStation[] } | null {
+  if (!fuel) return null
+  let best: number | null = null
+  let at: FuelStation[] = []
+  for (const s of stations) {
+    const [lng, lat] = s.position
+    if (bounds && (lng < bounds[0][0] || lng > bounds[1][0] || lat < bounds[0][1] || lat > bounds[1][1])) continue
+    const cents = s.fuels.find((f) => f.name === fuel)?.cents
+    if (cents == null) continue
+    if (best == null || cents < best) {
+      best = cents
+      at = [s]
+    } else if (cents === best) at.push(s)
+  }
+  return best == null ? null : { cents: best, ids: new Set(at.map((s) => s.id)), stations: at }
+}

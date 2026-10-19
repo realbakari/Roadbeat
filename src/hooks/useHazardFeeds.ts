@@ -10,7 +10,7 @@ import { fetchPastCyclones, type PastCyclone } from '../api/pastCyclones'
 import { fetchSpeedCameras, type SpeedCamera } from '../api/speedCameras'
 import type { LngLat } from '../lib/geo'
 import { poll } from './poll'
-import { fetchFuelStations, type FuelStation } from '../api/fuelAvailability'
+import { fetchFuelStations, type FuelStation } from '../api/fuelStations'
 
 /** A polled feed's last read: its value, the error from the latest read, and when it last succeeded. */
 export interface Feed<T> {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Camera } from '../api/types'
 import type { CouncilCentre } from '../api/newsTypes'
-import type { FuelStation } from '../api/fuelAvailability'
+import type { FuelStation } from '../api/fuelStations'
 import type { QldWarning } from '../api/qldWarnings'
 import { fireWarning, gazetteerPlace, newsItem, roadEvent, stopIndex } from '../test/fixtures'
 import { groupStories } from './newsStories'
@@ -132,7 +132,7 @@ describe('search', () => {
 })
 
 describe('search over the newer sources', () => {
-  const station: FuelStation = { id: '61470034', name: 'Mobil Gordonvale', brand: 'Mobil', address: '67 George St, Gordonvale', postcode: 4865, council: 'Cairns Regional', status: 'unavailable', updatedAt: null, fuels: [], position: [145.8, -17.1] }
+  const station: FuelStation = { id: '61470034', name: 'Mobil Gordonvale', brand: 'Mobil', address: '67 George St, Gordonvale', postcode: '4865', suburb: 'Gordonvale', status: 'unavailable', fuels: [], position: [145.8, -17.1] }
   const warning = { id: 'W1', level: 'Advice', levelText: 'Advice', title: 'ADVICE - Isisford', issued: null, type: 'Flood', area: 'Isisford', from: 'Longreach Regional Council', callToAction: null, header: null, impacts: null, shouldDo: null, moreInformation: null, nextUpdate: null, position: [144.4, -24.3], areaShape: null } as QldWarning
   const newer: SearchSources = {
     ...EMPTY,

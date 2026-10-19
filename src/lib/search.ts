@@ -3,7 +3,7 @@ import type { CouncilEvent } from '../api/bccDashboard'
 import type { AccessibleBay, BikeStop, ParkingMeter, Toilet } from '../api/bccPlaces'
 import type { FireWarning } from '../api/bushfireFeed'
 import type { Clearance } from '../api/clearances'
-import { FUEL_STATUS_LABEL, type FuelStation } from '../api/fuelAvailability'
+import { FUEL_STATUS_LABEL, type FuelStation } from '../api/fuelStations'
 import type { Gauge } from '../api/gaugeTypes'
 import type { CouncilCentre, Outage } from '../api/newsTypes'
 import type { QldWarning } from '../api/qldWarnings'
@@ -199,7 +199,7 @@ export function searchIndex(s: SearchSources): SearchEntry[] {
   }
   for (const w of s.warnings ?? []) add('warning', w.area ?? w.title, join(w.levelText, w.type, w.from), `place/warning/${encodeURIComponent(w.id)}`, w.area ?? w.title, [w.from])
   for (const f of s.fires ?? []) add('fire', f.title, join(f.levelText, f.area), `fire/${encodeURIComponent(f.id)}`, f.title, [f.area, f.location])
-  for (const f of s.fuel ?? []) add('fuel', brandedName(f), join(FUEL_STATUS_LABEL[f.status], f.address), `place/fuel/${encodeURIComponent(f.id)}`, brandedName(f), [f.address, f.council])
+  for (const f of s.fuel ?? []) add('fuel', brandedName(f), join(FUEL_STATUS_LABEL[f.status], f.address), `place/fuel/${encodeURIComponent(f.id)}`, brandedName(f), [f.address, f.suburb, f.postcode])
   for (const c of s.speedCameras ?? []) add('speedcamera', c.site, SPEED_CAMERA_LABEL[c.type], `place/speedcamera/${encodeURIComponent(c.id)}`, c.site)
   for (const r of s.restAreas) if (r.name) add('place', r.name, 'Rest area', `place/rest/${r.id}`, r.name)
   // Several dump points share a town's name ("Gympie" three times), so the published location tells them apart.

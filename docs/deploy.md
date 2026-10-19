@@ -97,13 +97,13 @@ Push alerts need four environment variables, a database and a scheduler. Until a
 
 GitHub runs scheduled workflows on a best-effort basis, often a few minutes late, and pauses them in repositories with no activity for 60 days. Vercel's Hobby plan runs its own cron jobs only once a day, which is why GitHub does the scheduling. Both scheduled workflows run only in `realbakari/Roadbeat`, so a fork never calls production. In a fork, change the `if:` line on the job to your repository's name.
 
-### Turn on fuel availability
+### Turn on fuel prices
 
 The fuel layer reads `/api/fuel`, which needs one server setting:
 
-- **`FUEL_LAYER_URL`**: the address of the fuel status layer the council disaster dashboards use for their **Fuel Status** map. It's kept out of the code on purpose. Set it in Vercel (Settings → Environment Variables, Production) and in `.env.local` for `npm run dev`.
+- **`FPQ_API_TOKEN`**: the subscriber token Fuel Prices Queensland issues to a licensed publisher or data consumer (sign up at fuelpricesqld.com.au and accept the Fuel Price Data Licence). Set it in Vercel (Settings → Environment Variables, Production) and in `.env.local` for `npm run dev`. The server sends it as `Authorization: FPDAPI SubscriberToken=<token>`.
 
-Without it, `/api/fuel` answers 503 and the layer says fuel status isn't set up. The endpoint sends no CORS header, so other sites can't use it from their pages, and it reads availability only, never prices.
+Without it, `/api/fuel` answers 503 and the layer says fuel prices aren't set up. The endpoint sends no CORS header and a `noindex` header: the licence allows Roadbeat to publish prices but not to pass them on for others to publish.
 
 ### Turn on NSW road hazards near the border
 
