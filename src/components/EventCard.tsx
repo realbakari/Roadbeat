@@ -1,9 +1,10 @@
 import { Badge, Text } from '@cloudflare/kumo'
-import { BellIcon, BellRingingIcon, ProhibitIcon } from '@phosphor-icons/react'
+import { BellIcon, BellRingingIcon, ClockCounterClockwiseIcon, ProhibitIcon } from '@phosphor-icons/react'
 import type { TrafficEvent } from '../api/types'
 import { priorityBadge, typeMeta } from '../lib/eventMeta'
 import { clean } from '../lib/format'
 import { eventPlace, eventTitle, impactLine } from '../lib/eventText'
+import { updateGap, updateGapText } from '../lib/eventAge'
 import { hasEnded, nextActiveDate } from '../lib/filters'
 import { isClosure } from '../lib/filters'
 import { RelativeTime } from './ui/RelativeTime'
@@ -58,6 +59,7 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
       ? `Starts ${startsFmt.format(next)}`
       : <RelativeTime at={p.last_updated} now={now} inline />
   const place = eventPlace(event)
+  const gap = upcoming ? null : updateGap(event, now)
 
   // The title is a heading holding the button, and the button's ::after
   // stretches over the card, so the whole card stays one click target while
@@ -98,6 +100,15 @@ export function EventCard({ event, now, distanceKm, upcoming, onSelect, headingA
         )}
         {clean(p.description) && (
           <p className="line-clamp-2 text-sm text-kumo-default">{clean(p.description)}</p>
+        )}
+        {/* QLDTraffic's own silence, said in words: never that the event has cleared. */}
+        {gap && (
+          <p className="flex items-start gap-1.5 text-xs text-kumo-default">
+            <span className="flex h-lh items-center text-kumo-warning">
+              <ClockCounterClockwiseIcon size={14} weight="bold" aria-hidden />
+            </span>
+            {updateGapText(gap)}
+          </p>
         )}
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant={meta.badge}>{subtype ? `${p.event_type} · ${subtype}` : p.event_type}</Badge>

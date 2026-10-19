@@ -65,6 +65,8 @@ The strip under the header (`src/components/MajorStrip.tsx`) leads with the most
 
 The event list opens with Queensland Disaster Management's warnings (`src/components/WarningList.tsx`), then bushfires, then council works, then road events. The warnings card opens by itself while any warning is at Watch and Act or higher. Each road event's row has one line of what it does to the road, in QLDTraffic's words: the impact, direction and delay it publishes (`impactLine()` in `src/lib/eventText.ts`), in red with the closed sign for a road closure.
 
+A row and the event's page also say when QLDTraffic has gone quiet on an event (`updateGap()` in `src/lib/eventAge.ts`): an unplanned event (crash, hazard, congestion or flooding) it hasn't updated for 7 days or more, or any event whose published next inspection has passed with no update since. Both come from QLDTraffic's own `last_updated` and `next_inspection`. The wording states the gap only and never says the event has cleared; the page points to Transport and Main Roads on 13 19 40. Planned roadworks and special events aren't flagged for age, as they run to a published schedule.
+
 ## Times and empty lists
 
 A relative time such as "3 hours ago" is `src/components/ui/RelativeTime.tsx`: a `<time datetime>` whose exact Brisbane time shows on hover, keyboard focus or tap, and which screen readers hear in full ("3 hours ago, Sun, 18 Oct, 2:12 pm AEST"). Inside a button or clickable card it can't take focus, so it gives the exact time as a hover title and to screen readers only. `useNow` stops its clock while the tab is hidden.

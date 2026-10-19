@@ -4,6 +4,7 @@ import {
   BellIcon,
   BellRingingIcon,
   CheckIcon,
+  ClockCounterClockwiseIcon,
   LinkSimpleIcon,
   ProhibitIcon,
   SirenIcon,
@@ -23,6 +24,7 @@ import { GaugesNearby } from './GaugesNearby'
 import { RoadContacts } from './RoadContacts'
 import { TypeIcon } from './EventCard'
 import { eventPlace, eventTitle } from '../lib/eventText'
+import { updateGap, updateGapText } from '../lib/eventAge'
 import { shareUrl } from '../lib/sharePage'
 import { useCopied } from '../hooks/useCopied'
 import { ExternalLink } from './ui/Links'
@@ -76,6 +78,7 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
     }
   }
 
+  const gap = updateGap(event, now)
   const direction = [clean(impact?.direction), clean(impact?.towards) && `towards ${clean(impact?.towards)}`]
     .filter(Boolean)
     .join(' ')
@@ -137,6 +140,14 @@ export function EventDetail({ event, cameras, now, onBack, onOpenCamera, watched
               icon={<ProhibitIcon weight="fill" />}
               title={clean(impact?.impact_subtype) ?? 'Road closed'}
               description={direction || undefined}
+            />
+          )}
+          {gap && (
+            <Banner
+              variant="secondary"
+              icon={<ClockCounterClockwiseIcon weight="bold" />}
+              title={updateGapText(gap)}
+              description="QLDTraffic still lists it, so Roadbeat shows it as published. Before you rely on it, check with Transport and Main Roads on 13 19 40."
             />
           )}
           {p.area_alert && clean(p.alert_message) && (
