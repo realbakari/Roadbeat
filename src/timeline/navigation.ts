@@ -2,11 +2,12 @@ import type { MouseEvent } from 'react'
 import type { PostView } from '../lib/posts'
 
 /** The timeline's tabs, in order, with the key that picks each. */
-export const VIEWS: { value: PostView; label: string; key: string }[] = [
+export const VIEWS: { value: PostView; label: string; short?: string; key: string }[] = [
   { value: 'latest', label: 'Latest', key: '1' },
   { value: 'major', label: 'Major', key: '2' },
-  { value: 'active', label: 'Most active', key: '3' },
+  { value: 'active', label: 'Most active', short: 'Active', key: '3' },
   { value: 'watching', label: 'Watching', key: '4' },
+  { value: 'fuel', label: 'Fuel', key: '5' },
 ]
 
 /** A plain left click, which the timeline handles itself; a click meant for a new tab or window goes to the browser. */

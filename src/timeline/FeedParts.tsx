@@ -34,10 +34,17 @@ export function FeedTabs({ view, onChange }: { view: PostView; onChange: (v: Pos
             tabIndex={on ? 0 : -1}
             onClick={() => onChange(v.value)}
             onKeyDown={move}
-            className={`flex flex-1 justify-center text-[15px] font-medium transition-colors hover:bg-kumo-tint focus-visible:bg-kumo-tint focus-visible:outline-none ${on ? 'text-kumo-strong' : 'text-kumo-subtle'}`}
+            className={`flex flex-1 justify-center px-1 text-[15px] font-medium transition-colors hover:bg-kumo-tint focus-visible:bg-kumo-tint focus-visible:outline-none ${on ? 'text-kumo-strong' : 'text-kumo-subtle'}`}
           >
             <span className="relative py-3.5">
-              {v.label}
+              {v.short ? (
+                <>
+                  <span className="sm:hidden">{v.short}</span>
+                  <span className="max-sm:hidden">{v.label}</span>
+                </>
+              ) : (
+                v.label
+              )}
               {on && <span aria-hidden className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-kumo-brand" />}
             </span>
           </button>

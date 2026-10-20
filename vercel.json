@@ -61,6 +61,17 @@
       "destination": "/index.html"
     },
     {
+      "source": "/timeline/:source/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|facebookexternalhit|facebookcatalog|slack|twitter|whatsapp|telegram|discord|linkedin|embedly|skype|pinterest|vkshare|mastodon|bluesky|iframely|preview|google).*"
+        }
+      ],
+      "destination": "/api/share?source=:source&id=:id"
+    },
+    {
       "source": "/timeline/:path*",
       "destination": "/index.html"
     },

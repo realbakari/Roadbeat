@@ -3,6 +3,7 @@ import { decodeFeed, parseTripUpdates, parseVehicles, type RouteLookup } from '.
 import { StopIndex, TripIndex, type StopFile, type TripFile } from '../../src/api/stops.js'
 import type { LiveVehicle, TransitRegion, TripUpdates } from '../../src/api/transitTypes.js'
 import { parseEvents } from '../../src/api/qldtrafficFeed.js'
+import { parseQldWarnings, QLD_WARNINGS_FEED, type QldWarning } from '../../src/api/qldWarningsFeed.js'
 import type { TrafficEvent } from '../../src/api/types.js'
 import routeData from '../../src/data/translink-routes.json' with { type: 'json' }
 import stopsCore from '../../src/data/translink-stops.json' with { type: 'json' }
@@ -17,6 +18,7 @@ const SOURCES = {
   events: 'https://data.qldtraffic.qld.gov.au/events_v2.geojson',
   bushfires: 'https://publiccontent-gis-psba-qld-gov-au.s3.amazonaws.com/content/Feeds/BushfireCurrentIncidents/bushfireAlert.json',
   translink: 'https://gtfsrt.api.translink.com.au/api/realtime',
+  warnings: QLD_WARNINGS_FEED,
 } as const
 
 const cache = new Map<string, { at: number; value: Promise<unknown> }>()
@@ -50,6 +52,11 @@ export function roadEvents(): Promise<{ events: TrafficEvent[]; fetchedAt: numbe
 /** Queensland Fire Department warnings and incidents, highest level first. */
 export function bushfires(): Promise<{ fires: FireWarning[]; fetchedAt: number }> {
   return cached('bushfires', 120_000, async () => ({ fires: parseBushfires(await (await get(SOURCES.bushfires)).json()), fetchedAt: Date.now() }))
+}
+
+/** Queensland Disaster Management's storm, flood, cyclone and other warnings. */
+export function qldWarnings(): Promise<QldWarning[]> {
+  return cached('warnings', 120_000, async () => parseQldWarnings(await (await get(SOURCES.warnings)).json()))
 }
 
 const ROUTES = (routeData as { routes: Record<string, { short: string; long: string; mode: LiveVehicle['mode']; color: string | null; line?: string }> }).routes

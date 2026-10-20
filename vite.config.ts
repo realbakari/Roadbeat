@@ -100,9 +100,15 @@ function devApi(): Plugin {
             .then((m) => {
               const handlers = m as Record<string, (r: Request) => Promise<Response>>
               const body = method === 'GET' || method === 'HEAD' ? undefined : Buffer.concat(chunks)
-              return (handlers[method] ?? handlers.GET)(new Request(`http://localhost${req.url}`, { method, body, headers: { 'content-type': req.headers['content-type'] ?? '' } }))
+              // The real host, so links a handler builds from its own address (share pages) keep the dev server's port.
+              return (handlers[method] ?? handlers.GET)(new Request(`http://${req.headers.host ?? 'localhost'}${req.url}`, { method, body, headers: { 'content-type': req.headers['content-type'] ?? '' } }))
             })
-            .then(async (r) => res.writeHead(r.status, { 'content-type': r.headers.get('content-type') ?? 'application/json' }).end(await r.text()))
+            // As bytes, so images (the share cards) arrive intact; redirects keep their location.
+            .then(async (r) =>
+              res
+                .writeHead(r.status, { 'content-type': r.headers.get('content-type') ?? 'application/json', ...(r.headers.get('location') ? { location: r.headers.get('location') ?? '' } : {}) })
+                .end(Buffer.from(await r.arrayBuffer())),
+            )
             .catch((e: Error) => res.writeHead(500, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message }))),
         )
       })

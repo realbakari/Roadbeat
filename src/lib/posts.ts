@@ -323,7 +323,7 @@ export function buildPosts({ events, fires, warnings, alerts, stories, history, 
   return posts.sort((a, b) => b.latest - a.latest)
 }
 
-export type PostView = 'latest' | 'major' | 'active' | 'watching'
+export type PostView = 'latest' | 'major' | 'active' | 'watching' | 'fuel'
 
 /**
  * The posts a view shows: everything, those at the publishers' top levels or
@@ -335,6 +335,8 @@ export function postsFor(posts: Post[], view: PostView, watched: number[], now: 
   if (view === 'major') return posts.filter((p) => p.major)
   if (view === 'active') return mostActive(posts, now).flatMap((g) => g.posts)
   if (view === 'watching') return posts.filter((p) => p.eventId != null && watched.includes(p.eventId))
+  // Fuel is its own list of stations (src/lib/fuelNearby.ts), not posts.
+  if (view === 'fuel') return []
   return posts
 }
 

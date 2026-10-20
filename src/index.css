@@ -39,6 +39,7 @@ body,
   --lane-transit: #7b52c7;
   --lane-news: #8b5cf6;
   --lane-official: #334155;
+  --lane-fuel: #15803d;
   --rail: #d3d7dd;
 }
 [data-mode="dark"] {
@@ -48,6 +49,7 @@ body,
   --lane-transit: #a585e6;
   --lane-news: #a78bfa;
   --lane-official: #94a3b8;
+  --lane-fuel: #4ade80;
   --rail: #36363a;
 }
 

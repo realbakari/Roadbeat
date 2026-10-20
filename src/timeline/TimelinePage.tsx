@@ -14,6 +14,7 @@ import { groupStories } from '../lib/newsStories'
 import { buildPosts, gatherRelated, laneOf, mostActive, postsFor, type FeedEntry, type PostView } from '../lib/posts'
 import { parsePath, timelinePath } from '../lib/route'
 import { DayMarker, FeedEnd, FeedSkeleton, FeedTabs, NewPostsButton } from './FeedParts'
+import { FuelFeed } from './FuelFeed'
 import { VIEWS } from './navigation'
 import { PostCard } from './PostCard'
 import { PostPage } from './PostPage'
@@ -153,7 +154,7 @@ export function TimelinePage({ post: initialPost }: { post: string | null }) {
     if (postId) return
     const reading = e.currentTarget.scrollTop > READING
     // Most active's order is its ranking, so it isn't held.
-    if (reading && !held && view !== 'active') setHeld(snapshotOf(list))
+    if (reading && !held && view !== 'active' && view !== 'fuel') setHeld(snapshotOf(list))
     else if (!reading && held) setHeld(null)
   }
   const showNew = () => {
@@ -178,7 +179,7 @@ export function TimelinePage({ post: initialPost }: { post: string | null }) {
         </p>
       )}
 
-      {(failed.length > 0 || loading.length > 0) && !nothingYet && (
+      {view !== 'fuel' && (failed.length > 0 || loading.length > 0) && !nothingYet && (
         <div className="grid gap-2 border-b border-kumo-line px-4 py-3">
           {failed.length > 0 && (
             <Banner
@@ -193,7 +194,9 @@ export function TimelinePage({ post: initialPost }: { post: string | null }) {
       )}
 
       <div id="feed" role="tabpanel" aria-labelledby={`tab-${view}`}>
-        {nothingYet ? (
+        {view === 'fuel' ? (
+          <FuelFeed now={now} />
+        ) : nothingYet ? (
           <FeedSkeleton />
         ) : entries.length === 0 ? (
           <div className="grid justify-items-center gap-2 px-6 py-16 text-center sm:px-12">
@@ -255,7 +258,7 @@ export function TimelinePage({ post: initialPost }: { post: string | null }) {
           </ul>
         )}
 
-        {entries.length > shown ? (
+        {view === 'fuel' ? null : entries.length > shown ? (
           <div className="border-b border-kumo-line px-4 py-3">
             <Button variant="secondary" className="w-full" onClick={() => setShown((s) => s + PAGE)}>
               Show {Math.min(PAGE, entries.length - shown)} more
@@ -266,7 +269,7 @@ export function TimelinePage({ post: initialPost }: { post: string | null }) {
         )}
       </div>
 
-      <p className="m-0 px-4 py-5 text-xs leading-relaxed text-kumo-subtle">
+      <p className={`m-0 px-4 py-5 text-xs leading-relaxed text-kumo-subtle ${view === 'fuel' ? 'hidden' : ''}`}>
         Each post is a publisher's own item at its own time, newest activity first. Posts on the same road and locality, or the same fire or warning area, are gathered and
         joined on one lane. Road event updates come from Roadbeat's record of QLDTraffic's feed over the last 48 hours and say only which published fields changed. Translink
         alerts are listed from when they took effect, since Translink publishes no issue time. Nothing here is liked, ranked or written by Roadbeat.
