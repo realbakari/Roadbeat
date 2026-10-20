@@ -21,6 +21,16 @@ describe('api/[endpoint].ts router', () => {
     expect((await GET(req('/api/share?event=abc'))).status).toBe(400)
   })
 
+  it('serves a page address a rewrite sends here, by the endpoint its query names', async () => {
+    // vercel.json sends link-preview crawlers from /timeline/<source>/<id>; the request keeps that address.
+    expect((await GET(req('/timeline/likes/1?endpoint=share&source=likes&id=1'))).status).toBe(400)
+    expect((await GET(req('/timeline/road/1'))).status).toBe(404)
+  })
+
+  it("lets only the path name an /api/ address's endpoint", async () => {
+    expect((await GET(req('/api/stops?q=Central&endpoint=share'))).status).toBe(200)
+  })
+
   it('answers 404 for an unknown endpoint', async () => {
     const res = await GET(req('/api/nope'))
     expect(res.status).toBe(404)

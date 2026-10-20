@@ -46,9 +46,15 @@ const ENDPOINTS: Record<string, Endpoint> = {
   visits,
 }
 
-/** The endpoint named by the last path segment: "/api/events?q=…" → events. */
+/**
+ * The endpoint named by the last path segment: "/api/events?q=…" → events. A
+ * rewrite from a page address (vercel.json) keeps that address in the request,
+ * so it names the endpoint in its query instead: "/timeline/road/1?endpoint=share".
+ */
 function endpointFor(request: Request): Endpoint | null {
-  const name = new URL(request.url).pathname.replace(/\/+$/, '').split('/').pop() ?? ''
+  const url = new URL(request.url)
+  const last = url.pathname.replace(/\/+$/, '').split('/').pop() ?? ''
+  const name = url.pathname.startsWith('/api/') ? last : (url.searchParams.get('endpoint') ?? last)
   return Object.hasOwn(ENDPOINTS, name) ? ENDPOINTS[name] : null
 }
 

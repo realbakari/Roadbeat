@@ -14,11 +14,16 @@ import { CARD_SOURCES, findCard } from '../shareCards.js'
 
 const Query = z.object({ source: z.enum(CARD_SOURCES), id: z.string().min(1).max(200) })
 
+// Each path is written out, so Vercel's file tracing bundles the fonts with the function (vercel.json lists them too).
 const require = createRequire(import.meta.url)
-const font = (weight: 400 | 600 | 700) => readFile(require.resolve(`@fontsource/inter/files/inter-latin-${weight}-normal.woff`))
+const FONT_FILES = {
+  400: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'),
+  600: require.resolve('@fontsource/inter/files/inter-latin-600-normal.woff'),
+  700: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'),
+} as const
 let fonts: Promise<{ name: string; data: Buffer; weight: 400 | 600 | 700; style: 'normal' }[]> | null = null
 const loadFonts = () =>
-  (fonts ??= Promise.all(([400, 600, 700] as const).map(async (weight) => ({ name: 'Inter', data: await font(weight), weight, style: 'normal' as const }))))
+  (fonts ??= Promise.all(([400, 600, 700] as const).map(async (weight) => ({ name: 'Inter', data: await readFile(FONT_FILES[weight]), weight, style: 'normal' as const }))))
 
 const INK = '#0f172a'
 const MUTED = '#64748b'
