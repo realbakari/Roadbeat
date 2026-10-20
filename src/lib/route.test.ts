@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { kioskPath, parsePath, parseHash, planHash, routeHref } from './route'
+import { kioskPath, parsePath, parseHash, planHash, routeHref, timelinePath } from './route'
 
 describe('parseHash', () => {
   it('reads detail pages', () => {
@@ -64,11 +64,16 @@ describe('parseHash', () => {
 })
 
 describe('parsePath', () => {
-  it('opens the dashboard, the status page, a kiosk board, or the app', () => {
+  it('opens the dashboard, the status page, the timeline, a kiosk board, or the app', () => {
     expect(parsePath('/dashboard')).toEqual({ kind: 'dashboard' })
     expect(parsePath('/dashboard/')).toEqual({ kind: 'dashboard' })
     expect(parsePath('/status')).toEqual({ kind: 'status' })
     expect(parsePath('/status/feeds')).toEqual({ kind: 'app' })
+    expect(parsePath('/timeline')).toEqual({ kind: 'timeline', post: null })
+    expect(parsePath('/timeline/road/835519')).toEqual({ kind: 'timeline', post: 'road:835519' })
+    expect(parsePath(timelinePath('fire:WARN/1 2'))).toEqual({ kind: 'timeline', post: 'fire:WARN/1 2' })
+    expect(parsePath('/timeline/x')).toEqual({ kind: 'app' })
+    expect(parsePath('/timeline/likes/1')).toEqual({ kind: 'app' })
     expect(parsePath(kioskPath('NSI', '870000'))).toEqual({ kind: 'kiosk', region: 'NSI', stopId: '870000' })
     expect(parsePath('/kiosk/XYZ/870000')).toEqual({ kind: 'app' })
     expect(parsePath(kioskPath('SEQ', 'place_censta'))).toEqual({ kind: 'kiosk', region: 'SEQ', stopId: 'place_censta' })

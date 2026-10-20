@@ -1,3 +1,5 @@
 /dashboard  /index.html  200
 /status  /index.html  200
+/timeline  /index.html  200
+/timeline/*  /index.html  200
 /kiosk/*  /index.html  200

@@ -19,9 +19,23 @@ const SIZES = { sm: { box: 'size-5 rounded', px: 12 }, md: { box: 'size-8 rounde
  * outlets' icons; a council's comes with its items. Falls back to a generic
  * mark when the publisher has no icon or it fails to load.
  */
-export function PublisherIcon({ publisher, kind, icon, size = 'md' }: { publisher: string; kind: NewsItem['kind']; icon?: string | null; size?: keyof typeof SIZES }) {
+export function PublisherIcon({
+  publisher,
+  kind,
+  icon,
+  size = 'md',
+  round = false,
+}: {
+  publisher: string
+  kind: NewsItem['kind']
+  icon?: string | null
+  size?: keyof typeof SIZES
+  /** A round icon with no ring of its own, for a frame that draws one (the timeline's rail). */
+  round?: boolean
+}) {
   const [failed, setFailed] = useState(false)
-  const { box, px } = SIZES[size]
+  const { box: square, px } = SIZES[size]
+  const box = round ? `${square.split(' ')[0]} rounded-full` : square
   const color = kind === 'official' ? LAYER_COLOR.newsOfficial : LAYER_COLOR.news
   const src = PUBLISHER_ICONS[publisher] ?? icon
   // Councils have no entry, so an official source without one gets a building.
@@ -29,7 +43,7 @@ export function PublisherIcon({ publisher, kind, icon, size = 'md' }: { publishe
   return (
     <span
       className={`${box} flex shrink-0 items-center justify-center overflow-hidden bg-kumo-base`}
-      style={{ boxShadow: `0 0 0 2px ${color}`, color }}
+      style={round ? { color } : { boxShadow: `0 0 0 2px ${color}`, color }}
       title={publisher}
     >
       {src && !failed ? (

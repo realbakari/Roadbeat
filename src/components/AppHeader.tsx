@@ -17,6 +17,7 @@ import {
   MoonIcon,
   ProhibitIcon,
   SirenIcon,
+  RowsIcon,
   SunIcon,
   TrafficConeIcon,
   VideoCameraIcon,
@@ -270,6 +271,9 @@ export function AppHeader({
             <DropdownMenu.Item icon={mode === 'dark' ? SunIcon : MoonIcon} onClick={onToggleMode} className="sm:hidden">
               {mode === 'dark' ? 'Light mode' : 'Dark mode'}
             </DropdownMenu.Item>
+            <DropdownMenu.LinkItem href="/timeline" icon={RowsIcon}>
+              Timeline of every source
+            </DropdownMenu.LinkItem>
             <DropdownMenu.LinkItem href="/dashboard" icon={SquaresFourIcon}>
               Network dashboard
             </DropdownMenu.LinkItem>

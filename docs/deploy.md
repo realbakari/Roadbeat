@@ -41,7 +41,7 @@ These functions then run:
 - `functions/api/camera-time.ts` serves `/api/camera-time`, with the same handler as Vercel (`api/_lib/endpoints/camera-time.ts`).
 - `functions/_middleware.ts` returns each page as Markdown when a request sends `Accept: text/markdown`, and a Markdown 404 for unknown pages.
 
-`public/_headers` sets the same security headers, `/assets/` caching and `.md` noindex as `vercel.json`, and `public/_redirects` serves `index.html` for `/dashboard`, `/status` and `/kiosk/*`.
+`public/_headers` sets the same security headers, `/assets/` caching and `.md` noindex as `vercel.json`, and `public/_redirects` serves `index.html` for `/dashboard`, `/status`, `/timeline`, `/timeline/*` and `/kiosk/*`.
 
 Everything else in `api/` runs only on Vercel. See [Endpoints that run only on Vercel](#endpoints-that-run-only-on-vercel).
 
@@ -50,7 +50,7 @@ Everything else in `api/` runs only on Vercel. See [Endpoints that run only on V
 Production runs on Vercel. `vercel.json` does the following:
 
 - Sets the build command and output folder.
-- Rewrites the six proxy paths, `/mcp` to `api/mcp.ts`, and `/dashboard`, `/status` and `/kiosk/*` to `index.html`.
+- Rewrites the six proxy paths, `/mcp` to `api/mcp.ts`, and `/dashboard`, `/status`, `/timeline`, `/timeline/*` and `/kiosk/*` to `index.html`.
 - Redirects `/about`, `/stations/<slug>` and the like, and `/index.html`, to the address with the trailing slash that the canonical links use.
 - Sends security headers on every response: `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, a `Content-Security-Policy` of `frame-ancestors 'self'`, and a `Permissions-Policy` that allows geolocation on the site's own pages and turns off the camera, microphone, payment and USB features. `public/_headers` holds the same headers for Cloudflare Pages, so change both together.
 - Caches the content-hashed files in `/assets/` for a year as immutable, and marks the `.md` twins `X-Robots-Tag: noindex` so search engines index only the HTML pages.

@@ -57,6 +57,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/timeline",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/timeline/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/roads",
       "destination": "/api/roads"
     },

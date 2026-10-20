@@ -125,13 +125,31 @@ export function parseHash(hash: string): Selection {
 }
 
 /** Screens that live at their own path rather than in the hash. */
-export type Screen = { kind: 'app' } | { kind: 'dashboard' } | { kind: 'status' } | { kind: 'kiosk'; region: TransitRegion; stopId: string }
+export type Screen =
+  | { kind: 'app' }
+  | { kind: 'dashboard' }
+  | { kind: 'status' }
+  /** The timeline, or one post on it by its id ("road:835519"). */
+  | { kind: 'timeline'; post: string | null }
+  | { kind: 'kiosk'; region: TransitRegion; stopId: string }
 
-/** Which screen a path opens: /dashboard, /status, /kiosk/SEQ/place_censta, or the app. */
+/** The sources a timeline post can come from, as its address names them. */
+const POST_SOURCES = new Set(['road', 'fire', 'warning', 'transit', 'news'])
+
+/** The address of the timeline (null) or of one post on it: /timeline/road/835519. */
+export function timelinePath(post: string | null): string {
+  if (!post) return '/timeline'
+  const i = post.indexOf(':')
+  return `/timeline/${post.slice(0, i)}/${encodeURIComponent(post.slice(i + 1))}`
+}
+
+/** Which screen a path opens: /dashboard, /status, /timeline (or one post, /timeline/road/835519), /kiosk/SEQ/place_censta, or the app. */
 export function parsePath(path: string): Screen {
   const parts = path.split('/').filter(Boolean)
   if (parts[0] === 'dashboard' && parts.length === 1) return { kind: 'dashboard' }
   if (parts[0] === 'status' && parts.length === 1) return { kind: 'status' }
+  if (parts[0] === 'timeline' && parts.length === 1) return { kind: 'timeline', post: null }
+  if (parts[0] === 'timeline' && parts.length === 3 && POST_SOURCES.has(parts[1])) return { kind: 'timeline', post: `${parts[1]}:${decode(parts[2])}` }
   if (parts[0] === 'kiosk' && isTransitRegion(parts[1]) && parts[2]) {
     return { kind: 'kiosk', region: parts[1], stopId: decode(parts[2]) }
   }

@@ -29,6 +29,37 @@ body,
 }
 
 /*
+ * The timeline's lanes: one colour per publisher, lighter in dark mode so the
+ * rail reads on a dark card. Decorative only: each post names its publisher.
+ */
+:root {
+  --lane-road: #3d6fd6;
+  --lane-fire: #d4521f;
+  --lane-warning: #b97709;
+  --lane-transit: #7b52c7;
+  --lane-news: #8b5cf6;
+  --lane-official: #334155;
+  --rail: #d3d7dd;
+}
+[data-mode="dark"] {
+  --lane-road: #6f9bf2;
+  --lane-fire: #f07b4d;
+  --lane-warning: #e3a737;
+  --lane-transit: #a585e6;
+  --lane-news: #a78bfa;
+  --lane-official: #94a3b8;
+  --rail: #36363a;
+}
+
+/* The timeline's "new posts" button arriving. */
+@keyframes timeline-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/*
  * iOS Safari zooms the page into any text field under 16px when it's tapped,
  * pushing the header and List/Map switch off screen. Phone-width fields get
  * 16px; this sits outside the layers so it beats Kumo's text-sm.
